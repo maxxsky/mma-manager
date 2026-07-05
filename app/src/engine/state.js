@@ -1,0 +1,761 @@
+import { R, RI, clamp, pick, fmt$, uid, random } from "./rng.js";
+import {
+  ATTRS, ATTR_LABEL, WEIGHTS, TRAITS, AMBITIONS, AMBITION_KEYS,
+  TRAINING, INTENSITY, SPONSOR_BRANDS, CAMP_TIERS, FAC_LABEL,
+  RIVAL_TRAITS, AGENT_TYPES, INVESTOR_TYPES, SPARRING_MATCH, EXTERNAL_PARTNERS, SPONSOR_TERMS,
+} from "./data.js";
+import { genFighter, assignAgent, agentFor, avgSkill, weeklyFee, scoutGrade, genCoach } from "./fighter.js";
+import { coachBonus, facBonus } from "./economy.js";
+import { genDivisions, rankOf, vacateTitle, stripTitle, initPromoterRel } from "./rankings.js";
+import { genRivalCamp } from "./rivals.js";
+import { getRel } from "./relationships.js";
+
+// ---------- initial state ----------
+export function newGame() {
+  const freeCoach = genCoach();
+  freeCoach.salary = 0;
+  freeCoach.freeUntil = 4;
+  return {
+    week: 1, cash: 100000, rep: 8, chemistry: 60,
+    roster: [
+      assignAgent(genFighter(0.55, "Indonesia")),
+      assignAgent(genFighter(0.5)),
+    ].map((f) => ({
+      ...f,
+      contract: {
+        managerCut: 0.18, fightsLeft: 4, fightsTotal: 4,
+        durationMo: 24, signedWeek: 0, renegoFlagged: false,
+      },
+    })),
+    coaches: [{ ...freeCoach, name: "Coach Basic", skill: 3, spec: "Head" }],
+    coachMarket: [genCoach(), genCoach(), genCoach()],
+    facilities: { mats: 1, ring: 1, weights: 1, medical: 1 },
+    campTier: 0,
+    campTag: pick(Object.keys(RIVAL_TRAITS)),
+    divisions: genDivisions(),
+    inbox: [], log: ["Camp dibuka. Budget awal $100,000. Bertahanlah."],
+    prospects: [], legacy: 0, over: null, won: false,
+    rivals: [genRivalCamp(0), genRivalCamp(1), genRivalCamp(2)],
+    promoterRel: initPromoterRel(),
+    loan: null,
+    relationships: {},
+    openGymActive: false,
+    sponsors: [],
+    investors: [],
+  };
+}
+
+// Sparring quality: archetype matching + external partner
+function calcSparringMult(f, g) {
+  let mult = clamp(1 + (g.roster.length - 2) * 0.02, 0.9, 1.1);
+  if (g.roster.length > 1) {
+    const matchScores = g.roster
+      .filter((x) => x.id !== f.id && !x.injury && !x.booked)
+      .map((x) => SPARRING_MATCH[f.archetype]?.[x.archetype] || 0.3);
+    if (matchScores.length > 0) {
+      const bestMatch = Math.max(...matchScores);
+      mult += bestMatch * 0.08;
+    }
+  }
+  if (f.externalPartner && f.externalPartner.weeksLeft > 0) {
+    const partner = f.externalPartner;
+    const archetypeBonus = SPARRING_MATCH[f.archetype]?.[partner.archetype] || 0.5;
+    const levelFactor = partner.level / 60;
+    mult += 0.06 * archetypeBonus * levelFactor;
+  }
+  return clamp(mult, 0.85, 1.2);
+}
+
+// ---------- tick logic ----------
+export function tick(g) {
+  g.week++;
+  const chemMult = g.chemistry >= 80 ? 1.15 : g.chemistry < 40 ? 0.9 : 1;
+
+  g.roster.forEach((f) => {
+    if (!f.ambitionRevealed && g.week - (f.joinedWeek || 0) >= 8) {
+      f.ambitionRevealed = true;
+      g.log.unshift(`💭 Ambisi ${f.name} terungkap: ${f.ambition} — ${AMBITIONS[f.ambition]}.`);
+    }
+    f.morale = clamp(f.morale + (60 - f.morale) * 0.02, 0, 100);
+    if (!f.booked && !f.injury && g.week - (f.lastFightWeek || 0) > 16) {
+      f.morale = clamp(f.morale - 0.5, 0, 100);
+    }
+    if (g.coaches.some((c) => c.personality === "Motivator") && f.morale < 50) {
+      f.morale = clamp(f.morale + 2, 0, 100);
+    }
+
+    // External sparring partner expiry
+    if (f.externalPartner) {
+      f.externalPartner.weeksLeft--;
+      if (f.externalPartner.weeksLeft <= 0) {
+        g.log.unshift(`🤝 ${f.name} — kontrak sparring partner selesai.`);
+        f.externalPartner = null;
+      }
+    }
+
+    if (f.injury) {
+      f.injury.weeks--;
+      if (f.injury.weeks <= 0) {
+        f.injury = null;
+        g.log.unshift(`✅ ${f.name} pulih dari cedera.`);
+      }
+      f.overtraining = clamp(f.overtraining - 10, 0, 100);
+      return;
+    }
+
+    const t = f.booked ? TRAINING.fightcamp : TRAINING[f.training.type];
+    const inten = INTENSITY[f.training.intensity];
+    g.cash -= t.cost;
+
+    if (f.training.type === "recovery" && !f.booked) {
+      f.overtraining = clamp(f.overtraining - 30, 0, 100);
+      f.morale = clamp(f.morale + 4, 0, 100);
+    } else {
+      const ageMult =
+        f.age <= 21 ? 1.3 : f.age <= 26 ? 1.15 : f.age <= 30 ? 1 : f.age <= 33 ? 0.85 : 0.6;
+      const otMult =
+        f.overtraining < 25 ? 1 : f.overtraining < 50 ? 0.9 : f.overtraining < 75 ? 0.75 : 0.5;
+      const traitMult = f.traits.includes("Natural Talent") ? 1.15 : 1;
+      const moraleMult = f.morale >= 75 ? 1.1 : f.morale < 40 ? 0.85 : 1;
+      const sparringMult = calcSparringMult(f, g);
+      const relAvg =
+        g.relationships && g.roster.length > 1
+          ? g.roster.reduce((s, other) =>
+              other.id !== f.id ? s + getRel(g, f.id, other.id) : s, 0) /
+              (g.roster.length - 1) / 100
+          : 0;
+      const relMult = clamp(1 + relAvg * 0.15, 0.85, 1.1);
+
+      t.gains.forEach((k) => {
+        const cap = f.ceilings[k];
+        const prog = f.attrs[k] / cap;
+        const capMult = f.traits.includes("Grinder")
+          ? 0.9
+          : prog < 0.7 ? 1 : prog < 0.9 ? 0.6 : 0.3;
+        const gain =
+          R(0.5, 1.4) *
+          inten.mult *
+          ageMult *
+          otMult *
+          traitMult *
+          moraleMult *
+          capMult *
+          chemMult *
+          coachBonus(g, [k]) *
+          facBonus(g, [k]) *
+          sparringMult *
+          relMult;
+        f.attrs[k] = clamp(f.attrs[k] + gain, 0, cap);
+      });
+
+      if (f.training.type === "content") {
+        const popGain =
+          TRAINING.content.popGain +
+          (f.traits.includes("Star Power") ? 2 : 0) +
+          (f.traits.includes("Showboat") ? 2 : 0);
+        f.popularity = clamp(f.popularity + popGain, 0, 100);
+      }
+
+      const discMult = g.coaches.some((c) => c.personality === "Disciplinarian") ? 0.75 : 1;
+      f.overtraining = clamp(
+        f.overtraining + inten.ot * (f.ambition === "Grinder" ? 0.75 : 1) * discMult - 8,
+        0, 100,
+      );
+
+      let injP =
+        inten.inj + (f.overtraining > 50 ? 0.05 : 0) + (f.overtraining > 75 ? 0.08 : 0);
+      if (f.traits.includes("Cautious")) injP *= 0.85;
+      if (f.traits.includes("Injury Prone")) injP *= 2.0;
+      if (g.coaches.some((c) => c.personality === "Disciplinarian")) injP *= 0.85;
+      injP *= 1 - (g.facilities.medical - 1) * 0.05;
+
+      if (random() < injP) {
+        const roll = random();
+        let sev;
+        if (roll < 0.5)
+          sev = { weeks: RI(1, 2), label: "🚑 Minor", cost: RI(500, 2000), tier: 0 };
+        else if (roll < 0.8)
+          sev = { weeks: RI(3, 6), label: "⚕️ Moderate", cost: RI(2000, 8000), tier: 1 };
+        else if (roll < 0.95)
+          sev = { weeks: RI(8, 16), label: "🆘 Serious", cost: RI(8000, 20000), tier: 2 };
+        else
+          sev = {
+            weeks: RI(20, 36), label: "💀 Career-Threatening",
+            cost: RI(15000, 40000), tier: 3, permanent: true,
+          };
+        f.injury = sev;
+        g.cash -= sev.cost;
+        f.injuryCount = (f.injuryCount || 0) + 1;
+        if (sev.tier >= 2) f.seriousInjuries = (f.seriousInjuries || 0) + 1;
+        if (sev.permanent) {
+          const attr = pick(ATTRS.filter((k) => k !== "chin"));
+          const reduction = RI(3, 8);
+          f.attrs[attr] = clamp(f.attrs[attr] - reduction, 5, 99);
+          f.ceilings[attr] = clamp(f.ceilings[attr] - reduction, f.attrs[attr], 99);
+          g.log.unshift(
+            `💀 ${f.name} mengalami kerusakan permanen: ${ATTR_LABEL[attr]} -${reduction} (sekarang ${Math.round(f.attrs[attr])}).`,
+          );
+        }
+        if (f.seriousInjuries >= 4 && !f.traits.includes("Injury Prone")) {
+          f.traits.push("Injury Prone");
+          g.log.unshift(
+            `⚠️ ${f.name} kini memiliki trait "Injury Prone" — 4+ cedera serius. Risiko cedera naik permanen.`,
+          );
+        }
+        f.morale = clamp(f.morale - (sev.tier >= 2 ? 14 : 8), 0, 100);
+        g.log.unshift(
+          `🚑 ${f.name}: ${sev.label} (${sev.weeks} minggu, biaya ${fmt$(sev.cost)}).`,
+        );
+        if (f.booked) {
+          g.log.unshift(
+            `❌ Fight ${f.name} DIBATALKAN karena cedera. Relasi promotor turun.`,
+          );
+          f.booked = null;
+          g.rep = clamp(g.rep - 2, 0, 100);
+        }
+      }
+
+      if (f.overtraining >= 90) {
+        f.injury = { weeks: 2, label: "Breakdown (overtraining)" };
+        f.morale = clamp(f.morale - 10, 0, 100);
+        g.log.unshift(
+          `⚠️ ${f.name} breakdown karena overtraining — istirahat paksa 2 minggu.`,
+        );
+      }
+    }
+
+    g.cash += weeklyFee(f);
+    if (f.booked) f.booked.weeksLeft--;
+  });
+
+  // ---------- chemistry events ----------
+  if (random() < 0.30 && g.roster.length >= 2) {
+    const roll = random();
+    const fa = pick(g.roster);
+    const fb = pick(g.roster.filter((x) => x.id !== fa.id));
+    const coachTarget = pick(g.coaches.filter((c) => !c.freeUntil || g.week > c.freeUntil));
+
+    if (roll < 0.25 && fa && fb) {
+      g.inbox.unshift({
+        id: uid(), type: "event", title: "Konflik sparring",
+        body: `${fa.name} dan ${fb.name} clash saat sparring — suasana camp tegang.`,
+        choices: [
+          { label: "Pisahkan jadwal", chem: 2 },
+          { label: "Biarkan selesai sendiri", gamble: [6, -8] },
+          { label: "Mediasi", chem: 5 },
+        ],
+      });
+    } else if (roll < 0.45 && coachTarget) {
+      const raiseAmt = coachTarget.salary * RI(1, 2);
+      g.inbox.unshift({
+        id: uid(), type: "event", title: `${coachTarget.name} minta naik gaji`,
+        body: `${coachTarget.name} merasa underpaid. Dia minta gaji ${fmt$(raiseAmt)}/bulan atau akan resign.`,
+        choices: [
+          {
+            label: `Naikkan ke ${fmt$(raiseAmt)}`,
+            cash: -raiseAmt * 4,
+            coachSalary: { id: coachTarget.id, amt: raiseAmt },
+          },
+          { label: "Tolak — mental turun", chem: -4 },
+        ],
+      });
+    } else if (roll < 0.65 && fa && fb) {
+      const bigger = fa.popularity > fb.popularity ? fa : fb;
+      const jealous = bigger.id === fa.id ? fb : fa;
+      g.inbox.unshift({
+        id: uid(), type: "event", title: `${jealous.name} cemburu`,
+        body: `${jealous.name} melihat ${bigger.name} dapat lebih banyak sorotan. Dia merasa tidak dihargai.`,
+        choices: [
+          { label: "Beri perhatian khusus", chem: 3, moraleTo: { id: jealous.id, amt: 6 } },
+          { label: "Acuhkan — dia harus bukti", gamble: [2, -6] },
+        ],
+      });
+    } else if (roll < 0.80 && fa && fb) {
+      const viral = pick([fa, fb]);
+      g.inbox.unshift({
+        id: uid(), type: "event", title: `${viral.name} viral!`,
+        body: `Video latihan ${viral.name} menyebar — popularity naik, tapi chemistry camp terganggu karena perhatian terbagi.`,
+        choices: [
+          { label: "Manfaatkan momentum", chem: -3, viralPop: viral.id },
+          { label: "Redam — fokus ke tim", chem: 3 },
+        ],
+      });
+    } else {
+      g.inbox.unshift({
+        id: uid(), type: "event", title: "Team bonding",
+        body: `${fa.name} dan ${fb.name} akur akhir-akhir ini. ${pick(["Mereka pergi makan bersama", "Mereka latihan bareng di luar jadwal", "Mereka saling support di sesi sparring"])}.`,
+        choices: [
+          { label: "Biarkan saja", chem: 3 },
+          { label: "Kasih bonus kegiatan tim", chem: 6, cash: -5000 },
+        ],
+      });
+    }
+  }
+
+  // ---------- fighter relationships ----------
+  if (g.relationships) {
+    const keys = Object.keys(g.relationships);
+    keys.forEach((k) => {
+      const v = g.relationships[k];
+      if (v > 0) g.relationships[k] = clamp(v - 0.3, -100, 100);
+      else if (v < 0) g.relationships[k] = clamp(v + 0.2, -100, 100);
+    });
+  }
+
+  // ---------- fight offers ----------
+  g.roster.forEach((f) => {
+    if (f.injury || f.booked) return;
+    const div = g.divisions[f.weightClass];
+    const isChamp = div && div.champ.player && div.champ.fighterId === f.id;
+
+    if (isChamp) {
+      if (
+        g.week - (f.lastFightWeek || 0) >= 24 &&
+        !g.inbox.some((m) => m.type === "offer" && m.defense && m.fighterId === f.id)
+      ) {
+        const c0 = div.list[0];
+        const opp = genFighter(clamp((c0.level || 1.3) + 0.05, 0.8, 1.5));
+        opp.name = c0.name; opp.archetype = c0.archetype; opp.weightClass = f.weightClass;
+        opp.record = { w: RI(10, 18), l: RI(0, 3), ko: 0, sub: 0, dec: 0 };
+        g.inbox.unshift({
+          id: uid(), type: "offer", fighterId: f.id, expires: 3,
+          tier: "Major", show: RI(150, 300) * 1000, winBonus: RI(150, 300) * 1000,
+          opponent: opp, title: true, defense: true, oppRank: 1, contenderId: c0.id,
+          titleTier: "Major", titleText: "🛡️ MANDATORY TITLE DEFENSE", weeks: RI(4, 6),
+        });
+        g.log.unshift(
+          `🛡️ Mandatory defense untuk ${f.name} tiba — tolak atau biarkan expire = title dicopot.`,
+        );
+      }
+      return;
+    }
+
+    if (random() < 0.35) {
+      const rep = g.rep;
+      const r = rankOf(g, f);
+
+      // Interim title
+      const wcDiv = g.divisions[f.weightClass];
+      if (
+        wcDiv && wcDiv.champ && wcDiv.champ.fighterId &&
+        wcDiv.champ.fighterId !== f.id
+      ) {
+        const champ = g.roster.find((x) => x.id === wcDiv.champ.fighterId);
+        if (
+          champ && champ.injury && champ.injury.weeks >= 8 &&
+          !f.titles.includes("Interim Champion") && r != null && r <= 5 &&
+          !g.inbox.some((m) => m.interimDiv === f.weightClass)
+        ) {
+          g.inbox.unshift({
+            id: uid(), type: "offer", fighterId: f.id, expires: 3,
+            interimDiv: f.weightClass,
+            tier: "Major", show: RI(80, 150) * 1000, winBonus: RI(80, 150) * 1000,
+            opponent: genFighter(1.3), title: true, defense: false,
+            oppRank: 1, contenderId: null,
+            titleTier: "Interim", titleText: "⏳ INTERIM TITLE FIGHT",
+            weeks: RI(4, 6),
+          });
+          return;
+        }
+      }
+
+      const has = (t) => f.titles.includes(t);
+      let titleTier = null;
+      let titleReason = "";
+
+      if (
+        rep >= 80 && r != null && r <= 3 &&
+        has("Major World Champion") && random() < 0.25
+      ) {
+        titleTier = "Premier";
+        titleReason = `rank #${r} + juara Major + rep ${Math.round(rep)}`;
+      } else if (
+        rep >= 60 && r != null && r <= 5 &&
+        has("National Champion") && !has("Major World Champion") && random() < 0.35
+      ) {
+        titleTier = "Major";
+        titleReason = `rank #${r} + juara Nasional + rep ${Math.round(rep)}`;
+      } else if (
+        rep >= 50 && r != null && r <= 8 &&
+        has("National Champion") && !has("Minor World Champion") &&
+        f.record.w >= 7 && random() < 0.3
+      ) {
+        titleTier = "Minor";
+        titleReason = `rank #${r} + juara Nasional + ${f.record.w} menang`;
+      } else if (
+        rep >= 40 && r != null && r <= 10 &&
+        has("Regional Champion") && !has("National Champion") &&
+        f.record.w >= 5 && random() < 0.3
+      ) {
+        titleTier = "National";
+        titleReason = `rank #${r} + juara Regional + ${f.record.w} menang`;
+      } else if (
+        rep >= 20 && f.record.w >= 3 &&
+        !has("Regional Champion") && random() < 0.3
+      ) {
+        titleTier = "Regional";
+        titleReason = `${f.record.w} menang + rep ${Math.round(rep)}`;
+      }
+
+      let tier, show;
+      if (rep >= 80 && f.record.w >= 8) { tier = "Premier"; show = RI(300, 600) * 1000; }
+      else if (rep >= 60 && f.record.w >= 6) { tier = "Major"; show = RI(60, 200) * 1000; }
+      else if (rep >= 40 && f.record.w >= 4) { tier = "National"; show = RI(12, 60) * 1000; }
+      else if (rep >= 20 && f.record.w >= 2) { tier = "Regional"; show = RI(3, 12) * 1000; }
+      else { tier = "Local"; show = RI(8, 30) * 100; }
+      if (titleTier) show = Math.round(show * 1.5);
+
+      let opp, oppRank = null, contenderId = null;
+      if (titleTier === "Major") {
+        opp = genFighter(1.45); opp.name = div.champ.name; oppRank = 0;
+      } else if (
+        div &&
+        ((r != null && random() < 0.6) ||
+          (r == null && f.record.w >= 2 && rep >= 20 && random() < 0.35))
+      ) {
+        const idx = r != null ? clamp(r - 2 + RI(-1, 1), 0, 14) : RI(11, 14);
+        const c = div.list[idx];
+        opp = genFighter(clamp(c.level || 1, 0.5, 1.5));
+        opp.name = c.name; opp.archetype = c.archetype;
+        oppRank = idx + 1; contenderId = c.id;
+      } else {
+        opp = genFighter(clamp(avgSkill(f) / 60 + R(-0.08, 0.1), 0.3, 1.5));
+      }
+      opp.weightClass = f.weightClass;
+      if (!opp.record.w) opp.record = { w: RI(2, 14), l: RI(0, 5), ko: 0, sub: 0, dec: 0 };
+      if (titleTier)
+        g.log.unshift(
+          `📣 Title shot ${titleTier} untuk ${f.name} — syarat terpenuhi: ${titleReason}.`,
+        );
+
+      g.inbox.unshift({
+        id: uid(), type: "offer", fighterId: f.id, expires: 3,
+        tier, show, winBonus: show, opponent: opp,
+        title: titleTier === "Major" || titleTier === "Premier",
+        titleTier, oppRank, contenderId,
+        titleText:
+          titleTier === "Premier"
+            ? "🏆 PREMIER WORLD TITLE FIGHT"
+            : titleTier === "Major"
+              ? "🏆 MAJOR WORLD TITLE FIGHT"
+              : titleTier === "Minor"
+                ? "🌍 MINOR WORLD TITLE FIGHT"
+                : titleTier === "National"
+                  ? "🥇 NATIONAL TITLE FIGHT"
+                  : titleTier === "Regional"
+                    ? "🥇 REGIONAL TITLE FIGHT"
+                    : null,
+        weeks: RI(4, 6),
+      });
+    }
+  });
+
+  g.inbox = g.inbox.filter((m) => {
+    if (m.type !== "offer" && m.type !== "investor" && m.type !== "sponsor") return true;
+    m.expires--;
+    if (m.expires <= 0 && m.defense) stripTitle(g, m.fighterId);
+    return m.expires > 0;
+  });
+
+  // ---------- monthly settlement ----------
+  if (g.week % 4 === 0) {
+    let sal = 0;
+    g.coaches.forEach((c) => {
+      if (!c.freeUntil || g.week > c.freeUntil) sal += c.salary;
+    });
+    const facVal = Object.values(g.facilities).reduce((s, l) => s + l * 30000, 0);
+    const maint = Math.round(facVal * 0.05);
+    let sponsorAmt = Math.round(g.rep * 500); // base sponsor
+
+    // Multi-sponsor settlement
+    if (g.sponsors && g.sponsors.length > 0) {
+      sponsorAmt = 0;
+      g.sponsors.forEach((sp) => {
+        const brand = SPONSOR_BRANDS.find((b) => b.name === sp.brand);
+        if (!brand) return;
+        let rate = sp.rate || brand.baseRate;
+        if (sp.terms === "royalty") {
+          // royalty: hitung bonus dari kemenangan bulan ini + boost
+          const wins = g.roster.filter((f) => f.lastFightWeek && g.week - f.lastFightWeek <= 4 && f.record.w > 0).length;
+          if (brand.boostFame) rate = Math.round(rate * (1 + (g.roster.reduce((s, f) => s + f.popularity, 0) / g.roster.length / 100) * (brand.boostFame - 1)));
+          if (brand.boostFight) rate = Math.round(rate * (1 + wins * (brand.boostFight - 1)));
+        }
+        sponsorAmt += rate;
+        // Countdown weeksLeft if set
+        if (sp.weeksLeft != null) {
+          sp.weeksLeft--;
+          if (sp.weeksLeft <= 0) {
+            g.log.unshift(`📢 Kontrak ${sp.brand} berakhir — cari sponsor baru.`);
+          }
+        }
+      });
+      g.sponsors = g.sponsors.filter((sp) => sp.weeksLeft == null || sp.weeksLeft > 0);
+    }
+
+    const fSponsor = g.roster.reduce((s, f) => s + f.popularity * 150, 0);
+    g.cash += sponsorAmt + fSponsor - sal - maint;
+    g.chemistry = clamp(
+      g.chemistry +
+        g.roster.filter((f) => f.traits.includes("Team Player")).length -
+        g.roster.filter((f) => f.traits.includes("Diva")).length +
+        (g.coaches.some((c) => c.personality === "Player's Coach") ? 2 : 0),
+      0, 100,
+    );
+    g.log.unshift(
+      `📊 Settlement bulanan: sponsor +${fmt$(sponsorAmt + fSponsor)}, gaji coach -${fmt$(sal)}, maintenance -${fmt$(maint)}.`,
+    );
+
+    // Equity deduction (investor)
+    if (g.investors && g.investors.length > 0) {
+      const totalEquity = g.investors.reduce((s, inv) => s + inv.equity, 0);
+      const equityCut = Math.round((sponsorAmt + fSponsor) * (totalEquity / 100));
+      if (equityCut > 0) {
+        g.cash -= equityCut;
+        g.log.unshift(`💰 ${totalEquity}% equity — investor potong ${fmt$(equityCut)} dari income.`);
+      }
+    }
+
+    if (random() < 0.5) {
+      g.coachMarket = [genCoach(), genCoach(), genCoach()];
+    }
+
+    // Investor offer generation
+    const existingTypes = (g.investors || []).map((i) => i.tier);
+    INVESTOR_TYPES.forEach((inv) => {
+      if (g.rep >= inv.repReq && existingTypes.filter((t) => t === inv.tier).length < inv.maxInvestors) {
+        const hasPending = g.inbox.some((m) => m.type === "investor" && m.investorTier === inv.tier);
+        if (!hasPending && random() < 0.12) {
+          const offerAmt = Math.round(R(inv.offerRange[0], inv.offerRange[1]));
+          const equityPct = Math.round(R(inv.equityRange[0], inv.equityRange[1]));
+          g.inbox.unshift({
+            id: uid(), type: "investor", expires: 4,
+            investorTier: inv.tier,
+            title: `💼 Tawaran Investor: ${inv.tier}`,
+            body: `Seorang ${inv.tier.toLowerCase()} tertarik menginvestasikan ${fmt$(offerAmt)} untuk ${equityPct}% equity camp-mu. Potongan bulanan dari income sponsor & fighter. Kamu bisa buy-back nanti dengan harga 3× lipat.`,
+            offerAmt, equityPct, desc: inv.desc,
+            choices: [
+              { label: `Terima ${fmt$(offerAmt)}`, investorAccept: { amt: offerAmt, equity: equityPct, tier: inv.tier } },
+              { label: "Tolak — equity terlalu besar", investorReject: true },
+            ],
+          });
+        }
+      }
+    });
+
+    // Sponsor offer generation
+    const activeBrands = (g.sponsors || []).map((s) => s.brand);
+    SPONSOR_BRANDS.forEach((brand) => {
+      if (g.rep < brand.repReq) return;
+      if (activeBrands.includes(brand.name)) return;
+      if (g.sponsors && g.sponsors.length >= 3) return;
+      const hasPending = g.inbox.some((m) => m.type === "sponsor" && m.sponsorBrand === brand.name);
+      if (hasPending || random() > 0.08) return;
+      g.inbox.unshift({
+        id: uid(), type: "sponsor", expires: 4,
+        sponsorBrand: brand.name,
+        title: `📢 Tawaran Sponsor: ${brand.name}`,
+        body: `${brand.icon} ${brand.name} (${brand.type}) tertarik bekerja sama dengan camp-mu. Pilih skema pembayaran:`,
+        terms: ["placement", "royalty"],
+        choices: [
+          { label: `Placement: ${fmt$(brand.baseRate)}/bln`, sponsorAccept: { brand: brand.name, terms: "placement", rate: brand.baseRate, weeksLeft: 48 } },
+          { label: `Royalty ~${fmt$(Math.round(brand.baseRate * 0.6))}/bln + bonus`, sponsorAccept: { brand: brand.name, terms: "royalty", rate: Math.round(brand.baseRate * 0.6), weeksLeft: 48 } },
+          { label: "Tolak", sponsorReject: true },
+        ],
+      });
+    });
+
+    Object.values(g.divisions).forEach((d) =>
+      d.list.forEach((c) => { c.points = clamp(c.points + RI(-3, 4), 5, 120); }),
+    );
+
+    // ---------- monthly ambition + fighter requests ----------
+    g.roster.forEach((f) => {
+      const r = rankOf(g, f);
+      if (f.ambition === "Belt Chaser") {
+        if (r) f.morale = clamp(f.morale + 3, 0, 100);
+        else if (f.record.w >= 4) f.morale = clamp(f.morale - 3, 0, 100);
+      }
+      if (f.ambition === "Star Power" && f.popularity < 30) {
+        f.morale = clamp(f.morale - 2, 0, 100);
+      }
+
+      if (
+        f.contract && f.contract.fightsLeft <= 0 &&
+        !g.inbox.some((m) => m.extendFighterId === f.id)
+      ) {
+        g.inbox.unshift({
+          id: uid(), type: "event", extendFighterId: f.id,
+          title: `${f.name} — kontrak habis`,
+          body: `Fight commitment ${f.name} sudah terpenuhi. Dia kini free agent — perpanjang kontrak atau lepas.`,
+          choices: [
+            { label: "Negosiasi perpanjangan", openExtend: f.id },
+            { label: "Lepas (jadi free agent)", release: f.id },
+          ],
+        });
+      }
+
+      const rr = rankOf(g, f);
+      if (
+        f.contract && !f.contract.renegoFlagged && f.contract.fightsLeft > 0 &&
+        ((rr != null && rr <= 10) || f.traits.includes("Diva"))
+      ) {
+        f.contract.renegoFlagged = true;
+        const why = rr != null && rr <= 10 ? `masuk Top 10 (rank #${rr})` : "trait Diva";
+        g.inbox.unshift({
+          id: uid(), type: "event", extendFighterId: f.id,
+          title: `${f.name} minta renegosiasi`,
+          body: `${f.name} menuntut kontrak baru karena ${why}. Kalau diabaikan, morale-nya turun.`,
+          choices: [
+            { label: "Buka renegosiasi", openExtend: f.id },
+            { label: "Tolak (morale -8)", moraleTo: { id: f.id, amt: -8 } },
+          ],
+        });
+      }
+
+      if (f.morale < 20 && !g.inbox.some((m) => m.releaseFighterId === f.id)) {
+        const bonus = RI(3, 8) * 1000;
+        g.inbox.unshift({
+          id: uid(), type: "event", releaseFighterId: f.id,
+          title: `${f.name} minta release`,
+          body: `Morale sangat rendah (${Math.round(f.morale)}). Dia merasa tidak berkembang dan ingin keluar dari camp.`,
+          choices: [
+            { label: "Kabulkan release", release: f.id },
+            { label: `Bonus retensi ${fmt$(bonus)}`, cash: -bonus, moraleTo: { id: f.id, amt: 30 } },
+            { label: "Abaikan", chem: -5 },
+          ],
+        });
+      }
+    });
+
+    // ---------- yearly ----------
+    if (g.week % 48 === 0) {
+      g.roster.forEach((f) => {
+        f.age++;
+        f.fightsThisYear = 0;
+        if (f.age >= 37) f.attrs.chin = clamp(f.attrs.chin - 6, 10, 99);
+        else if (f.age >= 34) f.attrs.chin = clamp(f.attrs.chin - 4, 10, 99);
+        else if (f.age >= 31) f.attrs.chin = clamp(f.attrs.chin - 2, 10, 99);
+
+        if (f.age >= 35 && !g.inbox.some((m) => m.retireFighterId === f.id)) {
+          const p = (f.age - 34) * 0.15 + ((f.streakL || 0) >= 3 ? 0.3 : 0);
+          if (random() < p) {
+            g.inbox.unshift({
+              id: uid(), type: "event", retireFighterId: f.id,
+              title: `${f.name} mempertimbangkan pensiun`,
+              body: `Usia ${f.age}, ${f.streakL || 0} kekalahan beruntun. Dia datang ke kantormu untuk bicara soal masa depannya.`,
+              choices: [
+                { label: "Hormati pensiun (rep +3)", retire: f.id },
+                { label: "Bujuk satu run lagi", convince: f.id },
+                { label: "Jadikan coach", toCoach: f.id },
+              ],
+            });
+          }
+        }
+      });
+
+      g.roster.forEach((f) => {
+        if (f.injury || f.booked || (f.contract && f.contract.fightsLeft <= 0)) return;
+        const weeksSinceFight = g.week - (f.lastFightWeek || 0);
+        if (weeksSinceFight > 24 && !g.inbox.some((m) => m.fightRequestId === f.id)) {
+          g.inbox.unshift({
+            id: uid(), type: "event", fightRequestId: f.id,
+            title: `🗣️ ${f.name} — minta fight lagi`,
+            body: `${f.name} sudah ${Math.floor(weeksSinceFight / 4)} bulan tanpa fight. Dia resah dan siap bertarung.`,
+            choices: [
+              { label: "Janji cari fight (morale +3)", fightPromise: f.id },
+              { label: "Sabar — timing belum tepat", moraleTo: { id: f.id, amt: -3 } },
+            ],
+          });
+        }
+        const avgFac = Object.values(g.facilities).reduce((s, v) => s + v, 0) / 4;
+        if (
+          avgFac < 2 && f.morale > 30 && random() < 0.15 &&
+          !g.inbox.some((m) => m.complainId === f.id)
+        ) {
+          const weak = Object.entries(g.facilities).sort((a, b) => a[1] - b[1])[0];
+          g.inbox.unshift({
+            id: uid(), type: "event", complainId: f.id,
+            title: `😤 ${f.name} — komplain fasilitas`,
+            body: `${f.name} mengeluh ${FAC_LABEL[weak[0]]} (level ${weak[1]}) kurang memadai. Dia minta upgrade.`,
+            choices: [
+              { label: "Janji upgrade (morale +4)", upgradePromise: { fighterId: f.id, fac: weak[0] } },
+              { label: "Bilang bersabar dulu", moraleTo: { id: f.id, amt: -4 } },
+            ],
+          });
+        }
+      });
+    }
+  }
+
+  // ---------- rival camp simulation ----------
+  if (g.rivals) {
+    g.rivals.forEach((rc) => {
+      rc.fighters.forEach((f) => {
+        if (f.injury) { f.injury.weeks--; if (f.injury.weeks <= 0) f.injury = null; return; }
+        ATTRS.forEach((k) => {
+          const cap = f.ceilings[k];
+          const gain =
+            R(0.2, 0.7) * (f.age <= 26 ? 1.15 : 1) *
+            (rc.traitData.spec === k ? rc.traitData.bonus : 1);
+          f.attrs[k] = clamp(f.attrs[k] + gain, 0, cap);
+        });
+      });
+      const scoutInterval = rc.trait === "Prospect Mill" ? 6 : 12;
+      if (g.week - rc.lastScoutWeek >= scoutInterval && rc.fighters.length < 8) {
+        const newF = assignAgent(genFighter(R(0.3, 0.7)));
+        rc.fighters.push(newF);
+        rc.lastScoutWeek = g.week;
+      }
+      rc.fighters = rc.fighters.filter((f) => f.age < 40);
+      rc.rivalry = clamp(rc.rivalry - 0.5, 0, 100);
+      rc.rep = clamp(rc.rep + R(-1, 2), 2, 90);
+      rc.cash += RI(5000, 20000);
+    });
+
+    // poaching
+    if (g.week % 8 === 0 && g.roster.length > 0) {
+      const r = pick(g.rivals);
+      const available = g.roster.filter(
+        (f) => !f.booked && !f.injury && f.morale < 60 &&
+          f.contract && f.contract.fightsLeft > 0,
+      );
+      if (available.length > 0 && r.rivalry > 30) {
+        const target = pick(available);
+        const offerBonus = Math.round(target.asking * (1 + r.rivalry / 100));
+        g.inbox.unshift({
+          id: uid(), type: "event",
+          title: `🚨 ${r.name} coba poach ${target.name}`,
+          body: `${r.name} (rivalry ${Math.round(r.rivalry)}) mengirim tawaran ke ${target.name}: signing bonus ${fmt$(offerBonus)}, cut lebih kecil. Morale-nya rendah — dia mempertimbangkan.`,
+          choices: [
+            { label: "Tingkatkan bonus + naikkan cut 2%", counter: { fighterId: target.id, cost: offerBonus } },
+            { label: "Biarkan dia pergi", letGo: target.id },
+            { label: "Bicara langsung (chemistry check)", talk: target.id },
+          ],
+        });
+        r.rivalry = clamp(r.rivalry - 5, 0, 100);
+      }
+    }
+
+    if (g.week % 12 === 0 && g.coaches.length > 1) {
+      const r = pick(g.rivals);
+      if (r.rivalry > 50) {
+        const nonFree = g.coaches.filter((c) => !c.freeUntil || g.week > c.freeUntil);
+        if (nonFree.length > 0) {
+          const tc = pick(nonFree);
+          g.inbox.unshift({
+            id: uid(), type: "event",
+            title: `🦊 ${r.name} coba poach ${tc.name}`,
+            body: `${tc.name} ditawari gaji ${fmt$(tc.salary * 2)} oleh ${r.name}. Kalau counter, harus naikkan gaji ke level itu.`,
+            choices: [
+              { label: `Naikkan gaji (${fmt$(tc.salary * 2)})`, coachPoach: { id: tc.id, newSalary: tc.salary * 2, rivalId: r.id } },
+              { label: "Lepas — rekrut pengganti", coachLeave: tc.id },
+            ],
+          });
+          r.rivalry = clamp(r.rivalry - 8, 0, 100);
+        }
+      }
+    }
+  }
+
+  if (g.cash < -50000) g.over = "BANGKRUT — kas di bawah -$50,000. Camp ditutup.";
+}

@@ -1,0 +1,529 @@
+import React, { useState, useEffect, useRef } from "react";
+import { R, RI, clamp, pick, fmt$, random, setRNG, resetRNG, mulberry32 } from "../engine/rng.js";
+import { ATTRS, ATTR_LABEL, WEIGHTS, GAME_PLANS } from "../engine/data.js";
+import { prepFighter, simRound } from "../engine/fight.js";
+import { C, DISPLAY, GlobalStyle, cut, Card, H, Btn, Tag, Bar } from "./theme.jsx";
+
+export default function FightNight({ fighter, done }) {
+  const [stage, setStage] = useState("staredown");
+  const [plan, setPlan] = useState("Keep It Standing");
+  const [viewMode, setViewMode] = useState("summary");
+  const [attitude, setAttitude] = useState(null);
+  const [rnd, setRnd] = useState(1);
+  const [state, setSt] = useState(null);
+  const [roundLog, setRoundLog] = useState(null);
+  const [tickIdx, setTickIdx] = useState(0);
+  const [corner, setCornerState] = useState("plan");
+  const cornerRef = useRef("plan");
+  const setCorner = (k) => { cornerRef.current = k; setCornerState(k); };
+  const [result, setResult] = useState(null);
+  const [timer, setTimer] = useState(20);
+  const [cutA, setCutA] = useState(0);
+  const [cutB, setCutB] = useState(0);
+  const [docCheck, setDocCheck] = useState(false);
+  const [weighinIssue, setWeighinIssue] = useState(null);
+  const [fightSeed, setFightSeed] = useState(null);
+
+  // Seed RNG for this fight, reset on unmount
+  useEffect(() => {
+    const seed = fighter.booked?.fightSeed || Math.floor(random() * 2147483647);
+    setFightSeed(seed);
+    setRNG(mulberry32(seed));
+    return () => { resetRNG(); };
+  }, []);
+  const opp = fighter.booked.opponent;
+  // Apply attitude modifier to fighters
+  const baseA = prepFighter(fighter);
+  const baseB = prepFighter(opp);
+  const A = { ...baseA, attrs: { ...baseA.attrs } };
+  const B = { ...baseB, attrs: { ...baseB.attrs } };
+  // Staredown attitude effects
+  const getAttitudeMod = () => {
+    if (attitude === "Respectful") return { a: { footwork: 1.05 }, b: {}, desc: "Focused & respectful" };
+    if (attitude === "Trash Talk") return { a: { striking: 1.08 }, b: { striking: 1.05 }, desc: "Heated trashtalk" };
+    return { a: {}, b: {}, desc: "Professional" };
+  };
+  const applyAttMod = () => {
+    const mod = getAttitudeMod();
+    Object.entries(mod.a).forEach(([k, v]) => A.attrs[k] = clamp(A.attrs[k] * v, 5, 99));
+    Object.entries(mod.b).forEach(([k, v]) => B.attrs[k] = clamp(B.attrs[k] * v, 5, 99));
+    return mod;
+  };
+  const attMod = applyAttMod();
+  const totalRounds = fighter.booked.title ? 5 : 3;
+  const limit = WEIGHTS.find((w) => w.name === fighter.weightClass).limit;
+  const cutPct = (fighter.natWeight - limit) / fighter.natWeight;
+  const cutInfo =
+    cutPct < 0.03
+      ? { label: "Easy Cut", pen: 0 }
+      : cutPct < 0.06
+        ? { label: "Moderate Cut · -5% stamina", pen: 5 }
+        : { label: "Hard Cut · -10% stamina", pen: 10 };
+  const missWeightChance = cutPct > 0.08 ? 0.20 : cutPct > 0.05 ? 0.08 : 0.02;
+  const missedWeight = random() < missWeightChance;
+
+  const runRound = (r, st, cornerChoice) => {
+    const res = simRound(r, A, B, st.staA, st.staB, plan, cornerChoice, cutInfo.pen > 5);
+    const newSt = {
+      staA: res.staA, staB: res.staB,
+      dmgA: st.dmgA + res.dmgA, dmgB: st.dmgB + res.dmgB,
+      scores: [...st.scores, { a: res.scoreA, b: res.scoreB }],
+    };
+    const newCutA = cutA + (res.dmgA > 20 ? RI(0, 2) : res.dmgA > 10 ? RI(0, 1) : 0);
+    const newCutB = cutB + (res.dmgB > 20 ? RI(0, 2) : res.dmgB > 10 ? RI(0, 1) : 0);
+    setCutA(newCutA); setCutB(newCutB);
+    setSt(newSt); setRoundLog(res); setTickIdx(0);
+    if (res.finish) {
+      setResult({ won: res.finish.by === "A", how: res.finish.how, r });
+      setStage("result");
+    } else if (r >= totalRounds) {
+      const winsA = newSt.scores.filter((s) => s.a >= s.b).length;
+      setResult({ won: winsA > totalRounds / 2, how: "Decision", r });
+      setStage("result");
+    } else {
+      if ((newCutA >= 4 || newCutB >= 4) && !docCheck) {
+        setDocCheck(true); setStage("corner");
+      } else setStage("corner");
+    }
+  };
+
+  const startFight = () => {
+    const st0 = { staA: 100 - cutInfo.pen, staB: 100, dmgA: 0, dmgB: 0, scores: [] };
+    setSt(st0);
+    if (viewMode === "skip") {
+      let st = { ...st0 };
+      const rounds = [];
+      for (let r = 1; r <= totalRounds; r++) {
+        const res = simRound(r, A, B, st.staA, st.staB, plan, "plan", cutInfo.pen > 5);
+        st = {
+          staA: res.staA, staB: res.staB,
+          dmgA: st.dmgA + res.dmgA, dmgB: st.dmgB + res.dmgB,
+          scores: [...st.scores, { a: res.scoreA, b: res.scoreB }],
+        };
+        rounds.push(res);
+        if (res.finish) { 
+          setSt(st); setRoundLog(res); setResult({ won: res.finish.by === "A", how: res.finish.how, r }); 
+          setStage("skipSummary"); return; 
+        }
+      }
+      setSt(st);
+      const winsA = st.scores.filter((s) => s.a >= s.b).length;
+      setResult({ won: winsA > totalRounds / 2, how: "Decision", r: totalRounds });
+      // Build combined round summary
+      const summaryLog = [];
+      rounds.forEach((res, i) => {
+        summaryLog.push(`Round ${i + 1}: ${res.finish ? `Fight ended via ${res.finish.how}` : `10-9 ${res.scoreA > res.scoreB ? fighter.name : opp.name}`}`);
+      });
+      setRoundLog({ log: summaryLog });
+      setStage("skipSummary");
+    } else {
+      setStage("round");
+      setTimeout(() => runRound(1, st0, "plan"), 60);
+    }
+  };
+
+  const nextRound = () => {
+    const nr = rnd + 1; setRnd(nr); setStage("round");
+    runRound(nr, state, cornerRef.current);
+  };
+
+  useEffect(() => {
+    if (stage !== "corner") return;
+    setTimer(20);
+    const iv = setInterval(() => setTimer((t) => t - 1), 1000);
+    return () => clearInterval(iv);
+  }, [stage, rnd]);
+  useEffect(() => { if (stage === "corner" && timer <= 0) nextRound(); }, [timer]);
+  // Tick-by-Tick: reveal log lines one by one
+  useEffect(() => {
+    if (viewMode !== "tick" || stage !== "round" || !roundLog) return;
+    if (tickIdx >= roundLog.log.length) return; // all revealed
+    const iv = setInterval(() => {
+      setTickIdx((prev) => {
+        const next = prev + 1;
+        if (next >= roundLog.log.length) return prev; // stop incrementing
+        return next;
+      });
+    }, 500);
+    return () => clearInterval(iv);
+  }, [viewMode, stage, roundLog, tickIdx]);
+  // Auto-advance to corner when tick-by-tick finishes
+  useEffect(() => {
+    if (viewMode !== "tick" || stage !== "round" || !roundLog || !state) return;
+    if (tickIdx >= roundLog.log.length) {
+      if (roundLog.finish) {
+        setResult({ won: roundLog.finish.by === "A", how: roundLog.finish.how, r: rnd });
+        setStage("result");
+      } else if (rnd >= totalRounds) {
+        const winsA = state.scores.filter((s) => s.a >= s.b).length;
+        setResult({ won: winsA > totalRounds / 2, how: "Decision", r: rnd });
+        setStage("result");
+      } else {
+        setTimeout(() => {
+          if ((cutA >= 4 || cutB >= 4) && !docCheck) {
+            setDocCheck(true); setStage("corner");
+          } else setStage("corner");
+        }, 300);
+      }
+    }
+  }, [tickIdx, viewMode]);
+
+  const doctorRetire = () => {
+    setResult({ won: false, how: "Doctor Stoppage", r: rnd }); setStage("result");
+  };
+
+  const applyResult = () => {
+    done((g2) => {
+      const f = g2.roster.find((x) => x.id === fighter.id);
+      const b = f.booked; f.booked = null;
+      let purse = b.show + (result.won ? b.winBonus : 0);
+      const cutRate = (f.contract && f.contract.managerCut) || 0.18;
+      if (weighinIssue === "catchweight") {
+        purse = Math.round(purse * 0.7);
+        if (g2.promoterRel) g2.promoterRel[b.tier] = clamp((g2.promoterRel[b.tier] || 30) - 5, 0, 100);
+      }
+      if (weighinIssue === "cancelled") {
+        f.booked = null; g2.rep = clamp(g2.rep - 4, 0, 100);
+        if (g2.promoterRel) g2.promoterRel[b.tier] = clamp((g2.promoterRel[b.tier] || 30) - 15, 0, 100);
+        g2.log.unshift(`🚫 Fight ${f.name} dibatalkan (miss weight). Rep -4, relasi turun.`);
+        return;
+      }
+      const cutC = Math.round(purse * cutRate);
+      g2.cash += cutC;
+      f.lastFightWeek = g2.week;
+      f.fightsThisYear = (f.fightsThisYear || 0) + 1;
+      if (f.contract) { f.contract.fightsLeft = Math.max(0, (f.contract.fightsLeft || 0) - 1); }
+      if (attitude === "Respectful") f.popularity = clamp(f.popularity + 2, 0, 100);
+      else if (attitude === "Trash Talk") {
+        f.popularity = clamp(f.popularity + 5, 0, 100);
+        if (!result.won) f.morale = clamp(f.morale - 8, 0, 100);
+      }
+      if (attitude === "Professional" && result.won) g2.rep = clamp(g2.rep + 2, 0, 100);
+      const div = g2.divisions[f.weightClass];
+      if (result.won) {
+        f.record.w++; f.streakL = 0;
+        if (result.how === "KO/TKO" || result.how === "Doctor Stoppage") f.record.ko++;
+        else if (result.how === "Submission") f.record.sub++;
+        else f.record.dec++;
+        f.morale = clamp(f.morale + 12, 0, 100);
+        const popMult = (f.traits.includes("Crowd Favorite") ? 2 : 1) * (f.ambition === "Star Power" ? 1.5 : 1);
+        f.popularity = clamp(f.popularity + (result.how === "Decision" ? 3 : 7) * popMult * (g2.coaches.some((c) => c.personality === "Player's Coach") ? 1.15 : 1), 0, 100);
+        g2.rep = clamp(g2.rep + { Local: 1, Regional: 2, National: 4, Major: 7 }[b.tier], 0, 100);
+        g2.chemistry = clamp(g2.chemistry + 1, 0, 100);
+        g2.legacy += { Local: 50, Regional: 120, National: 300, Major: 600 }[b.tier];
+        let pts = b.oppRank != null ? 8 + Math.max(0, 16 - b.oppRank) : 3;
+        if (result.how !== "Decision") pts += 3;
+        f.rankPoints = (f.rankPoints || 0) + pts;
+        if (b.contenderId && div) { const c = div.list.find((x) => x.id === b.contenderId); if (c) c.points = Math.round(c.points * 0.75); }
+        if (f.ambition === "Legacy" && b.oppRank != null) f.morale = clamp(f.morale + 5, 0, 100);
+        g2.log.unshift(`🏆 ${f.name} MENANG via ${result.how} (R${result.r})! +${pts} ranking pts · camp cut ${fmt$(cutC)}.`);
+        if (b.titleTier === "Major") {
+          if (!f.titles.includes("Major World Champion")) f.titles.push("Major World Champion");
+          if (div) div.champ = { name: f.name, player: true, fighterId: f.id };
+          g2.rep = clamp(g2.rep + 20, 0, 100); g2.legacy += 2000; g2.won = true;
+          g2.log.unshift(`👑 ${f.name} adalah MAJOR WORLD CHAMPION ${f.weightClass}!`);
+        } else if (b.titleTier === "Premier") {
+          if (!f.titles.includes("Premier World Champion")) f.titles.push("Premier World Champion");
+          if (div) div.champ = { name: f.name, player: true, fighterId: f.id };
+          g2.rep = clamp(g2.rep + 30, 0, 100); g2.legacy += 5000; g2.won = true;
+          g2.log.unshift(`🌟 ${f.name} adalah PREMIER WORLD CHAMPION ${f.weightClass}!`);
+        } else if (b.titleTier === "Interim") {
+          if (!f.titles.includes("Interim Champion")) f.titles.push("Interim Champion");
+          g2.rep = clamp(g2.rep + 10, 0, 100); g2.legacy += 800;
+          g2.log.unshift(`⏳ ${f.name} merebut INTERIM TITLE ${f.weightClass}! Akan unified dengan juara utama.`);
+        } else if (b.titleTier === "Minor") {
+          if (!f.titles.includes("Minor World Champion")) f.titles.push("Minor World Champion");
+          if (div) div.champ = { name: f.name, player: true, fighterId: f.id };
+          g2.rep = clamp(g2.rep + 14, 0, 100); g2.legacy += 1200;
+          g2.log.unshift(`🌍 ${f.name} merebut MINOR WORLD TITLE ${f.weightClass}!`);
+        } else if (b.titleTier === "National") {
+          f.titles.push("National Champion"); g2.rep = clamp(g2.rep + 10, 0, 100); g2.legacy += 800;
+          g2.log.unshift(`🥇 ${f.name} merebut NATIONAL TITLE!`);
+        } else if (b.titleTier === "Regional") {
+          f.titles.push("Regional Champion"); g2.rep = clamp(g2.rep + 6, 0, 100); g2.legacy += 300;
+          g2.log.unshift(`🥇 ${f.name} merebut REGIONAL TITLE!`);
+        }
+      } else {
+        f.record.l++; f.streakL = (f.streakL || 0) + 1;
+        f.rankPoints = Math.floor((f.rankPoints || 0) / 2);
+        if (!f.traits.includes("Iron Will")) f.morale = clamp(f.morale - 14, 0, 100);
+        g2.chemistry = clamp(g2.chemistry - (result.how === "KO/TKO" || result.how === "Doctor Stoppage" ? 5 : 2), 0, 100);
+        g2.log.unshift(`❌ ${f.name} kalah via ${result.how} (R${result.r}). Ranking pts terpangkas setengah. Camp cut ${fmt$(cutC)}.`);
+        if (b.defense) {
+          if (div) div.champ = { name: b.opponent.name, player: false };
+          f.titles = f.titles.filter((t) => t !== "Major World Champion");
+          g2.log.unshift(`👑 Title ${f.weightClass} lepas ke ${b.opponent.name}.`);
+        }
+      }
+      if (f.ambition === "Paycheck") f.morale = clamp(f.morale + 5, 0, 100);
+      if (f.ambition === "Family Man" && f.fightsThisYear > 3) {
+        f.morale = clamp(f.morale - 10, 0, 100);
+        g2.log.unshift(`🏠 ${f.name} (Family Man): lebih dari 3 fight tahun ini — morale anjlok.`);
+      }
+      const injRoll = random();
+      if (injRoll < (result.won ? 0.10 : 0.25)) {
+        f.injury = { weeks: RI(2, 4), label: "🚑 Minor", tier: 0 };
+        f.injuryCount = (f.injuryCount || 0) + 1;
+        g2.log.unshift(`🚑 Post-fight: ${f.name} cedera minor, ${f.injury.weeks} minggu.`);
+      } else if (injRoll < (result.won ? 0.12 : 0.28)) {
+        f.injury = { weeks: RI(4, 8), label: "⚕️ Moderate", tier: 1 };
+        f.injuryCount = (f.injuryCount || 0) + 1;
+        g2.log.unshift(`⚕️ Post-fight: ${f.name} cedera moderate, ${f.injury.weeks} minggu.`);
+      } else if (injRoll < (result.won ? 0.14 : 0.33)) {
+        f.injury = { weeks: RI(6, 12), label: "🆘 Serious", tier: 2 };
+        f.injuryCount = (f.injuryCount || 0) + 1; f.seriousInjuries = (f.seriousInjuries || 0) + 1;
+        g2.log.unshift(`🆘 Post-fight: ${f.name} cedera SERIUS, ${f.injury.weeks} minggu.`);
+        if (f.seriousInjuries >= 4 && !f.traits.includes("Injury Prone")) {
+          f.traits.push("Injury Prone");
+          g2.log.unshift(`⚠️ ${f.name} kini memiliki trait "Injury Prone" — 4+ cedera serius.`);
+        }
+      } else if (injRoll < (result.won ? 0.15 : 0.36)) {
+        const attr = pick(ATTRS.filter((k) => k !== "chin"));
+        const reduction = RI(3, 6);
+        f.injury = { weeks: RI(16, 30), label: "💀 Career-Threatening", tier: 3, permanent: true };
+        f.injuryCount = (f.injuryCount || 0) + 1; f.seriousInjuries = (f.seriousInjuries || 0) + 1;
+        f.attrs[attr] = clamp(f.attrs[attr] - reduction, 5, 99);
+        f.ceilings[attr] = clamp(f.ceilings[attr] - reduction, f.attrs[attr], 99);
+        g2.log.unshift(`💀 Post-fight: ${f.name} cedera PARAH — ${ATTR_LABEL[attr]} -${reduction} permanen. ${f.injury.weeks} minggu.`);
+      }
+      if (f.seriousInjuries >= 6 && f.age >= 30 && random() < 0.25) {
+        g2.inbox.unshift({
+          id: uid(), type: "event", retireFighterId: f.id,
+          title: `${f.name} — dokter rekomendasi pensiun`,
+          body: `Setelah ${f.seriousInjuries} cedera serius di usia ${f.age}, tim medis sangat menyarankan ${f.name} pensiun demi kesehatan jangka panjang.`,
+          choices: [
+            { label: "Hormati rekomendasi dokter", retire: f.id },
+            { label: "Bujuk terus (morale check)", convince: f.id },
+          ],
+        });
+      }
+    });
+  };
+
+  const cornerOpts = [
+    { k: "tdd", label: "Stay on your feet", desc: "+takedown defense" },
+    { k: "body", label: "Work the body", desc: "+output body shot" },
+    { k: "go", label: "He's tired — GO NOW", desc: "+agresi, stamina terbakar" },
+    { k: "save", label: "Conservative", desc: "hemat stamina" },
+    { k: "plan", label: "Stick to game plan", desc: "jalankan rencana" },
+  ];
+  const hpA = state ? clamp(100 - state.dmgA, 0, 100) : 100;
+  const hpB = state ? clamp(100 - state.dmgB, 0, 100) : 100;
+
+  const StatVs = ({ label, a, b }) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+      <div style={{ flex: 1 }}><Bar v={a} color={C.red} mirror /></div>
+      <div style={{ width: 76, textAlign: "center", fontSize: 9, letterSpacing: 1.5, color: C.dim, textTransform: "uppercase" }}>{label}<div style={{ color: C.chalk, fontSize: 11, fontFamily: DISPLAY }}>{Math.round(a)} · {Math.round(b)}</div></div>
+      <div style={{ flex: 1 }}><Bar v={b} color={C.blue} /></div>
+    </div>
+  );
+
+  // uid imported from rng.js
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 60, overflowY: "auto", background: `radial-gradient(ellipse 90% 55% at 50% -5%, ${C.spot} 0%, ${C.bg} 60%)` }}>
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", background: "linear-gradient(115deg, transparent 42%, rgba(230,182,76,.05) 47%, transparent 53%), linear-gradient(65deg, transparent 42%, rgba(63,143,212,.05) 47%, transparent 53%)" }} />
+      <div style={{ maxWidth: 560, margin: "0 auto", padding: 14, position: "relative" }}>
+        {/* MARQUEE */}
+        <div style={{ textAlign: "center", margin: "10px 0 14px" }}>
+          <div style={{ fontFamily: DISPLAY, fontSize: 11, letterSpacing: 5, color: C.goldDim }}>{fighter.booked.tier.toUpperCase()} EVENT · {fighter.weightClass.toUpperCase()}</div>
+          {fighter.booked.titleTier && <div style={{ fontFamily: DISPLAY, color: C.gold, fontSize: 16, letterSpacing: 3, animation: "goldglow 2s infinite" }}>★ {fighter.booked.defense ? "TITLE DEFENSE" : `${fighter.booked.titleTier.toUpperCase()} TITLE FIGHT`} ★</div>}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 4 }}>
+            <div style={{ flex: 1, textAlign: "right" }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: 22, color: C.red, lineHeight: 1, textTransform: "uppercase" }}>{fighter.name}</div>
+              <div style={{ color: C.dim, fontSize: 11 }}>{fighter.record.w}-{fighter.record.l} · {fighter.archetype}</div>
+            </div>
+            <div style={{ fontFamily: DISPLAY, fontSize: 26, color: C.gold, transform: "skewX(-10deg)", textShadow: "0 0 14px rgba(230,182,76,.5)" }}>VS</div>
+            <div style={{ flex: 1, textAlign: "left" }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: 22, color: C.blue, lineHeight: 1, textTransform: "uppercase" }}>{opp.name}</div>
+              <div style={{ color: C.dim, fontSize: 11 }}>{opp.record.w}-{opp.record.l} · {opp.archetype}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* HUD */}
+        {state && stage !== "weighin" && (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ flex: 1 }}><Bar v={hpA} color={hpA > 40 ? C.red : "#ff2216"} h={14} skew mirror /></div>
+              <div style={{ display: "flex", gap: 4 }}>
+                {Array.from({ length: totalRounds }).map((_, i) => (
+                  <div key={i} style={{ width: 8, height: 8, borderRadius: 4, background: i < state.scores.length ? (state.scores[i].a >= state.scores[i].b ? C.red : C.blue) : i === state.scores.length && stage !== "result" ? C.gold : "#232c40", boxShadow: i === state.scores.length && stage !== "result" ? `0 0 6px ${C.gold}` : "none" }} />
+                ))}
+              </div>
+              <div style={{ flex: 1 }}><Bar v={hpB} color={C.blue} h={14} skew /></div>
+            </div>
+            <div style={{ display: "flex", gap: 6, marginTop: 4, alignItems: "center" }}>
+              <div style={{ flex: 1 }}><Bar v={state.staA} color={C.green} h={5} skew mirror /></div>
+              <div style={{ width: 56, textAlign: "center", fontSize: 8, letterSpacing: 1.5, color: C.dim }}>HP / STA</div>
+              <div style={{ flex: 1 }}><Bar v={state.staB} color={C.green} h={5} skew /></div>
+            </div>
+          </div>
+        )}
+
+        {/* STAREDOWN */}
+        {stage === "staredown" && (
+          <Card accent={C.gold} style={{ textAlign: "center" }}>
+            <H>🔥 Staredown · Press Conference</H>
+            <div style={{ color: C.chalk, fontSize: 14, marginBottom: 14 }}>
+              Kedua fighter saling berhadapan. Pilih sikap yang akan <b style={{ color: C.gold }}>{fighter.name}</b> tunjukkan.
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+              {[
+                { k: "Respectful", icon: "🤝", desc: "Footwork +5% · Pop +2 · Aman", color: C.green },
+                { k: "Professional", icon: "😐", desc: "Netral · Rep +2 jika menang", color: C.blue },
+                { k: "Trash Talk", icon: "🗣️", desc: "Striking +8% (lawan +5%) · Pop +5 · Kalah = morale -8", color: C.red },
+              ].map((a) => (
+                <div key={a.k} onClick={() => setAttitude(a.k)} style={{ border: `2px solid ${attitude === a.k ? a.color : C.line}`, background: attitude === a.k ? `${a.color}11` : "transparent", padding: 12, cursor: "pointer", ...cut(8) }}>
+                  <div style={{ fontSize: 28, marginBottom: 4 }}>{a.icon}</div>
+                  <div style={{ fontFamily: DISPLAY, color: a.color, fontSize: 13, letterSpacing: 1, textTransform: "uppercase" }}>{a.k}</div>
+                  <div style={{ color: C.dim, fontSize: 9, marginTop: 4, lineHeight: 1.3 }}>{a.desc}</div>
+                </div>
+              ))}
+            </div>
+            {attitude && <Btn wide color={C.gold} onClick={() => setStage("weighin")}>Lanjut ke Weigh-in</Btn>}
+          </Card>
+        )}
+
+        {/* WEIGH-IN */}
+        {stage === "weighin" && (
+          <>
+            <Card accent={C.gold}>
+              <H>Tale of the Tape</H>
+              <StatVs label="Striking" a={fighter.attrs.striking} b={opp.attrs.striking} />
+              <StatVs label="Wrestling" a={fighter.attrs.wrestling} b={opp.attrs.wrestling} />
+              <StatVs label="BJJ" a={fighter.attrs.bjj} b={opp.attrs.bjj} />
+              <StatVs label="Footwork" a={fighter.attrs.footwork} b={opp.attrs.footwork} />
+              <StatVs label="Strength" a={fighter.attrs.strength} b={opp.attrs.strength} />
+              <StatVs label="Cardio" a={fighter.attrs.cardio} b={opp.attrs.cardio} />
+              <StatVs label="Chin" a={fighter.attrs.chin} b={opp.attrs.chin} />
+              <StatVs label="Fight IQ" a={fighter.attrs.fightIQ} b={opp.attrs.fightIQ} />
+              <div style={{ textAlign: "center", marginTop: 8, fontSize: 12, color: cutInfo.pen ? C.red : C.green }}>
+                ⚖️ Weigh-in: {fighter.natWeight} → {limit} lbs · <b>{cutInfo.label}</b>
+                {missedWeight && !weighinIssue && (
+                  <div style={{ marginTop: 8, padding: 10, background: "rgba(225,75,68,.12)", border: "1px solid #e14b4466", ...cut(6) }}>
+                    <div style={{ color: C.red, fontSize: 13, fontFamily: DISPLAY, letterSpacing: 1 }}>⚠️ MISS WEIGHT — {fighter.natWeight} lbs!</div>
+                    <div style={{ color: C.dim, fontSize: 11, margin: "6px 0" }}>{fighter.name} gagal mencapai {limit} lbs. Pilih tindakan:</div>
+                    <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
+                      <Btn small color={C.red} onClick={() => setWeighinIssue("catchweight")}>Catchweight (purse -30%)</Btn>
+                      <Btn small color={C.dim} onClick={() => setWeighinIssue("cancelled")}>Batalkan Fight</Btn>
+                    </div>
+                  </div>
+                )}
+                {weighinIssue === "catchweight" && <div style={{ color: C.red, marginTop: 4 }}>Catchweight disetujui — purse dipotong 30%.</div>}
+                {weighinIssue === "cancelled" && <div style={{ color: C.red, marginTop: 4 }}>Fight dibatalkan — rep & relasi turun.</div>}
+              </div>
+            </Card>
+            <Card>
+              <H>Game Plan</H>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {Object.entries(GAME_PLANS).map(([k, d]) => (
+                  <div key={k} onClick={() => setPlan(k)} style={{ border: `1px solid ${plan === k ? C.gold : C.line}`, background: plan === k ? "rgba(230,182,76,.08)" : "transparent", padding: 10, cursor: "pointer", ...cut(8) }}>
+                    <div style={{ fontFamily: DISPLAY, color: plan === k ? C.gold : C.chalk, fontSize: 13, letterSpacing: 1, textTransform: "uppercase" }}>{k}</div>
+                    <div style={{ color: C.dim, fontSize: 10, marginTop: 3 }}>{d}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
+                <span style={{ fontSize: 10, color: C.dim, textTransform: "uppercase", letterSpacing: 1 }}>View:</span>
+                {[{ k: "tick", label: "Tick-by-Tick" }, { k: "summary", label: "Round Summary" }, { k: "skip", label: "Skip to Result" }].map((m) => (
+                  <button key={m.k} onClick={() => setViewMode(m.k)} style={{ background: viewMode === m.k ? C.gold : C.panel2, color: viewMode === m.k ? "#0a0d14" : C.dim, border: `1px solid ${C.line}`, padding: "3px 8px", fontSize: 10, cursor: "pointer", fontFamily: DISPLAY, letterSpacing: 1, ...cut(4) }}>{m.label}</button>
+                ))}
+              </div>
+              <div style={{ marginTop: 12 }}><Btn wide color={C.red} onClick={startFight}>🔔 Bunyikan Bel</Btn></div>
+            </Card>
+          </>
+        )}
+
+        {/* ROUND LOG */}
+        {(stage === "round" || stage === "corner" || stage === "skipSummary") && roundLog && (
+          <Card accent={C.line}>
+            <H color={C.chalk}>Round {rnd} · Commentary</H>
+            {roundLog.log.map((l, i) => {
+              const showLine = viewMode !== "tick" ? true : i <= tickIdx;
+              if (!showLine) return null;
+              return (
+              <div key={i} className="rise" style={{ animationDelay: `${i * 0.12}s`, color: l.includes("KO") || l.includes("SUB") ? C.gold : C.chalk, fontSize: 13, marginBottom: 6, paddingLeft: 10, borderLeft: `2px solid ${l.includes("KO") || l.includes("SUB") ? C.gold : C.line}` }}>{l}</div>
+              );
+            })}
+            {viewMode === "tick" && stage === "round" && tickIdx < roundLog.log.length && (
+              <div className="rise" style={{ color: C.dim, fontSize: 10, marginTop: 4 }}>▌ Play-by-play · tick {tickIdx + 1}/{roundLog.log.length}</div>
+            )}
+          </Card>
+        )}
+        {stage === "skipSummary" && (
+          <div style={{ textAlign: "center", marginTop: 12 }}>
+            <Btn onClick={() => setStage("result")}>Lihat Hasil</Btn>
+          </div>
+        )}
+
+        {/* CORNER DECISION */}
+        {stage === "corner" && !docCheck && (
+          <Card accent={C.gold} style={{ boxShadow: "0 0 30px rgba(230,182,76,.12)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <div style={{ fontFamily: DISPLAY, color: C.gold, fontSize: 15, letterSpacing: 2 }}>🪑 CORNER — 60 DETIK</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: 22, color: timer <= 5 ? C.red : C.chalk, minWidth: 40, textAlign: "right", animation: timer <= 5 ? "goldglow 1s infinite" : "none" }}>0:{String(Math.max(timer, 0)).padStart(2, "0")}</div>
+            </div>
+            <div style={{ color: C.dim, fontSize: 11, marginBottom: 8 }}>
+              {state && state.scores.length > 0 ? (() => {
+                const last = state.scores[state.scores.length - 1];
+                return `Round ${rnd} — 10-9 ${last.a > last.b ? fighter.name : opp.name}. Instruksi untuk Round ${rnd + 1}`;
+              })() : `Instruksi untuk Round ${rnd + 1}`} — kalau waktu habis, fighter jalan dengan game plan.
+            </div>
+            {cornerOpts.map((o) => (
+              <div key={o.k} onClick={() => setCorner(o.k)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: `1px solid ${corner === o.k ? C.gold : C.line}`, background: corner === o.k ? "rgba(230,182,76,.08)" : "transparent", padding: "8px 10px", marginBottom: 6, cursor: "pointer", ...cut(7) }}>
+                <span style={{ fontFamily: DISPLAY, color: corner === o.k ? C.gold : C.chalk, fontSize: 13, letterSpacing: 1, textTransform: "uppercase" }}>"{o.label}"</span>
+                <span style={{ color: C.dim, fontSize: 10 }}>{o.desc}</span>
+              </div>
+            ))}
+            <Btn wide color={C.red} onClick={nextRound}>🔔 Round {rnd + 1}</Btn>
+          </Card>
+        )}
+
+        {/* DOCTOR STOPPAGE */}
+        {stage === "corner" && docCheck && (
+          <Card accent={C.red} style={{ textAlign: "center", boxShadow: "0 0 30px rgba(225,75,68,.18)" }}>
+            <H color={C.red}>🚑 Doctor Check — Cuts & Injury</H>
+            <div style={{ color: C.chalk, fontSize: 13, marginBottom: 8 }}>Dokter memasuki ring untuk memeriksa kondisi fighter.</div>
+            <div style={{ display: "flex", justifyContent: "center", gap: 20, marginBottom: 14, fontSize: 11 }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontFamily: DISPLAY, color: C.red, fontSize: 14 }}>{fighter.name}</div>
+                <div style={{ color: cutA >= 6 ? C.red : cutA >= 4 ? C.gold : C.dim }}>🩸 Cut level: {cutA}/10</div>
+              </div>
+              <div style={{ color: C.dim, alignSelf: "center" }}>VS</div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontFamily: DISPLAY, color: C.blue, fontSize: 14 }}>{opp.name}</div>
+                <div style={{ color: cutB >= 6 ? C.red : cutB >= 4 ? C.gold : C.dim }}>🩸 Cut level: {cutB}/10</div>
+              </div>
+            </div>
+            <div style={{ color: C.dim, fontSize: 10, marginBottom: 12 }}>Cut tinggi = risiko cedera permanen. Dokter bisa menghentikan fight.</div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+              <Btn small color={C.green} onClick={() => { setDocCheck(false); nextRound(); }}>Lanjutkan Fight</Btn>
+              <Btn small color={C.red} onClick={doctorRetire}>Hentikan (TKO Loss)</Btn>
+            </div>
+          </Card>
+        )}
+
+        {/* RESULT */}
+        {stage === "result" && result && (
+          <div style={{ position: "relative" }}>
+            {(result.how === "KO/TKO" || result.how === "Doctor Stoppage") && <div style={{ position: "fixed", inset: 0, background: "#fff", pointerEvents: "none", animation: "koflash .9s ease both" }} />}
+            <Card accent={result.won ? C.gold : C.red} style={{ textAlign: "center", paddingTop: 26, paddingBottom: 22 }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: 46, letterSpacing: 4, color: result.won ? C.gold : C.red, display: "inline-block", padding: "2px 18px", border: `3px solid ${result.won ? C.gold : C.red}`, animation: "belldrop .6s cubic-bezier(.2,1.4,.4,1) both", textTransform: "uppercase", ...cut(10) }}>
+                {result.won ? "Victory" : "Defeat"}
+              </div>
+              <div style={{ color: C.chalk, fontSize: 14, margin: "14px 0 4px" }}>
+                <b style={{ color: result.won ? C.red : C.blue }}>{result.won ? fighter.name : opp.name}</b> menang via {result.how} · Round {result.r}
+              </div>
+              {result.won && fighter.booked.title && <div style={{ fontFamily: DISPLAY, color: C.gold, fontSize: 18, letterSpacing: 2, animation: "goldglow 2s infinite" }}>👑 AND {fighter.booked.defense ? "STILL" : "NEW"} WORLD CHAMPION</div>}
+              <div style={{ color: C.dim, fontSize: 12, margin: "8px 0 14px" }}>
+                Purse {fmt$(fighter.booked.show + (result.won ? fighter.booked.winBonus : 0))} → camp cut {Math.round(((fighter.contract && fighter.contract.managerCut) || 0.18) * 100)}% = <b style={{ color: C.green }}>{fmt$((fighter.booked.show + (result.won ? fighter.booked.winBonus : 0)) * ((fighter.contract && fighter.contract.managerCut) || 0.18))}</b>
+              </div>
+              <Btn onClick={applyResult}>Kembali ke Camp</Btn>
+            </Card>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
