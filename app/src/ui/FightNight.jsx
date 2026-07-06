@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { R, RI, clamp, pick, fmt$, random, setRNG, resetRNG, mulberry32 } from "../engine/rng.js";
 import { ATTRS, ATTR_LABEL, WEIGHTS, GAME_PLANS } from "../engine/data.js";
 import { prepFighter, simRound } from "../engine/fight.js";
@@ -33,30 +33,32 @@ export default function FightNight({ fighter, done }) {
     return () => { resetRNG(); };
   }, []);
   const opp = fighter.booked.opponent;
-  // Apply attitude modifier to fighters
-  const baseA = prepFighter(fighter);
-  const baseB = prepFighter(opp);
-  const A = { ...baseA, attrs: { ...baseA.attrs } };
-  const B = { ...baseB, attrs: { ...baseB.attrs } };
-  // Staredown attitude effects
-  const getAttitudeMod = () => {
-    if (attitude === "Respectful") return { a: { footwork: 1.05 }, b: {}, desc: "Focused & respectful" };
-    if (attitude === "Trash Talk") return { a: { striking: 1.08 }, b: { striking: 1.05 }, desc: "Heated trashtalk" };
-    return { a: {}, b: {}, desc: "Professional" };
-  };
-  const applyAttMod = () => {
+  // useMemo: compute fighters once (attitude changes re-trigger, but renders don't mutate in-place)
+  const { A, B, attMod } = useMemo(() => {
+    const baseA = prepFighter(fighter);
+    const baseB = prepFighter(opp);
+    const A = { ...baseA, attrs: { ...baseA.attrs } };
+    const B = { ...baseB, attrs: { ...baseB.attrs } };
+    // Staredown attitude effects
+    const getAttitudeMod = () => {
+      if (attitude === "Respectful") return { a: { footwork: 1.05 }, b: {}, desc: "Focused & respectful" };
+      if (attitude === "Trash Talk") return { a: { striking: 1.08 }, b: { striking: 1.05 }, desc: "Heated trashtalk" };
+      return { a: {}, b: {}, desc: "Professional" };
+    };
     const mod = getAttitudeMod();
     Object.entries(mod.a).forEach(([k, v]) => A.attrs[k] = clamp(A.attrs[k] * v, 5, 99));
     Object.entries(mod.b).forEach(([k, v]) => B.attrs[k] = clamp(B.attrs[k] * v, 5, 99));
-    return mod;
-  };
-  const attMod = applyAttMod();
+    return { A, B, attMod: mod };
+  }, [fighter.id, opp.name, attitude]);
   const totalRounds = fighter.booked.title ? 5 : 3;
 
   // Sync volatile values to ref (prevents stale closure in auto-advance)
   useEffect(() => { tickDataRef.current = { ...tickDataRef.current, roundLog, state, rnd, totalRounds, cutA, cutB, docCheck }; });
-  const limit = WEIGHTS.find((w) => w.name === fighter.weightClass).limit;
-  const cutPct = (fighter.natWeight - limit) / fighter.natWeight;
+  // Guard: missing weightClass / natWeight → default safe values
+  const wc = WEIGHTS.find((w) => w.name === fighter.weightClass);
+  const limit = wc ? wc.limit : 155;
+  const hasWeight = fighter.natWeight != null && !isNaN(fighter.natWeight);
+  const cutPct = hasWeight ? (fighter.natWeight - limit) / fighter.natWeight : 0;
   const cutInfo =
     cutPct < 0.03
       ? { label: "Easy Cut", pen: 0 }
@@ -64,7 +66,8 @@ export default function FightNight({ fighter, done }) {
         ? { label: "Moderate Cut · -5% stamina", pen: 5 }
         : { label: "Hard Cut · -10% stamina", pen: 10 };
   const missWeightChance = cutPct > 0.08 ? 0.20 : cutPct > 0.05 ? 0.08 : 0.02;
-  const missedWeight = random() < missWeightChance;
+  // useMemo prevents re-roll on every render (would flicker weigh-in status)
+  const missedWeight = useMemo(() => random() < missWeightChance, [fighter.id]);
 
   const runRound = (r, st, cornerChoice) => {
     const res = simRound(r, A, B, st.staA, st.staB, plan, cornerChoice, cutInfo.pen > 5, st.mom || 0);
@@ -84,8 +87,13 @@ export default function FightNight({ fighter, done }) {
     } else if (res.knockdown) {
       setStage("knockdown");
     } else if (r >= totalRounds) {
-      const winsA = newSt.scores.filter((s) => s.a >= s.b).length;
-      setResult({ won: winsA > totalRounds / 2, how: "Decision", r });
+      const winsA = newSt.scores.filter((s) => s.a > s.b).length;
+      const winsB = newSt.scores.filter((s) => s.b > s.a).length;
+      if (winsA === winsB) {
+        setResult({ won: false, how: "Draw", r, draw: true });
+      } else {
+        setResult({ won: winsA > winsB, how: "Decision", r });
+      }
       setStage("result");
     } else {
       if ((newCutA >= 4 || newCutB >= 4) && !docCheck) {
@@ -115,8 +123,13 @@ export default function FightNight({ fighter, done }) {
         }
       }
       setSt(st);
-      const winsA = st.scores.filter((s) => s.a >= s.b).length;
-      setResult({ won: winsA > totalRounds / 2, how: "Decision", r: totalRounds });
+      const winsA = st.scores.filter((s) => s.a > s.b).length;
+      const winsB = st.scores.filter((s) => s.b > s.a).length;
+      if (winsA === winsB) {
+        setResult({ won: false, how: "Draw", r: totalRounds, draw: true });
+      } else {
+        setResult({ won: winsA > winsB, how: "Decision", r: totalRounds });
+      }
       // Build combined round summary
       const summaryLog = [];
       rounds.forEach((res, i) => {
@@ -138,7 +151,7 @@ export default function FightNight({ fighter, done }) {
   useEffect(() => {
     if (stage !== "corner") return;
     setTimer(20);
-    const iv = setInterval(() => setTimer((t) => t - 1), 1000);
+    const iv = setInterval(() => setTimer((t) => t > 0 ? t - 1 : 0), 1000);
     return () => clearInterval(iv);
   }, [stage, rnd]);
   useEffect(() => { if (stage === "corner" && timer <= 0) nextRound(); }, [timer]);
@@ -159,10 +172,13 @@ export default function FightNight({ fighter, done }) {
     return () => clearInterval(iv);
   }, [viewMode, stage, roundLog]);
   // Auto-advance to corner when tick-by-tick finishes
+  // tickIdx caps at displayLog.length-1 (interval stop prevents reaching length),
+  // so check >= displayLog.length - 1 instead of >= displayLog.length.
   useEffect(() => {
     if (viewMode !== "tick" || stage !== "round" || !roundLog || !state) return;
     const displayLog = roundLog.tickLog || roundLog.log;
-    if (tickIdx >= displayLog.length) {
+    if (displayLog.length === 0) return;
+    if (tickIdx >= displayLog.length - 1) {
       const d = tickDataRef.current;
       if (d.roundLog?.finish) {
         setResult({ won: d.roundLog.finish.by === "A", how: d.roundLog.finish.how, r: d.rnd });
@@ -170,8 +186,13 @@ export default function FightNight({ fighter, done }) {
       } else if (d.roundLog?.knockdown) {
         setStage("knockdown");
       } else if (d.rnd >= d.totalRounds) {
-        const winsA = d.state.scores.filter((s) => s.a >= s.b).length;
-        setResult({ won: winsA > d.totalRounds / 2, how: "Decision", r: d.rnd });
+        const winsA = d.state.scores.filter((s) => s.a > s.b).length;
+        const winsB = d.state.scores.filter((s) => s.b > s.a).length;
+        if (winsA === winsB) {
+          setResult({ won: false, how: "Draw", r: d.rnd, draw: true });
+        } else {
+          setResult({ won: winsA > winsB, how: "Decision", r: d.rnd });
+        }
         setStage("result");
       } else {
         setTimeout(() => {
@@ -591,13 +612,13 @@ export default function FightNight({ fighter, done }) {
           <div style={{ position: "relative" }}>
             {(result.how === "KO/TKO" || result.how === "Doctor Stoppage") && <div style={{ position: "fixed", inset: 0, background: "#fff", pointerEvents: "none", animation: "koflash .9s ease both" }} />}
             <Card accent={result.won ? C.gold : C.red} style={{ textAlign: "center", paddingTop: 26, paddingBottom: 22 }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: 46, letterSpacing: 4, color: result.won ? C.gold : C.red, display: "inline-block", padding: "2px 18px", border: `3px solid ${result.won ? C.gold : C.red}`, animation: "belldrop .6s cubic-bezier(.2,1.4,.4,1) both", textTransform: "uppercase", ...cut(10) }}>
-                {result.won ? "Victory" : "Defeat"}
+              <div style={{ fontFamily: DISPLAY, fontSize: 46, letterSpacing: 4, color: result.draw ? C.dim : result.won ? C.gold : C.red, display: "inline-block", padding: "2px 18px", border: `3px solid ${result.draw ? C.dim : result.won ? C.gold : C.red}`, animation: "belldrop .6s cubic-bezier(.2,1.4,.4,1) both", textTransform: "uppercase", ...cut(10) }}>
+                {result.draw ? "Draw" : result.won ? "Victory" : "Defeat"}
               </div>
               <div style={{ color: C.chalk, fontSize: 14, margin: "14px 0 4px" }}>
-                <b style={{ color: result.won ? C.red : C.blue }}>{result.won ? fighter.name : opp.name}</b> menang via {result.how} · Round {result.r}
+                {result.draw ? <b style={{ color: C.dim }}>Split Draw</b> : <b style={{ color: result.won ? C.red : C.blue }}>{result.won ? fighter.name : opp.name}</b>}{result.draw ? " — " : " menang via "}{result.how} · Round {result.r}
               </div>
-              {result.won && fighter.booked.title && <div style={{ fontFamily: DISPLAY, color: C.gold, fontSize: 18, letterSpacing: 2, animation: "goldglow 2s infinite" }}>👑 AND {fighter.booked.defense ? "STILL" : "NEW"} WORLD CHAMPION</div>}
+              {result.won && fighter.booked.title && <div style={{ fontFamily: DISPLAY, color: C.gold, fontSize: 18, letterSpacing: 2, animation: "goldglow 2s infinite" }}>👑 AND {fighter.booked.defense ? "STILL" : "NEW"} {fighter.booked.titleTier ? fighter.booked.titleTier.toUpperCase() : ""} CHAMPION</div>}
               <div style={{ color: C.dim, fontSize: 12, margin: "8px 0 14px" }}>
                 Purse {fmt$(fighter.booked.show + (result.won ? fighter.booked.winBonus : 0))} → camp cut {Math.round(((fighter.contract && fighter.contract.managerCut) || 0.18) * 100)}% = <b style={{ color: C.green }}>{fmt$((fighter.booked.show + (result.won ? fighter.booked.winBonus : 0)) * ((fighter.contract && fighter.contract.managerCut) || 0.18))}</b>
               </div>
