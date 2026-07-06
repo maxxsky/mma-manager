@@ -96,6 +96,8 @@ export default function FightNight({ fighter, done }) {
       }
       setStage("result");
     } else {
+      // Tick mode: stay in "round" — auto-advance effect handles transition after ticks finish
+      if (viewMode === "tick") return; // keep stage as "round", ticks will auto-advance
       if ((newCutA >= 4 || newCutB >= 4) && !docCheck) {
         setDocCheck(true); setStage("corner");
       } else setStage("corner");
