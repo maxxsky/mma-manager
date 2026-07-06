@@ -865,6 +865,32 @@ export function tick(g) {
 
   // ---------- rival camp simulation ----------
   if (g.rivals) {
+    // Rival fight simulation: random matchups between rival camps every 12 weeks
+    if (g.week % 12 === 0) {
+      for (let i = 0; i < g.rivals.length; i++) {
+        for (let j = i + 1; j < g.rivals.length; j++) {
+          const a = g.rivals[i], b = g.rivals[j];
+          const aF = a.fighters.filter(function(f) { return !f.injury; });
+          const bF = b.fighters.filter(function(f) { return !f.injury; });
+          if (aF.length > 0 && bF.length > 0 && random() < 0.6) {
+            const fA = pick(aF), fB = pick(bF);
+            const aWins = random() < 0.5;
+            const winner = aWins ? fA : fB;
+            const loser = aWins ? fB : fA;
+            winner.record.w = (winner.record.w || 0) + 1;
+            loser.record.l = (loser.record.l || 0) + 1;
+            const winCamp = aWins ? a : b;
+            const loseCamp = aWins ? b : a;
+            winCamp.rep = clamp(winCamp.rep + 1, 2, 90);
+            loseCamp.rep = clamp(loseCamp.rep - 1, 2, 90);
+            if (random() < 0.3) {
+              g.log.unshift("🥊 " + fA.name + " (" + a.name + ") vs " + fB.name + " (" + b.name + ") — " + winner.name + " menang!");
+            }
+          }
+        }
+      }
+    }
+
     g.rivals.forEach((rc) => {
       rc.fighters.forEach((f) => {
         if (f.injury) { f.injury.weeks--; if (f.injury.weeks <= 0) f.injury = null; return; }
@@ -872,7 +898,7 @@ export function tick(g) {
           const cap = f.ceilings[k];
           const gain =
             R(0.2, 0.7) * (f.age <= 26 ? 1.15 : 1) *
-            (rc.traitData.spec === k ? rc.traitData.bonus : 1);
+            (rc.traitData.spec === k ? rc.traitData.bonus : 1) * (1 + rc.rivalry * 0.003);
           f.attrs[k] = clamp(f.attrs[k] + gain, 0, cap);
         });
       });
@@ -887,6 +913,16 @@ export function tick(g) {
       rc.rivalry = clamp(rc.rivalry - 0.5, 0, 100);
       rc.rep = clamp(rc.rep + R(-1, 2), 2, 90);
       rc.cash += RI(5000, 20000);
+      // Rivals spend accumulated cash on upgrades
+      if (rc.cash > 80000 && random() < 0.15 && rc.coaches.length < 2) {
+        rc.coaches.push(genCoach());
+        rc.cash -= RI(20000, 40000);
+        if (random() < 0.2) g.log.unshift("🏗️ " + rc.name + " hire coach baru.");
+      } else if (rc.cash > 120000 && random() < 0.08) {
+        rc.rep = clamp(rc.rep + RI(3, 7), 2, 90);
+        rc.cash -= RI(50000, 80000);
+        if (random() < 0.2) g.log.unshift("📈 " + rc.name + " upgrade fasilitas — rep naik.");
+      }
       // Rival activity visible in log
       if (rc.rep > g.rep + 10 && g.week % 12 === 0) g.log.unshift(`📈 ${rc.name} rep ${Math.round(rc.rep)} — melewati camp kita!`);
     });
