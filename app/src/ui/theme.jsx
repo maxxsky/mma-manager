@@ -78,7 +78,7 @@ export const OVR = ({ f, size = 44 }) => {
 export const Meter = ({ label, v, color }) => (
   <div style={{ flex: 1 }}>
     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 8, letterSpacing: 1.5, color: C.dim, textTransform: "uppercase", marginBottom: 2 }}>
-      <span>{label}</span><span style={{ color, fontFamily: DISPLAY, fontSize: 11 }}>{Math.round(v)}</span>
+      <span>{label}</span><span style={{ color, fontFamily: DISPLAY, fontSize: 11 }}>{isNaN(v) ? "?" : Math.round(v)}</span>
     </div>
     <Bar v={v} color={color} h={4} skew />
   </div>
