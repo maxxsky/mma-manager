@@ -286,7 +286,7 @@ export default function FightNight({ fighter, done }) {
         if (!f.traits.includes("Iron Will")) f.morale = clamp(f.morale - 14, 0, 100);
         g2.chemistry = clamp(g2.chemistry - (result.how === "KO/TKO" || result.how === "Doctor Stoppage" ? 5 : 2), 0, 100);
         g2.rep = clamp(g2.rep - (result.how === "KO/TKO" ? 3 : 1), 2, 100); // kalah turun 1-3 rep, floor 2
-        g2.log.unshift(`❌ ${f.name} kalah via ${result.how} (R${result.r}). Ranking pts terpangkas setengah. Camp cut ${fmt$(cutC)}.`);
+        g2.log.unshift(`❌ ${f.name} kalah via ${result.how} (R${result.r}). Ranking pts berkurang 30%. Camp cut ${fmt$(cutC)}.`);
         if (b.defense) {
           if (div) div.champ = { name: b.opponent.name, player: false };
           f.titles = f.titles.filter((t) => t !== "Major World Champion");
@@ -374,7 +374,7 @@ export default function FightNight({ fighter, done }) {
             <div style={{ fontFamily: DISPLAY, fontSize: 26, color: C.gold, transform: "skewX(-10deg)", textShadow: "0 0 14px rgba(230,182,76,.5)" }}>VS</div>
             <div style={{ flex: 1, textAlign: "left" }}>
               <div style={{ fontFamily: DISPLAY, fontSize: 22, color: C.blue, lineHeight: 1, textTransform: "uppercase" }}>{opp.name}</div>
-              <div style={{ color: C.dim, fontSize: 11 }}>{opp.record.w}-{opp.record.l} · {opp.archetype}</div>
+              <div style={{ color: C.dim, fontSize: 11 }}>{(opp.record?.w ?? 0)}-{(opp.record?.l ?? 0)} · {opp.archetype}</div>
             </div>
           </div>
         </div>
@@ -386,7 +386,7 @@ export default function FightNight({ fighter, done }) {
               <div style={{ flex: 1 }}><Bar v={hpA} color={hpA > 40 ? C.red : "#ff2216"} h={14} skew mirror /></div>
               <div style={{ display: "flex", gap: 4 }}>
                 {Array.from({ length: totalRounds }).map((_, i) => (
-                  <div key={i} style={{ width: 8, height: 8, borderRadius: 4, background: i < state.scores.length ? (state.scores[i].a >= state.scores[i].b ? C.red : C.blue) : i === state.scores.length && stage !== "result" ? C.gold : "#232c40", boxShadow: i === state.scores.length && stage !== "result" ? `0 0 6px ${C.gold}` : "none" }} />
+                  <div key={i} style={{ width: 8, height: 8, borderRadius: 4, background: i < state.scores.length ? (state.scores[i].a > state.scores[i].b ? C.red : state.scores[i].b > state.scores[i].a ? C.blue : C.dim) : i === state.scores.length && stage !== "result" ? C.gold : "#232c40", boxShadow: i === state.scores.length && stage !== "result" ? `0 0 6px ${C.gold}` : "none" }} />
                 ))}
               </div>
               <div style={{ flex: 1 }}><Bar v={hpB} color={C.blue} h={14} skew /></div>
@@ -524,7 +524,7 @@ export default function FightNight({ fighter, done }) {
               </div>
               <div style={{ display: "flex", gap: 3, alignItems: "center", marginBottom: 4 }}>
                 <span style={{ fontSize: 8, color: C.dim, textTransform: "uppercase", marginRight: 4 }}>Score:</span>
-                {state?.scores?.map((s, i) => (<span key={i} style={{ fontSize: 9, color: s.a >= s.b ? C.red : C.blue, fontFamily: DISPLAY }}>{s.a >= s.b ? "A" : "B"}</span>))}
+                {state?.scores?.map((s, i) => (<span key={i} style={{ fontSize: 9, color: s.a > s.b ? C.red : s.b > s.a ? C.blue : C.dim, fontFamily: DISPLAY }}>{s.a > s.b ? "A" : s.b > s.a ? "B" : "D"}</span>))}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
                 <span style={{ fontSize: 8, color: C.dim, textTransform: "uppercase" }}>Momentum:</span>
@@ -616,7 +616,7 @@ export default function FightNight({ fighter, done }) {
                 {result.draw ? "Draw" : result.won ? "Victory" : "Defeat"}
               </div>
               <div style={{ color: C.chalk, fontSize: 14, margin: "14px 0 4px" }}>
-                {result.draw ? <b style={{ color: C.dim }}>Split Draw</b> : <b style={{ color: result.won ? C.red : C.blue }}>{result.won ? fighter.name : opp.name}</b>}{result.draw ? " — " : " menang via "}{result.how} · Round {result.r}
+                {result.draw ? <b style={{ color: C.dim }}>{result.how}</b> : <b style={{ color: result.won ? C.red : C.blue }}>{result.won ? fighter.name : opp.name}</b>}{result.draw ? " — " : " menang via "}{result.how} · Round {result.r}
               </div>
               {result.won && fighter.booked.title && <div style={{ fontFamily: DISPLAY, color: C.gold, fontSize: 18, letterSpacing: 2, animation: "goldglow 2s infinite" }}>👑 AND {fighter.booked.defense ? "STILL" : "NEW"} {fighter.booked.titleTier ? fighter.booked.titleTier.toUpperCase() : ""} CHAMPION</div>}
               <div style={{ color: C.dim, fontSize: 12, margin: "8px 0 14px" }}>
