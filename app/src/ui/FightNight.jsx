@@ -81,6 +81,8 @@ export default function FightNight({ fighter, done }) {
     if (res.finish) {
       setResult({ won: res.finish.by === "A", how: res.finish.how, r });
       setStage("result");
+    } else if (res.knockdown) {
+      setStage("knockdown");
     } else if (r >= totalRounds) {
       const winsA = newSt.scores.filter((s) => s.a >= s.b).length;
       setResult({ won: winsA > totalRounds / 2, how: "Decision", r });
@@ -163,6 +165,8 @@ export default function FightNight({ fighter, done }) {
       if (d.roundLog?.finish) {
         setResult({ won: d.roundLog.finish.by === "A", how: d.roundLog.finish.how, r: d.rnd });
         setStage("result");
+      } else if (d.roundLog?.knockdown) {
+        setStage("knockdown");
       } else if (d.rnd >= d.totalRounds) {
         const winsA = d.state.scores.filter((s) => s.a >= s.b).length;
         setResult({ won: winsA > d.totalRounds / 2, how: "Decision", r: d.rnd });
@@ -482,7 +486,7 @@ export default function FightNight({ fighter, done }) {
                     <Bar v={state?.staA || 100} color={state?.staA > 50 ? C.green : state?.staA > 25 ? C.gold : C.red} h={6} />
                     <span style={{ color: C.chalk, fontSize: 11, fontFamily: DISPLAY, width: 30 }}>{Math.round(state?.staA || 100)}%</span>
                   </div>
-                  <div style={{ color: C.dim, fontSize: 8, marginTop: 1 }}>Damage: {state?.dmgA < 20 ? "Ringan" : state?.dmgA < 40 ? "Sedang" : "Berat"}</div>
+                  <div style={{ color: C.dim, fontSize: 8, marginTop: 1 }}>HP: {Math.round(100 - (state?.dmgA || 0))}% {state?.bodyDmgA > 20 ? "· Body hurt" : ""} {state?.legDmgA > 15 ? "· Legs hurt" : ""}</div>
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ color: C.dim, textTransform: "uppercase", fontSize: 8, marginBottom: 2 }}>{opp.name}</div>
@@ -490,7 +494,7 @@ export default function FightNight({ fighter, done }) {
                     <Bar v={state?.staB || 100} color={state?.staB > 50 ? C.green : state?.staB > 25 ? C.gold : C.red} h={6} />
                     <span style={{ color: C.chalk, fontSize: 11, fontFamily: DISPLAY, width: 30 }}>{Math.round(state?.staB || 100)}%</span>
                   </div>
-                  <div style={{ color: C.dim, fontSize: 8, marginTop: 1 }}>Damage: {state?.dmgB < 20 ? "Ringan" : state?.dmgB < 40 ? "Sedang" : "Berat"}</div>
+                  <div style={{ color: C.dim, fontSize: 8, marginTop: 1 }}>HP: {Math.round(100 - (state?.dmgB || 0))}% {state?.bodyDmgB > 20 ? "· Body hurt" : ""} {state?.legDmgB > 15 ? "· Legs hurt" : ""}</div>
                 </div>
               </div>
               <div style={{ display: "flex", gap: 3, alignItems: "center", marginBottom: 4 }}>
@@ -519,6 +523,41 @@ export default function FightNight({ fighter, done }) {
               </div>
             ))}
             <Btn wide color={C.red} onClick={nextRound}>🔔 Round {rnd + 1}</Btn>
+          </Card>
+        )}
+
+        {/* KNOCKDOWN */}
+        {stage === "knockdown" && roundLog?.knockdown && (
+          <Card accent={C.red} style={{ textAlign: "center", boxShadow: "0 0 40px rgba(225,75,68,.25)" }}>
+            <div style={{ fontSize: 56, marginBottom: 4, animation: "koflash .8s ease both" }}>💥</div>
+            <H color={C.red}>DOWN! {roundLog.knockdown.name} TERJATUH!</H>
+            <div style={{ color: C.chalk, fontSize: 14, marginBottom: 8 }}>
+              {roundLog.knockdown.canRecover 
+                ? "Wasit mulai menghitung... dia bisa bangkit!"
+                : "Wasit langsung menghentikan pertarungan!"}
+            </div>
+            {roundLog.knockdown.canRecover ? (
+              <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 8 }}>
+                <Btn color={C.green} onClick={() => {
+                  if (roundLog.knockdown.fighter === "A") {
+                    setResult({ won: true, how: "KO/TKO", r: rnd });
+                  } else {
+                    setResult({ won: false, how: "KO/TKO", r: rnd });
+                  }
+                  setStage("result");
+                }}>Lanjutkan Serangan (TKO Win)</Btn>
+                <Btn small color={C.dim} onClick={() => {
+                  setSt(prev => ({ ...prev, mom: clamp((prev.mom || 0) + (roundLog.knockdown.fighter === "A" ? -15 : 15), -100, 100) }));
+                  setStage("corner");
+                }}>Biarkan Bangkit</Btn>
+              </div>
+            ) : (
+              <Btn color={C.red} onClick={() => {
+                const won = roundLog.knockdown.fighter !== "A";
+                setResult({ won, how: "KO/TKO", r: rnd });
+                setStage("result");
+              }}>Lihat Hasil</Btn>
+            )}
           </Card>
         )}
 

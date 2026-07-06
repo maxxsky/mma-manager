@@ -1,7 +1,6 @@
-import { R, clamp, random } from "./rng.js";
+import { R, RI, clamp, random, pick } from "./rng.js";
 import { ATTRS } from "./data.js";
 
-// ---------- fight engine ----------
 export function effAttr(f, k, sta, mods) {
   let v = f.attrs[k] * (0.45 + 0.55 * (sta / 100));
   if (k === "chin") {
@@ -11,162 +10,190 @@ export function effAttr(f, k, sta, mods) {
   return v * (mods?.[k] || 1);
 }
 
+// Exchange data: label, allowed position, generates commentary
+const EXCHANGES = {
+  strike: { pos: ["standing"], label: "Striking exchange" },
+  power: { pos: ["standing"], label: "Power shot" },
+  td: { pos: ["standing"], label: "Takedown" },
+  clinch: { pos: ["standing"], label: "Clinch" },
+  gnp: { pos: ["groundA", "groundB"], label: "Ground & pound" },
+  sub: { pos: ["groundA", "groundB"], label: "Submission" },
+  scramble: { pos: ["groundA", "groundB"], label: "Scramble" },
+};
+
+function pickExchange(position, A, planA) {
+  const pool = [];
+  if (position === "standing") pool.push("strike", "strike", "strike", "clinching", "power");
+  if (position === "standing" && (A.attrs.wrestling > 55 || planA === "Take It Down")) pool.push("td", "td", "td");
+  if (position === "groundA" || position === "groundB") pool.push("gnping", "gnping", "scramble");
+  if ((position === "groundA" || position === "groundB") && A.attrs.bjj > 55) pool.push("sub");
+  return pool.length > 0 ? pick(pool) : "strike";
+}
+
 export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum = 0) {
   const summaryLog = [];
   const tickLog = [];
-
-  function planB(f) {
-    return f.attrs.wrestling > f.attrs.striking ? "Take It Down" : "Keep It Standing";
-  }
-
-  const mkMods = (f, plan, corner) => {
-    const m = { striking: 1, wrestling: 1, footwork: 1, cardio: 1 };
-    if (plan === "Keep It Standing") { m.striking *= 1.15; m.footwork *= 1.1; }
-    if (plan === "Take It Down") m.wrestling *= 1.2;
-    if (plan === "Finish It") m.striking *= 1.12;
-    if (corner === "body") m.striking *= 1.12;
-    if (corner === "go") m.striking *= 1.2;
-    if (f.traits?.includes("Explosive")) m.striking *= rnd === 1 ? 1.2 : rnd >= 3 ? 0.85 : 1;
-    return m;
-  };
-
-  const mA = mkMods(A, planA, cornerA);
-  const mB = mkMods(B, planB(B), null);
-  let dmgA = 0, dmgB = 0, ptsA = 0, ptsB = 0, finish = null, landA = 0, landB = 0;
+  let dmgA = 0, dmgB = 0, bodyDmgA = 0, bodyDmgB = 0, legDmgA = 0, legDmgB = 0;
+  let ptsA = 0, ptsB = 0, finish = null, knockdown = null;
+  let landA = 0, landB = 0;
+  let position = "standing";
+  let mom = momentum || 0;
   const agg = cornerA === "go" ? 1.25 : cornerA === "save" ? 0.8 : 1;
 
   const both = (min, sec, msg) => {
     const line = `[${min}:${String(sec).padStart(2,"0")}] ${msg}`;
-    summaryLog.push(line);
-    tickLog.push(line);
+    summaryLog.push(line); tickLog.push(line);
   };
   const tickOnly = (min, sec, msg) => tickLog.push(`[${min}:${String(sec).padStart(2,"0")}] ${msg}`);
 
-  both(0, 5, `Round ${rnd} - bell rings! ${A.name} vs ${B.name}!`);
-  tickOnly(0, 10, `${A.name} in the center of the cage. Here we go!`);
-  tickOnly(0, 20, `${B.name} circling to his left, looking for an opening.`);
+  both(0, 5, `Round ${rnd} — bell rings! ${A.name} vs ${B.name}!`);
+  tickOnly(0, 10, `${A.name} in the center of the cage.`);
+  tickOnly(0, 20, `${B.name} circling, looking for opening.`);
 
-  // Early exchange
-  {
-    const outA = effAttr(A, "striking", stA, mA) * agg * 0.6;
-    const outB = effAttr(B, "striking", stB, mB) * 0.6;
-    landA = Math.round(R(4, 9) * (outA / (outA + effAttr(B, "footwork", stB, mB))));
-    landB = Math.round(R(4, 9) * (outB / (outB + effAttr(A, "footwork", stA, mA) * (cutPenA ? 0.95 : 1))));
-    const hitB = landA * (effAttr(A, "strength", stA) / 55) * R(0.8, 1.3) * 0.6;
-    const hitA = landB * (effAttr(B, "strength", stB) / 55) * R(0.8, 1.3) * 0.6;
-    dmgB += hitB; dmgA += hitA;
-    ptsA += landA + hitB; ptsB += landB + hitA;
+  // Pick 3-5 exchanges for this round
+  const nEx = RI(3, 5);
+  for (let ex = 0; ex < nEx; ex++) {
+    if (finish) break;
+    const exMin = Math.floor(ex * 4.5 / nEx);
+    const exSec = (ex * 60 / nEx) % 60;
+    const exType = pickExchange(position, A, planA);
 
-    tickOnly(0, 45, `Jab from ${A.name}, probing.`);
-    tickOnly(1, 10, `${A.name} flicks out a low kick to test the range.`);
-    if (landA + landB > 0) {
-      both(1, 15, `${A.name} landed ${landA}/${landA + landB} strikes - ${B.name} landed ${landB}.`);
-    } else {
-      both(1, 20, `Both fighters feeling each other out - few strikes exchanged.`);
-    }
-    tickOnly(1, 30, `${A.name} pawing with his lead hand, gauging distance.`);
-  }
+    // Momentum bonus small
+    const momMult = clamp(1 + (mom > 0 ? mom * 0.0005 : mom * 0.0003), 0.92, 1.08);
+    const phase = (ex === 0 ? 0.7 : ex >= nEx - 2 ? 0.5 : 0.6); // early vs late output
 
-  // Takedown attempt
-  {
-    const tdBonusA = (planA === "Take It Down" ? 0.15 : 0) + (cornerA === "tdd" ? -0.1 : 0);
-    const wantTdA = A.attrs.wrestling > 55 || planA === "Take It Down";
-    const wantTdB = B.attrs.wrestling > 55;
-    const tddA = cornerA === "tdd" ? 0.15 : 0;
+    // Calc damage & points based on exchange type
+    if (exType === "strike" || exType === "power") {
+      const pow = exType === "power" ? 1.4 : 1;
+      const defA = effAttr(B, "footwork", stB, {}) * (1 - (legDmgB || 0) * 0.002);
+      const defB = effAttr(A, "footwork", stA, {}) * (1 - (legDmgA || 0) * 0.002);
+      const outA = effAttr(A, "striking", stA, {}) * agg * phase * momMult * pow;
+      const outB = effAttr(B, "striking", stB, {}) * phase * pow;
+      const la = Math.round(R(4, 9) * (outA / (outA + defA + 1)));
+      const lb = Math.round(R(3, 7) * (outB / (outB + defB + 1)));
+      const hitB = la * (effAttr(A, "strength", stA) / 55) * R(0.8, 1.3);
+      const hitA = lb * (effAttr(B, "strength", stB) / 55) * R(0.8, 1.3);
+      dmgB += hitB; dmgA += hitA;
+      bodyDmgB += hitB * (cornerA === "body" ? 0.7 : 0.3);
+      bodyDmgA += hitA * 0.3;
+      legDmgB += hitB * (cornerA === "body" ? 0.5 : 0.15);
+      legDmgA += hitA * 0.15;
+      landA += la; landB += lb;
+      ptsA += la + hitB; ptsB += lb + hitA;
 
-    tickOnly(2, 0, `${A.name} changes levels... looking for something.`);
+      if (la + lb > 0) {
+        both(exMin, exSec, `${A.name} landed ${la} strikes — ${B.name} ${lb}.`);
+      }
+      if (exType === "power" && la > lb + 3) {
+        tickOnly(exMin, exSec + 5, `Big power shot from ${A.name}! ${B.name} felt that!`);
+      }
+      if (la > lb + 4) mom += 10; else if (lb > la + 4) mom -= 10;
 
-    if (wantTdA && random() < 0.6) {
-      const p = clamp(0.35 + (effAttr(A, "wrestling", stA, mA) - effAttr(B, "wrestling", stB)) / 120 + tdBonusA, 0.05, 0.85);
+    } else if (exType === "td") {
+      const wantB = B.attrs.wrestling > 55;
+      const tdBonus = (planA === "Take It Down" ? 0.15 : 0) + (cornerA === "tdd" ? -0.1 : 0);
+      const p = clamp(0.35 + (effAttr(A, "wrestling", stA, {}) - effAttr(B, "wrestling", stB)) / 120 + tdBonus, 0.05, 0.85);
       if (random() < p) {
-        ptsA += 12; dmgB += R(3, 8);
-        both(2, 30, `${A.name} shoots for a takedown - gets it! Top control.`);
-        tickOnly(2, 35, `He's in half guard, looking to advance position.`);
-        both(2, 50, `${A.name} working ground and pound.`);
-        tickOnly(2, 55, `Short elbows from the top - ${B.name} covering up.`);
-        if (random() < clamp((effAttr(A, "bjj", stA) - effAttr(B, "bjj", stB)) / 150 + 0.08, 0.02, 0.35)) {
+        ptsA += 12; dmgB += R(3, 8); position = "groundA";
+        both(exMin, exSec + 10, `${A.name} shoots for a takedown — gets it!`);
+        tickOnly(exMin, exSec + 15, `He's in side control.`);
+        mom += 12;
+        // Sub attempt chance
+        if (random() < clamp((effAttr(A, "bjj", stA) - effAttr(B, "bjj", stB)) / 150 + 0.06, 0.02, 0.3)) {
           finish = { by: "A", how: "Submission" };
-          both(3, 10, `SUBMISSION! ${A.name} locks in the choke! IT'S OVER!`);
-          tickOnly(3, 10, `The crowd erupts! ${A.name} sinks it deep!`);
+          both(exMin + 1, 0, `SUBMISSION! ${A.name} locks in the choke! IT'S OVER!`);
+          tickOnly(exMin + 1, 5, `The crowd erupts! ${B.name} has no choice but to tap!`);
         }
-      } else { ptsB += 4; both(2, 35, `${A.name} shoots for a takedown - stuffed by ${B.name}!`); }
-    } else if (!finish && wantTdB && random() < 0.55) {
-      const p = clamp(0.35 + (effAttr(B, "wrestling", stB, mB) - effAttr(A, "wrestling", stA, mA)) / 120 - tddA, 0.05, 0.85);
-      if (random() < p) {
-        ptsB += 12; dmgA += R(3, 8);
-        both(2, 40, `${B.name} with a takedown! Now on top.`);
-        tickOnly(2, 45, `${A.name} is on his back - needs to scramble.`);
-        if (random() < clamp((effAttr(B, "bjj", stB) - effAttr(A, "bjj", stA)) / 150 + 0.08, 0.02, 0.35)) {
-          finish = { by: "B", how: "Submission" };
-          both(3, 5, `SUBMISSION! ${B.name} sinks it in! Fight over!`);
+      } else {
+        ptsB += 4; mom -= 8;
+        both(exMin, exSec + 12, `${A.name} shoots — stuffed by ${B.name}!`);
+      }
+    } else if (exType === "gnp") {
+      const attacker = position === "groundA" ? A : B;
+      const isAttackerA = attacker === A;
+      const dmg = R(2, 6);
+      if (isAttackerA) { dmgB += dmg; ptsA += 8; mom += 5; bodyDmgB += dmg * 0.4; }
+      else { dmgA += dmg; ptsB += 8; mom -= 5; bodyDmgA += dmg * 0.4; }
+      both(exMin, exSec, `${attacker.name} working ground and pound.`);
+      tickOnly(exMin, exSec + 5, `Short elbows from the top.`);
+      // Scramble chance
+      if (random() < 0.4) {
+        position = "standing";
+        tickOnly(exMin, exSec + 10, `Scramble! Both fighters back to their feet!`);
+      }
+
+    } else if (exType === "sub") {
+      const onTop = position === "groundA" ? A : B;
+      const isTopA = onTop === A;
+      const subChance = clamp((effAttr(onTop, "bjj", isTopA ? stA : stB) - effAttr(isTopA ? B : A, "bjj", isTopA ? stB : stA)) / 150 + 0.05, 0.02, 0.3);
+      if (random() < subChance) {
+        finish = { by: isTopA ? "A" : "B", how: "Submission" };
+        both(exMin, exSec + 5, `SUBMISSION! ${onTop.name} sinks it in!`);
+      } else {
+        tickOnly(exMin, exSec + 5, `${onTop.name} hunting for a submission — ${isTopA ? B.name : A.name} defends!`);
+        if (isTopA) { ptsA += 6; mom += 3; } else { ptsB += 6; mom -= 3; }
+      }
+    } else if (exType === "scramble") {
+      const scrambleWin = random() < 0.5;
+      if (scrambleWin) { position = "standing"; both(exMin, exSec, `Scramble! Both fighters back up!`); mom += 3; }
+      else { both(exMin, exSec, `Scramble on the ground — ${A.name} holds position.`); mom -= 2; }
+    }
+
+    // Knockdown check
+    if (!finish && !knockdown && (dmgA > 50 || dmgB > 50)) {
+      const kdTarget = dmgA > dmgB ? A : B;
+      const isTargetA = kdTarget === A;
+      const chin = effAttr(kdTarget, "chin", isTargetA ? stA : stB);
+      const kdChance = clamp(((isTargetA ? dmgA : dmgB) - 40) / chin * 0.3, 0, 0.35) * (planA === "Finish It" ? 1.5 : 1);
+      if (random() < kdChance) {
+        knockdown = { fighter: isTargetA ? "A" : "B", name: kdTarget.name, canRecover: true };
+        both(exMin + 1, 0, `${kdTarget.name} IS DOWN! He's hurt bad!`);
+        tickOnly(exMin + 1, 2, `The referee is watching closely...`);
+        mom += isTargetA ? -25 : 25;
+        // Small chance it's a flash KO
+        if (random() < 0.3) {
+          knockdown.canRecover = false;
+          finish = { by: isTargetA ? "B" : "A", how: "KO/TKO" };
+          both(exMin + 1, 5, `KO!! ${isTargetA ? B.name : A.name} with the walk-off! No recovery possible!`);
         }
-      } else { ptsA += 4; both(2, 45, `${A.name} stuffs the takedown attempt.`); }
+      }
     }
   }
 
-  // Late exchange
+  // Round end or early finish
   if (!finish) {
-    tickOnly(3, 0, `Both fighters show signs of fatigue.`);
-    const outA = effAttr(A, "striking", stA, mA) * agg * 0.4;
-    const outB = effAttr(B, "striking", stB, mB) * 0.4;
-    landA = Math.round(R(3, 7) * (outA / (outA + effAttr(B, "footwork", stB, mB))));
-    landB = Math.round(R(3, 7) * (outB / (outB + effAttr(A, "footwork", stA, mA) * (cutPenA ? 0.95 : 1))));
-    const hitB = landA * (effAttr(A, "strength", stA) / 55) * R(0.7, 1.1) * 0.4;
-    const hitA = landB * (effAttr(B, "strength", stB) / 55) * R(0.7, 1.1) * 0.4;
-    dmgB += hitB; dmgA += hitA;
-    ptsA += landA + hitB; ptsB += landB + hitA;
-
-    if (landA + landB > 0) {
-      both(3, 30, `${A.name} lands ${landA} more strikes in the closing moments.`);
-      if (landB > 0) both(4, 0, `${B.name} fires back - ${landB} strikes.`);
-    }
-    tickOnly(4, 15, `Heavy breathing - both fighters digging deep.`);
-    both(4, 30, `Fighters are in the clinch against the cage - round winding down.`);
-    tickOnly(4, 50, `Ten seconds remaining - ${A.name} looking for a home run.`);
+    tickOnly(4, 50, `Final seconds — ${A.name} looking for a home run.`);
+    both(5, 0, `Round ${rnd} ends. Judges score this round.`);
   }
 
-  // KO check
-  if (!finish) {
-    const koB = clamp((dmgB + ptsA * 0.3) / (effAttr(B, "chin", stB) * 4.2), 0, 0.5) * (planA === "Finish It" ? 1.3 : 1);
-    const koA = clamp((dmgA + ptsB * 0.3) / (effAttr(A, "chin", stA) * 4.2), 0, 0.5);
-    if (random() < koB) { finish = { by: "A", how: "KO/TKO" }; both(4, 50, `KO!! ${A.name} drops ${B.name} with a massive shot! Referee steps in!`); tickOnly(4, 51, `${B.name} is out cold! The crowd is going crazy!`); }
-    else if (random() < koA) { finish = { by: "B", how: "KO/TKO" }; both(4, 55, `KO!! ${B.name} connects cleanly! ${A.name} is out!`); tickOnly(4, 56, `Unbelievable! ${B.name} with the walk-off KO!`); }
-  }
+  // Trait commentary
+  if (A.traits?.includes("Explosive") && rnd === 1) both(0, 25, `${A.name}'s explosive style on display early.`);
+  if (A.traits?.includes("Iron Chin") && dmgA > 20) both(3, 10, `${A.name}'s iron chin holding up.`);
+  if (B.traits?.includes("Glass Jaw") && dmgB > 25) both(3, 40, `${B.name} wobbles — that glass jaw!`);
+  if (A.traits?.includes("Grinder") && rnd >= 3) both(3, 20, `${A.name}'s grinding pressure wearing ${B.name} down.`);
+  if (A.traits?.includes("Showboat") && landA > 20) both(2, 15, `${A.name} showboating — crowd loves it!`);
 
-  if (!finish) both(5, 0, `Round ${rnd} ends. Judges will score this round.`);
+  // Body damage effect: extra stamina drain
+  const bodyDrainMultA = 1 + (bodyDmgA || 0) * 0.003;
+  const bodyDrainMultB = 1 + (bodyDmgB || 0) * 0.003;
+  // Leg damage effect: reduced footwork
+  const legModA = clamp(1 - (legDmgA || 0) * 0.002, 0.85, 1);
+  const legModB = clamp(1 - (legDmgB || 0) * 0.002, 0.85, 1);
 
-  // Trait commentary (both summary + tick)
-  if (A.traits?.includes("Explosive") && rnd === 1) both(0, 30, `${A.name}'s explosive style is on full display early.`);
-  if (A.traits?.includes("Iron Chin") && dmgA > 15) both(3, 15, `${A.name}'s iron chin is holding up well after heavy blows.`);
-  if (B.traits?.includes("Glass Jaw") && dmgB > 20) both(3, 45, `${B.name} wobbles - that glass jaw might be cracked!`);
-  if (A.traits?.includes("Grinder") && rnd >= 3) both(3, 0, `${A.name}'s grinding pressure is wearing ${B.name} down.`);
-  if (B.traits?.includes("Natural Talent") && rnd === 1) both(1, 0, `${B.name}'s natural gifts are on display - smooth technique.`);
-  if (A.traits?.includes("Showboat") && landA + ptsA > 30) both(2, 10, `${A.name} is showboating! The crowd loves it!`);
+  const drainA = R(10, 16) * agg * (planA === "Finish It" ? 1.25 : 1) * (planA === "Survive & Outpoint" ? 0.8 : 1) *
+    (cornerA === "save" ? 0.75 : 1) * (65 / clamp(A.attrs.cardio * legModA, 30, 95)) * bodyDrainMultA;
+  const drainB = R(10, 16) * (65 / clamp(B.attrs.cardio * legModB, 30, 95)) * bodyDrainMultB;
 
-  // Momentum update
-  let mom = momentum;
-  if (landA > landB + 5) mom += 15; else if (landB > landA + 5) mom -= 15;
-  if (finish?.by === "A") mom += 30; else if (finish?.by === "B") mom -= 30;
-  // Takedown momentum swing
-  if (tickLog.some(l => l.includes("takedown") && l.includes(A.name))) mom += 10;
-  if (tickLog.some(l => l.includes("takedown") && l.includes(B.name))) mom -= 10;
-  // Submission attempt
-  if (tickLog.some(l => l.includes("SUBMISSION"))) mom += 5;
-  // Natural decay toward 0
-  mom = clamp(mom - (mom > 0 ? 8 : -8), -100, 100);
-  // Momentum commentary
-  if (mom > 30) tickOnly(0, 25, `${A.name} is riding the momentum — he can feel it!`);
-  if (mom < -30) tickOnly(0, 25, `${B.name} has the momentum now — ${A.name} needs a shift.`);
+  // Momentum decay
+  mom = clamp(Math.round(mom * 0.7), -100, 100);
 
-  const drainA = R(10, 16)
-  const drainB = R(10, 16) * (65 / clamp(B.attrs.cardio, 30, 95));
   return {
     log: summaryLog, tickLog,
-    dmgA, dmgB,
+    dmgA, dmgB, bodyDmgA, bodyDmgB, legDmgA, legDmgB,
     staA: clamp(stA - drainA, 5, 100),
     staB: clamp(stB - drainB, 5, 100),
     scoreA: ptsA, scoreB: ptsB,
-    finish, landA, landB,
+    finish, knockdown, landA, landB,
     momentum: mom,
   };
 }
