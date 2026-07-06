@@ -256,11 +256,12 @@ export default function App() {
             <Card>
               <H>{t("UI.cashflow")}</H>
               <div style={{ display: "flex", justifyContent: "space-between", color: C.chalk, fontSize: 13, marginBottom: 3 }}>
-                <span>{t("UI.income")} / {t("UI.month")}</span><b style={{ color: C.green, fontFamily: DISPLAY }}>{fmt$(monthlyIn)}</b>
+                <span>💵 {t("UI.income")} (estimasi /bln)</span><b style={{ color: C.green, fontFamily: DISPLAY }}>{fmt$(monthlyIn)}</b>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", color: C.chalk, fontSize: 13 }}>
-                <span>{t("UI.expense")} / {t("UI.month")}</span><b style={{ color: C.red, fontFamily: DISPLAY }}>{fmt$(monthlyBurn)}</b>
+                <span>💸 {t("UI.expense")} (estimasi /bln)</span><b style={{ color: C.red, fontFamily: DISPLAY }}>{fmt$(monthlyBurn)}</b>
               </div>
+              <div style={{ color: C.dim, fontSize: 10, marginTop: 2 }}>📅 Training cost dipotong mingguan. Sponsor/gaji/maintenance tiap bulan.</div>
               <div style={{ color: C.dim, fontSize: 11, marginTop: 6 }}>
                 {monthlyIn < monthlyBurn ? "⚠️ Negatif — kamu butuh purse dari fight untuk bertahan." : "✅ Positif."} Bangkrut jika kas &lt; -$50K.
               </div>

@@ -16,7 +16,7 @@ export function newGame() {
   freeCoach.salary = Math.max(500, freeCoach.salary); // minimum salary biar gak $0
   freeCoach.freeUntil = 4;
   return {
-    week: 1, cash: 100000, rep: 8, chemistry: 60,
+    week: 1, cash: 35000, rep: 8, chemistry: 60,
     roster: [
       assignAgent(genFighter(0.55, "Indonesia")),
       assignAgent(genFighter(0.5)),
@@ -33,7 +33,7 @@ export function newGame() {
     campTier: 0,
     campTag: pick(Object.keys(RIVAL_TRAITS)),
     divisions: genDivisions(),
-    inbox: [], log: ["Camp dibuka. Budget awal $100,000. Bertahanlah."],
+    inbox: [], log: ["Camp dibuka. Budget awal $35,000. Bertahan dan menangkan fight."],
     prospects: [], legacy: 0, over: null, won: false,
     rivals: [genRivalCamp(0), genRivalCamp(1), genRivalCamp(2)],
     promoterRel: initPromoterRel(),
@@ -69,6 +69,17 @@ function calcSparringMult(f, g) {
 // ---------- tick logic ----------
 export function tick(g) {
   g.week++;
+
+  // ---------- loan repayment ----------
+  if (g.loan && g.loan.remaining > 0) {
+    const pay = Math.min(g.loan.weeklyPayment, g.loan.remaining);
+    g.cash -= pay;
+    g.loan.remaining -= pay;
+    if (g.loan.remaining <= 0) g.loan = null;
+  }
+  // open gym: small weekly income when active
+  if (g.openGymActive) g.cash += Math.round(g.rep * 50 + g.roster.length * 100);
+
   const chemMult = g.chemistry >= 80 ? 1.15 : g.chemistry < 40 ? 0.9 : 1;
 
   g.roster.forEach((f) => {
@@ -100,6 +111,7 @@ export function tick(g) {
         g.log.unshift(`✅ ${f.name} pulih dari cedera.`);
       }
       f.overtraining = clamp(f.overtraining - 10, 0, 100);
+      if (f.injury.costPerWeek) g.cash -= f.injury.costPerWeek;
       return;
     }
 
@@ -183,8 +195,8 @@ export function tick(g) {
             weeks: RI(20, 36), label: "💀 Career-Threatening",
             cost: RI(15000, 40000), tier: 3, permanent: true,
           };
+        sev.costPerWeek = Math.round(sev.cost / sev.weeks);
         f.injury = sev;
-        g.cash -= sev.cost;
         f.injuryCount = (f.injuryCount || 0) + 1;
         if (sev.tier >= 2) f.seriousInjuries = (f.seriousInjuries || 0) + 1;
         if (sev.permanent) {
