@@ -85,7 +85,7 @@ function pickExchange(pos, A, planA, matchup) {
     // Ground — exchange type depends on position and who's on top
     const g = GROUND[groundType] || GROUND.guard;
     const gnpW = isTop ? Math.round(g.topGNP * 8) : 0;
-    const subW = isTop ? Math.round(clamp((A.attrs.bjj - 30) / 20, 1, 5)) : Math.round(g.bottomSub * 5);
+    const subW = isTop ? Math.round(clamp((A.attrs.bjj - 20) / 15, 2, 6)) : Math.round(g.bottomSub * 6);
     const sweepW = !isTop ? Math.round(g.sweepChance * 6) : 0;
     const advW = isTop ? Math.round(g.advanceChance * 4) : 0;
 
@@ -113,7 +113,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
 
   // Submission progress system (not binary)
   let subProgress = 0;
-  const SUB_THRESHOLD = 100;
+  const SUB_THRESHOLD = 65;
 
   const both = (min, sec, msg) => {
     const line = `[${min}:${String(sec).padStart(2, "0")}] ${msg}`;
@@ -265,8 +265,8 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
         }`);
         if (isTopA) { ptsA += 5; mom += 2; } else { ptsB += 5; mom -= 2; }
         // Defender escape chance resets partial progress
-        if (random() < 0.20) {
-          subProgress = clamp(subProgress - RI(15, 30), 0, SUB_THRESHOLD);
+        if (random() < 0.15) {
+          subProgress = clamp(subProgress - RI(10, 20), 0, SUB_THRESHOLD);
           tickOnly(exMin, exSec + 10, `${defender.name} creates space — submission pressure eases.`);
         }
       }
