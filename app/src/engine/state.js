@@ -256,7 +256,7 @@ export function tick(g) {
         body: `${fa.name} dan ${fb.name} clash saat sparring — suasana camp tegang.`,
         choices: [
           { label: "Pisahkan jadwal", chem: 2 },
-          { label: "Biarkan selesai sendiri", gamble: [6, -8] },
+          { label: "Biarkan — bisa akur (+6) atau makin parah (-8)", gamble: [6, -8] },
           { label: "Mediasi", chem: 5 },
         ],
       });
@@ -288,7 +288,7 @@ export function tick(g) {
         body: `${jealous.name} melihat ${bigger.name} dapat lebih banyak sorotan. Dia merasa tidak dihargai.`,
         choices: [
           { label: "Beri perhatian khusus", chem: 3, moraleTo: { id: jealous.id, amt: 6 } },
-          { label: "Acuhkan — dia harus bukti", gamble: [2, -6] },
+          { label: "Acuhkan — hasil gak pasti (+2 atau -6)", gamble: [2, -6] },
         ],
       });
     } else if (roll < 0.80 && fa && fb) {
