@@ -29,7 +29,7 @@ export function random() {
 // ---------- utility ----------
 export const R = (a, b) => a + random() * (b - a);
 export const RI = (a, b) => Math.floor(R(a, b + 1));
-export const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+export const clamp = (v, a, b) => { const n = isNaN(v) ? a : v; return Math.min(b, Math.max(a, n)); };
 export const pick = (arr) => arr[RI(0, arr.length - 1)];
 export const fmt$ = (n) =>
   (n < 0 ? "-$" : "$") + Math.abs(Math.round(n)).toLocaleString("en-US");

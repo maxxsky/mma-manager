@@ -221,9 +221,10 @@ export default function FightNight({ fighter, done }) {
         f.morale = clamp(f.morale + 12, 0, 100);
         const popMult = (f.traits.includes("Crowd Favorite") ? 2 : 1) * (f.ambition === "Star Power" ? 1.5 : 1);
         f.popularity = clamp(f.popularity + (result.how === "Decision" ? 3 : 7) * popMult * (g2.coaches.some((c) => c.personality === "Player's Coach") ? 1.15 : 1), 0, 100);
-        g2.rep = clamp(g2.rep + { Local: 1, Regional: 2, National: 4, Major: 7 }[b.tier], 0, 100);
+        const tierBonus = { Local: 1, Regional: 2, National: 4, Major: 7 }[b.tier] || 1;
+        g2.rep = clamp(g2.rep + tierBonus, 0, 100);
         g2.chemistry = clamp(g2.chemistry + 1, 0, 100);
-        g2.legacy += { Local: 50, Regional: 120, National: 300, Major: 600 }[b.tier];
+        g2.legacy += { Local: 50, Regional: 120, National: 300, Major: 600 }[b.tier] || 50;
         let pts = b.oppRank != null ? 8 + Math.max(0, 16 - b.oppRank) : 3;
         if (result.how !== "Decision") pts += 3;
         f.rankPoints = (f.rankPoints || 0) + pts;
