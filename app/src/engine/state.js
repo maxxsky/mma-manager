@@ -261,17 +261,23 @@ export function tick(g) {
         ],
       });
     } else if (roll < 0.45 && coachTarget) {
-      const raiseAmt = Math.max(500, coachTarget.salary * RI(1, 2)); // minimum raise $500
+      // Coach asks for fair raise based on skill + tenure. No more double-charge or 0% raises.
+      const tenureWeeks = g.week - (coachTarget.hiredWeek || 0);
+      const tenureYears = Math.floor(tenureWeeks / 48);
+      const raisePct = clamp(0.10 + tenureYears * 0.03 + (coachTarget.skill - 3) * 0.02, 0.08, 0.50);
+      const raiseAmt = Math.round(coachTarget.salary * raisePct);
+      const newSalary = coachTarget.salary + raiseAmt;
+      const hasRaisedRecently = coachTarget.lastRaiseWeek && g.week - coachTarget.lastRaiseWeek < 48;
+      if (hasRaisedRecently || raiseAmt < 200) return; // skip if raised recently or amount too small
       g.inbox.unshift({
         id: uid(), type: "event", title: `${coachTarget.name} minta naik gaji`,
-        body: `${coachTarget.name} merasa underpaid. Dia minta gaji ${fmt$(raiseAmt)}/bulan atau akan resign.`,
+        body: `${coachTarget.name} sudah ${tenureYears > 0 ? tenureYears + " tahun" : Math.floor(tenureWeeks / 4) + " bulan"} di camp (skill ${coachTarget.skill}). Dia minta kenaikan ${Math.round(raisePct * 100)}%: dari ${fmt$(coachTarget.salary)} → ${fmt$(newSalary)}/bulan.`,
         choices: [
           {
-            label: `Naikkan ke ${fmt$(raiseAmt)}`,
-            cash: -raiseAmt * 4,
-            coachSalary: { id: coachTarget.id, amt: raiseAmt },
+            label: `Naikkan ke ${fmt$(newSalary)} (+${Math.round(raisePct * 100)}%)`,
+            coachSalary: { id: coachTarget.id, amt: newSalary },
           },
-          { label: "Tolak — mental turun", chem: -4 },
+          { label: "Tolak — risiko resign", chem: -5, coachResignChance: clamp(raisePct * 1.5, 0.15, 0.60) },
         ],
       });
     } else if (roll < 0.65 && fa && fb) {

@@ -554,7 +554,11 @@ export default function App() {
                           }
                           if (c.coachSalary) {
                             const coach = n.coaches.find((x) => x.id === c.coachSalary.id);
-                            if (coach) { coach.salary = c.coachSalary.amt; n.log.unshift(`💰 ${coach.name} dinaikkan gajinya ke ${fmt$(c.coachSalary.amt)}/bulan.`); }
+                            if (coach) {
+                              coach.salary = c.coachSalary.amt;
+                              coach.lastRaiseWeek = n.week;
+                              n.log.unshift(`💰 ${coach.name} dinaikkan gajinya ke ${fmt$(c.coachSalary.amt)}/bulan.`);
+                            }
                           }
                           if (c.viralPop) { const f = findF(c.viralPop); if (f) f.popularity = clamp(f.popularity + 8, 0, 100); }
                           if (c.cash) n.cash += c.cash;
@@ -579,12 +583,20 @@ export default function App() {
                           } else if (c.coachPoach != null) {
                             const coach = n.coaches.find((x) => x.id === c.coachPoach.id);
                             if (coach && n.cash >= c.coachPoach.newSalary * 4) {
+                              coach.hiredWeek = n.week;
                               coach.salary = c.coachPoach.newSalary; n.cash -= c.coachPoach.newSalary * 4;
                               n.log.unshift(`🛡️ ${coach.name} dipertahankan — gaji naik.`);
                               if (n.rivals) { const riv = n.rivals.find((x) => x.id === c.coachPoach.rivalId); if (riv) riv.rivalry = clamp(riv.rivalry + 10, 0, 100); }
                             } else if (coach) {
                               n.coaches = n.coaches.filter((x) => x.id !== c.coachPoach.id); n.chemistry = clamp(n.chemistry - 8, 0, 100);
                               n.log.unshift(`🦊 ${coach.name} pergi ke rival. Chemistry -8.`);
+                            }
+                          } else if (c.coachResignChance != null) {
+                            const coach = n.coaches.find((x) => x.id === c.coachResignChance.id);
+                            if (coach && Math.random() < c.coachResignChance.chance) {
+                              n.coaches = n.coaches.filter((x) => x.id !== coach.id);
+                              n.chemistry = clamp(n.chemistry - 8, 0, 100);
+                              n.log.unshift(`👋 ${coach.name} resign — permintaan gaji ditolak. Chemistry -8.`);
                             }
                           } else if (c.coachLeave != null) {
                             n.coaches = n.coaches.filter((x) => x.id !== c.coachLeave); n.chemistry = clamp(n.chemistry - 8, 0, 100);
@@ -717,7 +729,7 @@ export default function App() {
                     <div style={{ color: C.chalk, fontSize: 13 }}>{c.name} <Tag>{c.spec}</Tag><span style={{ fontFamily: DISPLAY, color: C.gold }}> {c.skill}</span>{c.personality && <Tag color={C.green}>{c.personality}</Tag>}</div>
                     <div style={{ color: C.dim, fontSize: 11 }}>{fmt$(c.salary)}/bulan</div>
                   </div>
-                  <Btn small disabled={g.coaches.length >= coachCap} onClick={() => up((n) => { n.coaches.push(c); n.coachMarket = n.coachMarket.filter((x) => x.id !== c.id); n.log.unshift(`👨‍🏫 ${c.name} (${c.spec}) direkrut — gaji ${fmt$(c.salary)}/bln.`); })} title={`Gaji ${fmt$(c.salary)}/bln — ${monthlyIn > 0 ? Math.round(c.salary / Math.max(monthlyIn, 1) * 100) : '?'}% dari income bulanan`}>Hire</Btn>
+                  <Btn small disabled={g.coaches.length >= coachCap} onClick={() => up((n) => { c.hiredWeek = n.week; n.coaches.push(c); n.coachMarket = n.coachMarket.filter((x) => x.id !== c.id); n.log.unshift(`👨‍🏫 ${c.name} (${c.spec}) direkrut — gaji ${fmt$(c.salary)}/bln.`); })} title={`Gaji ${fmt$(c.salary)}/bln — ${monthlyIn > 0 ? Math.round(c.salary / Math.max(monthlyIn, 1) * 100) : '?'}% dari income bulanan`}>Hire</Btn>
                 </div>
               ))}
             </Card>
