@@ -2,7 +2,7 @@ import { R, RI, clamp, pick, fmt$, uid, random } from "./rng.js";
 import {
   ATTRS, ATTR_LABEL, WEIGHTS, TRAITS, AMBITIONS, AMBITION_KEYS,
   TRAINING, INTENSITY, SPONSOR_BRANDS, CAMP_TIERS, FAC_LABEL,
-  RIVAL_TRAITS, AGENT_TYPES, INVESTOR_TYPES, SPARRING_MATCH, EXTERNAL_PARTNERS, SPONSOR_TERMS,
+  RIVAL_TRAITS, CAMP_SPECS, AGENT_TYPES, INVESTOR_TYPES, SPARRING_MATCH, EXTERNAL_PARTNERS, SPONSOR_TERMS,
 } from "./data.js";
 import { genFighter, assignAgent, agentFor, avgSkill, weeklyFee, scoutGrade, genCoach } from "./fighter.js";
 import { coachBonus, facBonus } from "./economy.js";
