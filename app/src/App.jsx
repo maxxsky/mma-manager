@@ -167,6 +167,7 @@ export default function App() {
     ["dashboard", "🏠", t("UI.camp")], ["roster", "👥", t("UI.roster")], ["rank", "🏆", t("UI.rank")],
     ["scout", "🔍", t("UI.scout")],
     ["inbox", "📨", `Inbox${g.inbox.length ? ` ${g.inbox.length}${g.inbox.some((m) => m.expires != null && m.expires <= 2) ? " ⚠️" : ""}` : ""}`],
+    ["finance", "💰", "KEUANGAN"],
     ["mgmt", "🏗️", t("UI.staff")], ["rivals", "⚔️", t("UI.rival")],
   ];
 
@@ -832,6 +833,66 @@ export default function App() {
             </Card>
           </>
         )}
+        {tab === "finance" && (() => {
+          const feeTotal = g.roster.reduce((s, f) => s + weeklyFee(f) * 4, 0);
+          const popTotal = g.roster.reduce((s, f) => s + f.popularity * 150, 0);
+          const baseSponsor = Math.round(g.rep * 500);
+          const sponsorIncome = g.sponsors && g.sponsors.length > 0
+            ? g.sponsors.reduce((s, sp) => s + (sp.rate || 0), 0)
+            : baseSponsor;
+          const coachSal = g.coaches.reduce((s, c) => s + ((!c.freeUntil || g.week > c.freeUntil) ? c.salary : 0), 0);
+          const facVal = Object.values(g.facilities).reduce((s, l) => s + l * 30000, 0);
+          const maint = Math.round(facVal * 0.05);
+          const equityPct = (g.investors || []).reduce((s, inv) => s + inv.equity, 0);
+          const equityCut = Math.round((sponsorIncome + popTotal) * (equityPct / 100));
+          const netMonthly = sponsorIncome + popTotal + feeTotal - coachSal - maint - equityCut;
+          const Row = ({ label, value, color, detail }) => (
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${C.line}33` }}>
+              <span style={{ fontSize: 12, color: C.chalk }}>{label}</span>
+              <span style={{ textAlign: "right" }}>
+                <span style={{ fontFamily: DISPLAY, fontSize: 14, color: color || C.chalk }}>{fmt$(value)}</span>
+                {detail && <div style={{ fontSize: 9, color: C.dim }}>{detail}</div>}
+              </span>
+            </div>
+          );
+          return (
+            <>
+              <Card><H>💵 Arus Kas Bulanan</H>
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 11, color: C.dim, letterSpacing: 1, marginBottom: 6, textTransform: "uppercase" }}>📥 Pemasukan</div>
+                  <Row label="🏢 Sponsor" value={sponsorIncome} color={C.green} detail={g.sponsors && g.sponsors.length > 0 ? `${g.sponsors.length} sponsor aktif` : `base (rep ${g.rep})`} />
+                  <Row label="👥 Popularitas Fighter" value={popTotal} color={C.green} detail={`${g.roster.length} fighter`} />
+                  <Row label="💪 Training Fee" value={feeTotal} color={C.green} detail={`${g.roster.length} fighter mingguan`} />
+                  <div style={{ padding: "4px 0", textAlign: "right", fontFamily: DISPLAY, fontSize: 16, color: C.green }}>+{fmt$(sponsorIncome + popTotal + feeTotal)}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: C.dim, letterSpacing: 1, marginBottom: 6, textTransform: "uppercase" }}>📤 Pengeluaran</div>
+                  <Row label="👨‍🏫 Gaji Coach" value={coachSal} color={C.red} detail={`${g.coaches.length} coach`} />
+                  <Row label="🏗️ Maintenance Fasilitas" value={maint} color={C.red} detail={`nilai aset ${fmt$(facVal)}`} />
+                  {equityPct > 0 && <Row label={`💰 Potongan Investor (${equityPct}%)`} value={equityCut} color={C.red} />}
+                  <div style={{ padding: "4px 0", textAlign: "right", fontFamily: DISPLAY, fontSize: 16, color: C.red }}>-{fmt$(coachSal + maint + equityCut)}</div>
+                </div>
+                <div style={{ marginTop: 10, padding: "8px 0", borderTop: `2px solid ${C.gold}44`, textAlign: "right" }}>
+                  <span style={{ fontSize: 11, color: C.dim, letterSpacing: 1, textTransform: "uppercase" }}>Bersih / Bulan </span>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 20, color: netMonthly >= 0 ? C.green : C.red }}>{netMonthly >= 0 ? "+" : ""}{fmt$(netMonthly)}</span>
+                </div>
+              </Card>
+              <Card><H>💎 Kas & Cadangan</H>
+                <div style={{ fontFamily: DISPLAY, fontSize: 28, color: g.cash >= 0 ? C.gold : C.red, letterSpacing: 2 }}>{fmt$(g.cash)}</div>
+                <div style={{ fontSize: 11, color: C.dim, marginTop: 4 }}>Bangkrut jika kas &lt; -$50,000</div>
+                {g.loan && <Row label="🏦 Pinjaman Aktif" value={g.loan.remaining} color={C.red} detail={`cicilan ${fmt$(g.loan.weeklyPayment)}/minggu`} />}
+              </Card>
+              <Card><H>📋 Ringkasan</H>
+                <div style={{ fontSize: 11, color: C.chalk, lineHeight: 1.7 }}>
+                  <div>• <b style={{ color: C.green }}>Sponsor</b>: {g.sponsors && g.sponsors.length > 0 ? `${g.sponsors.length} brand aktif (${g.sponsors.map(s => s.brand).join(", ")})` : "rep-based, belum ada brand"}</div>
+                  <div>• <b style={{ color: C.green }}>Fighter</b>: {g.roster.length} orang, ${feeTotal}/bln dari training fee + ${popTotal}/bln dari popularitas</div>
+                  <div>• <b style={{ color: C.red }}>Coach</b>: {g.coaches.length} orang, ${coachSal}/bln</div>
+                  <div>• <b style={{ color: C.red }}>Fasilitas</b>: level mats {g.facilities.mats}/ring {g.facilities.ring}/weights {g.facilities.weights}/medical {g.facilities.medical}, maintenance ${maint}/bln</div>
+                </div>
+              </Card>
+            </>
+          );
+        })()}
       </div>
 
       {/* BOTTOM NAV */}
