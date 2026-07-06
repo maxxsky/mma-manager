@@ -76,19 +76,21 @@ export function autoGamePlan(fighter, opponent) {
 }
 
 // ── Exchange picker with proper position awareness ──
-function pickExchange(pos, A, planA, matchup) {
+function pickExchange(pos, A, B, planA, matchup) {
   const pool = [];
   const isGround = typeof pos === "object" && pos.type;
   const groundType = isGround ? pos.type : null;
   const isTop = isGround ? pos.top === "A" : false;
 
   if (!isGround) {
-    // Standing
+    // Standing — both fighters can attempt takedowns
     pool.push("strike", "strike", "strike", "strike");
     pool.push("power");
     pool.push("clinch", "clinch");
-    const tdWeight = A.attrs.wrestling > 55 || planA === "Take It Down" ? 4 : 1;
-    for (let i = 0; i < tdWeight; i++) pool.push("td");
+    const tdWeightA = A.attrs.wrestling > 55 || planA === "Take It Down" ? 4 : 1;
+    const tdWeightB = B.attrs.wrestling > 55 ? 3 : 1;
+    for (let i = 0; i < tdWeightA; i++) pool.push("td");
+    for (let i = 0; i < tdWeightB; i++) pool.push("tdB");
   } else {
     // Ground — exchange type depends on position and who's on top
     const g = GROUND[groundType] || GROUND.guard;
@@ -141,7 +143,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
     const exMin = Math.floor(ex * 4.5 / nEx);
     const exSec = Math.floor((ex * 60 / nEx) % 60);
     
-    const exType = pickExchange(position, A, planA, matchup);
+    const exType = pickExchange(position, A, B, planA, matchup);
 
     const momMult = clamp(1 + (mom > 0 ? mom * 0.0006 : mom * 0.0003), 0.90, 1.10);
     const phase = ex < 2 ? 0.7 : ex >= nEx - 2 ? 0.5 : 0.6;
@@ -184,7 +186,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       const dmgThaiA = isThaiA ? R(4, 9) * (1 + clinchModA) : R(2, 5);
       const dmgThaiB = isThaiB ? R(4, 9) : R(2, 5);
       const outA = effAttr(A, "striking", stA, {}) * agg * (isThaiA ? 1.4 : 1) * (1 + clinchModA);
-      const outB = effAttr(B, "striking", stB, {}) * (isThaiB ? 1.4 : 1) * (1 + (matchup.bStrike || 0));
+      const outB = effAttr(B, "striking", stB, {}) * (isThaiB ? 1.4 : 1) * (1 + (matchup.bClinch || 0));
       const la = Math.round(outA * R(0.3, 0.6));
       const lb = Math.round(outB * R(0.3, 0.6));
       dmgB += la * (isThaiA ? 1.8 : 1); dmgA += lb * (isThaiB ? 1.8 : 1);
@@ -223,6 +225,26 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
         if (B.archetype === "BJJ Specialist" && random() < 0.10) {
           finish = { by: "B", how: "Submission" };
           both(exMin + 1, 0, `GUILLOTINE! ${B.name} catches the neck on the way in! IT'S OVER!`);
+        }
+      }
+
+    // ── TAKEDOWN BY B (B shoots on A) ──
+    } else if (exType === "tdB") {
+      const bTDBonus = (matchup.bTD || 0);
+      const aTDDefBonus = (matchup.aTDDef || 0) + (cornerA === "tdd" ? 0.10 : 0);
+      const pB = clamp(0.38 + (effAttr(B, "wrestling", stB, {}) - effAttr(A, "wrestling", stA, {})) / 60 + bTDBonus - aTDDefBonus, 0.10, 0.92);
+      if (random() < pB) {
+        ptsB += 12; dmgA += R(3, 8);
+        position = { type: "halfGuard", top: "B" };
+        both(exMin, exSec + 10, `${B.name} shoots — takedown! Lands in half guard.`);
+        mom -= 12;
+      } else {
+        ptsA += 4; mom += 8;
+        both(exMin, exSec + 12, `${B.name} shoots — stuffed by ${A.name}!`);
+        // Guillotine counter chance for BJJ specialist (A)
+        if (A.archetype === "BJJ Specialist" && random() < 0.10) {
+          finish = { by: "A", how: "Submission" };
+          both(exMin + 1, 0, `GUILLOTINE! ${A.name} catches the neck on the way in! IT'S OVER!`);
         }
       }
 
