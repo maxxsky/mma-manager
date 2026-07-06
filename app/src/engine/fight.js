@@ -201,15 +201,27 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       }
       if (la > lb + 4) mom += 8;
       else if (lb > la + 4) mom -= 8;
-      // Takedown from clinch — both fighters can trip
-      if (random() < 0.25 && A.attrs.wrestling > 40) {
-        position = { type: "halfGuard", top: "A" };
-        tickOnly(exMin, exSec + 8, `${A.name} trips ${B.name} from the clinch — half guard!`);
-        mom += 5;
-      } else if (random() < 0.25 && B.attrs.wrestling > 40) {
-        position = { type: "halfGuard", top: "B" };
-        tickOnly(exMin, exSec + 8, `${B.name} trips ${A.name} from the clinch — half guard!`);
-        mom -= 5;
+      // Takedown from clinch — random turn order, both can trip
+      if (random() < 0.5) {
+        if (random() < 0.25 && B.attrs.wrestling > 40) {
+          position = { type: "halfGuard", top: "B" };
+          tickOnly(exMin, exSec + 8, `${B.name} trips ${A.name} from the clinch — half guard!`);
+          mom -= 5;
+        } else if (random() < 0.25 && A.attrs.wrestling > 40) {
+          position = { type: "halfGuard", top: "A" };
+          tickOnly(exMin, exSec + 8, `${A.name} trips ${B.name} from the clinch — half guard!`);
+          mom += 5;
+        }
+      } else {
+        if (random() < 0.25 && A.attrs.wrestling > 40) {
+          position = { type: "halfGuard", top: "A" };
+          tickOnly(exMin, exSec + 8, `${A.name} trips ${B.name} from the clinch — half guard!`);
+          mom += 5;
+        } else if (random() < 0.25 && B.attrs.wrestling > 40) {
+          position = { type: "halfGuard", top: "B" };
+          tickOnly(exMin, exSec + 8, `${B.name} trips ${A.name} from the clinch — half guard!`);
+          mom -= 5;
+        }
       }
 
     // ── TAKEDOWN ──
