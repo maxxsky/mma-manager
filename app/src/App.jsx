@@ -11,6 +11,7 @@ import {
 import { genFighter, assignAgent, agentFor, avgSkill, tierOf, weeklyFee, scoutGrade, makeReport, genCoach } from "./engine/fighter.js";
 import { genDivisions, rankOf, vacateTitle, stripTitle, initPromoterRel } from "./engine/rankings.js";
 import { genRivalCamp } from "./engine/rivals.js";
+import { facilityCost } from "./engine/economy.js";
 import {newGame, tick} from "./engine/state.js";
 import { reducer } from "./engine/reducer.js";
 
