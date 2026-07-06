@@ -112,10 +112,16 @@ export function tick(g) {
       }
       f.overtraining = clamp(f.overtraining - 10, 0, 100);
       if (f.injury.costPerWeek) g.cash -= f.injury.costPerWeek;
+      // Slight attribute decay during long injuries (realistic ring rust)
+      if (f.injury.weeks > 4) {
+        const decayAttr = f.injury.tier >= 2 ? ["striking","wrestling","bjj","footwork","strength","cardio"] : ["cardio"];
+        decayAttr.forEach((k) => f.attrs[k] = clamp(f.attrs[k] - 0.15, 5, f.ceilings[k]));
+      }
       return;
     }
 
-    const t = f.booked ? TRAINING.fightcamp : TRAINING[f.training.type];
+    // During booking: fight camp only in last 2 weeks, otherwise player chooses
+    const t = f.booked && f.booked.weeksLeft <= 2 ? TRAINING.fightcamp : TRAINING[f.training.type];
     const inten = INTENSITY[f.training.intensity];
     g.cash -= t.cost;
 
@@ -124,7 +130,7 @@ export function tick(g) {
       f.morale = clamp(f.morale + 4, 0, 100);
     } else {
       const ageMult =
-        f.age <= 21 ? 1.3 : f.age <= 26 ? 1.15 : f.age <= 30 ? 1 : f.age <= 33 ? 0.85 : 0.6;
+        f.age <= 21 ? 1.3 : f.age <= 26 ? 1.15 : f.age <= 30 ? 1.0 : f.age <= 33 ? 0.90 : f.age <= 36 ? 0.75 : 0.55;
       const otMult =
         f.overtraining < 25 ? 1 : f.overtraining < 50 ? 0.9 : f.overtraining < 75 ? 0.75 : 0.5;
       const traitMult = f.traits.includes("Natural Talent") ? 1.15 : 1;
@@ -160,13 +166,6 @@ export function tick(g) {
         f.attrs[k] = clamp(f.attrs[k] + gain, 0, cap);
       });
 
-      if (f.training.type === "content") {
-        const popGain =
-          TRAINING.content.popGain +
-          (f.traits.includes("Star Power") ? 2 : 0) +
-          (f.traits.includes("Showboat") ? 2 : 0);
-        f.popularity = clamp(f.popularity + popGain, 0, 100);
-      }
 
       const discMult = g.coaches.some((c) => c.personality === "Disciplinarian") ? 0.75 : 1;
       f.overtraining = clamp(
@@ -237,6 +236,10 @@ export function tick(g) {
     }
 
     g.cash += weeklyFee(f);
+    // Popularity decay: fighters lose 0.5 pop/week when not booked or doing content
+    if (!f.booked && !f.injury) {
+      f.popularity = clamp(f.popularity - 0.5, 0, 100);
+    }
     if (f.booked) f.booked.weeksLeft--;
   });
 
@@ -644,12 +647,12 @@ export function tick(g) {
       g.roster.forEach((f) => {
         f.age++;
         f.fightsThisYear = 0;
-        if (f.age >= 37) f.attrs.chin = clamp(f.attrs.chin - 6, 10, 99);
-        else if (f.age >= 34) f.attrs.chin = clamp(f.attrs.chin - 4, 10, 99);
-        else if (f.age >= 31) f.attrs.chin = clamp(f.attrs.chin - 2, 10, 99);
+        if (f.age >= 37) f.attrs.chin = clamp(f.attrs.chin - 3, 10, 99);
+        else if (f.age >= 34) f.attrs.chin = clamp(f.attrs.chin - 2, 10, 99);
+        else if (f.age >= 31) f.attrs.chin = clamp(f.attrs.chin - 1, 10, 99);
 
-        if (f.age >= 35 && !g.inbox.some((m) => m.retireFighterId === f.id)) {
-          const p = (f.age - 34) * 0.15 + ((f.streakL || 0) >= 3 ? 0.3 : 0);
+        if (f.age >= 36 && !g.inbox.some((m) => m.retireFighterId === f.id)) {
+          const p = (f.age - 35) * 0.15 + ((f.streakL || 0) >= 3 ? 0.3 : 0);
           if (random() < p) {
             g.inbox.unshift({
               id: uid(), type: "event", retireFighterId: f.id,

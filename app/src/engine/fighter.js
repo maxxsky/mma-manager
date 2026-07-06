@@ -1,6 +1,6 @@
 import { R, RI, clamp, pick, random, uid } from "./rng.js";
 import {
-  ATTRS, WEIGHTS, ARCHETYPES, REGIONS, TRAITS, TRAIT_KEYS,
+  ATTRS, WEIGHTS, ARCHETYPES, REGIONS, TRAITS, TRAIT_KEYS, TRAIT_CONFLICTS,
   AMBITIONS, AMBITION_KEYS, AGENT_TYPES, COACH_SPECS, COACH_NAMES, COACH_PERSONALITIES,
 } from "./data.js";
 
@@ -25,7 +25,13 @@ export function genFighter(level, regionName) {
   const traits = [];
   while (traits.length < 2) {
     const t = pick(TRAIT_KEYS);
-    if (!traits.includes(t)) traits.push(t);
+    if (!traits.includes(t)) {
+      // Check conflicts: skip trait that conflicts with an already-assigned trait
+      const conflicts = TRAIT_CONFLICTS[t];
+      if (!conflicts || !traits.some((existing) => conflicts.includes(existing))) {
+        traits.push(t);
+      }
+    }
   }
   return {
     id: uid(),
@@ -46,6 +52,8 @@ export function genFighter(level, regionName) {
     asking: Math.round(level * 8000 + R(500, 3000)),
     weightClassDelta: 0,
     externalPartner: null,
+    // Reach in cm — scaled by weight class (heavier ≈ taller ≈ longer reach)
+    reach: wc.limit >= 205 ? RI(190, 210) : wc.limit >= 170 ? RI(180, 198) : wc.limit >= 145 ? RI(170, 190) : RI(160, 180),
   };
 }
 

@@ -54,6 +54,16 @@ export const TRAITS = {
 };
 export const TRAIT_KEYS = Object.keys(TRAITS);
 
+// Trait exclusion — traits that conflict with each other (can't both be on same fighter)
+export const TRAIT_CONFLICTS = {
+  "Glass Jaw": ["Iron Chin"],
+  "Iron Chin": ["Glass Jaw"],
+  Cautious: ["Explosive"],
+  Explosive: ["Cautious"],
+  Diva: ["Team Player"],
+  "Team Player": ["Diva"],
+};
+
 export const AMBITIONS = {
   "Belt Chaser": "Bahagia jika ranked; morale turun jika stuck unranked",
   Paycheck: "Morale naik setiap selesai fight (dibayar)",
@@ -85,11 +95,10 @@ export const TRAINING = {
   conditioning: { label: "S&C", cost: 300, gains: ["strength", "cardio"] },
   sparring: { label: "Sparring", cost: 800, gains: ["fightIQ", "striking", "wrestling"] },
   recovery: { label: "Recovery", cost: 100, gains: [] },
-  fightcamp: { label: "Fight Camp", cost: 1000, gains: ["fightIQ", "cardio"] },
-  content: { label: "📱 Content", cost: 200, gains: [], popGain: 4 },
+  fightcamp: { label: "Fight Camp", cost: 1000, gains: ["fightIQ", "cardio", "striking", "wrestling"] },
 };
 export const INTENSITY = {
-  Light: { mult: 0.6, inj: 0, ot: 4 },
+  Light: { mult: 0.6, inj: 0.005, ot: 4 },
   Medium: { mult: 1.0, inj: 0.02, ot: 9 },
   Hard: { mult: 1.4, inj: 0.08, ot: 16 },
 };
