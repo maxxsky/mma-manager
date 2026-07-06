@@ -612,6 +612,43 @@ export default function App() {
                     </div>
                   ))}
                 </div>
+                <div style={{ marginTop: 8, borderTop: `1px solid ${C.line}33`, paddingTop: 8 }}>
+                  <div style={{ fontSize: 10, color: C.dim, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>Poach Fighter</div>
+                  {(() => {
+                    const targets = [...rc.fighters].filter(f => !f.injury && !f.booked);
+                    if (targets.length === 0) return <div style={{ color: C.dim, fontSize: 10 }}>No viable targets.</div>;
+                    const best = targets.sort((a, b) => avgSkill(b) - avgSkill(a))[0];
+                    const cost = Math.round(best.asking * 1.8 * (1 + rc.rivalry / 100));
+                    const successChance = clamp(55 - rc.rivalry * 0.4 - Math.round(avgSkill(best) - 50) * 0.3, 10, 85);
+                    return (
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <span style={{ color: C.chalk, fontSize: 12 }}>{best.name}</span>
+                          <span style={{ color: C.dim, fontSize: 10, marginLeft: 6 }}>{best.archetype} · {tierOf(best)} · chance {Math.round(successChance)}%</span>
+                        </div>
+                        <Btn small color={C.red} disabled={g.cash < cost || g.roster.length >= rosterCap} onClick={() => up((n) => {
+                          const riv = n.rivals.find(x => x.id === rc.id);
+                          if (!riv) return;
+                          const tf = riv.fighters.find(x => x.id === best.id);
+                          if (!tf) return;
+                          if (random() * 100 < successChance) {
+                            tf.contract = { managerCut: 0.15, fightsLeft: 3, fightsTotal: 3, durationMo: 18, signedWeek: n.week, renegoFlagged: false };
+                            tf.morale = clamp(tf.morale + 15, 0, 100);
+                            n.roster.push(tf);
+                            riv.fighters = riv.fighters.filter(x => x.id !== best.id);
+                            n.cash -= cost;
+                            riv.rivalry = clamp(riv.rivalry + 20, 0, 100);
+                            n.log.unshift(`🦅 POACH SUKSES: ${best.name} (${best.archetype}) meninggalkan ${rc.name} — bergabung ke camp kita!`);
+                          } else {
+                            n.cash -= Math.round(cost * 0.2);
+                            riv.rivalry = clamp(riv.rivalry + 5, 0, 100);
+                            n.log.unshift(`❌ Poach ${best.name} GAGAL — rival menyadari pendekatan kita. Rivalry +5.`);
+                          }
+                        })}>🦅 {fmt$(cost)}</Btn>
+                      </div>
+                    );
+                  })()}
+                </div>
               </Card>
             ))}
           </Card>

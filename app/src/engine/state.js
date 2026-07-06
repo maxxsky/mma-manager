@@ -719,10 +719,10 @@ export function tick(g) {
     if (g.week % 8 === 0 && g.roster.length > 0) {
       const r = pick(g.rivals);
       const available = g.roster.filter(
-        (f) => !f.booked && !f.injury && f.morale < 60 &&
+        (f) => !f.booked && !f.injury && f.morale < 70 &&
           f.contract && f.contract.fightsLeft > 0,
       );
-      if (available.length > 0 && r.rivalry > 30) {
+      if (available.length > 0 && r.rivalry > 15) {
         const target = pick(available);
         const offerBonus = Math.round(target.asking * (1 + r.rivalry / 100));
         g.inbox.unshift({
