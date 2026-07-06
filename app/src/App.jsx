@@ -485,7 +485,11 @@ export default function App() {
                         up((n) => {
                           n.inbox = n.inbox.filter((x) => x.id !== m.id);
                           const findF = (id) => n.roster.find((x) => x.id === id);
-                          if (c.release != null) {
+                          if (c.classChangeAccept != null) {
+                            dispatch({ type: "CLASS_CHANGE_ACCEPT", fighterId: c.classChangeAccept.fighterId, targetClass: c.classChangeAccept.targetClass, targetIdx: c.classChangeAccept.targetIdx, moraleEffect: c.classChangeAccept.moraleEffect });
+                          } else if (c.classChangeReject != null) {
+                            dispatch({ type: "CLASS_CHANGE_REJECT", fighterId: c.classChangeReject.fighterId, moralePenalty: c.classChangeReject.moralePenalty });
+                          } else if (c.release != null) {
                             const f = findF(c.release);
                             if (f) { vacateTitle(n, f); n.roster = n.roster.filter((x) => x.id !== c.release); n.chemistry = clamp(n.chemistry - 5, 0, 100); n.log.unshift(`👋 ${f.name} di-release dari camp.`); }
                           } else if (c.retire != null) {

@@ -6,6 +6,8 @@ import {
   ATTRS, TRAINING, INTENSITY, CAMP_TIERS, SPONSOR_BRANDS, FAC_LABEL,
 } from "./data.js";
 import { weeklyFee, avgSkill } from "./fighter.js";
+import { WEIGHTS } from "./data.js";
+import { vacateTitle } from "./rankings.js";
 import { coachBonus, facBonus } from "./economy.js";
 import { getRel } from "./relationships.js";
 
@@ -83,6 +85,31 @@ export function reducer(g, action) {
     case "SET_CAMP_TAG": {
       if (action.tag && g.rep >= 5) {
         g.campTag = action.tag;
+      }
+      break;
+    }
+    case "CLASS_CHANGE_ACCEPT": {
+      const f2 = g.roster.find((x) => x.id === action.fighterId);
+      if (f2) {
+        const oldClass = f2.weightClass;
+        const delta = action.targetIdx - WEIGHTS.findIndex((w) => w.name === oldClass);
+        f2.weightClassDelta = (f2.weightClassDelta || 0) + delta;
+        f2.weightClass = action.targetClass;
+        f2.natWeight = Math.round(WEIGHTS[action.targetIdx].limit * R(1.0, 1.09));
+        vacateTitle(g, f2);
+        f2.rankPoints = Math.max(0, f2.rankPoints - 20);
+        f2.morale = clamp(f2.morale + action.moraleEffect, 0, 100);
+        f2.lastClassChange = g.week;
+        g.log.unshift(`⚖️ ${f2.name} pindah dari ${oldClass} ke ${action.targetClass} (permintaan sendiri).`);
+      }
+      break;
+    }
+    case "CLASS_CHANGE_REJECT": {
+      const f2 = g.roster.find((x) => x.id === action.fighterId);
+      if (f2) {
+        f2.morale = clamp(f2.morale + action.moralePenalty, 0, 100);
+        f2.lastClassChange = g.week;
+        g.log.unshift(`🙅 ${f2.name} minta pindah kelas — permintaan ditolak (morale ${action.moralePenalty > 0 ? "+" : ""}${action.moralePenalty}).`);
       }
       break;
     }

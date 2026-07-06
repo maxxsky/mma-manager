@@ -76,30 +76,9 @@ export default function FighterCard({ f, g, up }) {
             <div style={{ flex: 1 }}>Popularity<Bar v={f.popularity} color={C.gold} h={6} /></div>
           </div>
           {!f.injury && !f.booked && (
-            <div style={{ marginTop: 10, display: "flex", gap: 6, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 10, color: C.dim, letterSpacing: 1, textTransform: "uppercase", marginRight: 4 }}>Kelas:</span>
-              {WEIGHTS.map((w) => {
-                const oldIdx = WEIGHTS.findIndex((x) => x.name === f.weightClass);
-                const newIdx = WEIGHTS.findIndex((x) => x.name === w.name);
-                const delta = newIdx - oldIdx;
-                const isUp = delta > 0;
-                const classTip = delta === 0 ? "" : isUp ? "⬆ cut mudah · strength↓ footwork↑" : "⬇ cut berat · strength↑ footwork↓";
-                return (
-                <button key={w.name} disabled={w.name === f.weightClass} onClick={() => up((g2) => {
-                  const nf = g2.roster.find((x) => x.id === f.id);
-                  if (!nf) return;
-                  const oldClass = nf.weightClass;
-                  nf.weightClassDelta = (nf.weightClassDelta || 0) + delta;
-                  nf.weightClass = w.name;
-                  nf.natWeight = Math.round(w.limit * R(1.0, 1.09));
-                  vacateTitle(g2, nf);
-                  nf.rankPoints = Math.max(0, nf.rankPoints - 20);
-                  nf.morale = clamp(nf.morale - 5, 0, 100);
-                  g2.log.unshift(`⚖️ ${nf.name} pindah dari ${oldClass} ke ${w.name} ${isUp ? "(↑ naik" : "(↓ turun"} kelas). Title divacate, rank pts -20.`);
-                })}
-                  style={{ background: w.name === f.weightClass ? C.gold : C.panel2, color: w.name === f.weightClass ? "#0a0d14" : C.chalk, border: "none", padding: "3px 6px", fontSize: 9, cursor: w.name === f.weightClass ? "default" : "pointer", ...cut(3) }} title={classTip}>{w.name.split(/(?=[A-Z])/).join(" ")}
-                </button>
-              )})}
+            <div style={{ marginTop: 10, color: C.dim, fontSize: 10, fontStyle: "italic" }}>
+              ⚖️ Pindah kelas sekarang berdasarkan permintaan fighter — cek inbox untuk request pindah divisi. 
+              Dipicu oleh performa (lose streak, win streak, age) dan ambisi fighter.
             </div>
           )}
           {!f.booked && !f.injury && (
