@@ -11,7 +11,7 @@ export function effAttr(f, k, sta, mods) {
   return v * (mods?.[k] || 1);
 }
 
-export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA) {
+export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum = 0) {
   const summaryLog = [];
   const tickLog = [];
 
@@ -143,7 +143,22 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA) {
   if (B.traits?.includes("Natural Talent") && rnd === 1) both(1, 0, `${B.name}'s natural gifts are on display - smooth technique.`);
   if (A.traits?.includes("Showboat") && landA + ptsA > 30) both(2, 10, `${A.name} is showboating! The crowd loves it!`);
 
-  const drainA = R(10, 16) * agg * (planA === "Finish It" ? 1.25 : 1) * (planA === "Survive & Outpoint" ? 0.8 : 1) * (cornerA === "save" ? 0.75 : 1) * (65 / clamp(A.attrs.cardio, 30, 95));
+  // Momentum update
+  let mom = momentum;
+  if (landA > landB + 5) mom += 15; else if (landB > landA + 5) mom -= 15;
+  if (finish?.by === "A") mom += 30; else if (finish?.by === "B") mom -= 30;
+  // Takedown momentum swing
+  if (tickLog.some(l => l.includes("takedown") && l.includes(A.name))) mom += 10;
+  if (tickLog.some(l => l.includes("takedown") && l.includes(B.name))) mom -= 10;
+  // Submission attempt
+  if (tickLog.some(l => l.includes("SUBMISSION"))) mom += 5;
+  // Natural decay toward 0
+  mom = clamp(mom - (mom > 0 ? 8 : -8), -100, 100);
+  // Momentum commentary
+  if (mom > 30) tickOnly(0, 25, `${A.name} is riding the momentum — he can feel it!`);
+  if (mom < -30) tickOnly(0, 25, `${B.name} has the momentum now — ${A.name} needs a shift.`);
+
+  const drainA = R(10, 16)
   const drainB = R(10, 16) * (65 / clamp(B.attrs.cardio, 30, 95));
   return {
     log: summaryLog, tickLog,
@@ -152,6 +167,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA) {
     staB: clamp(stB - drainB, 5, 100),
     scoreA: ptsA, scoreB: ptsB,
     finish, landA, landB,
+    momentum: mom,
   };
 }
 

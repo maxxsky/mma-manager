@@ -67,11 +67,12 @@ export default function FightNight({ fighter, done }) {
   const missedWeight = random() < missWeightChance;
 
   const runRound = (r, st, cornerChoice) => {
-    const res = simRound(r, A, B, st.staA, st.staB, plan, cornerChoice, cutInfo.pen > 5);
+    const res = simRound(r, A, B, st.staA, st.staB, plan, cornerChoice, cutInfo.pen > 5, st.mom || 0);
     const newSt = {
       staA: res.staA, staB: res.staB,
       dmgA: st.dmgA + res.dmgA, dmgB: st.dmgB + res.dmgB,
       scores: [...st.scores, { a: res.scoreA, b: res.scoreB }],
+      mom: res.momentum != null ? res.momentum : 0,
     };
     const newCutA = cutA + (res.dmgA > 20 ? RI(0, 2) : res.dmgA > 10 ? RI(0, 1) : 0);
     const newCutB = cutB + (res.dmgB > 20 ? RI(0, 2) : res.dmgB > 10 ? RI(0, 1) : 0);
@@ -92,17 +93,18 @@ export default function FightNight({ fighter, done }) {
   };
 
   const startFight = () => {
-    const st0 = { staA: 100 - cutInfo.pen, staB: 100, dmgA: 0, dmgB: 0, scores: [] };
+    const st0 = { staA: 100 - cutInfo.pen, staB: 100, dmgA: 0, dmgB: 0, scores: [], mom: 0 };
     setSt(st0);
     if (viewMode === "skip") {
       let st = { ...st0 };
       const rounds = [];
       for (let r = 1; r <= totalRounds; r++) {
-        const res = simRound(r, A, B, st.staA, st.staB, plan, "plan", cutInfo.pen > 5);
+        const res = simRound(r, A, B, st.staA, st.staB, plan, "plan", cutInfo.pen > 5, st.mom || 0);
         st = {
           staA: res.staA, staB: res.staB,
           dmgA: st.dmgA + res.dmgA, dmgB: st.dmgB + res.dmgB,
           scores: [...st.scores, { a: res.scoreA, b: res.scoreB }],
+          mom: res.momentum != null ? res.momentum : 0,
         };
         rounds.push(res);
         if (res.finish) { 
@@ -495,8 +497,16 @@ export default function FightNight({ fighter, done }) {
                 <span style={{ fontSize: 8, color: C.dim, textTransform: "uppercase", marginRight: 4 }}>Score:</span>
                 {state?.scores?.map((s, i) => (<span key={i} style={{ fontSize: 9, color: s.a >= s.b ? C.red : C.blue, fontFamily: DISPLAY }}>{s.a >= s.b ? "A" : "B"}</span>))}
               </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                <span style={{ fontSize: 8, color: C.dim, textTransform: "uppercase" }}>Momentum:</span>
+                <div style={{ flex: 1, height: 4, background: "#141a28", position: "relative" }}>
+                  <div style={{ position: "absolute", top: 0, bottom: 0, left: "50%", width: `${Math.abs(state?.mom || 0) * 0.5}%`, background: (state?.mom || 0) > 0 ? C.red : C.blue, transform: (state?.mom || 0) > 0 ? undefined : "translateX(-104%)" }} />
+                  <div style={{ position: "absolute", top: "50%", left: "50%", width: 2, height: 4, background: C.dim, transform: "translate(-50%, -50%)" }} />
+                </div>
+                <span style={{ fontSize: 8, color: (state?.mom || 0) >= 0 ? C.red : C.blue, fontFamily: DISPLAY, width: 16, textAlign: "center" }}>{(state?.mom || 0) >= 0 ? `${Math.round(state?.mom || 0)}%` : `${Math.round(Math.abs(state?.mom || 0))}%`}</span>
+              </div>
               <div style={{ fontSize: 10, color: C.gold, fontStyle: "italic" }}>
-                💡 {(() => { const staA = state?.staA || 100, staB = state?.staB || 100; const lead = state?.scores?.filter(s => s.a >= s.b).length || 0; const behind = (state?.scores?.length || 0) - lead; if (staB < 35) return 'Dia kehabisan bensin — bisa kamu habisi ronde ini!'; if (staA < 35) return 'Jaga stamina, bertahan dulu. Ambil nafas.'; if (behind > 0) return 'Kita butuh ronde ini. Ambil risiko — go!'; if (lead >= 2) return 'Kita unggul jauh. Tenang, jaga jarak.'; if (staA > staB + 20) return 'Kamu lebih segar — tingkatkan output sekarang.'; return 'Seimbang. Jalanin strategi aja, jangan serakah.'; })()}
+                💡 {(() => { const staA = state?.staA || 100, staB = state?.staB || 100; const lead = state?.scores?.filter(s => s.a >= s.b).length || 0; const behind = (state?.scores?.length || 0) - lead; const mom = state?.mom || 0; if (staB < 35 && mom > 20) return 'Dia kehabisan bensin dan momentum kita — habiskan sekarang!'; if (staB < 35) return 'Dia kehabisan bensin — bisa kamu habisi ronde ini!'; if (staA < 35) return 'Jaga stamina, bertahan dulu. Ambil nafas.'; if (mom < -40) return 'Dia di atas angin — bikin grappling, potong momentumnya!'; if (behind > 0 && mom > 30) return 'Kita momentum bagus meski skor kurang — teruskan tekanan!'; if (behind > 0) return 'Kita butuh ronde ini. Ambil risiko — go!'; if (lead >= 2) return 'Kita unggul jauh. Tenang, jaga jarak.'; if (staA > staB + 20) return 'Kamu lebih segar — tingkatkan output sekarang.'; return 'Seimbang. Jalanin strategi aja, jangan serakah.'; })()}
               </div>
             </div>
             {cornerOpts.map((o) => (
