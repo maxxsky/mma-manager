@@ -575,6 +575,24 @@ export function tick(g) {
       }
     });
 
+    // Promoter relationship: natural decay + tier spillover
+    if (g.promoterRel) {
+      const tiers = ["Local", "Regional", "National", "Major", "Premier"];
+      tiers.forEach((t) => {
+        // Decay: lose 1-2 points if no fight in this tier for 12+ weeks
+        const hasRecentFight = g.roster.some((f) => f.lastFightWeek && g.week - f.lastFightWeek <= 12 && g.log.some((l) => l.includes(t)));
+        if (!hasRecentFight && g.promoterRel[t] > 15) {
+          g.promoterRel[t] = clamp(g.promoterRel[t] - RI(1, 2), 5, 100);
+        }
+      });
+      // Spillover: high rel at tier N helps tier N+1 slightly
+      for (let i = 0; i < tiers.length - 1; i++) {
+        if (g.promoterRel[tiers[i]] >= 70) {
+          g.promoterRel[tiers[i + 1]] = clamp(g.promoterRel[tiers[i + 1]] + 0.5, 5, 100);
+        }
+      }
+    }
+
     if (g.investors && g.investors.length > 0) {
       const totalEquity = g.investors.reduce((s, inv) => s + inv.equity, 0);
       const equityCut = Math.round((sponsorAmt + fSponsor) * (totalEquity / 100));

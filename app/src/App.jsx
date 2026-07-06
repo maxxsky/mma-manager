@@ -483,11 +483,11 @@ export default function App() {
                         const counterChance = clamp(rel + 20, 10, 90);
                         if (random() * 100 < counterChance) {
                           const nf = n.roster.find((x) => x.id === m.fighterId);
-                          const boosted = Math.round(m.show * 1.3);
-                          nf.booked = { opponent: m.opponent, weeksLeft: m.weeks, show: boosted, winBonus: Math.round(m.winBonus * 1.3), tier: m.tier, title: m.title, titleTier: m.titleTier, defense: m.defense, oppRank: m.oppRank, contenderId: m.contenderId };
+                          const boosted = Math.round(m.show * (1.15 + rel / 200)); // 15-40% based on relationship
+                          nf.booked = { opponent: m.opponent, weeksLeft: m.weeks, show: boosted, winBonus: Math.round(m.winBonus * (1.15 + rel / 200)), tier: m.tier, title: m.title, titleTier: m.titleTier, defense: m.defense, oppRank: m.oppRank, contenderId: m.contenderId };
                           n.inbox = n.inbox.filter((x) => x.id !== m.id);
                           if (n.promoterRel) n.promoterRel[m.tier] = clamp(rel - 3, 0, 100);
-                          n.log.unshift(`💬 ${nf.name} counter offer diterima — purse naik ke ${fmt$(boosted)} (relasi ${m.tier} -3).`);
+                          n.log.unshift(`💬 ${nf.name} counter offer diterima — purse +${Math.round((1.15 + rel / 200 - 1) * 100)}% ke ${fmt$(boosted)} (relasi ${m.tier} -3).`);
                         } else {
                           n.inbox = n.inbox.filter((x) => x.id !== m.id);
                           if (n.promoterRel) n.promoterRel[m.tier] = clamp(rel - 5, 0, 100);
