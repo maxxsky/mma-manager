@@ -82,7 +82,7 @@ export default function App() {
           if (s.openGymActive == null) s.openGymActive = false;
           if (s.sponsor == null) s.sponsor = null;
           if (!s.investors) s.investors = [];
-          if (s.rep == null || isNaN(s.rep)) s.rep = 8;
+          if (s.rep == null || isNaN(s.rep) || s.rep <= 0) s.rep = 8;
           if (!s.sponsors) {
             s.sponsors = s.sponsor ? [{ brand: s.sponsor.brand, terms: "placement", rate: s.sponsor.rate, weeksLeft: null }] : [];
           }
