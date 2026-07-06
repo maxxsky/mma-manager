@@ -111,7 +111,11 @@ export function tick(g) {
         g.log.unshift(`✅ ${f.name} pulih dari cedera.`);
       }
       f.overtraining = clamp(f.overtraining - 10, 0, 100);
-      if (f.injury.costPerWeek) g.cash -= f.injury.costPerWeek;
+      if (f.injury.costPerWeek) {
+        // Medical clause affects camp cost: camp=100%, split=50%, fighter=0%
+        const medMult = f.contract?.medical === "fighter" ? 0 : f.contract?.medical === "split" ? 0.5 : 1;
+        g.cash -= Math.round(f.injury.costPerWeek * medMult);
+      }
       // Slight attribute decay during long injuries (realistic ring rust)
       if (f.injury.weeks > 4) {
         const decayAttr = f.injury.tier >= 2 ? ["striking","wrestling","bjj","footwork","strength","cardio"] : ["cardio"];
@@ -560,6 +564,17 @@ export function tick(g) {
     );
 
     // Equity deduction (investor)
+    // Fighter equity deduction (fighters with camp equity %)
+    g.roster.forEach((f) => {
+      if (f.contract?.equity && f.contract.equity > 0) {
+        const fighterCut = Math.round((sponsorAmt + fSponsor) * (f.contract.equity / 100));
+        if (fighterCut > 0) {
+          g.cash -= fighterCut;
+          f.morale = clamp(f.morale + 2, 0, 100); // equity partner = happier
+        }
+      }
+    });
+
     if (g.investors && g.investors.length > 0) {
       const totalEquity = g.investors.reduce((s, inv) => s + inv.equity, 0);
       const equityCut = Math.round((sponsorAmt + fSponsor) * (totalEquity / 100));
@@ -679,6 +694,22 @@ export function tick(g) {
       }
       if (f.ambition === "Star Power" && f.popularity < 30) {
         f.morale = clamp(f.morale - 2, 0, 100);
+      }
+
+      if (f.contract) {
+        // Duration expiry: contract time runs out regardless of fights left
+        const contractAge = g.week - (f.contract.signedWeek || f.joinedWeek || 0);
+        if (contractAge >= f.contract.durationMo * 4 && !g.inbox.some((m) => m.durationExpiredId === f.id)) {
+          g.inbox.unshift({
+            id: uid(), type: "event", durationExpiredId: f.id,
+            title: `${f.name} — kontrak habis (durasi)`,
+            body: `Kontrak ${f.name} sudah berjalan ${f.contract.durationMo} bulan. Dia kini free agent — perpanjang atau lepas.`,
+            choices: [
+              { label: "Negosiasi perpanjangan", openExtend: f.id },
+              { label: "Lepas (jadi free agent)", release: f.id },
+            ],
+          });
+        }
       }
 
       if (
