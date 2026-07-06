@@ -317,8 +317,11 @@ export default function App() {
         {tab === "rank" && (() => {
           const wc = rankDiv || (g.roster[0] && g.roster[0].weightClass) || "Lightweight";
           const div = g.divisions[wc];
+          const playerNames = new Set(g.roster.filter((f) => f.weightClass === wc).map((f) => f.name));
           const combined = [
-            ...div.list.map((c) => ({ name: c.name, points: c.points, player: false, arch: c.archetype })),
+            // AI fighters only (exclude names that match player fighters)
+            ...div.list.filter((c) => !playerNames.has(c.name)).map((c) => ({ name: c.name, points: c.points, player: false, arch: c.archetype })),
+            // Player fighters with rank points (not the champion)
             ...g.roster.filter((f) => f.weightClass === wc && (f.rankPoints || 0) > 0 && !(div.champ.player && div.champ.fighterId === f.id)).map((f) => ({ name: f.name, points: f.rankPoints, player: true, arch: f.archetype })),
           ].sort((a, b) => b.points - a.points);
           const top = combined.slice(0, 15);

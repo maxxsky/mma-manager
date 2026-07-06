@@ -282,7 +282,7 @@ export default function FightNight({ fighter, done }) {
         }
       } else {
         f.record.l++; f.streakL = (f.streakL || 0) + 1;
-        f.rankPoints = Math.floor((f.rankPoints || 0) / 2);
+        f.rankPoints = Math.floor((f.rankPoints || 0) * 0.70);
         if (!f.traits.includes("Iron Will")) f.morale = clamp(f.morale - 14, 0, 100);
         g2.chemistry = clamp(g2.chemistry - (result.how === "KO/TKO" || result.how === "Doctor Stoppage" ? 5 : 2), 0, 100);
         g2.rep = clamp(g2.rep - (result.how === "KO/TKO" ? 3 : 1), 2, 100); // kalah turun 1-3 rep, floor 2

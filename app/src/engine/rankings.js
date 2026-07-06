@@ -15,7 +15,7 @@ export function genDivisions() {
         points: Math.round(100 - r * 5 + R(-2, 2)), level: lvl,
       });
     }
-    d[w.name] = { champ: { name: genFighter(1.5).name, player: false }, list };
+    d[w.name] = { champ: { name: list[0].name, player: false, fighterId: null }, list };
   });
   return d;
 }
@@ -30,8 +30,9 @@ export function rankOf(g, f) {
 export function vacateTitle(g, f) {
   const div = g.divisions && g.divisions[f.weightClass];
   if (div && div.champ.player && div.champ.fighterId === f.id) {
-    div.champ = { name: genFighter(1.45).name, player: false };
-    g.log.unshift(`👑 Title ${f.weightClass} vakum, lalu diisi juara baru.`);
+    const newChamp = div.list[0];
+    div.champ = { name: newChamp.name, player: false, fighterId: null };
+    g.log.unshift(`👑 Title ${f.weightClass} vakum — ${newChamp.name} (#1 contender) naik jadi juara baru.`);
   }
 }
 

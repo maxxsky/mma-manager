@@ -579,9 +579,43 @@ export function tick(g) {
       });
     });
 
+        // AI ranking movement — more dynamic (was ±3-4)
     Object.values(g.divisions).forEach((d) =>
-      d.list.forEach((c) => { c.points = clamp(c.points + RI(-3, 4), 5, 120); }),
+      d.list.forEach((c) => { c.points = clamp(c.points + RI(-8, 12), 5, 120); }),
     );
+
+    // AI fighter rotation: every 48 weeks, retire bottom 3, 3 new prospects enter
+    if (g.week % 48 === 0) {
+      Object.values(g.divisions).forEach((d) => {
+        // Retire fighters with simulated aging
+        const retireCount = 3;
+        const retired = d.list.splice(d.list.length - retireCount, retireCount);
+        const retiredNames = retired.map((x) => x.name).join(", ");
+        // Generate 3 new prospects at the bottom
+        for (let i = 0; i < retireCount; i++) {
+          const lvl = R(0.5, 0.85);
+          const nf = genFighter(lvl);
+          d.list.push({
+            id: uid(), name: nf.name, archetype: nf.archetype,
+            points: Math.round(R(10, 25)), level: lvl,
+          });
+        }
+        g.log.unshift(`🔄 ${d.list[0]?.archetype ? d.list[0].archetype + " " : ""}Divisi — 3 fighter pensiun diganti prospect baru. (${retiredNames})`);
+      });
+    }
+
+    // ---------- rank decay for inactivity ----------
+    g.roster.forEach((f) => {
+      if (f.injury || f.booked) return;
+      if (!f.rankPoints || f.rankPoints <= 0) return;
+      const weeksSinceFight = g.week - (f.lastFightWeek || 0);
+      if (weeksSinceFight > 24) {
+        f.rankPoints = Math.max(1, f.rankPoints - 1);
+        if (weeksSinceFight > 36 && g.week % 4 === 0) {
+          g.log.unshift(`📉 ${f.name}: rank pts -1 karena ${Math.floor(weeksSinceFight / 4)} bulan tanpa fight.`);
+        }
+      }
+    });
 
     // ---------- monthly ambition + fighter requests ----------
     g.roster.forEach((f) => {
