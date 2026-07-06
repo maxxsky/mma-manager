@@ -349,8 +349,32 @@ export function tick(g) {
       const rep = g.rep;
       const r = rankOf(g, f);
 
-      // Interim title
+      // Interim title unification: champion recovered, create unification fight
       const wcDiv = g.divisions[f.weightClass];
+      if (wcDiv && wcDiv.champ && wcDiv.champ.fighterId) {
+        const currentChamp = g.roster.find((x) => x.id === wcDiv.champ.fighterId);
+        if (currentChamp && !currentChamp.injury && !currentChamp.booked) {
+          const interimChamp = g.roster.find((x) =>
+            x.weightClass === f.weightClass && x.id !== currentChamp.id &&
+            x.titles.includes("Interim Champion")
+          );
+          if (interimChamp && !interimChamp.booked && !interimChamp.injury && !g.inbox.some((m) => m.type === "offer" && m.unificationFor === interimChamp.id)) {
+            g.inbox.unshift({
+              id: uid(), type: "offer", fighterId: interimChamp.id, expires: 4,
+              tier: "Major", show: RI(250, 500) * 1000, winBonus: RI(250, 500) * 1000,
+              opponent: { name: currentChamp.name, archetype: currentChamp.archetype, record: currentChamp.record, weightClass: interimChamp.weightClass },
+              title: true, defense: false, oppRank: 0, contenderId: null,
+              titleTier: "Major", titleText: "🤝 INTERIM TITLE UNIFICATION", weeks: RI(4, 6),
+              unificationFor: interimChamp.id,
+            });
+            g.log.unshift("🤝 UNIFICATION: " + interimChamp.name + " (interim) vs " + currentChamp.name + " (juara)!");
+            return;
+          }
+        }
+      }
+
+      // Interim title
+      // (original check below)
       if (
         wcDiv && wcDiv.champ && wcDiv.champ.fighterId &&
         wcDiv.champ.fighterId !== f.id
@@ -598,6 +622,7 @@ export function tick(g) {
           d.list.push({
             id: uid(), name: nf.name, archetype: nf.archetype,
             points: Math.round(R(10, 25)), level: lvl,
+            record: { w: RI(0, 3), l: RI(0, 2), ko: 0, sub: 0, dec: 0 },
           });
         }
         g.log.unshift(`🔄 ${d.list[0]?.archetype ? d.list[0].archetype + " " : ""}Divisi — 3 fighter pensiun diganti prospect baru. (${retiredNames})`);

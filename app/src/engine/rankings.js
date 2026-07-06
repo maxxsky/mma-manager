@@ -10,10 +10,13 @@ export function genDivisions() {
     for (let r = 1; r <= 15; r++) {
       const lvl = clamp(1.4 - r * 0.035, 0.8, 1.5);
       const nf = genFighter(lvl);
+      const baseWins = Math.round(20 - r * 0.8);
       list.push({
         id: uid(), name: nf.name, archetype: nf.archetype,
         points: Math.round(100 - r * 5 + R(-2, 2)), level: lvl,
+        record: { w: baseWins + RI(-2, 2), l: RI(0, clamp(r - 3, 0, 6)), ko: Math.round((baseWins + 2) * 0.35), sub: Math.round((baseWins + 2) * 0.20), dec: 0 },
       });
+      list[list.length - 1].record.dec = list[list.length - 1].record.w - list[list.length - 1].record.ko - list[list.length - 1].record.sub;
     }
     d[w.name] = { champ: { name: list[0].name, player: false, fighterId: null }, list };
   });
