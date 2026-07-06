@@ -88,7 +88,7 @@ function pickExchange(pos, A, B, planA, matchup) {
     pool.push("power");
     pool.push("clinch", "clinch");
     const tdWeightA = A.attrs.wrestling > 55 || planA === "Take It Down" ? 4 : 1;
-    const tdWeightB = B.attrs.wrestling > 55 ? 3 : 1;
+    const tdWeightB = B.attrs.wrestling > 55 ? 4 : 1;
     for (let i = 0; i < tdWeightA; i++) pool.push("td");
     for (let i = 0; i < tdWeightB; i++) pool.push("tdB");
   } else {
@@ -201,11 +201,15 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       }
       if (la > lb + 4) mom += 8;
       else if (lb > la + 4) mom -= 8;
-      // Takedown from clinch
+      // Takedown from clinch — both fighters can trip
       if (random() < 0.25 && A.attrs.wrestling > 40) {
         position = { type: "halfGuard", top: "A" };
         tickOnly(exMin, exSec + 8, `${A.name} trips ${B.name} from the clinch — half guard!`);
         mom += 5;
+      } else if (random() < 0.25 && B.attrs.wrestling > 40) {
+        position = { type: "halfGuard", top: "B" };
+        tickOnly(exMin, exSec + 8, `${B.name} trips ${A.name} from the clinch — half guard!`);
+        mom -= 5;
       }
 
     // ── TAKEDOWN ──
