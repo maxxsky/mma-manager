@@ -13,7 +13,7 @@ import { getRel } from "./relationships.js";
 // ---------- initial state ----------
 export function newGame() {
   const freeCoach = genCoach();
-  freeCoach.salary = 0;
+  freeCoach.salary = Math.max(500, freeCoach.salary); // minimum salary biar gak $0
   freeCoach.freeUntil = 4;
   return {
     week: 1, cash: 100000, rep: 8, chemistry: 60,
@@ -246,7 +246,7 @@ export function tick(g) {
         ],
       });
     } else if (roll < 0.45 && coachTarget) {
-      const raiseAmt = coachTarget.salary * RI(1, 2);
+      const raiseAmt = Math.max(500, coachTarget.salary * RI(1, 2)); // minimum raise $500
       g.inbox.unshift({
         id: uid(), type: "event", title: `${coachTarget.name} minta naik gaji`,
         body: `${coachTarget.name} merasa underpaid. Dia minta gaji ${fmt$(raiseAmt)}/bulan atau akan resign.`,

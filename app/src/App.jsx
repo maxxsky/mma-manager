@@ -287,6 +287,7 @@ export default function App() {
             </Card>
             <Card>
               <H>{t("UI.fightSchedule")}</H>
+              {(() => { const offerCount = g.inbox.filter(m => m.type === "offer").length; return offerCount > 0 ? <div style={{ background: `${C.gold}18`, border: `1px solid ${C.gold}44`, padding: 8, marginBottom: 8, ...cut(4) }}><div style={{ color: C.gold, fontSize: 13, fontFamily: DISPLAY, letterSpacing: 1 }}>📨 {offerCount} tawaran fight menunggu — cek Inbox!</div></div> : null; })()}
               {g.roster.filter((f) => f.booked).length === 0 && <div style={{ color: C.dim, fontSize: 13 }}>Belum ada fight terjadwal — cek Inbox untuk offer promotor.</div>}
               {g.roster.filter((f) => f.booked).map((f) => (
                 <div key={f.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: `1px solid ${C.line}` }}>

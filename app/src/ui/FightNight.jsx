@@ -196,7 +196,7 @@ export default function FightNight({ fighter, done }) {
         if (g2.promoterRel) g2.promoterRel[b.tier] = clamp((g2.promoterRel[b.tier] || 30) - 5, 0, 100);
       }
       if (weighinIssue === "cancelled") {
-        f.booked = null; g2.rep = clamp(g2.rep - 4, 0, 100);
+        f.booked = null; g2.rep = clamp(g2.rep - 3, 2, 100); // floor 2 biar gak death spiral
         if (g2.promoterRel) g2.promoterRel[b.tier] = clamp((g2.promoterRel[b.tier] || 30) - 15, 0, 100);
         g2.log.unshift(`🚫 Fight ${f.name} dibatalkan (miss weight). Rep -4, relasi turun.`);
         return;
@@ -262,6 +262,7 @@ export default function FightNight({ fighter, done }) {
         f.rankPoints = Math.floor((f.rankPoints || 0) / 2);
         if (!f.traits.includes("Iron Will")) f.morale = clamp(f.morale - 14, 0, 100);
         g2.chemistry = clamp(g2.chemistry - (result.how === "KO/TKO" || result.how === "Doctor Stoppage" ? 5 : 2), 0, 100);
+        g2.rep = clamp(g2.rep - (result.how === "KO/TKO" ? 3 : 1), 2, 100); // kalah turun 1-3 rep, floor 2
         g2.log.unshift(`❌ ${f.name} kalah via ${result.how} (R${result.r}). Ranking pts terpangkas setengah. Camp cut ${fmt$(cutC)}.`);
         if (b.defense) {
           if (div) div.champ = { name: b.opponent.name, player: false };
