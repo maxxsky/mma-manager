@@ -143,10 +143,12 @@ export default function FightNight({ fighter, done }) {
   }, [stage, rnd]);
   useEffect(() => { if (stage === "corner" && timer <= 0) nextRound(); }, [timer]);
   // Tick-by-Tick: reveal log lines one by one
+  // tickIdx NOT in dep array — interval is closure-safe via functional setTickIdx(prev=>).
+  // Putting tickIdx as dep forces interval re-create ON EVERY TICK (flicker + lost updates).
   useEffect(() => {
     if (viewMode !== "tick" || stage !== "round" || !roundLog) return;
     const displayLog = roundLog.tickLog || roundLog.log;
-    if (tickIdx >= displayLog.length) return;
+    if (displayLog.length === 0) return;
     const iv = setInterval(() => {
       setTickIdx((prev) => {
         const next = prev + 1;
@@ -155,7 +157,7 @@ export default function FightNight({ fighter, done }) {
       });
     }, 500);
     return () => clearInterval(iv);
-  }, [viewMode, stage, roundLog, tickIdx]);
+  }, [viewMode, stage, roundLog]);
   // Auto-advance to corner when tick-by-tick finishes
   useEffect(() => {
     if (viewMode !== "tick" || stage !== "round" || !roundLog || !state) return;
