@@ -8,7 +8,7 @@ import {
 import { weeklyFee, avgSkill } from "./fighter.js";
 import { WEIGHTS } from "./data.js";
 import { vacateTitle } from "./rankings.js";
-import { coachBonus, facBonus } from "./economy.js";
+import { coachBonus, facBonus, facilityCost } from "./economy.js";
 import { getRel } from "./relationships.js";
 
 export function reducer(g, action) {
@@ -41,7 +41,7 @@ export function reducer(g, action) {
       const lvl = g.facilities[action.facility] || 0;
       const max = (CAMP_TIERS[g.campTier || 0]?.facMax || [2,2,2,2])[Object.keys(g.facilities).indexOf(action.facility)];
       if (lvl < max) {
-        const cost = lvl * (15000 + (g.campTier || 0) * 10000);
+        const cost = facilityCost(lvl, g.campTier);
         if (g.cash >= cost) {
           g.cash -= cost;
           g.facilities[action.facility] = lvl + 1;

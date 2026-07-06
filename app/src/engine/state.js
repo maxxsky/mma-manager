@@ -31,7 +31,7 @@ export function newGame() {
     coachMarket: [genCoach(), genCoach(), genCoach()],
     facilities: { mats: 1, ring: 1, weights: 1, medical: 1 },
     campTier: 0,
-    campTag: pick(Object.keys(RIVAL_TRAITS)),
+    campTag: pick(Object.keys(CAMP_SPECS)),
     divisions: genDivisions(),
     inbox: [], log: ["Camp dibuka. Budget awal $35,000. Bertahan dan menangkan fight."],
     prospects: [], legacy: 0, over: null, won: false,
@@ -563,9 +563,22 @@ export function tick(g) {
       }
     }
 
-    if (random() < 0.5) {
-      g.coachMarket = [genCoach(), genCoach(), genCoach()];
-    }
+    // Coach market refresh: size scales with rep (2-7 coaches)
+    const marketSize = clamp(2 + Math.floor(g.rep / 15), 2, 7);
+    const market = [];
+    for (let i = 0; i < marketSize; i++) market.push(genCoach());
+    g.coachMarket = market;
+
+    // Coach skill growth: +0.5/year for coaches with active fighters
+    g.coaches.forEach((c) => {
+      if (c.skill < 10 && g.roster.some((f) => !f.injury)) {
+        c.skill = clamp(c.skill + 0.5, 1, 10);
+        if (c.skill === Math.round(c.skill)) {
+          c.salary = Math.round(c.salary * 1.05); // 5% raise per skill point
+          g.log.unshift(`📈 ${c.name} naik ke skill ${Math.round(c.skill)} — gaji jadi ${fmt$(c.salary)}/bln.`);
+        }
+      }
+    });
 
     // Investor offer generation
     const existingTypes = (g.investors || []).map((i) => i.tier);

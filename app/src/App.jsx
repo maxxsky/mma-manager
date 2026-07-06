@@ -6,7 +6,7 @@ import { R, RI, clamp, pick, fmt$, uid, random } from "./engine/rng.js";
 import {
   ATTRS, ATTR_LABEL, WEIGHTS, ARCH_COLOR, TRAITS, AMBITIONS, AMBITION_KEYS,
   AGENT_TYPES, GAME_PLANS, TRAINING, INTENSITY, COACH_PERSONALITIES,
-  CAMP_TIERS, SPONSOR_BRANDS, FAC_LABEL, RIVAL_TRAITS, PROMO_TIERS,
+  CAMP_TIERS, CAMP_SPECS, SPONSOR_BRANDS, FAC_LABEL, RIVAL_TRAITS, PROMO_TIERS,
 } from "./engine/data.js";
 import { genFighter, assignAgent, agentFor, avgSkill, tierOf, weeklyFee, scoutGrade, makeReport, genCoach } from "./engine/fighter.js";
 import { genDivisions, rankOf, vacateTitle, stripTitle, initPromoterRel } from "./engine/rankings.js";
@@ -703,7 +703,7 @@ export default function App() {
                   <span>{c.name} <Tag>{c.spec}</Tag><span style={{ fontFamily: DISPLAY, color: C.gold }}> {c.skill}</span>
                     {c.personality && <Tag color={C.green}>{COACH_PERSONALITIES[c.personality]?.icon} {c.personality}</Tag>}</span>
                   <span style={{ color: C.dim, fontSize: 11 }}>{c.freeUntil && g.week <= c.freeUntil ? "gratis (intro)" : fmt$(c.salary) + "/bln"}
-                    {g.coaches.length > 1 && <button onClick={() => up((n) => { n.coaches = n.coaches.filter((x) => x.id !== c.id); n.chemistry = clamp(n.chemistry - 5, 0, 100); })} style={{ marginLeft: 8, background: "none", border: "none", color: C.red, cursor: "pointer", fontSize: 11 }}>pecat</button>}
+                    {g.coaches.length > 1 && <button onClick={() => up((n) => { n.cash -= c.salary; n.coaches = n.coaches.filter((x) => x.id !== c.id); n.chemistry = clamp(n.chemistry - 5, 0, 100); n.log.unshift(`👋 ${c.name} dipecat — severance 1 bulan gaji (${fmt$(c.salary)}). Chemistry -5.`); })} style={{ marginLeft: 8, background: "none", border: "none", color: C.red, cursor: "pointer", fontSize: 11 }}>pecat</button>}
                   </span>
                 </div>
               ))}
@@ -716,7 +716,7 @@ export default function App() {
                     <div style={{ color: C.chalk, fontSize: 13 }}>{c.name} <Tag>{c.spec}</Tag><span style={{ fontFamily: DISPLAY, color: C.gold }}> {c.skill}</span>{c.personality && <Tag color={C.green}>{c.personality}</Tag>}</div>
                     <div style={{ color: C.dim, fontSize: 11 }}>{fmt$(c.salary)}/bulan</div>
                   </div>
-                  <Btn small disabled={g.coaches.length >= coachCap} onClick={() => up((n) => { n.coaches.push(c); n.coachMarket = n.coachMarket.filter((x) => x.id !== c.id); n.log.unshift(`👨‍🏫 ${c.name} (${c.spec}) direkrut.`); })}>Hire</Btn>
+                  <Btn small disabled={g.coaches.length >= coachCap} onClick={() => up((n) => { n.coaches.push(c); n.coachMarket = n.coachMarket.filter((x) => x.id !== c.id); n.log.unshift(`👨‍🏫 ${c.name} (${c.spec}) direkrut — gaji ${fmt$(c.salary)}/bln.`); })} title={`Gaji ${fmt$(c.salary)}/bln — ${monthlyIn > 0 ? Math.round(c.salary / Math.max(monthlyIn, 1) * 100) : '?'}% dari income bulanan`}>Hire</Btn>
                 </div>
               ))}
             </Card>
@@ -742,19 +742,19 @@ export default function App() {
               <H>🏷️ Spesialisasi Camp · {g.campTag || "Belum dipilih"}</H>
               <div style={{ color: C.dim, fontSize: 11, marginBottom: 8 }}>
                 {g.campTag
-                  ? `${RIVAL_TRAITS[g.campTag]?.desc || ""} — ${RIVAL_TRAITS[g.campTag]?.spec ? `bonus training ${RIVAL_TRAITS[g.campTag].spec.toUpperCase()} +6%` : "bonus gain 10% untuk semua latihan"}`
+                  ? CAMP_SPECS[g.campTag]?.desc || "Belum dipilih"
                   : "Pilih spesialisasi yang cocok dengan roster-mu."}
               </div>
               {g.rep >= 5 && (
                 <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                  {Object.entries(RIVAL_TRAITS).map(([k, v]) => (
+                  {Object.entries(CAMP_SPECS).map(([k, v]) => (
                     <button key={k} onClick={() => up((n) => {
                       n.campTag = k;
                       if (g.campTag !== k) n.log.unshift(`🏷️ Camp spesialisasi berubah: ${k}. Bonus training: ${v.spec ? v.spec.toUpperCase() + " +6%" : "semua +10%"} .`);
                     })}
                       style={{ background: g.campTag === k ? C.gold : C.panel2, color: g.campTag === k ? "#0a0d14" : C.chalk, border: `1px solid ${C.line}`, padding: "6px 9px", fontSize: 10, cursor: "pointer", flex: "0 0 calc(50% - 3px)", ...cut(6) }}>
                       <div style={{ fontFamily: DISPLAY, letterSpacing: 1, textTransform: "uppercase", marginBottom: 2 }}>{k}</div>
-                      <div style={{ fontSize: 8, color: g.campTag === k ? "#0a0d1488" : C.dim }}>{v.spec ? `${v.spec.toUpperCase()} +6%` : "Semua +10%"}</div>
+                      <div style={{ fontSize: 8, color: g.campTag === k ? "#0a0d1488" : C.dim }}>{v.desc}</div>
                     </button>
                   ))}
                 </div>
@@ -767,7 +767,7 @@ export default function App() {
                 const lvl = g.facilities[k] || 1;
                 const idx = { mats:0, ring:1, weights:2, medical:3 }[k];
                 const max = tier.facMax[idx];
-                const cost = lvl * (15000 + g.campTier * 10000);
+                const cost = facilityCost(lvl, g.campTier);
                 return (
                   <div key={k} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: `1px solid ${C.line}55` }}>
                     <div>

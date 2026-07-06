@@ -119,6 +119,15 @@ export const COACH_PERSONALITIES = {
 export const RIVAL_NAMES = [
   "Chimera Gym", "Blackthorn MMA", "Cerberus Camp", "Kruel Combat", "Apex Fight Team",
 ];
+// Camp specialization tags (separate from rival traits)
+export const CAMP_SPECS = {
+  "Striking Focus": { spec: "striking", bonus: 1.06, desc: "Bonus training striking +6%" },
+  "Grappling Academy": { spec: "wrestling", bonus: 1.06, desc: "Bonus training wrestling +6%" },
+  "BJJ Lab": { spec: "bjj", bonus: 1.06, desc: "Bonus training BJJ +6%" },
+  "Well-Rounded": { spec: null, bonus: 1.10, desc: "Semua training +10%" },
+  "Conditioning Center": { spec: "strength", bonus: 1.06, desc: "Bonus training strength +6%" },
+};
+
 export const RIVAL_TRAITS = {
   "Striking Factory": { spec: "striking", bonus: 1.15 },
   "Wrestling Hub": { spec: "wrestling", bonus: 1.15 },
@@ -131,7 +140,7 @@ export const PROMO_TIERS = ["Local", "Regional", "National", "Major", "Premier"]
 
 // ---------- camp tier ----------
 export const CAMP_TIERS = [
-  { name: "Local Gym",     rep: 0,   cost: 0,       rosterCap: 4, coachCap: 1, facMax: [2,2,2,1], trainBonus: 0,    desc: "Gym kecil lingkungan. Upgrade terbatas." },
+  { name: "Local Gym",     rep: 0,   cost: 0,       rosterCap: 4, coachCap: 1, facMax: [2,2,2,2], trainBonus: 0,    desc: "Gym kecil lingkungan. Upgrade terbatas." },
   { name: "Regional Camp", rep: 15,  cost: 25000,   rosterCap: 6, coachCap: 2, facMax: [3,3,3,2], trainBonus: 0.05, desc: "Camp dikenal regional. Kapasitas & coach naik." },
   { name: "National Center", rep: 35, cost: 60000,  rosterCap: 8, coachCap: 3, facMax: [4,4,4,3], trainBonus: 0.10, desc: "Pusat latihan nasional. Fasilitas kelas atas." },
   { name: "Elite MMA Factory", rep: 55, cost: 120000, rosterCap: 10, coachCap: 4, facMax: [5,5,5,4], trainBonus: 0.15, desc: "Factory kelas dunia. Scout otomatis per bulan." },
