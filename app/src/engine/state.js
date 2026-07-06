@@ -705,11 +705,14 @@ export function tick(g) {
         const newF = assignAgent(genFighter(R(0.3, 0.7)));
         rc.fighters.push(newF);
         rc.lastScoutWeek = g.week;
+        g.log.unshift(`👀 ${rc.name} merekrut ${newF.name} (${newF.archetype}, ${newF.weightClass}).`);
       }
       rc.fighters = rc.fighters.filter((f) => f.age < 40);
       rc.rivalry = clamp(rc.rivalry - 0.5, 0, 100);
       rc.rep = clamp(rc.rep + R(-1, 2), 2, 90);
       rc.cash += RI(5000, 20000);
+      // Rival activity visible in log
+      if (rc.rep > g.rep + 10 && g.week % 12 === 0) g.log.unshift(`📈 ${rc.name} rep ${Math.round(rc.rep)} — melewati camp kita!`);
     });
 
     // poaching
