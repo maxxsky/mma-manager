@@ -123,7 +123,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
 
   // Submission progress system (not binary)
   let subProgress = 0;
-  const SUB_THRESHOLD = (A.archetype === "BJJ Specialist" || B.archetype === "BJJ Specialist") ? 40 : 50;
+  const SUB_THRESHOLD = (A.archetype === "BJJ Specialist" || B.archetype === "BJJ Specialist") ? 55 : 50;
 
   const both = (min, sec, msg) => {
     const line = `[${min}:${String(sec).padStart(2, "0")}] ${msg}`;
@@ -189,7 +189,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       const outB = effAttr(B, "striking", stB, {}) * (isThaiB ? 1.4 : 1) * (1 + (matchup.bClinch || 0));
       const la = Math.round(outA * R(0.3, 0.6));
       const lb = Math.round(outB * R(0.3, 0.6));
-      dmgB += la * (isThaiA ? 1.8 : 1); dmgA += lb * (isThaiB ? 1.8 : 1);
+      dmgB += la * (isThaiA ? 1.1 : 1); dmgA += lb * (isThaiB ? 1.1 : 1);
       bodyDmgB += la * 0.5; bodyDmgA += lb * 0.5;
       landA += la; landB += lb;
       ptsA += Math.round(la * 1.2); ptsB += Math.round(lb * 1.2);
