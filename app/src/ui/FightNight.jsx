@@ -259,7 +259,7 @@ export default function FightNight({ fighter, done }) {
         if (b.titleTier === "Major") {
           if (!f.titles.includes("Major World Champion")) f.titles.push("Major World Champion");
           if (div) div.champ = { name: f.name, player: true, fighterId: f.id };
-          g2.rep = clamp(g2.rep + 20, 0, 100); g2.legacy += 2000; g2.won = true;
+          g2.rep = clamp(g2.rep + 20, 0, 100); g2.legacy += 2000; g2.won = true; g2.log.unshift("⭐ Milestone: Legacy mencapai " + Math.round(g2.legacy).toLocaleString() + " pts!");
           g2.log.unshift(`👑 ${f.name} adalah MAJOR WORLD CHAMPION ${f.weightClass}!`);
         } else if (b.titleTier === "Premier") {
           if (!f.titles.includes("Premier World Champion")) f.titles.push("Premier World Champion");

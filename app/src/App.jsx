@@ -233,20 +233,20 @@ export default function App() {
 
       <div style={{ maxWidth: 680, margin: "0 auto", padding: 12 }}>
         {/* Win Condition Display */}
-        {g.won && (() => {
+        {(g.legacy || 0) > 0 && (() => {
           const wcLegacy = g.legacy;
           const wc = wcLegacy >= 100000 ? { tier: "GOAT", icon: "🐐", color: "#ff4488", label: "Greatest of All Time", unlocked: true, total: 5 }
             : wcLegacy >= 50000 ? { tier: "Platinum", icon: "💎", color: "#b5e4ff", label: "MMA Empire", unlocked: true, total: 5 }
             : wcLegacy >= 25000 ? { tier: "Gold", icon: "👑", color: C.gold, label: "World Class Camp", unlocked: true, total: 5 }
-            : wcLegacy >= 12000 ? { tier: "Silver", icon: "🥈", color: "#b0b8c8", label: "Respected Camp", unlocked: false, total: 5 }
-            : wcLegacy >= 5000 ? { tier: "Bronze", icon: "🥉", color: "#c48a4a", label: "Rising Camp", unlocked: false, total: 5 }
+            : wcLegacy >= 12000 ? { tier: "Silver", icon: "🥈", color: "#b0b8c8", label: "Respected Camp", unlocked: true, total: 5 }
+            : wcLegacy >= 5000 ? { tier: "Bronze", icon: "🥉", color: "#c48a4a", label: "Rising Camp", unlocked: true, total: 5 }
             : null;
           if (!wc) return null;
           return (
             <Card accent={wc.color} style={{ textAlign: "center" }}>
               <div style={{ fontSize: 28 }}>{wc.icon}</div>
               <div style={{ fontFamily: DISPLAY, color: wc.color, fontSize: 18, letterSpacing: 2, textTransform: "uppercase", animation: wc.unlocked ? "goldglow 2s infinite" : "none" }}>{wc.label}</div>
-              <div style={{ color: C.dim, fontSize: 12, marginTop: 3 }}>{wc.tier} — Legacy {(g.legacy || 0).toLocaleString()}/100,000 · {wc.unlocked ? "✅ Dicapai!" : `Butuh ${wc.tier === "Silver" ? "12.000" : "5.000"} Legacy`}</div>
+              <div style={{ color: C.dim, fontSize: 12, marginTop: 3 }}>{wc.tier} — Legacy {(g.legacy || 0).toLocaleString()} pts · Tier {wc.total} tiers</div>
               <div style={{ display: "flex", gap: 4, justifyContent: "center", marginTop: 6 }}>
                 {[{ k: "Bronze", i: "🥉" }, { k: "Silver", i: "🥈" }, { k: "Gold", i: "👑" }, { k: "Platinum", i: "💎" }, { k: "GOAT", i: "🐐" }].map((t) => (
                   <div key={t.k} style={{ fontSize: 12, opacity: g.legacy >= ({ Bronze: 5000, Silver: 12000, Gold: 25000, Platinum: 50000, GOAT: 100000 })[t.k] ? 1 : 0.2 }}>{t.i}</div>
