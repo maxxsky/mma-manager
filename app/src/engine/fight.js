@@ -113,7 +113,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
 
   // Submission progress system (not binary)
   let subProgress = 0;
-  const SUB_THRESHOLD = 65;
+  const SUB_THRESHOLD = 50; // was 65 — submissions finish faster now
 
   const both = (min, sec, msg) => {
     const line = `[${min}:${String(sec).padStart(2, "0")}] ${msg}`;
@@ -145,8 +145,9 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       const defB = effAttr(A, "footwork", stA, {}) * clamp(1 - (legDmgB || 0) * 0.003, 0.70, 1);
       const outA = effAttr(A, "striking", stA, {}) * agg * phase * momMult * pow * (1 + strikeModA);
       const outB = effAttr(B, "striking", stB, {}) * phase * pow;
-      const la = Math.round(R(4, 10) * (outA / (outA + defA + 1)));
-      const lb = Math.round(R(3, 8) * (outB / (outB + defB + 1)));
+      // More responsive: skill difference matters more (was / (out+def+1), now / (def+8))
+      const la = Math.round(R(4, 10) * (outA / (defA + 8)));
+      const lb = Math.round(R(3, 8) * (outB / (defB + 8)));
       const hitB = la * (effAttr(A, "strength", stA) / 50) * R(0.8, 1.3);
       const hitA = lb * (effAttr(B, "strength", stB) / 50) * R(0.8, 1.3);
       dmgB += hitB; dmgA += hitA;
@@ -155,8 +156,8 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       legDmgB += hitB * (cornerA === "body" ? 0.5 : 0.15);
       legDmgA += hitA * 0.15;
       landA += la; landB += lb;
-      ptsA += la + Math.round(hitB * 0.4);
-      ptsB += lb + Math.round(hitA * 0.4);
+      ptsA += la + Math.round(hitB * 0.6);
+      ptsB += lb + Math.round(hitA * 0.6);
 
       if (la + lb > 0) {
         both(exMin, exSec, `${A.name} landed ${la} strikes — ${B.name} ${lb}.`);
@@ -171,8 +172,8 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       const isThaiA = A.archetype === "Muay Thai";
       const isThaiB = B.archetype === "Muay Thai";
       const clinchModA = (matchup.aClinch || 0);
-      const dmgThaiA = isThaiA ? R(4, 10) * (1 + clinchModA) : R(1, 4);
-      const dmgThaiB = isThaiB ? R(4, 10) : R(1, 4);
+      const dmgThaiA = isThaiA ? R(5, 12) * (1 + clinchModA) : R(2, 6);
+      const dmgThaiB = isThaiB ? R(5, 12) : R(2, 6);
       const outA = effAttr(A, "striking", stA, {}) * agg * (isThaiA ? 1.4 : 1) * (1 + clinchModA);
       const outB = effAttr(B, "striking", stB, {}) * (isThaiB ? 1.4 : 1);
       const la = Math.round(outA * R(0.3, 0.6));
@@ -248,8 +249,8 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       const subMod = (matchup.aSub || 0);
 
       const adv = clamp(
-        (effAttr(attacker, "bjj", attackerSta, {}) * 0.7 + effAttr(attacker, "strength", attackerSta, {}) * 0.15 + posBonus + subMod * 30)
-        - (effAttr(defender, "bjj", defenderSta, {}) * 0.5 + effAttr(defender, "fightIQ", defenderSta, {}) * 0.3),
+        (effAttr(attacker, "bjj", attackerSta, {}) * 0.8 + effAttr(attacker, "strength", attackerSta, {}) * 0.2 + posBonus + subMod * 30)
+        - (effAttr(defender, "bjj", defenderSta, {}) * 0.5 + effAttr(defender, "fightIQ", defenderSta, {}) * 0.25),
         -10, 45
       );
 
@@ -315,7 +316,9 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       const kdTarget = dmgA > dmgB ? A : B;
       const isTargetA = kdTarget === A;
       const chin = effAttr(kdTarget, "chin", isTargetA ? stA : stB);
-      const kdChance = clamp(((isTargetA ? dmgA : dmgB) - 40) / chin * 0.3, 0, 0.35) * (planA === "Finish It" ? 1.5 : 1);
+      // Power matters for knockdown: strength bonus added to KD chance
+      const attackerStr = effAttr(isTargetA ? B : A, "strength", isTargetA ? stB : stA);
+      const kdChance = clamp(((isTargetA ? dmgA : dmgB) - 40) / chin * 0.3 + (attackerStr - 40) * 0.002, 0, 0.40) * (planA === "Finish It" ? 1.5 : 1);
       if (random() < kdChance) {
         knockdown = { fighter: isTargetA ? "A" : "B", name: kdTarget.name, canRecover: true };
         both(exMin + 1, 0, `${kdTarget.name} IS DOWN! He's hurt bad!`);
