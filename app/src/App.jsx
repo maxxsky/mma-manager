@@ -43,6 +43,8 @@ export default function App() {
   const [nego, setNego] = useState(null);
   const [saveSlot, setSaveSlotState] = useState(getSaveSlot());
   const [weeklySummary, setWeeklySummary] = useState(null);
+  const [scoutFilterArch, setScoutFilterArch] = useState(null);
+  const [scoutFilterWC, setScoutFilterWC] = useState(null);
   const [slotInfo, setSlotInfo] = useState([]);
   const { t, lang, setLang } = useLang();
 
@@ -143,12 +145,23 @@ export default function App() {
 
   const fightFighter = activeFight ? g.roster.find((f) => f.id === activeFight) : null;
 
-  const scout = (cost, level, label) => {
+  const scout = (cost, level, label, filterArch, filterWC) => {
     up((n) => {
       n.cash -= cost;
       const grade = scoutGrade(n.rep);
-      const f = assignAgent(genFighter(R(level[0], level[1])));
-      n.prospects.unshift({ id: uid(), fighter: f, report: makeReport(f, grade), grade, method: label });
+      let f = assignAgent(genFighter(R(level[0], level[1])));
+      // Apply filter: regenerate until match or max 5 attempts
+      if (filterArch || filterWC) {
+        for (let attempt = 0; attempt < 5; attempt++) {
+          if ((!filterArch || f.archetype === filterArch) && (!filterWC || f.weightClass === filterWC)) break;
+          f = assignAgent(genFighter(R(level[0], level[1])));
+        }
+      }
+      n.prospects.unshift({ id: uid(), fighter: f, report: makeReport(f, grade), grade, method: label, scoutedWeek: n.week });
+      if (n.prospects.length > 5) {
+        const dropped = n.prospects[5];
+        n.log.unshift(`📋 ${dropped.fighter.name} (prospect) di-drop — slot scouting penuh (max 5).`);
+      }
       n.prospects = n.prospects.slice(0, 5);
       n.log.unshift(`🔍 Scout report baru (${label}, grade ${grade}).`);
     });
@@ -352,7 +365,7 @@ export default function App() {
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "5px 8px", borderBottom: `1px solid ${C.line}44`, background: c.player ? "rgba(230,182,76,.07)" : "transparent" }}>
                     <span style={{ fontFamily: DISPLAY, color: c.player ? C.gold : C.dim, width: 28, fontSize: 14 }}>#{i + 1}</span>
                     <span style={{ flex: 1, color: c.player ? C.gold : C.chalk, fontSize: 13, fontWeight: c.player ? 700 : 400 }}>{c.name}{c.player ? " ★" : ""}</span>
-                    <span style={{ color: C.dim, fontSize: 10 }}>{c.arch}</span>
+                    <span style={{ color: C.dim, fontSize: 10 }}>{c.arch}{c.record ? ` · ${c.record.w}-${c.record.l}` : ""}</span>
                     <span style={{ fontFamily: DISPLAY, color: C.dim, fontSize: 12, width: 34, textAlign: "right" }}>{c.points}</span>
                   </div>
                 ))}
@@ -372,9 +385,23 @@ export default function App() {
           <>
             <Card>
               <H>Scouting Network · Grade {scoutGrade(g.rep)}</H>
-              <div style={{ color: C.dim, fontSize: 11, marginBottom: 8 }}>Grade laporan naik seiring reputasi camp — laporan grade rendah bisa meleset jauh.</div>
+              <div style={{ color: C.dim, fontSize: 11, marginBottom: 8 }}>Grade laporan naik seiring reputasi camp — laporan grade rendah bisa meleset jauh. Filter opsional di bawah fokuskan pencarian.</div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 10, color: C.dim, marginRight: 4 }}>Archetype:</span>
+                <button onClick={() => setScoutFilterArch(null)} style={{ background: !scoutFilterArch ? C.gold : C.panel2, color: !scoutFilterArch ? "#0a0d14" : C.dim, border: `1px solid ${C.line}`, padding: "2px 6px", fontSize: 9, cursor: "pointer", ...cut(3) }}>All</button>
+                {Object.keys(ARCH_COLOR).map((arch) => (
+                  <button key={arch} onClick={() => setScoutFilterArch(scoutFilterArch === arch ? null : arch)} style={{ background: scoutFilterArch === arch ? ARCH_COLOR[arch] : C.panel2, color: scoutFilterArch === arch ? "#fff" : C.dim, border: `1px solid ${C.line}`, padding: "2px 6px", fontSize: 9, cursor: "pointer", ...cut(3) }}>{arch}{scoutFilterArch === arch ? " ✓" : ""}</button>
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 10, color: C.dim, marginRight: 4 }}>Divisi:</span>
+                <button onClick={() => setScoutFilterWC(null)} style={{ background: !scoutFilterWC ? C.gold : C.panel2, color: !scoutFilterWC ? "#0a0d14" : C.dim, border: `1px solid ${C.line}`, padding: "2px 6px", fontSize: 9, cursor: "pointer", ...cut(3) }}>All</button>
+                {WEIGHTS.map((w) => (
+                  <button key={w.name} onClick={() => setScoutFilterWC(scoutFilterWC === w.name ? null : w.name)} style={{ background: scoutFilterWC === w.name ? C.gold : C.panel2, color: scoutFilterWC === w.name ? "#0a0d14" : C.dim, border: `1px solid ${C.line}`, padding: "2px 6px", fontSize: 9, cursor: "pointer", ...cut(3) }}>{w.name}{scoutFilterWC === w.name ? " ✓" : ""}</button>
+                ))}
+              </div>
               {[
-                ["Local Amateur Circuit", 0, [0.35, 0.6]],
+                ["Local Amateur Circuit", 50, [0.35, 0.6]],
                 ["Regional Tryouts", 500, [0.5, 0.9]],
                 ["National Scouting Trip", 2000, [0.8, 1.2]],
                 ["Diamond in the Rough", 10000, [1.0, 1.45]],
@@ -384,7 +411,7 @@ export default function App() {
                     <div style={{ color: C.chalk, fontSize: 13, fontFamily: DISPLAY, letterSpacing: 1, textTransform: "uppercase" }}>{label}</div>
                     <div style={{ color: C.dim, fontSize: 11 }}>{cost ? fmt$(cost) : "Gratis"}</div>
                   </div>
-                  <Btn small disabled={g.cash < cost || g.roster.length >= rosterCap} onClick={() => scout(cost, lvl, label)}>Kirim</Btn>
+                  <Btn small disabled={g.cash < cost || g.roster.length >= rosterCap} onClick={() => scout(cost, lvl, label, scoutFilterArch, scoutFilterWC)}>Kirim</Btn>
                 </div>
               ))}
               {g.roster.length >= rosterCap && <div style={{ color: C.red, fontSize: 11, marginTop: 6 }}>Kapasitas camp penuh ({rosterCap} fighter).</div>}
@@ -408,6 +435,8 @@ export default function App() {
                 <div style={{ color: C.dim, fontSize: 12 }}>
                   Potensi: <span style={{ color: C.gold }}>{p.report.pot}</span>
                   {p.report.traits.length > 0 && <> · {p.report.traits.map((t) => <Tag key={t} color={C.red}>{t}</Tag>)}</>}
+                {p.report.ambition && <div style={{ color: C.dim, fontSize: 11, marginTop: 2 }}>🎯 {p.report.ambition}</div>}
+                {p.report.bestCeiling && <div style={{ color: C.dim, fontSize: 11, marginTop: 2 }}>📈 Top potential: <span style={{ color: C.gold }}>{ATTR_LABEL[p.report.bestCeiling.attr]} {p.report.bestCeiling.val}</span></div>}
                 </div>
                 <div style={{ color: C.dim, fontSize: 11, marginTop: 4 }}>🤝 {AGENT_TYPES[p.fighter.agent || "none"].label} · asking ~{fmt$(p.fighter.asking)}</div>
                 <div style={{ display: "flex", gap: 8, marginTop: 10 }}>

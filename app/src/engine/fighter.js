@@ -109,7 +109,7 @@ export function scoutGrade(rep) {
 }
 
 export function makeReport(f, grade) {
-  const err = { C: 18, B: 10, A: 5, S: 0 }[grade];
+  const err = { C: 12, B: 10, A: 5, S: 0 }[grade];
   const est = {};
   ATTRS.forEach((k) => {
     if (grade === "C" && (k === "chin" || k === "fightIQ")) est[k] = "?";
@@ -118,5 +118,17 @@ export function makeReport(f, grade) {
   const potAvg = ATTRS.reduce((s, k) => s + f.ceilings[k], 0) / ATTRS.length;
   const pot = grade === "C" ? "?" : "⭐".repeat(clamp(Math.round(potAvg / 20), 1, 5));
   const traits = grade === "S" ? f.traits : grade === "A" ? [f.traits[0]] : [];
-  return { est, pot, traits, ambition: grade === "S" ? f.ambition : null };
+  // Grade A: show ambition category (hint), Grade S: show full ambition
+  const ambitionHint = grade === "S" ? f.ambition
+    : grade === "A" ? (f.ambition === "Belt Chaser" || f.ambition === "Legacy" ? "🏆 Title-driven"
+      : f.ambition === "Paycheck" || f.ambition === "Family Man" ? "💰 Money-driven"
+      : f.ambition === "Grinder" ? "🏋️ Workhorse"
+      : "⭐ Fame-driven") : null;
+  // Grade A+: show best ceiling attribute
+  const bestCeiling = grade === "S" || grade === "A" ? (() => {
+    let best = null, bestVal = 0;
+    for (const k of ATTRS) { if (f.ceilings[k] > bestVal) { bestVal = f.ceilings[k]; best = k; } }
+    return best ? { attr: best, val: Math.round(bestVal) } : null;
+  })() : null;
+  return { est, pot, traits, ambition: ambitionHint, bestCeiling };
 }

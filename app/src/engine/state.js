@@ -496,6 +496,15 @@ export function tick(g) {
     return m.expires > 0;
   });
 
+  // Prospect expiry: prospects that stay >12 weeks get signed by other camps
+  if (g.prospects && g.prospects.length > 0 && g.week % 4 === 0) {
+    const expired = g.prospects.filter((p) => g.week - (p.scoutedWeek || 0) > 12);
+    if (expired.length > 0) {
+      expired.forEach((p) => g.log.unshift("👋 " + p.fighter.name + " — prospect diambil camp lain (12+ minggu di pool)."));
+    }
+    g.prospects = g.prospects.filter((p) => g.week - (p.scoutedWeek || 0) <= 12);
+  }
+
   // ---------- monthly settlement ----------
   if (g.week % 4 === 0) {
     let sal = 0;
