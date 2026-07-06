@@ -543,11 +543,8 @@ export default function FightNight({ fighter, done }) {
             {roundLog.knockdown.canRecover ? (
               <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 8 }}>
                 <Btn color={C.green} onClick={() => {
-                  if (roundLog.knockdown.fighter === "A") {
-                    setResult({ won: true, how: "KO/TKO", r: rnd });
-                  } else {
-                    setResult({ won: false, how: "KO/TKO", r: rnd });
-                  }
+                  // fighter "B" = opponent down → player wins by TKO
+                  setResult({ won: roundLog.knockdown.fighter === "B", how: "KO/TKO", r: rnd });
                   setStage("result");
                 }}>Lanjutkan Serangan (TKO Win)</Btn>
                 <Btn small color={C.dim} onClick={() => {
