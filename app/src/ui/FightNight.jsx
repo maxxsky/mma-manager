@@ -308,11 +308,11 @@ export default function FightNight({ fighter, done }) {
   };
 
   const cornerOpts = [
-    { k: "tdd", label: "Stay on your feet", desc: "+takedown defense" },
-    { k: "body", label: "Work the body", desc: "+output body shot" },
-    { k: "go", label: "He's tired — GO NOW", desc: "+agresi, stamina terbakar" },
-    { k: "save", label: "Conservative", desc: "hemat stamina" },
-    { k: "plan", label: "Stick to game plan", desc: "jalankan rencana" },
+    { k: "tdd",   label: "Jaga Jarak",    desc: "+takedown defense",  trade: "↟ defense ↡ striking" },
+    { k: "body",  label: "Serang Badan",   desc: "+body damage",       trade: "↟ akumulasi ↡ poin instan" },
+    { k: "go",    label: "Habisi Dia!",    desc: "+agresi +finish",    trade: "↟ KO chance ↡ stamina terkuras" },
+    { k: "save",  label: "Hemat Tenaga",   desc: "+stamina recovery",  trade: "↟ defense ↡ output striking" },
+    { k: "plan",  label: "Sesuai Rencana", desc: "seimbang, aman",     trade: "↔ netral — tanpa risiko" },
   ];
   const hpA = state ? clamp(100 - state.dmgA, 0, 100) : 100;
   const hpB = state ? clamp(100 - state.dmgB, 0, 100) : 100;
@@ -472,15 +472,39 @@ export default function FightNight({ fighter, done }) {
               <div style={{ fontFamily: DISPLAY, color: C.gold, fontSize: 15, letterSpacing: 2 }}>🪑 CORNER — 60 DETIK</div>
               <div style={{ fontFamily: DISPLAY, fontSize: 22, color: timer <= 5 ? C.red : C.chalk, minWidth: 40, textAlign: "right", animation: timer <= 5 ? "goldglow 1s infinite" : "none" }}>0:{String(Math.max(timer, 0)).padStart(2, "0")}</div>
             </div>
-            <div style={{ color: C.dim, fontSize: 11, marginBottom: 8 }}>
-              {state && state.scores.length > 0 ? (() => {
-                const last = state.scores[state.scores.length - 1];
-                return `Round ${rnd} — 10-9 ${last.a > last.b ? fighter.name : opp.name}. Instruksi untuk Round ${rnd + 1}`;
-              })() : `Instruksi untuk Round ${rnd + 1}`} — kalau waktu habis, fighter jalan dengan game plan.
+            <div style={{ background: "#0a0e17", padding: 10, marginBottom: 10, ...cut(8) }}>
+              <div style={{ display: "flex", gap: 12, fontSize: 10, marginBottom: 6 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ color: C.dim, textTransform: "uppercase", fontSize: 8, marginBottom: 2 }}>{fighter.name}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <Bar v={state?.staA || 100} color={state?.staA > 50 ? C.green : state?.staA > 25 ? C.gold : C.red} h={6} />
+                    <span style={{ color: C.chalk, fontSize: 11, fontFamily: DISPLAY, width: 30 }}>{Math.round(state?.staA || 100)}%</span>
+                  </div>
+                  <div style={{ color: C.dim, fontSize: 8, marginTop: 1 }}>Damage: {state?.dmgA < 20 ? "Ringan" : state?.dmgA < 40 ? "Sedang" : "Berat"}</div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ color: C.dim, textTransform: "uppercase", fontSize: 8, marginBottom: 2 }}>{opp.name}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <Bar v={state?.staB || 100} color={state?.staB > 50 ? C.green : state?.staB > 25 ? C.gold : C.red} h={6} />
+                    <span style={{ color: C.chalk, fontSize: 11, fontFamily: DISPLAY, width: 30 }}>{Math.round(state?.staB || 100)}%</span>
+                  </div>
+                  <div style={{ color: C.dim, fontSize: 8, marginTop: 1 }}>Damage: {state?.dmgB < 20 ? "Ringan" : state?.dmgB < 40 ? "Sedang" : "Berat"}</div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 3, alignItems: "center", marginBottom: 4 }}>
+                <span style={{ fontSize: 8, color: C.dim, textTransform: "uppercase", marginRight: 4 }}>Score:</span>
+                {state?.scores?.map((s, i) => (<span key={i} style={{ fontSize: 9, color: s.a >= s.b ? C.red : C.blue, fontFamily: DISPLAY }}>{s.a >= s.b ? "A" : "B"}</span>))}
+              </div>
+              <div style={{ fontSize: 10, color: C.gold, fontStyle: "italic" }}>
+                💡 {(() => { const staA = state?.staA || 100, staB = state?.staB || 100; const lead = state?.scores?.filter(s => s.a >= s.b).length || 0; const behind = (state?.scores?.length || 0) - lead; if (staB < 35) return 'Dia kehabisan bensin — bisa kamu habisi ronde ini!'; if (staA < 35) return 'Jaga stamina, bertahan dulu. Ambil nafas.'; if (behind > 0) return 'Kita butuh ronde ini. Ambil risiko — go!'; if (lead >= 2) return 'Kita unggul jauh. Tenang, jaga jarak.'; if (staA > staB + 20) return 'Kamu lebih segar — tingkatkan output sekarang.'; return 'Seimbang. Jalanin strategi aja, jangan serakah.'; })()}
+              </div>
             </div>
             {cornerOpts.map((o) => (
               <div key={o.k} onClick={() => setCorner(o.k)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: `1px solid ${corner === o.k ? C.gold : C.line}`, background: corner === o.k ? "rgba(230,182,76,.08)" : "transparent", padding: "8px 10px", marginBottom: 6, cursor: "pointer", ...cut(7) }}>
-                <span style={{ fontFamily: DISPLAY, color: corner === o.k ? C.gold : C.chalk, fontSize: 13, letterSpacing: 1, textTransform: "uppercase" }}>"{o.label}"</span>
+                <div>
+                  <span style={{ fontFamily: DISPLAY, color: corner === o.k ? C.gold : C.chalk, fontSize: 13, letterSpacing: 1, textTransform: "uppercase" }}>{o.label}</span>
+                  <div style={{ fontSize: 8, color: corner === o.k ? C.gold : C.dim }}>{o.trade}</div>
+                </div>
                 <span style={{ color: C.dim, fontSize: 10 }}>{o.desc}</span>
               </div>
             ))}
