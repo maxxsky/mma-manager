@@ -23,6 +23,7 @@ export default function FightNight({ fighter, done }) {
   const [docCheck, setDocCheck] = useState(false);
   const [weighinIssue, setWeighinIssue] = useState(null);
   const [fightSeed, setFightSeed] = useState(null);
+  const tickDataRef = useRef({ roundLog: null, state: null, rnd: 1, totalRounds: 3, cutA: 0, cutB: 0, docCheck: false });
 
   // Seed RNG for this fight, reset on unmount
   useEffect(() => {
@@ -51,6 +52,9 @@ export default function FightNight({ fighter, done }) {
   };
   const attMod = applyAttMod();
   const totalRounds = fighter.booked.title ? 5 : 3;
+
+  // Sync volatile values to ref (prevents stale closure in auto-advance)
+  useEffect(() => { tickDataRef.current = { ...tickDataRef.current, roundLog, state, rnd, totalRounds, cutA, cutB, docCheck }; });
   const limit = WEIGHTS.find((w) => w.name === fighter.weightClass).limit;
   const cutPct = (fighter.natWeight - limit) / fighter.natWeight;
   const cutInfo =
@@ -137,11 +141,12 @@ export default function FightNight({ fighter, done }) {
   // Tick-by-Tick: reveal log lines one by one
   useEffect(() => {
     if (viewMode !== "tick" || stage !== "round" || !roundLog) return;
-    if (tickIdx >= roundLog.log.length) return; // all revealed
+    const displayLog = roundLog.tickLog || roundLog.log;
+    if (tickIdx >= displayLog.length) return;
     const iv = setInterval(() => {
       setTickIdx((prev) => {
         const next = prev + 1;
-        if (next >= roundLog.log.length) return prev; // stop incrementing
+        if (next >= displayLog.length) return prev;
         return next;
       });
     }, 500);
@@ -150,17 +155,19 @@ export default function FightNight({ fighter, done }) {
   // Auto-advance to corner when tick-by-tick finishes
   useEffect(() => {
     if (viewMode !== "tick" || stage !== "round" || !roundLog || !state) return;
-    if (tickIdx >= roundLog.log.length) {
-      if (roundLog.finish) {
-        setResult({ won: roundLog.finish.by === "A", how: roundLog.finish.how, r: rnd });
+    const displayLog = roundLog.tickLog || roundLog.log;
+    if (tickIdx >= displayLog.length) {
+      const d = tickDataRef.current;
+      if (d.roundLog?.finish) {
+        setResult({ won: d.roundLog.finish.by === "A", how: d.roundLog.finish.how, r: d.rnd });
         setStage("result");
-      } else if (rnd >= totalRounds) {
-        const winsA = state.scores.filter((s) => s.a >= s.b).length;
-        setResult({ won: winsA > totalRounds / 2, how: "Decision", r: rnd });
+      } else if (d.rnd >= d.totalRounds) {
+        const winsA = d.state.scores.filter((s) => s.a >= s.b).length;
+        setResult({ won: winsA > d.totalRounds / 2, how: "Decision", r: d.rnd });
         setStage("result");
       } else {
         setTimeout(() => {
-          if ((cutA >= 4 || cutB >= 4) && !docCheck) {
+          if ((d.cutA >= 4 || d.cutB >= 4) && !d.docCheck) {
             setDocCheck(true); setStage("corner");
           } else setStage("corner");
         }, 300);
@@ -436,21 +443,22 @@ export default function FightNight({ fighter, done }) {
         )}
 
         {/* ROUND LOG */}
-        {(stage === "round" || stage === "corner" || stage === "skipSummary") && roundLog && (
+        {(stage === "round" || stage === "corner" || stage === "skipSummary") && roundLog && (() => {
+          const displayLog = viewMode === "tick" ? (roundLog.tickLog || roundLog.log) : (roundLog.log || []);
+          return (
           <Card accent={C.line}>
             <H color={C.chalk}>Round {rnd} · Commentary</H>
-            {roundLog.log.map((l, i) => {
+            {displayLog.map((l, i) => {
               const showLine = viewMode !== "tick" ? true : i <= tickIdx;
               if (!showLine) return null;
               return (
               <div key={i} className="rise" style={{ animationDelay: `${i * 0.12}s`, color: l.includes("KO") || l.includes("SUB") ? C.gold : C.chalk, fontSize: 13, marginBottom: 6, paddingLeft: 10, borderLeft: `2px solid ${l.includes("KO") || l.includes("SUB") ? C.gold : C.line}` }}>{l}</div>
               );
             })}
-            {viewMode === "tick" && stage === "round" && tickIdx < roundLog.log.length && (
-              <div className="rise" style={{ color: C.dim, fontSize: 10, marginTop: 4 }}>▌ Play-by-play · tick {tickIdx + 1}/{roundLog.log.length}</div>
+            {viewMode === "tick" && stage === "round" && tickIdx < displayLog.length && (
+              <div className="rise" style={{ color: C.dim, fontSize: 10, marginTop: 4 }}>▌ Play-by-play · tick {tickIdx + 1}/{displayLog.length}</div>
             )}
-          </Card>
-        )}
+          </Card>)})()}
         {stage === "skipSummary" && (
           <div style={{ textAlign: "center", marginTop: 12 }}>
             <Btn onClick={() => setStage("result")}>Lihat Hasil</Btn>
