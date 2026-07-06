@@ -35,10 +35,10 @@ const EXCHANGES = {
   advance: { pos: ["ground"],                  label: "Position advance" },
 };
 
-// ── Matchup modifier: archetype rock-paper-scissors ──
-// Returns { striker: bonus, grappler: bonus } for fighter A vs B
-function matchupMod(A, B) {
-  const key = `${A.archetype}_vs_${B.archetype}`;
+// ── Matchup modifier: archetype rock-paper-scissors (bidirectional) ──
+function matchupMods(A, B) {
+  const keyAB = `${A.archetype}_vs_${B.archetype}`;
+  const keyBA = `${B.archetype}_vs_${A.archetype}`;
   const table = {
     "Boxer_vs_Wrestler":          { aStrike: 0.10, aTDDef: -0.15 },
     "Boxer_vs_BJJ Specialist":    { aStrike: 0.15, aTDDef: 0.10 },
@@ -53,7 +53,15 @@ function matchupMod(A, B) {
     "BJJ Specialist_vs_Muay Thai":{ aSub: 0.10, aSweep: 0.10 },
     "BJJ Specialist_vs_Boxer":    { aTD: -0.05, aSub: 0.05 },
   };
-  return table[key] || {};
+  // A's bonuses come from A_vs_B, B's bonuses come from B_vs_A (mirrored keys)
+  const bKeys = { aStrike:"bStrike", aTDDef:"bTDDef", aClinch:"bClinch", aTD:"bTD", aGNP:"bGNP", aSubRisk:"bSubRisk", aSub:"bSub", aSweep:"bSweep" };
+  const aMods = table[keyAB] || {};
+  const bRaw = table[keyBA] || {};
+  const bMods = {};
+  for (const [k, v] of Object.entries(bRaw)) {
+    bMods[bKeys[k]] = v;
+  }
+  return { ...aMods, ...bMods };
 }
 
 // ── Auto game plan: pick best plan based on stats ──
@@ -109,7 +117,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
   let position = "standing"; // "standing" or { type: "guard"|...|"backMount", top: "A"|"B" }
   let mom = momentum || 0;
   const agg = cornerA === "go" ? 1.25 : cornerA === "save" ? 0.8 : 1;
-  const matchup = matchupMod(A, B);
+  const matchup = matchupMods(A, B);
 
   // Submission progress system (not binary)
   let subProgress = 0;
@@ -133,21 +141,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
     const exMin = Math.floor(ex * 4.5 / nEx);
     const exSec = Math.floor((ex * 60 / nEx) % 60);
     
-    // Archetype-aware: first 3 exchanges favor the archetype's preferred range
-    let exType;
-    if (ex < 2 && position === "standing") {
-      if (A.archetype === "Wrestler" || A.archetype === "BJJ Specialist") {
-        exType = pick(["td","td","td","clinch","strike"]); // heavily favor takedowns early
-      } else if (A.archetype === "Muay Thai") {
-        exType = pick(["clinch","clinch","strike","strike","td"]);
-      } else if (A.archetype === "Boxer") {
-        exType = pick(["strike","strike","strike","power","td"]);
-      } else {
-        exType = pickExchange(position, A, planA, matchup);
-      }
-    } else {
-      exType = pickExchange(position, A, planA, matchup);
-    }
+    const exType = pickExchange(position, A, planA, matchup);
 
     const momMult = clamp(1 + (mom > 0 ? mom * 0.0006 : mom * 0.0003), 0.90, 1.10);
     const phase = ex < 2 ? 0.7 : ex >= nEx - 2 ? 0.5 : 0.6;
@@ -159,7 +153,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       const defA = effAttr(B, "footwork", stB, {}) * clamp(1 - (legDmgA || 0) * 0.003, 0.70, 1);
       const defB = effAttr(A, "footwork", stA, {}) * clamp(1 - (legDmgB || 0) * 0.003, 0.70, 1);
       const outA = effAttr(A, "striking", stA, {}) * agg * phase * momMult * pow * (1 + strikeModA);
-      const outB = effAttr(B, "striking", stB, {}) * phase * pow;
+      const outB = effAttr(B, "striking", stB, {}) * phase * pow * (1 + (matchup.bStrike || 0));
       // More responsive: skill difference matters more (was / (out+def+1), now / (def+8))
       const la = Math.round(R(3, 7) * (outA / (defA + 12)));
       const lb = Math.round(R(2, 6) * (outB / (defB + 12)));
@@ -190,7 +184,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       const dmgThaiA = isThaiA ? R(4, 9) * (1 + clinchModA) : R(2, 5);
       const dmgThaiB = isThaiB ? R(4, 9) : R(2, 5);
       const outA = effAttr(A, "striking", stA, {}) * agg * (isThaiA ? 1.4 : 1) * (1 + clinchModA);
-      const outB = effAttr(B, "striking", stB, {}) * (isThaiB ? 1.4 : 1);
+      const outB = effAttr(B, "striking", stB, {}) * (isThaiB ? 1.4 : 1) * (1 + (matchup.bStrike || 0));
       const la = Math.round(outA * R(0.3, 0.6));
       const lb = Math.round(outB * R(0.3, 0.6));
       dmgB += la * (isThaiA ? 1.8 : 1); dmgA += lb * (isThaiB ? 1.8 : 1);
@@ -237,7 +231,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       const isTopA = position?.top === "A";
       const gType = position?.type || "guard";
       const g = GROUND[gType] || GROUND.guard;
-      const gnpMult = g.topGNP + (matchup.aGNP || 0);
+      const gnpMult = g.topGNP + (matchup.aGNP || 0) + (matchup.bGNP || 0);
       const dmg = R(2, 8) * gnpMult;
       const attacker = isTopA ? A : B;
       if (isTopA) { dmgB += dmg; ptsA += Math.round(dmg * 0.8); mom += 4; bodyDmgB += dmg * 0.5; }
@@ -263,7 +257,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       // BJJ gets bonus sub progress from bottom (guard specialist)
       const isBJJBottom = attacker.archetype !== "BJJ Specialist" && defender.archetype === "BJJ Specialist";
       const posBonus = gType === "backMount" ? 35 : gType === "mount" ? 20 : gType === "sideControl" ? 10 : (isBJJBottom ? 8 : 5);
-      const subMod = (matchup.aSub || 0);
+      const subMod = (matchup.aSub || 0) + (matchup.bSub || 0);
 
       const adv = clamp(
         (effAttr(attacker, "bjj", attackerSta, {}) * 0.8 + effAttr(attacker, "strength", attackerSta, {}) * 0.2 + posBonus + subMod * 30)
@@ -293,7 +287,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
     } else if (exType === "sweep") {
       const isTopA = position?.top === "A";
       const sweeper = isTopA ? B : A;
-      const sweepMod = (matchup.aSweep || 0);
+      const sweepMod = (matchup.aSweep || 0) + (matchup.bSweep || 0);
       if (random() < 0.35 + sweepMod) {
         position = { type: "guard", top: isTopA ? "B" : "A" };
         both(exMin, exSec + 5, `${sweeper.name} sweeps! Position reversed!`);
@@ -334,7 +328,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       const isTargetA = kdTarget === A;
       const chin = effAttr(kdTarget, "chin", isTargetA ? stA : stB);
       // Power matters for knockdown: strength bonus added to KD chance
-      const attackerStr = effAttr(isTargetA ? B : A, "strength", isTargetA ? stB : stA);
+      const attackerStr = effAttr(isTargetA ? B : A, "strength", isTargetA ? stB : stA) * (1 + (isTargetA ? (matchup.bStrike || 0) : 0));
       const kdChance = clamp(((isTargetA ? dmgA : dmgB) - 40) / chin * 0.3 + (attackerStr - 40) * 0.002, 0, 0.40) * (planA === "Finish It" ? 1.5 : 1);
       if (random() < kdChance) {
         knockdown = { fighter: isTargetA ? "A" : "B", name: kdTarget.name, canRecover: true };
