@@ -215,6 +215,12 @@ export default function FightNight({ fighter, done }) {
   };
 
   const applyResult = () => {
+    const fightCtx = {
+      fightResult: { won: result.won, how: result.how, draw: result.draw || false },
+      titleWon: result.won && (fighter.booked.titleTier === "Major" || fighter.booked.titleTier === "Premier" || fighter.booked.titleTier === "Interim" || fighter.booked.titleTier === "Minor" || fighter.booked.titleTier === "National" || fighter.booked.titleTier === "Regional"),
+      signedSProspect: false,
+      koStreak: result.won && (result.how === "KO/TKO" || result.how === "Doctor Stoppage") ? (fighter.koStreak || 0) + 1 : 0,
+    };
     done((g2) => {
       const f = g2.roster.find((x) => x.id === fighter.id);
       const b = f.booked; f.booked = null;
@@ -341,7 +347,7 @@ export default function FightNight({ fighter, done }) {
           ],
         });
       }
-    });
+    }, fightCtx);
   };
 
   const cornerOpts = [
@@ -629,6 +635,25 @@ export default function FightNight({ fighter, done }) {
                 Purse {fmt$(fighter.booked.show + (result.won ? fighter.booked.winBonus : 0))} → camp cut {Math.round(((fighter.contract && fighter.contract.managerCut) || 0.18) * 100)}% = <b style={{ color: C.green }}>{fmt$((fighter.booked.show + (result.won ? fighter.booked.winBonus : 0)) * ((fighter.contract && fighter.contract.managerCut) || 0.18))}</b>
               </div>
               <Btn onClick={applyResult}>Kembali ke Camp</Btn>
+              <button onClick={() => {
+                const text = [
+                  `═══ FIGHT REPORT ═══`,
+                  `${fighter.name} vs ${opp.name}`,
+                  `${fighter.weightClass} · ${fighter.booked.tier} Event`,
+                  `Result: ${result.draw ? 'Draw' : result.won ? fighter.name + ' wins' : opp.name + ' wins'} via ${result.how} (R${result.r})`,
+                  ``,
+                  `--- Round-by-Round ---`,
+                  ...(roundLog?.log || ['No log available']),
+                ].join('\n');
+                navigator.clipboard.writeText(text).then(() => {
+                  alert('📋 Fight report copied to clipboard!');
+                }).catch(() => {
+                  // Fallback
+                  const ta = document.createElement('textarea');
+                  ta.value = text; document.body.appendChild(ta);
+                  ta.select(); document.execCommand('copy'); ta.remove();
+                });
+              }} style={{ marginLeft: 8, background: C.panel2, color: C.dim, border: `1px solid ${C.line}`, padding: '8px 14px', fontSize: 10, cursor: 'pointer', fontFamily: 'monospace', letterSpacing: 1, borderRadius: 6 }}>📋 Copy Fight Report</button>
             </Card>
           </div>
         )}

@@ -7,6 +7,7 @@ import {
   ATTRS, ATTR_LABEL, WEIGHTS, ARCH_COLOR, TRAITS, AMBITIONS, AMBITION_KEYS,
   AGENT_TYPES, GAME_PLANS, TRAINING, INTENSITY, COACH_PERSONALITIES,
   CAMP_TIERS, CAMP_SPECS, SPONSOR_BRANDS, FAC_LABEL, RIVAL_TRAITS, PROMO_TIERS,
+  ACHIEVEMENTS,
 } from "./engine/data.js";
 import { genFighter, assignAgent, agentFor, avgSkill, tierOf, weeklyFee, scoutGrade, makeReport, genCoach } from "./engine/fighter.js";
 import { genDivisions, rankOf, vacateTitle, stripTitle, initPromoterRel } from "./engine/rankings.js";
@@ -14,6 +15,7 @@ import { genRivalCamp } from "./engine/rivals.js";
 import { facilityCost } from "./engine/economy.js";
 import {newGame, tick} from "./engine/state.js";
 import { reducer } from "./engine/reducer.js";
+import { checkAchievements } from "./engine/achievements.js";
 
 // ===== UI: React components =====
 import { C, DISPLAY, GlobalStyle, cut, Card, H, Btn, Tag, Bar, OVR, Meter } from "./ui/theme.jsx";
@@ -107,6 +109,31 @@ export default function App() {
     })();
   }, []);
 
+  // ── Keyboard shortcuts ──
+  useEffect(() => {
+    const handler = (e) => {
+      // Don't fire when typing in inputs
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+      // Space = advance week
+      if (e.code === "Space" && !g.over && !activeFight && !nego && !weeklySummary) {
+        e.preventDefault();
+        advance();
+      }
+      // Ctrl+Z = undo
+      if (e.ctrlKey && e.code === "KeyZ" && !e.shiftKey) {
+        e.preventDefault();
+        dispatch({ type: "UNDO" });
+      }
+      // Ctrl+Y = redo
+      if (e.ctrlKey && e.code === "KeyY") {
+        e.preventDefault();
+        dispatch({ type: "REDO" });
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [g.over, activeFight, nego, weeklySummary]);
+
   const up = (fn) => setG((old) => {
     const n = JSON.parse(JSON.stringify(old));
     fn(n);
@@ -119,7 +146,7 @@ export default function App() {
   };
 
   const advance = () => {
-    up((n) => { tick(n); n.log = n.log.slice(0, 30); });
+    up((n) => { tick(n); n.log = n.log.slice(0, 30); checkAchievements(n); });
     setWeekFlash((x) => x + 1);
     // Weekly summary: capture changes after tick
     setTimeout(() => {
@@ -314,6 +341,23 @@ export default function App() {
                 {g.log.map((l, i) => <div key={i} style={{ color: i === 0 ? C.chalk : C.dim, fontSize: 12, marginBottom: 5, paddingBottom: 5, borderBottom: `1px solid ${C.line}55` }}>{l}</div>)}
               </div>
             </Card>
+            {g._unlocked && g._unlocked.length > 0 && (
+              <Card>
+                <H>🏆 Achievements · {g._unlocked.length}</H>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {g._unlocked.map((id) => {
+                    const ach = ACHIEVEMENTS?.find((a) => a.id === id);
+                    if (!ach) return null;
+                    return (
+                      <div key={id} style={{ background: C.panel2, border: `1px solid ${C.gold}44`, padding: "6px 10px", ...cut(6), fontSize: 10, color: C.chalk }}>
+                        <span style={{ fontSize: 14 }}>{ach.icon}</span> <b>{ach.title}</b>
+                        <div style={{ color: C.dim, fontSize: 9 }}>{ach.desc}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
           </>
         )}
 
@@ -852,10 +896,11 @@ dispatch({ type: "INBOX_EVENT", choiceIndex: i, messageId: m.id, choice: c, gamb
       )}
 
       {fightFighter && fightFighter.booked && (
-        <FightNight key={fightFighter.id} fighter={fightFighter} done={(fx) => {
+        <FightNight key={fightFighter.id} fighter={fightFighter} done={(fx, fightCtx) => {
           setG((old) => {
             const n = JSON.parse(JSON.stringify(old));
             fx(n);
+            if (fightCtx) checkAchievements(n, fightCtx);
             try { localStorage.setItem(SAVE_KEY, JSON.stringify(n)); } catch (e) {}
             return n;
           });

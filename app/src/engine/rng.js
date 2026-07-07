@@ -75,6 +75,9 @@ export const pick = (arr) => arr[RI(0, arr.length - 1)];
 export const fmt$ = (n) =>
   (n < 0 ? "-$" : "$") + Math.abs(Math.round(n)).toLocaleString("en-US");
 
+// Deep clone for state snapshots (undo/redo)
+export const snapshot = (obj) => JSON.parse(JSON.stringify(obj));
+
 let UID = 1;
 export const uid = () => UID++;
 export const resetUID = () => { UID = 1; };

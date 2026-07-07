@@ -1,7 +1,7 @@
 // Lightweight reducer — actions recorded for future multiplayer replay
 // Pattern: dispatch({ type, payload }) → pure state transformation
 
-import { clamp, RI, R, pick, fmt$, uid } from "./rng.js";
+import { clamp, RI, R, pick, fmt$, uid, snapshot } from "./rng.js";
 import {
   ATTRS, TRAINING, INTENSITY, CAMP_TIERS, SPONSOR_BRANDS, FAC_LABEL,
 } from "./data.js";
@@ -15,10 +15,49 @@ import { getRel } from "./relationships.js";
 // Unlike Redux-style reducers, this mutates `g` in place for performance.
 // Named "reducer" for familiarity; functions identically to a state machine.
 export function reducer(g, action) {
-  // Log every action for multiplayer replay
-  if (!g.actionLog) g.actionLog = [];
-  g.actionLog.push({ ...action, week: g.week, ts: Date.now() });
-  if (g.actionLog.length > 500) g.actionLog = g.actionLog.slice(-500);
+  // Ignore undo/redo in the action log itself
+  const isMetaAction = action.type === "UNDO" || action.type === "REDO";
+
+  // Snapshot before every non-meta action (undo/redo stack)
+  if (!isMetaAction && action.type !== "INIT") {
+    if (!g._undoStack) g._undoStack = [];
+    if (!g._redoStack) g._redoStack = [];
+    // Save current state, drop oldest if > 20 entries
+    g._undoStack.push({ snapshot: snapshot(g) });
+    if (g._undoStack.length > 20) g._undoStack.shift();
+    g._redoStack = []; // new action clears redo
+  }
+
+  // Log every action for multiplayer replay (skip meta + init)
+  if (!isMetaAction) {
+    if (!g.actionLog) g.actionLog = [];
+    g.actionLog.push({ ...action, week: g.week, ts: Date.now() });
+    if (g.actionLog.length > 500) g.actionLog = g.actionLog.slice(-500);
+  }
+
+  // ── UNDO/REDO ──
+  if (action.type === "UNDO") {
+    if (g._undoStack && g._undoStack.length > 0) {
+      const current = snapshot(g);
+      g._redoStack.push({ snapshot: current });
+      const prev = g._undoStack.pop().snapshot;
+      Object.keys(g).forEach((k) => delete g[k]);
+      Object.assign(g, prev);
+      g.log.unshift("⏪ Undo — kembali ke state sebelumnya.");
+    }
+    return g;
+  }
+  if (action.type === "REDO") {
+    if (g._redoStack && g._redoStack.length > 0) {
+      const current = snapshot(g);
+      g._undoStack.push({ snapshot: current });
+      const next = g._redoStack.pop().snapshot;
+      Object.keys(g).forEach((k) => delete g[k]);
+      Object.assign(g, next);
+      g.log.unshift("⏩ Redo — maju ke state berikutnya.");
+    }
+    return g;
+  }
 
   switch (action.type) {
     case "SET_TRAINING": {

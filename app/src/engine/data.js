@@ -198,3 +198,21 @@ export const INVESTOR_TYPES = [
     desc: "Private equity — dana besar, equity signifikan.",
   },
 ];
+
+// ── Achievements ──
+export const ACHIEVEMENTS = [
+  { id: "first_win", title: "First Blood", desc: "Win your first fight", icon: "🩸" },
+  { id: "first_ko", title: "Knockout Artist", desc: "Win by KO/TKO", icon: "💥" },
+  { id: "first_sub", title: "Submission Specialist", desc: "Win by submission", icon: "🦾" },
+  { id: "first_title", title: "World Champion", desc: "Win any title", icon: "👑" },
+  { id: "five_wins", title: "Hot Streak", desc: "Win 5 fights total", icon: "🔥" },
+  { id: "ten_wins", title: "Dominant Force", desc: "Win 10 fights total", icon: "⚡" },
+  { id: "legacy_1k", title: "Established", desc: "Reach 1,000 legacy points", icon: "🏛️" },
+  { id: "legacy_5k", title: "Hall of Famer", desc: "Reach 5,000 legacy points", icon: "🏆" },
+  { id: "cash_100k", title: "Six Figures", desc: "Reach $100,000 cash", icon: "💰" },
+  { id: "cash_1m", title: "Million Dollar Man", desc: "Reach $1,000,000 cash", icon: "💎" },
+  { id: "sign_s_prospect", title: "Talent Scout", desc: "Sign an S-grade prospect", icon: "🔍" },
+  { id: "tier_3", title: "National Center", desc: "Upgrade camp to tier 3", icon: "🏗️" },
+  { id: "tier_5", title: "World-Class Institute", desc: "Upgrade camp to tier 5", icon: "🌟" },
+  { id: "ko_streak_3", title: "Finisher", desc: "3 consecutive KO/TKO wins", icon: "☠️" },
+];
