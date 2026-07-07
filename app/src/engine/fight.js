@@ -437,6 +437,8 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
     staB: clamp(stB - drainB, 5, 100),
     scoreA: ptsA, scoreB: ptsB,
     finish, knockdown, landA, landB,
+        tdA: position && typeof position === "object" && position.top === "A" ? 1 : 0,
+        tdB: position && typeof position === "object" && position.top === "B" ? 1 : 0,
     momentum: mom,
   };
 }

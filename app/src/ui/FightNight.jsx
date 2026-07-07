@@ -24,6 +24,11 @@ export default function FightNight({ fighter, done }) {
   const [weighinIssue, setWeighinIssue] = useState(null);
   const [fightSeed, setFightSeed] = useState(null);
   const tickDataRef = useRef({ roundLog: null, state: null, rnd: 1, totalRounds: 3, cutA: 0, cutB: 0, docCheck: false });
+  // Cumulative fight stats for HUD
+  const [totalLandA, setTotalLandA] = useState(0);
+  const [totalLandB, setTotalLandB] = useState(0);
+  const [totalTdA, setTotalTdA] = useState(0);
+  const [totalTdB, setTotalTdB] = useState(0);
 
   // Seed RNG for this fight, reset on unmount
   // useRef guards against double-init in React Strict Mode
@@ -85,6 +90,11 @@ export default function FightNight({ fighter, done }) {
     const newCutB = cutB + (res.dmgB > 20 ? RI(0, 2) : res.dmgB > 10 ? RI(0, 1) : 0);
     setCutA(newCutA); setCutB(newCutB);
     setSt(newSt); setRoundLog(res); setTickIdx(0);
+    // Accumulate fight stats for HUD
+    setTotalLandA((prev) => prev + (res.landA || 0));
+    setTotalLandB((prev) => prev + (res.landB || 0));
+    if (res.tdA) setTotalTdA((prev) => prev + 1);
+    if (res.tdB) setTotalTdB((prev) => prev + 1);
     if (res.finish) {
       setResult({ won: res.finish.by === "A", how: res.finish.how, r });
       setStage("result");
@@ -144,8 +154,8 @@ export default function FightNight({ fighter, done }) {
       setRoundLog({ log: summaryLog });
       setStage("skipSummary");
     } else {
-      setStage("round");
-      setTimeout(() => runRound(1, st0, "plan"), 60);
+      setStage("entrance");
+      setTimeout(() => { setStage("round"); runRound(1, st0, "plan"); }, 2500);
     }
   };
 
@@ -420,6 +430,14 @@ export default function FightNight({ fighter, done }) {
               <div style={{ width: 56, textAlign: "center", fontSize: 8, letterSpacing: 1.5, color: C.dim }}>HP / STA</div>
               <div style={{ flex: 1 }}><Bar v={state.staB} color={C.green} h={5} skew /></div>
             </div>
+            {/* Live Stats */}
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 9, color: C.dim }}>
+              <span>👊 Strikes: <b style={{ color: C.red }}>{totalLandA}</b></span>
+              <span>🎯 Takedowns: <b style={{ color: C.gold }}>{totalTdA}</b></span>
+              <span style={{ flex: 1, textAlign: "center" }}>|</span>
+              <span>🎯 Takedowns: <b style={{ color: C.gold }}>{totalTdB}</b></span>
+              <span>👊 Strikes: <b style={{ color: C.blue }}>{totalLandB}</b></span>
+            </div>
           </div>
         )}
 
@@ -495,6 +513,30 @@ export default function FightNight({ fighter, done }) {
               <div style={{ marginTop: 12 }}><Btn wide color={C.red} onClick={startFight}>🔔 Bunyikan Bel</Btn></div>
             </Card>
           </>
+        )}
+
+        {/* FIGHTER ENTRANCE */}
+        {stage === "entrance" && (
+          <Card accent={C.gold} style={{ textAlign: "center", padding: 30 }}>
+            <div style={{ fontSize: 48, marginBottom: 4, animation: "koflash .8s ease both" }}>🚶</div>
+            <H color={C.gold}>Fighter Entrance</H>
+            <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 14 }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontFamily: DISPLAY, color: C.red, fontSize: 20, textTransform: "uppercase" }}>{fighter.name}</div>
+                <div style={{ color: C.dim, fontSize: 12, marginTop: 2 }}>{fighter.record.w}-{fighter.record.l} · {fighter.archetype}</div>
+                <div style={{ color: C.dim, fontSize: 10, marginTop: 1 }}>{fighter.weightClass}</div>
+              </div>
+              <div style={{ fontFamily: DISPLAY, fontSize: 26, color: C.gold, alignSelf: "center" }}>VS</div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontFamily: DISPLAY, color: C.blue, fontSize: 20, textTransform: "uppercase" }}>{opp.name}</div>
+                <div style={{ color: C.dim, fontSize: 12, marginTop: 2 }}>{(opp.record?.w ?? 0)}-{(opp.record?.l ?? 0)} · {opp.archetype}</div>
+                <div style={{ color: C.dim, fontSize: 10, marginTop: 1 }}>{opp.weightClass || ""}</div>
+              </div>
+            </div>
+            <div style={{ color: C.dim, fontSize: 11, marginTop: 16, animation: "goldglow 1.5s infinite" }}>
+              {fighter.booked.tier.toUpperCase()} EVENT · {fighter.booked.title ? "TITLE FIGHT" : "FIGHT NIGHT"}
+            </div>
+          </Card>
         )}
 
         {/* ROUND LOG */}
