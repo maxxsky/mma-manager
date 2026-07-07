@@ -155,7 +155,7 @@ export default function FightNight({ fighter, done }) {
       setStage("skipSummary");
     } else {
       setStage("entrance");
-      setTimeout(() => { setStage("round"); runRound(1, st0, "plan"); }, 1200);
+      setTimeout(() => { setStage("round"); runRound(1, st0, "plan"); }, 2500);
     }
   };
 
