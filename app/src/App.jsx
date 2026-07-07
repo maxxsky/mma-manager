@@ -491,7 +491,7 @@ export default function App() {
           <>
             {g.inbox.length === 0 && <Card><div style={{ color: C.dim, fontSize: 13 }}>Inbox kosong — advance minggu, offer & event akan datang.</div></Card>}
             {g.inbox.length > 0 && (() => { const sorted = [...g.inbox].sort((a, b) => { const urgentA = (a.defense ? 3 : 0) + (a.expires != null && a.expires <= 2 ? 2 : 0) + (a.type === "offer" ? 1 : 0); const urgentB = (b.defense ? 3 : 0) + (b.expires != null && b.expires <= 2 ? 2 : 0) + (b.type === "offer" ? 1 : 0); return urgentB - urgentA; });
-            {sorted.map((m) => {
+            return sorted.map((m) => {
               if (m.type === "offer") {
                 const f = g.roster.find((x) => x.id === m.fighterId);
                 if (!f || f.booked || f.injury) return null;
@@ -543,8 +543,7 @@ dispatch({ type: "INBOX_EVENT", choiceIndex: i, messageId: m.id, choice: c, gamb
                   </div>
                 </Card>
               );
-            })}
-            ;})()}
+            })})()}
           </>
         )}
 
