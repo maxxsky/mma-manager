@@ -40,7 +40,7 @@ function matchupMods(A, B) {
   const keyAB = `${A.archetype}_vs_${B.archetype}`;
   const keyBA = `${B.archetype}_vs_${A.archetype}`;
   const table = {
-    "Boxer_vs_Wrestler":          { aStrike: 0.10, aTDDef: -0.15 },
+    "Boxer_vs_Wrestler":          { aStrike: 0.10, aTDDef: -0.08 },
     "Boxer_vs_BJJ Specialist":    { aStrike: 0.15, aTDDef: 0.10 },
     "Boxer_vs_Boxer":             { aStrike: -0.05 },
     "Muay Thai_vs_Wrestler":      { aClinch: 0.15, aTDDef: 0.05 },
@@ -50,7 +50,7 @@ function matchupMods(A, B) {
     "Wrestler_vs_Muay Thai":      { aTD: 0.05, aGNP: 0.10 },
     "Wrestler_vs_BJJ Specialist": { aTD: 0.10, aSubRisk: 0.12 },
     "BJJ Specialist_vs_Wrestler": { aSub: 0.10, aSweep: 0.15 },
-    "BJJ Specialist_vs_Muay Thai":{ aSub: 0.10, aSweep: 0.10 },
+    "BJJ Specialist_vs_Muay Thai":{ aSub: 0.05, aSweep: 0.10 },
     "BJJ Specialist_vs_Boxer":    { aTD: -0.05, aSub: 0.05 },
     "All-Rounder_vs_Boxer":       { aStrike: 0.10 },
     "All-Rounder_vs_Muay Thai":   { aTDDef: 0.10 },
