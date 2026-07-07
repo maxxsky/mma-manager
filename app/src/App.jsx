@@ -147,25 +147,16 @@ export default function App() {
   const fightFighter = activeFight ? g.roster.find((f) => f.id === activeFight) : null;
 
   const scout = (cost, level, label, filterArch, filterWC) => {
-    up((n) => {
-      n.cash -= cost;
-      const grade = scoutGrade(n.rep);
-      let f = assignAgent(genFighter(R(level[0], level[1])));
-      // Apply filter: regenerate until match or max 5 attempts
-      if (filterArch || filterWC) {
-        for (let attempt = 0; attempt < 5; attempt++) {
-          if ((!filterArch || f.archetype === filterArch) && (!filterWC || f.weightClass === filterWC)) break;
-          f = assignAgent(genFighter(R(level[0], level[1])));
-        }
+    const grade = scoutGrade(g.rep);
+    let f = assignAgent(genFighter(R(level[0], level[1])));
+    if (filterArch || filterWC) {
+      for (let attempt = 0; attempt < 5; attempt++) {
+        if ((!filterArch || f.archetype === filterArch) && (!filterWC || f.weightClass === filterWC)) break;
+        f = assignAgent(genFighter(R(level[0], level[1])));
       }
-      n.prospects.unshift({ id: uid(), fighter: f, report: makeReport(f, grade), grade, method: label, scoutedWeek: n.week });
-      if (n.prospects.length > 5) {
-        const dropped = n.prospects[5];
-        n.log.unshift(`📋 ${dropped.fighter.name} (prospect) di-drop — slot scouting penuh (max 5).`);
-      }
-      n.prospects = n.prospects.slice(0, 5);
-      n.log.unshift(`🔍 Scout report baru (${label}, grade ${grade}).`);
-    });
+    }
+    const report = makeReport(f, grade);
+    dispatch({ type: "SCOUT", cost, fighter: f, report, grade, method: label });
   };
 
   const monthlyBurn = g.coaches.reduce((s, c) => s + ((!c.freeUntil || g.week > c.freeUntil) ? c.salary : 0), 0)
@@ -293,7 +284,7 @@ export default function App() {
                         <div style={{ color: C.chalk, fontSize: 13, fontFamily: DISPLAY, letterSpacing: 1 }}>{brand?.icon || "📢"} {sp.brand}</div>
                         <div style={{ color: C.dim, fontSize: 10 }}>{sp.terms === "placement" ? `${fmt$(sp.rate)}/bln tetap` : `${fmt$(sp.rate)}/bln + bonus kemenangan`} · {sp.weeksLeft ? `sisa ${sp.weeksLeft} mgg` : ""}</div>
                       </div>
-                      <button onClick={() => up((n) => { n.sponsors = n.sponsors.filter((x) => x.brand !== sp.brand); n.log.unshift(`❌ Kontrak ${sp.brand} diakhiri.`); })} style={{ background: "none", border: `1px solid ${C.red}44`, color: C.red, padding: "3px 8px", fontSize: 9, cursor: "pointer", ...cut(4) }}>akhiri</button>
+                      <button onClick={() => dispatch({ type: "TERMINATE_SPONSOR", brand: sp.brand })} style={{ background: "none", border: `1px solid ${C.red}44`, color: C.red, padding: "3px 8px", fontSize: 9, cursor: "pointer", ...cut(4) }}>akhiri</button>
                     </div>
                   );
                 })
@@ -442,7 +433,7 @@ export default function App() {
                 <div style={{ color: C.dim, fontSize: 11, marginTop: 4 }}>🤝 {AGENT_TYPES[p.fighter.agent || "none"].label} · asking ~{fmt$(p.fighter.asking)}</div>
                 <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                   <Btn small disabled={g.roster.length >= rosterCap} onClick={() => setNego({ fighter: p.fighter, mode: "sign", prospectId: p.id })}>Negosiasi</Btn>
-                  <Btn small color={C.dim} onClick={() => up((n) => { n.prospects = n.prospects.filter((x) => x.id !== p.id); })}>Pass</Btn>
+                  <Btn small color={C.dim} onClick={() => dispatch({ type: "DISMISS_PROSPECT", prospectId: p.id })}>Pass</Btn>
                 </div>
               </Card>
             ))}
@@ -471,34 +462,18 @@ export default function App() {
                       {g.promoterRel && <div style={{ marginTop: 4, fontSize: 10, color: (g.promoterRel[m.tier] || 30) >= 60 ? C.green : (g.promoterRel[m.tier] || 30) < 30 ? C.red : C.dim }}>🤝 Hubungan {m.tier}: {Math.round(g.promoterRel[m.tier] || 30)}/100</div>}
                     </div>
                     <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-                      <Btn small color={C.green} onClick={() => up((n) => {
-                        const nf = n.roster.find((x) => x.id === m.fighterId);
-                        nf.booked = { opponent: m.opponent, weeksLeft: m.weeks, show: m.show, winBonus: m.winBonus, tier: m.tier, title: m.title, titleTier: m.titleTier, defense: m.defense, oppRank: m.oppRank, contenderId: m.contenderId };
-                        n.inbox = n.inbox.filter((x) => x.id !== m.id);
-                        if (n.promoterRel) n.promoterRel[m.tier] = clamp((n.promoterRel[m.tier] || 30) + 5, 0, 100);
-                        n.log.unshift(`📝 ${nf.name} menerima fight ${m.tier} vs ${m.opponent.name} — masuk Fight Camp. Relasi ${m.tier} +5.`);
-                      })}>Accept</Btn>
-                      <Btn small color={C.gold} onClick={() => up((n) => {
-                        const rel = (n.promoterRel && n.promoterRel[m.tier]) || 30;
+                      <Btn small color={C.green} onClick={() => dispatch({ type: "ACCEPT_FIGHT", fighterId: m.fighterId, opponent: m.opponent, weeks: m.weeks, show: m.show, winBonus: m.winBonus, tier: m.tier, title: m.title, titleTier: m.titleTier, defense: m.defense, oppRank: m.oppRank, contenderId: m.contenderId, messageId: m.id })}>Accept</Btn>
+                      <Btn small color={C.gold} onClick={() => {
+                        const rel = (g.promoterRel && g.promoterRel[m.tier]) || 30;
                         const counterChance = clamp(rel + 20, 10, 90);
                         if (random() * 100 < counterChance) {
-                          const nf = n.roster.find((x) => x.id === m.fighterId);
-                          const boosted = Math.round(m.show * (1.15 + rel / 200)); // 15-40% based on relationship
-                          nf.booked = { opponent: m.opponent, weeksLeft: m.weeks, show: boosted, winBonus: Math.round(m.winBonus * (1.15 + rel / 200)), tier: m.tier, title: m.title, titleTier: m.titleTier, defense: m.defense, oppRank: m.oppRank, contenderId: m.contenderId };
-                          n.inbox = n.inbox.filter((x) => x.id !== m.id);
-                          if (n.promoterRel) n.promoterRel[m.tier] = clamp(rel - 3, 0, 100);
-                          n.log.unshift(`💬 ${nf.name} counter offer diterima — purse +${Math.round((1.15 + rel / 200 - 1) * 100)}% ke ${fmt$(boosted)} (relasi ${m.tier} -3).`);
+                          const boosted = Math.round(m.show * (1.15 + rel / 200));
+                          dispatch({ type: "COUNTER_FIGHT", fighterId: m.fighterId, opponent: m.opponent, weeks: m.weeks, boosted, boostedWin: Math.round(m.winBonus * (1.15 + rel / 200)), tier: m.tier, title: m.title, titleTier: m.titleTier, defense: m.defense, oppRank: m.oppRank, contenderId: m.contenderId, messageId: m.id, rel });
                         } else {
-                          n.inbox = n.inbox.filter((x) => x.id !== m.id);
-                          if (n.promoterRel) n.promoterRel[m.tier] = clamp(rel - 5, 0, 100);
-                          n.log.unshift(`❌ Counter offer ditolak — promotor ${m.tier} menarik tawaran. Relasi -5.`);
+                          dispatch({ type: "REJECT_FIGHT", fighterId: m.fighterId, tier: m.tier, messageId: m.id, stripTitle: m.defense });
                         }
-                      })}>Counter</Btn>
-                      <Btn small color={C.dim} onClick={() => up((n) => {
-                        n.inbox = n.inbox.filter((x) => x.id !== m.id);
-                        if (n.promoterRel) n.promoterRel[m.tier] = clamp((n.promoterRel[m.tier] || 30) - 8, 0, 100);
-                        if (m.defense) stripTitle(n, m.fighterId);
-                      })}>Reject</Btn>
+                      }}>Counter</Btn>
+                      <Btn small color={C.dim} onClick={() => dispatch({ type: "REJECT_FIGHT", fighterId: m.fighterId, tier: m.tier, messageId: m.id, stripTitle: m.defense })}>Reject</Btn>
                     </div>
                   </Card>
                 );
@@ -512,121 +487,11 @@ export default function App() {
                       <Btn key={i} small onClick={() => {
                         if (c.openExtend != null) {
                           const f = g.roster.find((x) => x.id === c.openExtend);
-                          up((n) => { n.inbox = n.inbox.filter((x) => x.id !== m.id); });
+                          dispatch({ type: "INBOX_REMOVE", messageId: m.id });
                           if (f) setNego({ fighter: f, mode: "extend" });
                           return;
                         }
-                        up((n) => {
-                          n.inbox = n.inbox.filter((x) => x.id !== m.id);
-                          const findF = (id) => n.roster.find((x) => x.id === id);
-                          if (c.classChangeAccept != null) {
-                            dispatch({ type: "CLASS_CHANGE_ACCEPT", fighterId: c.classChangeAccept.fighterId, targetClass: c.classChangeAccept.targetClass, targetIdx: c.classChangeAccept.targetIdx, moraleEffect: c.classChangeAccept.moraleEffect });
-                          } else if (c.classChangeReject != null) {
-                            dispatch({ type: "CLASS_CHANGE_REJECT", fighterId: c.classChangeReject.fighterId, moralePenalty: c.classChangeReject.moralePenalty });
-                          } else if (c.release != null) {
-                            const f = findF(c.release);
-                            if (f) { vacateTitle(n, f); n.roster = n.roster.filter((x) => x.id !== c.release); n.chemistry = clamp(n.chemistry - 5, 0, 100); n.log.unshift(`👋 ${f.name} di-release dari camp.`); }
-                          } else if (c.retire != null) {
-                            const f = findF(c.retire);
-                            if (f) { vacateTitle(n, f); n.roster = n.roster.filter((x) => x.id !== c.retire); n.rep = clamp(n.rep + 3, 0, 100); n.log.unshift(`🎗️ ${f.name} pensiun dengan hormat. Rep +3.`); }
-                          } else if (c.convince != null) {
-                            const f = findF(c.convince);
-                            if (f && f.morale >= 60 && !f.convincedOnce) {
-                              f.convincedOnce = true; f.morale = clamp(f.morale - 10, 0, 100);
-                              n.log.unshift(`🤝 ${f.name} setuju satu run terakhir (hanya bisa dibujuk sekali).`);
-                            } else if (f) {
-                              vacateTitle(n, f); n.roster = n.roster.filter((x) => x.id !== c.convince);
-                              n.log.unshift(`🎗️ ${f.name} tetap pensiun — hatinya sudah bulat.`);
-                            }
-                          } else if (c.toCoach != null) {
-                            const f = findF(c.toCoach);
-                            if (f) {
-                              vacateTitle(n, f);
-                              n.roster = n.roster.filter((x) => x.id !== c.toCoach);
-                              const cap2 = n.rep >= 50 ? 3 : n.rep >= 10 ? 2 : 1;
-                              if (n.coaches.length < cap2) {
-                                const specMap = { Boxer: "Striking", "Muay Thai": "Striking", Wrestler: "Wrestling", "BJJ Specialist": "BJJ", "All-Rounder": "Head" };
-                                const sk = clamp(Math.round(avgSkill(f) / 12), 2, 8);
-                                n.coaches.push({ id: uid(), name: "Coach " + f.name.split(" ").pop(), spec: specMap[f.archetype], skill: sk, salary: sk * 1800 });
-                                n.chemistry = clamp(n.chemistry + 5, 0, 100);
-                                n.log.unshift(`👨‍🏫 ${f.name} pensiun dan jadi coach.`);
-                              }
-                            }
-                          }
-                          if (c.coachSalary) {
-                            const coach = n.coaches.find((x) => x.id === c.coachSalary.id);
-                            if (coach) {
-                              coach.salary = c.coachSalary.amt;
-                              coach.lastRaiseWeek = n.week;
-                              n.log.unshift(`💰 ${coach.name} dinaikkan gajinya ke ${fmt$(c.coachSalary.amt)}/bulan.`);
-                            }
-                          }
-                          if (c.viralPop) { const f = findF(c.viralPop); if (f) f.popularity = clamp(f.popularity + 8, 0, 100); }
-                          if (c.cash) n.cash += c.cash;
-                          if (c.moraleTo) { const f = findF(c.moraleTo.id); if (f) { f.morale = clamp(f.morale + c.moraleTo.amt, 0, 100); n.log.unshift(`💰 Bonus retensi dibayar — morale ${f.name} naik.`); } }
-                          else if (c.letGo != null) {
-                            const f = findF(c.letGo);
-                            if (f) { vacateTitle(n, f); n.roster = n.roster.filter((x) => x.id !== c.letGo); n.rep = clamp(n.rep - 3, 0, 100); n.chemistry = clamp(n.chemistry - 5, 0, 100); n.log.unshift(`🚪 ${f.name} pergi ke rival camp.`); }
-                          } else if (c.talk != null) {
-                            const f = findF(c.talk);
-                            if (f && n.chemistry >= 50) { f.morale = clamp(f.morale + 15, 0, 100); n.chemistry = clamp(n.chemistry - 5, 0, 100); n.log.unshift(`🤝 ${f.name} diyakinkan bertahan. Chemistry -5.`); }
-                            else if (f) { vacateTitle(n, f); n.roster = n.roster.filter((x) => x.id !== c.talk); n.log.unshift(`🚪 ${f.name} tetap pergi — chemistry rendah.`); }
-                          } else if (c.counter != null) {
-                            const f = findF(c.counter.fighterId);
-                            if (f && n.cash >= c.counter.cost) {
-                              n.cash -= c.counter.cost; f.morale = clamp(f.morale + 20, 0, 100);
-                              if (f.contract) f.contract.managerCut = clamp((f.contract.managerCut || 0.18) + 0.02, 0, 0.35);
-                              n.log.unshift(`💰 ${f.name} dipertahankan — bonus match. Cash -${fmt$(c.counter.cost)}.`);
-                            } else if (f) {
-                              vacateTitle(n, f); n.roster = n.roster.filter((x) => x.id !== c.counter.fighterId);
-                              n.log.unshift(`🚪 Kas tak cukup — ${f.name} pergi ke rival.`);
-                            }
-                          } else if (c.coachPoach != null) {
-                            const coach = n.coaches.find((x) => x.id === c.coachPoach.id);
-                            if (coach && n.cash >= c.coachPoach.newSalary * 4) {
-                              coach.hiredWeek = n.week;
-                              coach.salary = c.coachPoach.newSalary; n.cash -= c.coachPoach.newSalary * 4;
-                              n.log.unshift(`🛡️ ${coach.name} dipertahankan — gaji naik.`);
-                              if (n.rivals) { const riv = n.rivals.find((x) => x.id === c.coachPoach.rivalId); if (riv) riv.rivalry = clamp(riv.rivalry + 10, 0, 100); }
-                            } else if (coach) {
-                              n.coaches = n.coaches.filter((x) => x.id !== c.coachPoach.id); n.chemistry = clamp(n.chemistry - 8, 0, 100);
-                              n.log.unshift(`🦊 ${coach.name} pergi ke rival. Chemistry -8.`);
-                            }
-                          } else if (c.coachResignChance != null) {
-                            const coach = n.coaches.find((x) => x.id === c.coachResignChance.id);
-                            if (coach && Math.random() < c.coachResignChance.chance) {
-                              n.coaches = n.coaches.filter((x) => x.id !== coach.id);
-                              n.chemistry = clamp(n.chemistry - 8, 0, 100);
-                              n.log.unshift(`👋 ${coach.name} resign — permintaan gaji ditolak. Chemistry -8.`);
-                            }
-                          } else if (c.coachLeave != null) {
-                            n.coaches = n.coaches.filter((x) => x.id !== c.coachLeave); n.chemistry = clamp(n.chemistry - 8, 0, 100);
-                            n.log.unshift(`👋 Coach dilepas — chemistry -8.`);
-                          } else if (c.fightPromise != null) {
-                            const f = findF(c.fightPromise); if (f) f.morale = clamp(f.morale + 3, 0, 100);
-                          } else if (c.upgradePromise != null) {
-                            const f = findF(c.upgradePromise.fighterId); if (f) f.morale = clamp(f.morale + 4, 0, 100);
-                          } else if (c.investorAccept != null) {
-                            const d = c.investorAccept;
-                            n.cash += d.amt;
-                            n.investors.push({ tier: d.tier, equity: d.equity, investment: d.amt, weekAcquired: n.week });
-                            n.log.unshift(`💼 Investor ${d.tier} masuk — ${fmt$(d.amt)} untuk ${d.equity}% equity. Potongan bulanan dimulai.`);
-                          } else if (c.investorReject != null) {
-                            n.log.unshift(`💼 Tawaran investor ditolak.`);
-                          } else if (c.sponsorAccept != null) {
-                            const d = c.sponsorAccept;
-                            if (!n.sponsors) n.sponsors = [];
-                            n.sponsors.push({ brand: d.brand, terms: d.terms, rate: d.rate, weeksLeft: d.weeksLeft });
-                            n.log.unshift(`📢 ${d.brand} (${d.terms === "placement" ? "Placement" : "Royalty"}) — ${fmt$(d.rate)}/bln, ${d.weeksLeft} minggu.`);
-                          } else if (c.sponsorReject != null) {
-                            n.log.unshift(`📢 Tawaran sponsor ditolak.`);
-                          } else {
-                            let d = c.chem || 0;
-                            if (c.gamble) d = random() < 0.5 ? c.gamble[0] : c.gamble[1];
-                            n.chemistry = clamp(n.chemistry + d, 0, 100);
-                            if (d) n.log.unshift(`Keputusan "${c.label}" → chemistry ${d >= 0 ? "+" : ""}${d}.`);
-                          }
-                        });
+dispatch({ type: "INBOX_EVENT", choiceIndex: i, messageId: m.id, choice: c, gambleRoll: c.gamble ? random() : null });
                       }}>{c.label}</Btn>
                     ))}
                   </div>
@@ -720,7 +585,7 @@ export default function App() {
                   <span>{c.name} <Tag>{c.spec}</Tag><span style={{ fontFamily: DISPLAY, color: C.gold }}> {c.skill}</span>
                     {c.personality && <Tag color={C.green}>{COACH_PERSONALITIES[c.personality]?.icon} {c.personality}</Tag>}</span>
                   <span style={{ color: C.dim, fontSize: 11 }}>{c.freeUntil && g.week <= c.freeUntil ? "gratis (intro)" : fmt$(c.salary) + "/bln"}
-                    {g.coaches.length > 1 && <button onClick={() => up((n) => { n.cash -= c.salary; n.coaches = n.coaches.filter((x) => x.id !== c.id); n.chemistry = clamp(n.chemistry - 5, 0, 100); n.log.unshift(`👋 ${c.name} dipecat — severance 1 bulan gaji (${fmt$(c.salary)}). Chemistry -5.`); })} style={{ marginLeft: 8, background: "none", border: "none", color: C.red, cursor: "pointer", fontSize: 11 }}>pecat</button>}
+                    {g.coaches.length > 1 && <button onClick={() => dispatch({ type: "FIRE_COACH", coachId: c.id, severance: c.salary, coachName: c.name })} style={{ marginLeft: 8, background: "none", border: "none", color: C.red, cursor: "pointer", fontSize: 11 }}>pecat</button>}
                   </span>
                 </div>
               ))}
@@ -733,7 +598,7 @@ export default function App() {
                     <div style={{ color: C.chalk, fontSize: 13 }}>{c.name} <Tag>{c.spec}</Tag><span style={{ fontFamily: DISPLAY, color: C.gold }}> {c.skill}</span>{c.personality && <Tag color={C.green}>{c.personality}</Tag>}</div>
                     <div style={{ color: C.dim, fontSize: 11 }}>{fmt$(c.salary)}/bulan</div>
                   </div>
-                  <Btn small disabled={g.coaches.length >= coachCap} onClick={() => up((n) => { c.hiredWeek = n.week; n.coaches.push(c); n.coachMarket = n.coachMarket.filter((x) => x.id !== c.id); n.log.unshift(`👨‍🏫 ${c.name} (${c.spec}) direkrut — gaji ${fmt$(c.salary)}/bln.`); })} title={`Gaji ${fmt$(c.salary)}/bln — ${monthlyIn > 0 ? Math.round(c.salary / Math.max(monthlyIn, 1) * 100) : '?'}% dari income bulanan`}>Hire</Btn>
+                  <Btn small disabled={g.coaches.length >= coachCap} onClick={() => dispatch({ type: "HIRE_COACH", coachId: c.id, coach: c, coachName: c.name, coachSpec: c.spec, coachSalary: c.salary })} title={`Gaji ${fmt$(c.salary)}/bln — ${monthlyIn > 0 ? Math.round(c.salary / Math.max(monthlyIn, 1) * 100) : '?'}% dari income bulanan`}>Hire</Btn>
                 </div>
               ))}
             </Card>
@@ -748,11 +613,7 @@ export default function App() {
                 <div>📈 Train bonus: <b style={{ color: C.green }}>+{Math.round(tier.trainBonus * 100)}%</b></div>
               </div>
               {g.campTier < 4 && (
-                <Btn small disabled={g.rep < CAMP_TIERS[g.campTier + 1].rep || g.cash < CAMP_TIERS[g.campTier + 1].cost} onClick={() => up((n) => {
-                  const t = CAMP_TIERS[n.campTier + 1];
-                  n.cash -= t.cost; n.campTier++; n.rep = clamp(n.rep + 8, 0, 100);
-                  n.log.unshift(`🏗️ Camp upgrade ke TIER ${n.campTier + 1}: ${t.name}!`);
-                })}>Upgrade ke {CAMP_TIERS[g.campTier + 1].name} — butuh Rep ≥{CAMP_TIERS[g.campTier + 1].rep} · {fmt$(CAMP_TIERS[g.campTier + 1].cost)}</Btn>
+                <Btn small disabled={g.rep < CAMP_TIERS[g.campTier + 1].rep || g.cash < CAMP_TIERS[g.campTier + 1].cost} onClick={() => dispatch({ type: "UPGRADE_TIER" })}>Upgrade ke {CAMP_TIERS[g.campTier + 1].name} — butuh Rep ≥{CAMP_TIERS[g.campTier + 1].rep} · {fmt$(CAMP_TIERS[g.campTier + 1].cost)}</Btn>
               )}
             </Card>
             <Card>
@@ -765,10 +626,7 @@ export default function App() {
               {g.rep >= 5 && (
                 <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
                   {Object.entries(CAMP_SPECS).map(([k, v]) => (
-                    <button key={k} onClick={() => up((n) => {
-                      n.campTag = k;
-                      if (g.campTag !== k) n.log.unshift(`🏷️ Camp spesialisasi berubah: ${k}. Bonus training: ${v.spec ? v.spec.toUpperCase() + " +6%" : "semua +10%"} .`);
-                    })}
+                    <button key={k} onClick={() => dispatch({ type: "SET_CAMP_TAG", tag: k })}
                       style={{ background: g.campTag === k ? C.gold : C.panel2, color: g.campTag === k ? "#0a0d14" : C.chalk, border: `1px solid ${C.line}`, padding: "6px 9px", fontSize: 10, cursor: "pointer", flex: "0 0 calc(50% - 3px)", ...cut(6) }}>
                       <div style={{ fontFamily: DISPLAY, letterSpacing: 1, textTransform: "uppercase", marginBottom: 2 }}>{k}</div>
                       <div style={{ fontSize: 8, color: g.campTag === k ? "#0a0d1488" : C.dim }}>{v.desc}</div>
@@ -793,13 +651,7 @@ export default function App() {
                         {Array.from({ length: max }).map((_, j) => <div key={j} style={{ width: 13, height: 5, background: j < lvl ? C.gold : "#1b2331", transform: "skewX(-16deg)" }} />)}
                       </div>
                     </div>
-                    <Btn small disabled={lvl >= max || g.cash < cost} onClick={() => up((n) => { 
-                      n.facilities[k] = (n.facilities[k] || 1) + 1;
-                      const c = (n.facilities[k] - 1) * (15000 + (n.campTier || 0) * 10000);
-                      n.cash -= c;
-                      n.chemistry = clamp(n.chemistry + 5, 0, 100);
-                      n.log.unshift(`🏗️ ${FAC_LABEL[k]} upgrade ke L${n.facilities[k]}.`); 
-                    })}>{lvl >= max ? "MAX" : `⬆ ${fmt$(cost)}`}</Btn>
+                    <Btn small disabled={lvl >= max || g.cash < cost} onClick={() => dispatch({ type: "UPGRADE_FACILITY", facility: k, facilityLabel: FAC_LABEL[k] })}>{lvl >= max ? "MAX" : `⬆ ${fmt$(cost)}`}</Btn>
                   </div>
                 );
               })}
@@ -815,14 +667,7 @@ export default function App() {
                         <div style={{ color: C.chalk, fontSize: 13, fontFamily: DISPLAY, letterSpacing: 1 }}>{inv.tier}</div>
                         <div style={{ color: C.dim, fontSize: 10 }}>{inv.equity}% equity · invest ${(inv.investment / 1000).toFixed(0)}K · ~{fmt$(estCut)}/bln potongan</div>
                       </div>
-                      <Btn small color={C.gold} disabled={g.cash < inv.investment * 3} onClick={() => up((n) => {
-                        const idx = n.investors.findIndex((x) => x.tier === inv.tier && x.weekAcquired === inv.weekAcquired);
-                        if (idx < 0) return;
-                        const cost = Math.round(inv.investment * 3);
-                        n.cash -= cost;
-                        n.investors.splice(idx, 1);
-                        n.log.unshift(`🔄 ${inv.tier} dibuy-back — ${fmt$(cost)}. Equity bebas.`);
-                      })}>Buy-back {fmt$(inv.investment * 3)}</Btn>
+                      <Btn small color={C.gold} disabled={g.cash < inv.investment * 3} onClick={() => dispatch({ type: "BUYBACK_INVESTOR", tier: inv.tier, weekAcquired: inv.weekAcquired, cost: Math.round(inv.investment * 3) })}>Buy-back {fmt$(inv.investment * 3)}</Btn>
                     </div>
                   );
                 })}
@@ -999,27 +844,7 @@ export default function App() {
           onCommit={(deal) => {
             const neg = nego;
             if (!neg?.fighter) return;
-            up((n) => {
-              if (neg.mode === "sign") {
-                const prospect = n.prospects.find((x) => x.id === neg.prospectId);
-                if (!prospect) return;
-                const f = prospect.fighter;
-                n.cash -= deal.signBonus;
-                f.joinedWeek = n.week;
-                if (prospect.grade === "S") f.ambitionRevealed = true;
-                f.contract = { managerCut: deal.cut, fightsLeft: deal.fights, fightsTotal: deal.fights, durationMo: deal.duration, signedWeek: n.week, renegoFlagged: false, exclusive: deal.exclusive, rematch: deal.rematch, medical: deal.medical, equity: deal.equity };
-                n.roster.push(f);
-                n.prospects = n.prospects.filter((x) => x.id !== neg.prospectId);
-                n.log.unshift(`✍️ ${f.name} teken kontrak: cut ${Math.round(deal.cut * 100)}%, ${deal.fights} fight, ${fmt$(deal.signBonus)} bonus.`);
-               } else {
-                 const f = n.roster.find((x) => x.id === neg.fighter.id);
-                 if (!f) return;
-                n.cash -= deal.signBonus;
-                f.contract = { managerCut: deal.cut, fightsLeft: deal.fights, fightsTotal: deal.fights, durationMo: deal.duration, signedWeek: n.week, renegoFlagged: true, exclusive: deal.exclusive, rematch: deal.rematch, medical: deal.medical, equity: deal.equity };
-                f.morale = clamp(f.morale + 8, 0, 100);
-                n.log.unshift(`📝 ${f.name} perpanjang kontrak: cut ${Math.round(deal.cut * 100)}%, ${deal.fights} fight.`);
-              }
-            });
+            dispatch({ type: "SIGN_CONTRACT", mode: neg.mode, prospectId: neg.prospectId, fighterId: neg.fighter?.id, deal });
           }}
         />
       )}
