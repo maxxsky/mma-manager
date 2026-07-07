@@ -136,12 +136,13 @@ export default function App() {
 
   const saveTimer = useRef(null);
   const up = (fn) => setG((old) => {
-    const n = structuredClone(old);
+    // JSON round-trip ensures state stays serializable for localStorage
+    const n = JSON.parse(JSON.stringify(old));
     fn(n);
     // Throttle localStorage saves — avoid blocking on every click
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      try { localStorage.setItem(SAVE_KEY, JSON.stringify(n)); } catch (e) {}
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify(n)); } catch (e) { /* state too large, skip */ }
     }, 1000);
     return n;
   });
