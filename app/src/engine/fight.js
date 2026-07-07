@@ -123,7 +123,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
 
   // Submission progress system (not binary)
   let subProgress = 0;
-  const SUB_THRESHOLD = (A.archetype === "BJJ Specialist" || B.archetype === "BJJ Specialist") ? 55 : 50;
+  const SUB_THRESHOLD = (A.archetype === "BJJ Specialist" || B.archetype === "BJJ Specialist") ? 60 : 50;
 
   const both = (min, sec, msg) => {
     const line = `[${min}:${String(sec).padStart(2, "0")}] ${msg}`;
@@ -228,7 +228,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
     } else if (exType === "td") {
       const tdBonus = (matchup.aTD || 0) + (planA === "Take It Down" ? 0.18 : 0) + (cornerA === "tdd" ? -0.10 : 0);
       const tdDefBonus = (matchup.aTDDef || 0);
-      const p = clamp(0.38 + (effAttr(A, "wrestling", stA, {}) - effAttr(B, "wrestling", stB, {})) / 60 + tdBonus + tdDefBonus, 0.10, 0.92);
+      const p = clamp(0.35 + (effAttr(A, "wrestling", stA, {}) - effAttr(B, "wrestling", stB, {})) / 60 + tdBonus + tdDefBonus, 0.10, 0.90);
       if (random() < p) {
         ptsA += 12; dmgB += R(3, 8);
         position = { type: "halfGuard", top: "A" };
@@ -248,7 +248,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
     } else if (exType === "tdB") {
       const bTDBonus = (matchup.bTD || 0);
       const aTDDefBonus = (matchup.aTDDef || 0) + (cornerA === "tdd" ? 0.10 : 0);
-      const pB = clamp(0.38 + (effAttr(B, "wrestling", stB, {}) - effAttr(A, "wrestling", stA, {})) / 60 + bTDBonus - aTDDefBonus, 0.10, 0.92);
+      const pB = clamp(0.35 + (effAttr(B, "wrestling", stB, {}) - effAttr(A, "wrestling", stA, {})) / 60 + bTDBonus - aTDDefBonus, 0.10, 0.90);
       if (random() < pB) {
         ptsB += 12; dmgA += R(3, 8);
         position = { type: "halfGuard", top: "B" };
