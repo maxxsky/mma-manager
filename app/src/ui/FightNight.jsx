@@ -23,7 +23,6 @@ export default function FightNight({ fighter, done }) {
   const [docCheck, setDocCheck] = useState(false);
   const [weighinIssue, setWeighinIssue] = useState(null);
   const [fightSeed, setFightSeed] = useState(null);
-  const [opponentFinishes, setOpponentFinishes] = useState(null);
   const tickDataRef = useRef({ roundLog: null, state: null, rnd: 1, totalRounds: 3, cutA: 0, cutB: 0, docCheck: false });
   // Cumulative fight stats for HUD
   const [totalLandA, setTotalLandA] = useState(0);
@@ -100,11 +99,6 @@ export default function FightNight({ fighter, done }) {
       setResult({ won: res.finish.by === "A", how: res.finish.how, r });
       setStage("result");
     } else if (res.knockdown) {
-      if (res.knockdown.fighter === "A") {
-        const finishes = random() < 0.45;
-        setOpponentFinishes(finishes);
-        if (finishes) setResult({ won: false, how: "KO/TKO", r });
-      }
       setStage("knockdown");
     } else if (r >= totalRounds) {
       const winsA = newSt.scores.filter((s) => s.a > s.b).length;
@@ -646,41 +640,14 @@ export default function FightNight({ fighter, done }) {
           <Card accent={C.red} style={{ textAlign: "center", boxShadow: "0 0 40px rgba(225,75,68,.25)" }}>
             <div style={{ fontSize: 56, marginBottom: 4, animation: "koflash .8s ease both" }}>💥</div>
             <H color={C.red}>DOWN! {roundLog.knockdown.name} TERJATUH!</H>
-            <div style={{ color: C.chalk, fontSize: 14, marginBottom: 8 }}>
-              {roundLog.knockdown.canRecover 
-                ? "Wasit mulai menghitung... dia bisa bangkit!"
-                : "Wasit langsung menghentikan pertarungan!"}
+            <div style={{ color: C.chalk, fontSize: 14, marginBottom: 12 }}>
+              Wasit langsung menghentikan pertarungan!
             </div>
-            {roundLog.knockdown.canRecover ? (
-              roundLog.knockdown.fighter === "B" ? (
-                // Opponent is down — player chooses: attack or let recover
-                <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 8 }}>
-                  <Btn color={C.green} onClick={() => { setResult({ won: true, how: "KO/TKO", r: rnd }); setStage("result"); }}>Lanjutkan Serangan (TKO Win)</Btn>
-                  <Btn small color={C.dim} onClick={() => { setSt(prev => ({ ...prev, mom: clamp((prev.mom || 0) + 15, -100, 100) })); setStage("corner"); }}>Biarkan Bangkit</Btn>
-                </div>
-              ) : (
-                // Player's fighter is down — opponent decides (simulated)
-                <div style={{ textAlign: "center" }}>
-                  {opponentFinishes ? (
-                    <div>
-                      <div style={{ color: C.red, fontSize: 13, marginBottom: 8 }}>{opp.name} tidak memberi kesempatan — wasit menghentikan!</div>
-                      <Btn color={C.red} onClick={() => setStage("result")}>Lihat Hasil</Btn>
-                    </div>
-                  ) : (
-                    <div>
-                      <div style={{ color: C.gold, fontSize: 13, marginBottom: 8 }}>{opp.name} membiarkan {fighter.name} bangkit — wasit melanjutkan!</div>
-                      <Btn color={C.gold} onClick={() => setStage("corner")}>Lanjutkan Fight</Btn>
-                    </div>
-                  )}
-                </div>
-              )
-            ) : (
-              <Btn color={C.red} onClick={() => {
-                const won = roundLog.knockdown.fighter !== "A";
-                setResult({ won, how: "KO/TKO", r: rnd });
-                setStage("result");
-              }}>Lihat Hasil</Btn>
-            )}
+            <Btn color={C.red} onClick={() => {
+              const won = roundLog.knockdown.fighter !== "A";
+              setResult({ won, how: "KO/TKO", r: rnd });
+              setStage("result");
+            }}>Lihat Hasil</Btn>
           </Card>
         )}
 
