@@ -70,6 +70,18 @@ export default function FighterCard({ f, g, up }) {
               📄 Kontrak: cut <b style={{ color: C.chalk }}>{Math.round(f.contract.managerCut * 100)}%</b> · sisa <b style={{ color: f.contract.fightsLeft <= 1 ? C.red : C.chalk }}>{f.contract.fightsLeft}/{f.contract.fightsTotal}</b> fight · {f.contract.durationMo} bln · 🤝 {AGENT_TYPES[f.agent || "none"].label}
             </div>
           )}
+          {f.fightHistory && f.fightHistory.length > 0 && (
+            <div style={{ marginTop: 8, borderTop: `1px solid ${C.line}44`, paddingTop: 6 }}>
+              <div style={{ fontSize: 9, color: C.dim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>📋 Fight History ({f.fightHistory.length} fights)</div>
+              {[...f.fightHistory].reverse().slice(0, 8).map((h, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 9, padding: "1px 0", color: h.result === "W" ? C.green : h.result === "D" ? C.dim : C.red }}>
+                  <span>Wk {h.week} · vs <b>{h.opponent}</b></span>
+                  <span>{h.result} · {h.method} R{h.round} {h.title ? "🏆" : ""} · {h.tier}</span>
+                </div>
+              ))}
+              {f.fightHistory.length > 8 && <div style={{ fontSize: 8, color: C.dim, marginTop: 2 }}>...and {f.fightHistory.length - 8} more fights</div>}
+            </div>
+          )}
           {f.weightClassDelta != null && f.weightClassDelta !== 0 && (
             <div style={{ color: C.dim, fontSize: 10, marginTop: 2 }}>
               ⚖️ Perubahan kelas: <b style={{ color: f.weightClassDelta > 0 ? C.red : C.blue }}>{f.weightClassDelta > 0 ? `↑ Naik ${f.weightClassDelta} kelas` : `↓ Turun ${Math.abs(f.weightClassDelta)} kelas`}</b> — strength ±{Math.abs(f.weightClassDelta) * 2}% · footwork ∓{Math.abs(f.weightClassDelta) * 1.5}%

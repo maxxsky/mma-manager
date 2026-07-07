@@ -100,6 +100,7 @@ export default function App() {
             if (!f.contract) f.contract = { managerCut: 0.18, fightsLeft: 4, fightsTotal: 4, durationMo: 24, signedWeek: f.joinedWeek || 0, renegoFlagged: false };
             f.injuryCount = f.injuryCount || 0;
             f.seriousInjuries = f.seriousInjuries || 0;
+            if (!f.fightHistory) f.fightHistory = [];
           });
           setG(s);
         }

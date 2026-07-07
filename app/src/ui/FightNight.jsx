@@ -256,6 +256,12 @@ export default function FightNight({ fighter, done }) {
       f.lastFightWeek = g2.week;
       f.fightsThisYear = (f.fightsThisYear || 0) + 1;
       if (f.contract) { f.contract.fightsLeft = Math.max(0, (f.contract.fightsLeft || 0) - 1); }
+      // Record fight history
+      if (!f.fightHistory) f.fightHistory = [];
+      f.fightHistory.push({
+        week: g2.week, opponent: opp.name, result: result.won ? "W" : result.draw ? "D" : "L",
+        method: result.how, round: result.r, title: b.title || false, tier: b.tier,
+      });
       if (attitude === "Respectful") f.popularity = clamp(f.popularity + 2, 0, 100);
       else if (attitude === "Trash Talk") {
         f.popularity = clamp(f.popularity + 5, 0, 100);
