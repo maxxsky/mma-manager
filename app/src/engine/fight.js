@@ -46,16 +46,16 @@ function matchupMods(A, B) {
     "Muay Thai_vs_Wrestler":      { aClinch: 0.15, aTDDef: 0.05 },
     "Muay Thai_vs_BJJ Specialist":{ aClinch: 0.10, aTDDef: -0.10 },
     "Muay Thai_vs_Boxer":         { aStrike: -0.05, aClinch: 0.15 },
-    "Wrestler_vs_Boxer":          { aTD: 0.20, aGNP: 0.10 },
+    "Wrestler_vs_Boxer":          { aTD: 0.20, aGNP: 0.10, aTDDef: 0.10 },
     "Wrestler_vs_Muay Thai":      { aTD: 0.05, aGNP: 0.10 },
     "Wrestler_vs_BJJ Specialist": { aTD: 0.10, aSubRisk: 0.12 },
     "BJJ Specialist_vs_Wrestler": { aSub: 0.10, aSweep: 0.15 },
     "BJJ Specialist_vs_Muay Thai":{ aSub: 0.10, aSweep: 0.10 },
     "BJJ Specialist_vs_Boxer":    { aTD: -0.05, aSub: 0.05 },
-    "All-Rounder_vs_Boxer":       { aStrike: 0.05 },
-    "All-Rounder_vs_Muay Thai":   { aTDDef: 0.05 },
-    "All-Rounder_vs_Wrestler":    { aTDDef: 0.05 },
-    "All-Rounder_vs_BJJ Specialist": { aSweep: 0.08 },
+    "All-Rounder_vs_Boxer":       { aStrike: 0.10 },
+    "All-Rounder_vs_Muay Thai":   { aTDDef: 0.10 },
+    "All-Rounder_vs_Wrestler":    { aTDDef: 0.10 },
+    "All-Rounder_vs_BJJ Specialist": { aSweep: 0.15 },
   };
   // A's bonuses come from A_vs_B, B's bonuses come from B_vs_A (mirrored keys)
   const bKeys = { aStrike:"bStrike", aTDDef:"bTDDef", aClinch:"bClinch", aTD:"bTD", aGNP:"bGNP", aSubRisk:"bSubRisk", aSub:"bSub", aSweep:"bSweep" };
@@ -127,7 +127,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
 
   // Submission progress system (not binary)
   let subProgress = 0;
-  const SUB_THRESHOLD = (A.archetype === "BJJ Specialist" || B.archetype === "BJJ Specialist") ? 60 : 50;
+  const SUB_THRESHOLD = (A.archetype === "BJJ Specialist" || B.archetype === "BJJ Specialist") ? 65 : 50;
 
   const both = (min, sec, msg) => {
     const line = `[${min}:${String(sec).padStart(2, "0")}] ${msg}`;
@@ -288,12 +288,16 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
     // ── SUBMISSION (progressive system) ──
     } else if (exType === "sub") {
       const isTopA = position?.top === "A";
-      const attacker = isTopA ? A : B;
-      const defender = isTopA ? B : A;
+      let attacker = isTopA ? A : B;
+      let defender = isTopA ? B : A;
       const gType = position?.type || "guard";
       const g = GROUND[gType] || GROUND.guard;
-      const attackerSta = isTopA ? stA : stB;
-      const defenderSta = isTopA ? stB : stA;
+      // BJJ guard specialist: can attack with subs from guard only (not side/mount)
+      if (defender.archetype === "BJJ Specialist" && attacker.archetype !== "BJJ Specialist" && gType === "guard") {
+        [attacker, defender] = [defender, attacker];
+      }
+      const attackerSta = attacker === A ? stA : stB;
+      const defenderSta = defender === A ? stA : stB;
 
       // Position bonus: back mount >> mount >> side >> guard
       // BJJ gets bonus sub progress from bottom (guard specialist)
@@ -310,14 +314,14 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       subProgress += adv;
 
       if (subProgress >= SUB_THRESHOLD) {
-        finish = { by: isTopA ? "A" : "B", how: "Submission" };
+        finish = { by: attacker === A ? "A" : "B", how: "Submission" };
         both(exMin, exSec + 5, `SUBMISSION! ${attacker.name} sinks it in! IT'S OVER!`);
         tickOnly(exMin, exSec + 10, `${defender.name} has no choice but to tap!`);
       } else {
         tickOnly(exMin, exSec + 5, `${attacker.name} hunting for a submission — ${defender.name} defends. ${
           subProgress > 60 ? "It's getting tight!" : subProgress > 30 ? "Good attempt." : ""
         }`);
-        if (isTopA) { ptsA += 5; mom += 2; } else { ptsB += 5; mom -= 2; }
+        if (attacker === A) { ptsA += 5; mom += 2; } else { ptsB += 5; mom -= 2; }
         // Defender escape chance resets partial progress
         if (random() < 0.15) {
           subProgress = clamp(subProgress - RI(10, 20), 0, SUB_THRESHOLD);
