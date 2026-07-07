@@ -1,3 +1,44 @@
+/**
+ * @typedef {Object} Fighter
+ * @property {number} id
+ * @property {string} name
+ * @property {number} age
+ * @property {string} region
+ * @property {string} archetype - Boxer | Muay Thai | Wrestler | BJJ Specialist | All-Rounder
+ * @property {string} weightClass
+ * @property {number} natWeight
+ * @property {Object<string,number>} attrs - striking, wrestling, bjj, footwork, strength, cardio, chin, fightIQ
+ * @property {Object<string,number>} ceilings
+ * @property {string[]} traits
+ * @property {number} morale
+ * @property {number} popularity
+ * @property {number} overtraining
+ * @property {?{weeks:number, label:string, tier:number}} injury
+ * @property {{type:string, intensity:string}} training
+ * @property {?{opponent:Fighter, weeksLeft:number, show:number, winBonus:number, tier:string, titleTier:string}} booked
+ * @property {{w:number, l:number, ko:number, sub:number, dec:number}} record
+ * @property {string[]} titles
+ * @property {string} ambition
+ * @property {number} rankPoints
+ * @property {string} agent
+ * @property {?{managerCut:number, fightsLeft:number, fightsTotal:number, durationMo:number, medical:string}} contract
+ *
+ * @typedef {Object} Game
+ * @property {number} week
+ * @property {number} cash
+ * @property {number} rep
+ * @property {number} chemistry
+ * @property {Fighter[]} roster
+ * @property {Object[]} coaches
+ * @property {Object[]} inbox
+ * @property {string[]} log
+ * @property {Object<string,Object>} divisions
+ * @property {?{amount:number, weeklyPayment:number, remaining:number}} loan
+ * @property {Object[]} investors
+ * @property {Object[]} sponsors
+ * @property {number} legacy
+ */
+
 // ---------- seedable RNG (mulberry32) ----------
 // Ganti Math.random() di engine — server & client bisa reproduce fight yg sama
 export function mulberry32(seed) {

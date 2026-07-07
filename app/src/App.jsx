@@ -24,7 +24,9 @@ import NegotiateModal from "./ui/NegotiateModal.jsx";
 // ============================================================
 //   SAVE
 // ============================================================
-const SAVE_PREFIX = "mma-manager-save-v3";
+// Save version: bump when schema changes. Use migrationMap for backward compat.
+// v3 → v4: added medical clause to default contracts (2026-07-07)
+const SAVE_PREFIX = "mma-manager-save-v4";
 
 function saveKey(slot) { return `${SAVE_PREFIX}-slot${slot}`; }
 function getSaveSlot() { try { return parseInt(localStorage.getItem(`${SAVE_PREFIX}-active`)) || 1; } catch { return 1; } }

@@ -392,7 +392,7 @@ export default function FightNight({ fighter, done }) {
               <div style={{ flex: 1 }}><Bar v={hpA} color={hpA > 40 ? C.red : "#ff2216"} h={14} skew mirror /></div>
               <div style={{ display: "flex", gap: 4 }}>
                 {Array.from({ length: totalRounds }).map((_, i) => (
-                  <div key={i} style={{ width: 8, height: 8, borderRadius: 4, background: i < state.scores.length ? (state.scores[i].a > state.scores[i].b ? C.red : state.scores[i].b > state.scores[i].a ? C.blue : C.dim) : i === state.scores.length && stage !== "result" ? C.gold : "#232c40", boxShadow: i === state.scores.length && stage !== "result" ? `0 0 6px ${C.gold}` : "none" }} />
+                  <div key={i} style={{ width: 8, height: 8, borderRadius: 4, background: i < state.scores.length ? (state.scores[i].a > state.scores[i].b ? C.red : state.scores[i].b > state.scores[i].a ? C.blue : C.dim) : i === state.scores.length && stage !== "result" ? C.gold : C.panel2, boxShadow: i === state.scores.length && stage !== "result" ? `0 0 6px ${C.gold}` : "none" }} />
                 ))}
               </div>
               <div style={{ flex: 1 }}><Bar v={hpB} color={C.blue} h={14} skew /></div>
