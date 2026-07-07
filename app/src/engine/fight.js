@@ -54,7 +54,7 @@ function matchupMods(A, B) {
     "BJJ Specialist_vs_Boxer":    { aTD: -0.05, aSub: 0.05 },
     "All-Rounder_vs_Boxer":       { aStrike: 0.10 },
     "All-Rounder_vs_Muay Thai":   { aTDDef: 0.10 },
-    "All-Rounder_vs_Wrestler":    { aTDDef: 0.10 },
+    "All-Rounder_vs_Wrestler":    { aTDDef: 0.05 },
     "All-Rounder_vs_BJJ Specialist": { aSweep: 0.15 },
     "Boxer_vs_All-Rounder":       { aStrike: 0.05 },
     "Muay Thai_vs_All-Rounder":   { aClinch: 0.05 },
@@ -328,7 +328,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
 
       // BJJ guard specialist: separate sub threat from bottom (guard/half only)
       // Runs parallel — doesn't interfere with top fighter's sub game
-      if (!finish && defender.archetype === "BJJ Specialist" && attacker.archetype !== "BJJ Specialist" && (gType === "guard" || gType === "halfGuard") && random() < 0.30) {
+      if (!finish && defender.archetype === "BJJ Specialist" && attacker.archetype !== "BJJ Specialist" && (gType === "guard" || gType === "halfGuard") && random() < 0.20) {
         const bjjAdv = clamp(
           (effAttr(defender, "bjj", defenderSta, {}) * 0.6 + effAttr(defender, "fightIQ", defenderSta, {}) * 0.15 + 3)
           - (effAttr(attacker, "bjj", attackerSta, {}) * 0.3 + effAttr(attacker, "strength", attackerSta, {}) * 0.2),
