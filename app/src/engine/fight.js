@@ -292,21 +292,14 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
     // ── SUBMISSION (progressive system) ──
     } else if (exType === "sub") {
       const isTopA = position?.top === "A";
-      let attacker = isTopA ? A : B;
-      let defender = isTopA ? B : A;
+      const attacker = isTopA ? A : B;
+      const defender = isTopA ? B : A;
       const gType = position?.type || "guard";
       const g = GROUND[gType] || GROUND.guard;
-      // BJJ guard specialist: can attack with subs from guard only (not side/mount)
-      if (defender.archetype === "BJJ Specialist" && attacker.archetype !== "BJJ Specialist" && gType === "guard") {
-        [attacker, defender] = [defender, attacker];
-      }
       const attackerSta = attacker === A ? stA : stB;
       const defenderSta = defender === A ? stA : stB;
 
-      // Position bonus: back mount >> mount >> side >> guard
-      // BJJ gets bonus sub progress from bottom (guard specialist)
-      const isBJJBottom = attacker.archetype !== "BJJ Specialist" && defender.archetype === "BJJ Specialist";
-      const posBonus = gType === "backMount" ? 35 : gType === "mount" ? 20 : gType === "sideControl" ? 10 : (isBJJBottom ? 8 : 5);
+      const posBonus = gType === "backMount" ? 35 : gType === "mount" ? 20 : gType === "sideControl" ? 10 : 5;
       const subMod = (matchup.aSub || 0) + (matchup.bSub || 0);
 
       const adv = clamp(
@@ -326,7 +319,6 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
           subProgress > 60 ? "It's getting tight!" : subProgress > 30 ? "Good attempt." : ""
         }`);
         if (attacker === A) { ptsA += 5; mom += 2; } else { ptsB += 5; mom -= 2; }
-        // Defender escape chance resets partial progress
         if (random() < 0.15) {
           subProgress = clamp(subProgress - RI(10, 20), 0, SUB_THRESHOLD);
           tickOnly(exMin, exSec + 10, `${defender.name} creates space — submission pressure eases.`);
