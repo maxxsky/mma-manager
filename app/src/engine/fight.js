@@ -50,15 +50,13 @@ function matchupMods(A, B) {
     "Wrestler_vs_Muay Thai":      { aTD: 0.05, aGNP: 0.10 },
     "Wrestler_vs_BJJ Specialist": { aTD: 0.10, aSubRisk: 0.12 },
     "BJJ Specialist_vs_Wrestler": { aSub: 0.10, aSweep: 0.15 },
-    "BJJ Specialist_vs_Muay Thai":{ aSub: 0.07, aSweep: 0.10 },
+    "BJJ Specialist_vs_Muay Thai":{ aSub: 0.06, aSweep: 0.10 },
     "BJJ Specialist_vs_Boxer":    { aTD: -0.05, aSub: 0.05 },
-    "All-Rounder_vs_Boxer":       { aStrike: 0.10 },
-    "All-Rounder_vs_Muay Thai":   { aTDDef: 0.10 },
-    "All-Rounder_vs_Wrestler":    { aTDDef: 0.05 },
-    "All-Rounder_vs_BJJ Specialist": { aSweep: 0.15 },
+    "All-Rounder_vs_Boxer":       { aStrike: 0.08 },
+    "All-Rounder_vs_Muay Thai":   { aTDDef: 0.08 },
+    "All-Rounder_vs_Wrestler":    { aTDDef: 0.01 },
+    "All-Rounder_vs_BJJ Specialist": { aSweep: 0.12 },
     "Boxer_vs_All-Rounder":       { aStrike: 0.05 },
-    "Muay Thai_vs_All-Rounder":   { aClinch: 0.05 },
-    "Wrestler_vs_All-Rounder":    { aTDDef: 0.05 },
     "BJJ Specialist_vs_All-Rounder": { aSub: 0.05 },
   };
   // A's bonuses come from A_vs_B, B's bonuses come from B_vs_A (mirrored keys)
@@ -328,7 +326,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
 
       // BJJ guard specialist: separate sub threat from bottom (guard/half only)
       // Runs parallel — doesn't interfere with top fighter's sub game
-      if (!finish && defender.archetype === "BJJ Specialist" && attacker.archetype !== "BJJ Specialist" && (gType === "guard" || gType === "halfGuard") && random() < 0.20) {
+      if (!finish && defender.archetype === "BJJ Specialist" && attacker.archetype !== "BJJ Specialist" && (gType === "guard" || gType === "halfGuard") && random() < 0.08) {
         const bjjAdv = clamp(
           (effAttr(defender, "bjj", defenderSta, {}) * 0.6 + effAttr(defender, "fightIQ", defenderSta, {}) * 0.15 + 3)
           - (effAttr(attacker, "bjj", attackerSta, {}) * 0.3 + effAttr(attacker, "strength", attackerSta, {}) * 0.2),
