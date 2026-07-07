@@ -58,7 +58,7 @@ function matchupMods(A, B) {
     "All-Rounder_vs_BJJ Specialist": { aSweep: 0.15 },
     "Boxer_vs_All-Rounder":       { aStrike: 0.05 },
     "Muay Thai_vs_All-Rounder":   { aClinch: 0.05 },
-    "Wrestler_vs_All-Rounder":    { aGNP: 0.05 },
+    "Wrestler_vs_All-Rounder":    { aTDDef: 0.05 },
     "BJJ Specialist_vs_All-Rounder": { aSub: 0.05 },
   };
   // A's bonuses come from A_vs_B, B's bonuses come from B_vs_A (mirrored keys)
@@ -131,6 +131,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
 
   // Submission progress system (not binary)
   let subProgress = 0;
+  let bjjGuardProgress = 0;
   const SUB_THRESHOLD = (A.archetype === "BJJ Specialist" || B.archetype === "BJJ Specialist") ? 65 : 50;
 
   const both = (min, sec, msg) => {
@@ -322,6 +323,23 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
         if (random() < 0.15) {
           subProgress = clamp(subProgress - RI(10, 20), 0, SUB_THRESHOLD);
           tickOnly(exMin, exSec + 10, `${defender.name} creates space — submission pressure eases.`);
+        }
+      }
+
+      // BJJ guard specialist: separate sub threat from bottom (guard/half only)
+      // Runs parallel — doesn't interfere with top fighter's sub game
+      if (!finish && defender.archetype === "BJJ Specialist" && attacker.archetype !== "BJJ Specialist" && (gType === "guard" || gType === "halfGuard") && random() < 0.30) {
+        const bjjAdv = clamp(
+          (effAttr(defender, "bjj", defenderSta, {}) * 0.6 + effAttr(defender, "fightIQ", defenderSta, {}) * 0.15 + 3)
+          - (effAttr(attacker, "bjj", attackerSta, {}) * 0.3 + effAttr(attacker, "strength", attackerSta, {}) * 0.2),
+          -3, 25
+        );
+        bjjGuardProgress += bjjAdv;
+        if (bjjGuardProgress >= 45) {
+          finish = { by: defender === A ? "A" : "B", how: "Submission" };
+          both(exMin + 1, 0, `SUBMISSION! ${defender.name} locks it from the bottom! IT'S OVER!`);
+        } else if (bjjAdv > 8) {
+          tickOnly(exMin, exSec + 8, `${defender.name} threatens a submission from guard!`);
         }
       }
 
