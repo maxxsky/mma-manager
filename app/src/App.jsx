@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLang } from "./ui/LangContext.jsx";
 
 // ===== ENGINE: pure JS, zero React — bisa di-import oleh server Node nanti =====
@@ -134,10 +134,15 @@ export default function App() {
     return () => window.removeEventListener("keydown", handler);
   }, [g.over, activeFight, nego, weeklySummary]);
 
+  const saveTimer = useRef(null);
   const up = (fn) => setG((old) => {
-    const n = JSON.parse(JSON.stringify(old));
+    const n = structuredClone(old);
     fn(n);
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify(n)); } catch (e) {}
+    // Throttle localStorage saves — avoid blocking on every click
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify(n)); } catch (e) {}
+    }, 1000);
     return n;
   });
 
