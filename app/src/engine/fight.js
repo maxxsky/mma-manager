@@ -36,6 +36,8 @@ const EXCHANGES = {
 };
 
 // ── Matchup modifier: archetype rock-paper-scissors (bidirectional) ──
+// BALANCE: calibrated via 25+ simulation iterations (see BALANCE_*.md).
+// Bidirectional sim: 5000 fights per mirror pair, target 45-55% win rates.
 function matchupMods(A, B) {
   const keyAB = `${A.archetype}_vs_${B.archetype}`;
   const keyBA = `${B.archetype}_vs_${A.archetype}`;

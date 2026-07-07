@@ -26,11 +26,15 @@ export default function FightNight({ fighter, done }) {
   const tickDataRef = useRef({ roundLog: null, state: null, rnd: 1, totalRounds: 3, cutA: 0, cutB: 0, docCheck: false });
 
   // Seed RNG for this fight, reset on unmount
+  // useRef guards against double-init in React Strict Mode
+  const seedRef = useRef(null);
   useEffect(() => {
+    if (seedRef.current) return; // already seeded — Strict Mode guard
     const seed = fighter.booked?.fightSeed || Math.floor(random() * 2147483647);
+    seedRef.current = seed;
     setFightSeed(seed);
     setRNG(mulberry32(seed));
-    return () => { resetRNG(); };
+    return () => { seedRef.current = null; resetRNG(); };
   }, []);
   const opp = fighter.booked.opponent;
   // useMemo: compute fighters once (attitude changes re-trigger, but renders don't mutate in-place)
@@ -49,7 +53,7 @@ export default function FightNight({ fighter, done }) {
     Object.entries(mod.a).forEach(([k, v]) => A.attrs[k] = clamp(A.attrs[k] * v, 5, 99));
     Object.entries(mod.b).forEach(([k, v]) => B.attrs[k] = clamp(B.attrs[k] * v, 5, 99));
     return { A, B, attMod: mod };
-  }, [fighter.id, opp.name, attitude]);
+  }, [fighter, opp, attitude]);
   const totalRounds = fighter.booked.title ? 5 : 3;
 
   // Sync volatile values to ref (prevents stale closure in auto-advance)

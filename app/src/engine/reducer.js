@@ -11,6 +11,9 @@ import { vacateTitle } from "./rankings.js";
 import { coachBonus, facBonus, facilityCost } from "./economy.js";
 import { getRel } from "./relationships.js";
 
+// Game-state mutator — applies actions directly to game object.
+// Unlike Redux-style reducers, this mutates `g` in place for performance.
+// Named "reducer" for familiarity; functions identically to a state machine.
 export function reducer(g, action) {
   // Log every action for multiplayer replay
   if (!g.actionLog) g.actionLog = [];
@@ -135,7 +138,7 @@ export function reducer(g, action) {
       const idx = g.investors.findIndex((x) => x.tier === action.tier && x.weekAcquired === action.weekAcquired);
       if (idx >= 0) {
         g.cash -= action.cost;
-        g.investors.splice(idx, 1);
+        g.investors = g.investors.filter((_, i) => i !== idx);
         g.log.unshift("🔄 " + action.tier + " dibuy-back.");
       }
       break;

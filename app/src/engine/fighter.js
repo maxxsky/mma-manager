@@ -23,7 +23,9 @@ export function genFighter(level, regionName) {
   ATTRS.forEach((k) => (ceilings[k] = clamp(attrs[k] + RI(8, 30), attrs[k], 99)));
   const wc = pick(WEIGHTS);
   const traits = [];
-  while (traits.length < 2) {
+  let attempts = 0;
+  while (traits.length < 2 && attempts < 100) {
+    attempts++;
     const t = pick(TRAIT_KEYS);
     if (!traits.includes(t)) {
       // Check conflicts: skip trait that conflicts with an already-assigned trait
@@ -88,6 +90,7 @@ export function defaultContract() {
   return {
     managerCut: 0.18, fightsLeft: 4, fightsTotal: 4,
     durationMo: 24, signedWeek: 0, renegoFlagged: false,
+    medical: "camp", // camp pays full medical cost by default
   };
 }
 
