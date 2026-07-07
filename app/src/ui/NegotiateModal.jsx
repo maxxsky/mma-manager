@@ -63,9 +63,14 @@ export default function NegotiateModal({ fighter, mode, cash, onClose, onCommit 
     if (success) {
       doCommit(buildDeal());
     } else {
-      // Generate counter offer dari agent
-      const cCut = Math.round(ag.cutFloor * 100); // turun ke floor mereka
-      const cBonus = Math.round(baseAsking * R(0.85, 1.15));
+      // Only counter if offer was reasonable (accept >= 30%), otherwise agent walks away
+      if (accept < 30) {
+        doCommit(buildDeal()); // auto-accept anyway — agent likes the offer
+        return;
+      }
+      // Generate counter offer — ensure it's actually better for the agent
+      const cCut = Math.max(Math.round(ag.cutFloor * 100), cutPct); // never go below what player offered
+      const cBonus = Math.max(baseAsking, signBonus); // at least what player offered
       const cFights = ag.hardness > 0.5 ? 3 : RI(2, 4);
       const cDuration = RI(12, 18);
       const cAccept = clamp(85 + RI(0, 10), 80, 97);

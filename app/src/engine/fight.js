@@ -295,6 +295,12 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       const isTopA = position?.top === "A";
       const attacker = isTopA ? A : B;
       const defender = isTopA ? B : A;
+      // Only fighters with decent BJJ can attempt submissions
+      if (effAttr(attacker, "bjj", attacker === A ? stA : stB, {}) < 50) {
+        // Not skilled enough — scramble instead
+        tickOnly(exMin, exSec, `${attacker.name} lacks submission skills — position stalled.`);
+        continue; // skip to next exchange
+      }
       const gType = position?.type || "guard";
       const g = GROUND[gType] || GROUND.guard;
       const attackerSta = attacker === A ? stA : stB;

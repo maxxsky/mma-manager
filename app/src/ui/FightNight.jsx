@@ -160,7 +160,19 @@ export default function FightNight({ fighter, done }) {
   };
 
   const nextRound = () => {
-    const nr = rnd + 1; setRnd(nr); setStage("round");
+    const nr = rnd + 1;
+    if (nr > totalRounds) {
+      const winsA = state?.scores?.filter((s) => s.a > s.b).length || 0;
+      const winsB = state?.scores?.filter((s) => s.b > s.a).length || 0;
+      if (winsA === winsB) {
+        setResult({ won: false, how: "Draw", r: rnd, draw: true });
+      } else {
+        setResult({ won: winsA > winsB, how: "Decision", r: rnd });
+      }
+      setStage("result");
+      return;
+    }
+    setRnd(nr); setStage("round");
     runRound(nr, state, cornerRef.current);
   };
 
