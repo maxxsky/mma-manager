@@ -52,6 +52,10 @@ function matchupMods(A, B) {
     "BJJ Specialist_vs_Wrestler": { aSub: 0.10, aSweep: 0.15 },
     "BJJ Specialist_vs_Muay Thai":{ aSub: 0.10, aSweep: 0.10 },
     "BJJ Specialist_vs_Boxer":    { aTD: -0.05, aSub: 0.05 },
+    "All-Rounder_vs_Boxer":       { aStrike: 0.05 },
+    "All-Rounder_vs_Muay Thai":   { aTDDef: 0.05 },
+    "All-Rounder_vs_Wrestler":    { aTDDef: 0.05 },
+    "All-Rounder_vs_BJJ Specialist": { aSweep: 0.08 },
   };
   // A's bonuses come from A_vs_B, B's bonuses come from B_vs_A (mirrored keys)
   const bKeys = { aStrike:"bStrike", aTDDef:"bTDDef", aClinch:"bClinch", aTD:"bTD", aGNP:"bGNP", aSubRisk:"bSubRisk", aSub:"bSub", aSweep:"bSweep" };
