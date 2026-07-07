@@ -119,14 +119,6 @@ export const COACH_PERSONALITIES = {
 export const RIVAL_NAMES = [
   "Chimera Gym", "Blackthorn MMA", "Cerberus Camp", "Kruel Combat", "Apex Fight Team",
 ];
-// Camp specialization tags (separate from rival traits)
-export const CAMP_SPECS = {
-  "Striking Focus": { spec: "striking", bonus: 1.06, desc: "Bonus training striking +6%" },
-  "Grappling Academy": { spec: "wrestling", bonus: 1.06, desc: "Bonus training wrestling +6%" },
-  "BJJ Lab": { spec: "bjj", bonus: 1.06, desc: "Bonus training BJJ +6%" },
-  "Well-Rounded": { spec: null, bonus: 1.10, desc: "Semua training +10%" },
-  "Conditioning Center": { spec: "strength", bonus: 1.06, desc: "Bonus training strength +6%" },
-};
 
 export const RIVAL_TRAITS = {
   "Striking Factory": { spec: "striking", bonus: 1.15 },
@@ -173,31 +165,6 @@ export const SPARRING_MATCH = {
   "BJJ Specialist": { Boxer: 0.2, "Muay Thai": 0.2, Wrestler: 0.9, "BJJ Specialist": 1.0, "All-Rounder": 0.5 },
   "All-Rounder":  { Boxer: 0.6, "Muay Thai": 0.6, Wrestler: 0.6, "BJJ Specialist": 0.6, "All-Rounder": 0.8 },
 };
-
-export const EXTERNAL_PARTNERS = {
-  Local:   { label: "Local Partner", cost: 400,  levelRange: [30, 50], desc: "Pemula lokal — murah, gain kecil" },
-  Regular: { label: "Regular Partner", cost: 900,  levelRange: [45, 70], desc: "Sparring selevel — harga wajar" },
-  Pro:     { label: "Pro Partner", cost: 1600, levelRange: [60, 85], desc: "Sparring pro — mahal, gain besar" },
-  Elite:   { label: "Elite Partner", cost: 2800, levelRange: [75, 95], desc: "Partner kelas dunia — premium" },
-};
-
-export const INVESTOR_TYPES = [
-  {
-    tier: "Angel", repReq: 15, maxInvestors: 2,
-    offerRange: [20000, 35000], equityRange: [8, 15],
-    desc: "Investor individu — dana kecil, equity rendah.",
-  },
-  {
-    tier: "Venture", repReq: 35, maxInvestors: 2,
-    offerRange: [60000, 100000], equityRange: [15, 25],
-    desc: "Venture partner — dana menengah, equity moderat.",
-  },
-  {
-    tier: "Private Equity", repReq: 55, maxInvestors: 1,
-    offerRange: [150000, 250000], equityRange: [25, 40],
-    desc: "Private equity — dana besar, equity signifikan.",
-  },
-];
 
 // ── Achievements ──
 export const ACHIEVEMENTS = [

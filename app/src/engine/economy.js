@@ -1,5 +1,5 @@
 import { clamp } from "./rng.js";
-import { CAMP_TIERS, RIVAL_TRAITS, CAMP_SPECS } from "./data.js";
+import { CAMP_TIERS } from "./data.js";
 
 export function coachBonus(g, gains) {
   let b = 1;
@@ -25,10 +25,6 @@ export function facBonus(g, gains) {
   if (gains.includes("striking")) b += (g.facilities.ring - 1) * 0.06;
   if (gains.includes("strength") || gains.includes("cardio")) b += (g.facilities.weights - 1) * 0.06;
   b += tier.trainBonus;
-  if (g.campTag) {
-    const tag = CAMP_SPECS[g.campTag] || RIVAL_TRAITS[g.campTag];
-    if (tag && tag.spec && gains.includes(tag.spec)) b += 0.06;
-  }
   return b;
 }
 

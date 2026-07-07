@@ -6,7 +6,7 @@ import { R, RI, clamp, pick, fmt$, uid, random } from "./engine/rng.js";
 import {
   ATTRS, ATTR_LABEL, WEIGHTS, ARCH_COLOR, TRAITS, AMBITIONS, AMBITION_KEYS,
   AGENT_TYPES, GAME_PLANS, TRAINING, INTENSITY, COACH_PERSONALITIES,
-  CAMP_TIERS, CAMP_SPECS, SPONSOR_BRANDS, FAC_LABEL, RIVAL_TRAITS, PROMO_TIERS,
+  CAMP_TIERS, SPONSOR_BRANDS, FAC_LABEL, RIVAL_TRAITS, PROMO_TIERS,
   ACHIEVEMENTS,
 } from "./engine/data.js";
 import { genFighter, assignAgent, agentFor, avgSkill, tierOf, weeklyFee, scoutGrade, makeReport, genCoach, genBio } from "./engine/fighter.js";
@@ -84,11 +84,9 @@ export default function App() {
           if (!s.promoterRel) s.promoterRel = initPromoterRel();
           if (s.campTier == null) s.campTier = 0;
           if (s.loan == null) s.loan = null;
-          if (!s.campTag) s.campTag = pick(Object.keys(RIVAL_TRAITS));
           if (!s.relationships) s.relationships = {};
           if (s.openGymActive == null) s.openGymActive = false;
           if (s.sponsor == null) s.sponsor = null;
-          if (!s.investors) s.investors = [];
           if (s.rep == null || isNaN(s.rep) || s.rep <= 0) s.rep = 8;
           if (!s.sponsors) {
             s.sponsors = s.sponsor ? [{ brand: s.sponsor.brand, terms: "placement", rate: s.sponsor.rate, weeksLeft: null }] : [];
@@ -672,26 +670,6 @@ dispatch({ type: "INBOX_EVENT", choiceIndex: i, messageId: m.id, choice: c, gamb
               )}
             </Card>
             <Card>
-              <H>🏷️ Spesialisasi Camp · {g.campTag || "Belum dipilih"}</H>
-              <div style={{ color: C.dim, fontSize: 11, marginBottom: 8 }}>
-                {g.campTag
-                  ? CAMP_SPECS[g.campTag]?.desc || "Belum dipilih"
-                  : "Pilih spesialisasi yang cocok dengan roster-mu."}
-              </div>
-              {g.rep >= 5 && (
-                <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                  {Object.entries(CAMP_SPECS).map(([k, v]) => (
-                    <button key={k} onClick={() => dispatch({ type: "SET_CAMP_TAG", tag: k })}
-                      style={{ background: g.campTag === k ? C.gold : C.panel2, color: g.campTag === k ? "#0a0d14" : C.chalk, border: `1px solid ${C.line}`, padding: "6px 9px", fontSize: 10, cursor: "pointer", flex: "0 0 calc(50% - 3px)", ...cut(6) }}>
-                      <div style={{ fontFamily: DISPLAY, letterSpacing: 1, textTransform: "uppercase", marginBottom: 2 }}>{k}</div>
-                      <div style={{ fontSize: 8, color: g.campTag === k ? "#0a0d1488" : C.dim }}>{v.desc}</div>
-                    </button>
-                  ))}
-                </div>
-              )}
-              {g.rep < 5 && <div style={{ color: C.red, fontSize: 10 }}>Rep 5+ untuk ganti spesialisasi.</div>}
-            </Card>
-            <Card>
               <H>Fasilitas · cap per tier</H>
               {(["mats","ring","weights","medical"]).map((k) => {
                 const lvl = g.facilities[k] || 1;
@@ -711,23 +689,6 @@ dispatch({ type: "INBOX_EVENT", choiceIndex: i, messageId: m.id, choice: c, gamb
                 );
               })}
             </Card>
-            {(g.investors && g.investors.length > 0) ? (
-              <Card>
-                <H>💼 Investors · {g.investors.reduce((s, i) => s + i.equity, 0)}% Equity</H>
-                {g.investors.map((inv, i) => {
-                  const estCut = Math.round((monthlyIn) * (inv.equity / 100));
-                  return (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: `1px solid ${C.line}55` }}>
-                      <div>
-                        <div style={{ color: C.chalk, fontSize: 13, fontFamily: DISPLAY, letterSpacing: 1 }}>{inv.tier}</div>
-                        <div style={{ color: C.dim, fontSize: 10 }}>{inv.equity}% equity · invest ${(inv.investment / 1000).toFixed(0)}K · ~{fmt$(estCut)}/bln potongan</div>
-                      </div>
-                      <Btn small color={C.gold} disabled={g.cash < inv.investment * 3} onClick={() => dispatch({ type: "BUYBACK_INVESTOR", tier: inv.tier, weekAcquired: inv.weekAcquired, cost: Math.round(inv.investment * 3) })}>Buy-back {fmt$(inv.investment * 3)}</Btn>
-                    </div>
-                  );
-                })}
-              </Card>
-            ) : null}
             <Card>
               <H>📊 Rep Unlock Milestones</H>
               <div style={{ fontSize: 10, color: C.dim, lineHeight: 1.6 }}>
@@ -797,9 +758,7 @@ dispatch({ type: "INBOX_EVENT", choiceIndex: i, messageId: m.id, choice: c, gamb
           const coachSal = g.coaches.reduce((s, c) => s + ((!c.freeUntil || g.week > c.freeUntil) ? c.salary : 0), 0);
           const facVal = Object.values(g.facilities).reduce((s, l) => s + l * 30000, 0);
           const maint = Math.round(facVal * 0.05);
-          const equityPct = (g.investors || []).reduce((s, inv) => s + inv.equity, 0);
-          const equityCut = Math.round((sponsorIncome + popTotal) * (equityPct / 100));
-          const netMonthly = sponsorIncome + popTotal + feeTotal - coachSal - maint - equityCut;
+          const netMonthly = sponsorIncome + popTotal + feeTotal - coachSal - maint;
           const Row = ({ label, value, color, detail }) => (
             <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${C.line}33` }}>
               <span style={{ fontSize: 12, color: C.chalk }}>{label}</span>
@@ -823,8 +782,7 @@ dispatch({ type: "INBOX_EVENT", choiceIndex: i, messageId: m.id, choice: c, gamb
                   <div style={{ fontSize: 11, color: C.dim, letterSpacing: 1, marginBottom: 6, textTransform: "uppercase" }}>📤 Pengeluaran</div>
                   <Row label="👨‍🏫 Gaji Coach" value={coachSal} color={C.red} detail={`${g.coaches.length} coach`} />
                   <Row label="🏗️ Maintenance Fasilitas" value={maint} color={C.red} detail={`nilai aset ${fmt$(facVal)}`} />
-                  {equityPct > 0 && <Row label={`💰 Potongan Investor (${equityPct}%)`} value={equityCut} color={C.red} />}
-                  <div style={{ padding: "4px 0", textAlign: "right", fontFamily: DISPLAY, fontSize: 16, color: C.red }}>-{fmt$(coachSal + maint + equityCut)}</div>
+                  <div style={{ padding: "4px 0", textAlign: "right", fontFamily: DISPLAY, fontSize: 16, color: C.red }}>-{fmt$(coachSal + maint)}</div>
                 </div>
                 <div style={{ marginTop: 10, padding: "8px 0", borderTop: `2px solid ${C.gold}44`, textAlign: "right" }}>
                   <span style={{ fontSize: 11, color: C.dim, letterSpacing: 1, textTransform: "uppercase" }}>Bersih / Bulan </span>

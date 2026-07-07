@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { R, clamp, fmt$ } from "../engine/rng.js";
-import { ATTRS, ATTR_LABEL, WEIGHTS, ARCH_COLOR, TRAITS, AMBITIONS, TRAINING, INTENSITY, AGENT_TYPES, EXTERNAL_PARTNERS } from "../engine/data.js";
+import { ATTRS, ATTR_LABEL, WEIGHTS, ARCH_COLOR, TRAITS, AMBITIONS, TRAINING, INTENSITY, AGENT_TYPES } from "../engine/data.js";
 import { avgSkill, tierOf } from "../engine/fighter.js";
 import { rankOf, vacateTitle } from "../engine/rankings.js";
 import { getRel } from "../engine/relationships.js";
@@ -131,41 +131,6 @@ export default function FighterCard({ f, g, up }) {
                 ))}
                 <span style={{ color: C.dim, fontSize: 9 }}>keras = gain↑ risiko↑</span>
               </div>
-              {/* External sparring partner */}
-              {f.training.type === "sparring" && (
-                <div style={{ marginTop: 8, borderTop: `1px solid ${C.line}44`, paddingTop: 8 }}>
-                  <div style={{ fontSize: 10, color: C.dim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>
-                    {f.externalPartner ? `🤝 External: ${f.externalPartner.archetype} (level ${f.externalPartner.level}) · ${f.externalPartner.weeksLeft} mgg` : "🤝 Hire External Sparring Partner"}
-                  </div>
-                  {!f.externalPartner ? (
-                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                      {Object.entries(EXTERNAL_PARTNERS).map(([k, p]) => (
-                        <button key={k} onClick={() => up((g2) => {
-                          const nf = g2.roster.find((x) => x.id === f.id);
-                          if (!nf || g2.cash < p.cost) return;
-                          g2.cash -= p.cost;
-                          const archs = Object.keys(ARCH_COLOR);
-                          nf.externalPartner = {
-                            archetype: archs[Math.floor(Math.random() * archs.length)],
-                            level: Math.round(p.levelRange[0] + Math.random() * (p.levelRange[1] - p.levelRange[0])),
-                            weeksLeft: 4, cost: p.cost, tier: k,
-                          };
-                          g2.log.unshift(`🤝 ${nf.name} hire ${k.toLowerCase()} — ${nf.externalPartner.archetype} (level ${nf.externalPartner.level}), 4 minggu.`);
-                        })}
-                          style={{ background: C.panel2, color: C.chalk, border: `1px solid ${C.line}`, padding: "4px 8px", fontSize: 9, cursor: "pointer", ...cut(4) }}
-                          title={p.desc}>
-                          {k} · {fmt$(p.cost)}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <button onClick={() => up((g2) => {
-                      const nf = g2.roster.find((x) => x.id === f.id);
-                      if (nf) nf.externalPartner = null;
-                    })} style={{ background: "none", border: `1px solid ${C.red}44`, color: C.red, padding: "3px 8px", fontSize: 9, cursor: "pointer", ...cut(4) }}>Akhiri kontrak</button>
-                  )}
-                </div>
-              )}
             </div>
           )}
         </div>

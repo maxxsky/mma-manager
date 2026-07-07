@@ -100,12 +100,6 @@ const EN = {
   // ---- SPONSOR ----
   "SPONSOR.placement": "Placement Fee", "SPONSOR.royalty": "Royalty",
   "SPONSOR.noSponsor": "No sponsors yet — advance weeks to receive offers from brands (based on camp reputation). Max 3 active sponsors.",
-  // ---- INVESTOR ----
-  "INVESTOR.Angel": "Angel", "INVESTOR.Venture": "Venture",
-  "INVESTOR.Private Equity": "Private Equity",
-  // ---- EXTERNAL PARTNER ----
-  "PARTNER.Local": "Local Partner", "PARTNER.Regular": "Regular Partner",
-  "PARTNER.Pro": "Pro Partner", "PARTNER.Elite": "Elite Partner",
   // ---- SPECIALISATION ----
   "SPEC.Striking Factory": "Striking Factory",
   "SPEC.Wrestling Hub": "Wrestling Hub",
@@ -202,10 +196,6 @@ const ID = {
   "INJURY.2": "🆘 Serius", "INJURY.3": "💀 Ancaman Karir",
   "SPONSOR.placement": "Biaya Penempatan", "SPONSOR.royalty": "Royalti",
   "SPONSOR.noSponsor": "Belum ada sponsor — majukan minggu untuk menerima tawaran (berdasarkan reputasi camp). Maks 3 sponsor aktif.",
-  "INVESTOR.Angel": "Malaikat", "INVESTOR.Venture": "Venture",
-  "INVESTOR.Private Equity": "Ekuitas Swasta",
-  "PARTNER.Local": "Partner Lokal", "PARTNER.Regular": "Partner Reguler",
-  "PARTNER.Pro": "Partner Pro", "PARTNER.Elite": "Partner Elit",
   "SPEC.Striking Factory": "Pabrik Pukulan",
   "SPEC.Wrestling Hub": "Pusat Gulat",
   "SPEC.BJJ Academy": "Akademi BJJ",

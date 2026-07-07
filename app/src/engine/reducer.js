@@ -132,13 +132,6 @@ export function reducer(g, action) {
       }
       break;
     }
-    case "SET_CAMP_TAG": {
-      if (action.tag && g.rep >= 5) {
-        if (g.campTag !== action.tag) g.log.unshift("🏷️ Camp spesialisasi berubah: " + action.tag + ".");
-        g.campTag = action.tag;
-      }
-      break;
-    }
     case "CLASS_CHANGE_ACCEPT": {
       const f2 = g.roster.find((x) => x.id === action.fighterId);
       if (f2) {
@@ -174,15 +167,6 @@ export function reducer(g, action) {
     case "TERMINATE_SPONSOR": {
       g.sponsors = g.sponsors.filter((x) => x.brand !== action.brand);
       g.log.unshift("❌ Kontrak " + action.brand + " diakhiri.");
-      break;
-    }
-    case "BUYBACK_INVESTOR": {
-      const idx = g.investors.findIndex((x) => x.tier === action.tier && x.weekAcquired === action.weekAcquired);
-      if (idx >= 0) {
-        g.cash -= action.cost;
-        g.investors = g.investors.filter((_, i) => i !== idx);
-        g.log.unshift("🔄 " + action.tier + " dibuy-back.");
-      }
       break;
     }
     case "SCOUT": {
@@ -371,12 +355,6 @@ export function reducer(g, action) {
         const f = findF(c.fightPromise); if (f) f.morale = clamp(f.morale + 3, 0, 100);
       } else if (c.upgradePromise != null) {
         const f = findF(c.upgradePromise.fighterId); if (f) f.morale = clamp(f.morale + 4, 0, 100);
-      } else if (c.investorAccept != null) {
-        const d = c.investorAccept;
-        g.cash += d.amt;
-        g.investors.push({ tier: d.tier, equity: d.equity, investment: d.amt, weekAcquired: g.week });
-        g.log.unshift("💼 Investor " + d.tier + " masuk.");
-      } else if (c.investorReject != null) { g.log.unshift("💼 Investor ditolak.");
       } else if (c.sponsorAccept != null) {
         const d = c.sponsorAccept;
         if (!g.sponsors) g.sponsors = [];

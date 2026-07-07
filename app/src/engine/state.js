@@ -2,7 +2,7 @@ import { R, RI, clamp, pick, fmt$, uid, random } from "./rng.js";
 import {
   ATTRS, ATTR_LABEL, WEIGHTS, TRAITS, AMBITIONS, AMBITION_KEYS,
   TRAINING, INTENSITY, SPONSOR_BRANDS, CAMP_TIERS, FAC_LABEL,
-  RIVAL_TRAITS, CAMP_SPECS, AGENT_TYPES, INVESTOR_TYPES, SPARRING_MATCH, EXTERNAL_PARTNERS, SPONSOR_TERMS,
+  RIVAL_TRAITS, AGENT_TYPES, SPARRING_MATCH, SPONSOR_TERMS,
 } from "./data.js";
 import { genFighter, assignAgent, agentFor, avgSkill, weeklyFee, scoutGrade, genCoach } from "./fighter.js";
 import { coachBonus, facBonus } from "./economy.js";
@@ -31,7 +31,6 @@ export function newGame() {
     coachMarket: [genCoach(), genCoach(), genCoach()],
     facilities: { mats: 1, ring: 1, weights: 1, medical: 1 },
     campTier: 0,
-    campTag: pick(Object.keys(CAMP_SPECS)),
     divisions: genDivisions(),
     inbox: [], log: ["Camp dibuka. Budget awal $35,000. Bertahan dan menangkan fight."],
     prospects: [], legacy: 0, over: null, won: false,
@@ -41,7 +40,6 @@ export function newGame() {
     relationships: {},
     openGymActive: false,
     sponsors: [],
-    investors: [],
   };
 }
 
@@ -56,12 +54,6 @@ function calcSparringMult(f, g) {
       const bestMatch = Math.max(...matchScores);
       mult += bestMatch * 0.08;
     }
-  }
-  if (f.externalPartner && f.externalPartner.weeksLeft > 0) {
-    const partner = f.externalPartner;
-    const archetypeBonus = SPARRING_MATCH[f.archetype]?.[partner.archetype] || 0.5;
-    const levelFactor = partner.level / 60;
-    mult += 0.06 * archetypeBonus * levelFactor;
   }
   return clamp(mult, 0.85, 1.2);
 }
@@ -93,15 +85,6 @@ export function tick(g) {
     }
     if (g.coaches.some((c) => c.personality === "Motivator") && f.morale < 50) {
       f.morale = clamp(f.morale + 2, 0, 100);
-    }
-
-    // External sparring partner expiry
-    if (f.externalPartner) {
-      f.externalPartner.weeksLeft--;
-      if (f.externalPartner.weeksLeft <= 0) {
-        g.log.unshift(`🤝 ${f.name} — kontrak sparring partner selesai.`);
-        f.externalPartner = null;
-      }
     }
 
     if (f.injury) {
