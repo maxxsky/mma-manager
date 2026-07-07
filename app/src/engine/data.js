@@ -28,14 +28,14 @@ export const ARCH_COLOR = {
 };
 
 export const REGIONS = {
-  Brazil: { arch: "BJJ Specialist", first: ["Carlos", "Thiago", "Rafael", "Gilberto", "Marcio", "Renan"], last: ["Silva", "Oliveira", "Souza", "Costa", "Barbosa", "Lima"] },
-  Russia: { arch: "Wrestler", first: ["Dmitri", "Islam", "Magomed", "Sergei", "Anatoly", "Zaur"], last: ["Volkov", "Petrov", "Nurmagov", "Ivanov", "Gadzhiev", "Orlov"] },
-  USA: { arch: "Wrestler", first: ["Marcus", "Tyler", "Deshawn", "Cody", "Brandon", "Jake"], last: ["Johnson", "Miller", "Carter", "Reyes", "Brooks", "Hall"] },
-  Netherlands: { arch: "Muay Thai", first: ["Rico", "Jasper", "Melvin", "Daan", "Sem", "Bram"], last: ["Verhoeven", "de Vries", "Bakker", "Visser", "Smit", "Mulder"] },
-  Japan: { arch: "All-Rounder", first: ["Kenta", "Ryo", "Takeshi", "Yuki", "Shinya", "Kaito"], last: ["Sato", "Tanaka", "Yamamoto", "Kobayashi", "Aoki", "Mori"] },
-  Nigeria: { arch: "All-Rounder", first: ["Kamaru", "Chidi", "Israel", "Emeka", "Tobi", "Sodiq"], last: ["Adesanya", "Okafor", "Usman", "Balogun", "Eze", "Ade"] },
-  UK: { arch: "Boxer", first: ["Liam", "Callum", "Darren", "Owen", "Reece", "Kieran"], last: ["Edwards", "Till", "Pearson", "Aspinall", "Wood", "Hardy"] },
-  Indonesia: { arch: "Boxer", first: ["Bima", "Raka", "Dimas", "Agus", "Yoga", "Rizky"], last: ["Saputra", "Wijaya", "Pratama", "Santoso", "Hidayat", "Nugroho"] },
+  Brazil: { arch: "BJJ Specialist", first: ["Carlos", "Thiago", "Rafael", "Gilberto", "Marcio", "Renan", "Fabio", "Lucas", "Pedro", "Andre", "Diego", "Bruno"], last: ["Silva", "Oliveira", "Souza", "Costa", "Barbosa", "Lima", "Ferreira", "Pereira", "Almeida", "Santos", "Carvalho", "Nascimento"] },
+  Russia: { arch: "Wrestler", first: ["Dmitri", "Islam", "Magomed", "Sergei", "Anatoly", "Zaur", "Alexei", "Viktor", "Nikolai", "Artem", "Yuri", "Ruslan"], last: ["Volkov", "Petrov", "Nurmagov", "Ivanov", "Gadzhiev", "Orlov", "Fedorov", "Morozov", "Sokolov", "Kovalev", "Kozlov", "Medvedev"] },
+  USA: { arch: "Wrestler", first: ["Marcus", "Tyler", "Deshawn", "Cody", "Brandon", "Jake", "Derek", "Chris", "Ryan", "Justin", "Kevin", "Andre"], last: ["Johnson", "Miller", "Carter", "Reyes", "Brooks", "Hall", "Davis", "Wilson", "Thompson", "Anderson", "Garcia", "Martinez"] },
+  Netherlands: { arch: "Muay Thai", first: ["Rico", "Jasper", "Melvin", "Daan", "Sem", "Bram", "Lars", "Thijs", "Kevin", "Niels", "Stefan", "Marco"], last: ["Verhoeven", "de Vries", "Bakker", "Visser", "Smit", "Mulder", "Jansen", "Dekker", "Groot", "Vos", "Bos", "Willems"] },
+  Japan: { arch: "All-Rounder", first: ["Kenta", "Ryo", "Takeshi", "Yuki", "Shinya", "Kaito", "Hiroshi", "Kenji", "Taro", "Shun", "Masa", "Sota"], last: ["Sato", "Tanaka", "Yamamoto", "Kobayashi", "Aoki", "Mori", "Watanabe", "Suzuki", "Ito", "Takahashi", "Nakamura", "Shimizu"] },
+  Nigeria: { arch: "All-Rounder", first: ["Kamaru", "Chidi", "Israel", "Emeka", "Tobi", "Sodiq", "Babatunde", "Oluwaseun", "Chibueze", "Ndubuisi", "Adebayo", "Ikechukwu"], last: ["Adesanya", "Okafor", "Usman", "Balogun", "Eze", "Ade", "Olawale", "Nnamdi", "Obi", "Onyeka", "Afolabi", "Akintola"] },
+  UK: { arch: "Boxer", first: ["Liam", "Callum", "Darren", "Owen", "Reece", "Kieran", "Connor", "Scott", "Jamie", "Lewis", "Aaron", "Gareth"], last: ["Edwards", "Till", "Pearson", "Aspinall", "Wood", "Hardy", "Thompson", "Walker", "Clark", "Wright", "Mitchell", "Collins"] },
+  Indonesia: { arch: "Boxer", first: ["Bima", "Raka", "Dimas", "Agus", "Yoga", "Rizky", "Andi", "Bayu", "Eko", "Fajar", "Hendra", "Irfan"], last: ["Saputra", "Wijaya", "Pratama", "Santoso", "Hidayat", "Nugroho", "Siregar", "Susanto", "Halim", "Gunawan", "Setiawan", "Kusuma"] },
 };
 
 export const TRAITS = {

@@ -56,7 +56,41 @@ export function genFighter(level, regionName) {
     externalPartner: null,
     // Reach in cm — scaled by weight class (heavier ≈ taller ≈ longer reach)
     reach: wc.limit >= 205 ? RI(190, 210) : wc.limit >= 170 ? RI(180, 198) : wc.limit >= 145 ? RI(170, 190) : RI(160, 180),
+    bio: null, // generated when fighter joins camp or is scouted
   };
+}
+
+export function genBio(f) {
+  const age = f.age;
+  const archetype = f.archetype;
+  const region = f.region;
+  const ambition = f.ambition;
+  
+  const intros = {
+    Brazil: ["Dari favela Rio", "Bekas penjaga keamanan di Sao Paulo", "Tumbuh di gym BJJ keluarga", "Survivor jalanan Salvador"],
+    Russia: ["Mantan pegulat nasional Dagestan", "Tentara wajib militer 2 tahun", "Dari pegunungan Kaukasus", "Atlet tarung sejak TK"],
+    USA: ["Eks wrestler NCAA Div III", "Bekas marinir", "Dari gym pinggiran Chicago", "Atlet sekolah menengah fenomenal"],
+    Netherlands: ["Lulusan akademi kickboxing Amsterdam", "Pekerja pelabuhan Rotterdam", "Bekas tentara kerajaan Belanda", "Gym rat di Utrecht"],
+    Japan: ["Mantan judoka nasional", "Lulusan akademi MMA Tokyo", "Pekerja kantoran yang berhenti", "Dari dojo keluarga"],
+    Nigeria: ["Petinju jalanan Lagos", "Mantan tentara Nigeria", "Atlet universitas yang beralih", "Dari desa terpencil Delta"],
+    UK: ["Bekas tukang batu Manchester", "Atlet amatir Liverpool", "Dari gym London selatan", "Mantan penjara — berubah lewat MMA"],
+    Indonesia: ["Jawara pasar Bali", "Bekas satpam Jakarta", "Atlet PON yang beralih", "Dari desa pegunungan Jawa"],
+  };
+
+  const bodies = {
+    "Belt Chaser": ["Sejak kecil mimpinya cuma satu: sabuk juara.", "Ob sesif dengan gelar — gak akan berhenti sebelum juara.", "Mental baja, selalu incar peringkat."],
+    Paycheck: ["Kirim duit ke keluarga tiap bulan — ini hidupnya.", "Fight = gaji. Simple.", "Gak peduli sabuk, yang penting bisa bayar tagihan."],
+    Legacy: ["Ingin nama dikenang seperti legenda.", "Fokus ke long game — bangun reputasi.", "Gak terburu-buru, maunya karir panjang."],
+    "Family Man": ["Punya anak 2 — mereka alasan dia fight.", "Gak suka ambil risiko cedera — keluarga tunggu di rumah.", "Hati-hati, terukur, tapi gigih."],
+    Grinder: ["Mental pekerja keras — gak kenal lelah.", "Orang biasa yang gak biasa.", "Setiap hari latihan, setiap hari progres."],
+    "Star Power": ["Percaya diri tinggi — ingin jadi bintang.", "Suka sorotan kamera dan teriakan fans.", "Showman sejati."],
+  };
+
+  const intro = pick(intros[region] || intros["USA"]);
+  const body = pick(bodies[ambition] || bodies["Belt Chaser"]);
+  const meta = `${age} tahun, ${archetype}, ${region}.`;
+
+  return `${meta} ${intro}. ${body}`;
 }
 
 export function assignAgent(f) {

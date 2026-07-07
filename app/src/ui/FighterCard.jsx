@@ -60,6 +60,11 @@ export default function FighterCard({ f, g, up }) {
           <div style={{ color: C.dim, fontSize: 10, marginTop: 4 }}>
             🎯 Ambisi: {f.ambitionRevealed ? <span style={{ color: C.gold }}>{f.ambition} — {AMBITIONS[f.ambition]}</span> : <span>??? (terungkap setelah ±2 bulan di camp, atau lewat scout grade S)</span>}
           </div>
+          {f.bio && (
+            <div style={{ color: C.dim, fontSize: 9, marginTop: 3, fontStyle: "italic", lineHeight: 1.3 }}>
+              📖 {f.bio}
+            </div>
+          )}
           {f.contract && (
             <div style={{ color: C.dim, fontSize: 10, marginTop: 4 }}>
               📄 Kontrak: cut <b style={{ color: C.chalk }}>{Math.round(f.contract.managerCut * 100)}%</b> · sisa <b style={{ color: f.contract.fightsLeft <= 1 ? C.red : C.chalk }}>{f.contract.fightsLeft}/{f.contract.fightsTotal}</b> fight · {f.contract.durationMo} bln · 🤝 {AGENT_TYPES[f.agent || "none"].label}

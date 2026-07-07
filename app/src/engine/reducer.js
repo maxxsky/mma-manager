@@ -5,7 +5,7 @@ import { clamp, RI, R, pick, fmt$, uid, snapshot } from "./rng.js";
 import {
   ATTRS, TRAINING, INTENSITY, CAMP_TIERS, SPONSOR_BRANDS, FAC_LABEL,
 } from "./data.js";
-import { weeklyFee, avgSkill } from "./fighter.js";
+import { weeklyFee, avgSkill, genBio } from "./fighter.js";
 import { WEIGHTS } from "./data.js";
 import { vacateTitle } from "./rankings.js";
 import { coachBonus, facBonus, facilityCost } from "./economy.js";
@@ -256,6 +256,7 @@ export function reducer(g, action) {
         f.contract = { managerCut: action.deal.cut, fightsLeft: action.deal.fights, fightsTotal: action.deal.fights, durationMo: action.deal.duration, signedWeek: g.week, renegoFlagged: false, exclusive: action.deal.exclusive, rematch: action.deal.rematch, medical: action.deal.medical, equity: action.deal.equity };
         g.roster.push(f);
         g.prospects = g.prospects.filter((x) => x.id !== action.prospectId);
+        if (!f.bio) f.bio = genBio(f);
         g.log.unshift("✍️ " + f.name + " teken kontrak: cut " + Math.round(action.deal.cut * 100) + "%, " + action.deal.fights + " fight.");
       } else {
         const f = g.roster.find((x) => x.id === action.fighterId);

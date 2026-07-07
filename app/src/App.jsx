@@ -9,7 +9,7 @@ import {
   CAMP_TIERS, CAMP_SPECS, SPONSOR_BRANDS, FAC_LABEL, RIVAL_TRAITS, PROMO_TIERS,
   ACHIEVEMENTS,
 } from "./engine/data.js";
-import { genFighter, assignAgent, agentFor, avgSkill, tierOf, weeklyFee, scoutGrade, makeReport, genCoach } from "./engine/fighter.js";
+import { genFighter, assignAgent, agentFor, avgSkill, tierOf, weeklyFee, scoutGrade, makeReport, genCoach, genBio } from "./engine/fighter.js";
 import { genDivisions, rankOf, vacateTitle, stripTitle, initPromoterRel } from "./engine/rankings.js";
 import { genRivalCamp } from "./engine/rivals.js";
 import { facilityCost } from "./engine/economy.js";

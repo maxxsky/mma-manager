@@ -1,6 +1,7 @@
 import { R, RI, clamp, pick, uid } from "./rng.js";
 import { WEIGHTS } from "./data.js";
 import { genFighter } from "./fighter.js";
+import { genBio } from "./fighter.js";
 
 // ---------- divisions & rankings ----------
 export function genDivisions() {
@@ -10,6 +11,7 @@ export function genDivisions() {
     for (let r = 1; r <= 15; r++) {
       const lvl = clamp(1.4 - r * 0.035, 0.8, 1.5);
       const nf = genFighter(lvl);
+      nf.bio = genBio(nf);
       const baseWins = Math.round(20 - r * 0.8);
       list.push({
         id: uid(), name: nf.name, archetype: nf.archetype,
