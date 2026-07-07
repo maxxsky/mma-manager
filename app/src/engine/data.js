@@ -20,7 +20,7 @@ export const ARCHETYPES = {
   "Muay Thai": { striking: 1.08, bjj: 0.80, wrestling: 0.95, footwork: 0.95, clinch: 1.15, cardio: 0.90 },
   Wrestler: { wrestling: 1.25, strength: 1.10, striking: 0.75, bjj: 0.90, footwork: 0.80, cardio: 1.10 },
   "BJJ Specialist": { bjj: 1.25, wrestling: 1.10, striking: 0.70, footwork: 0.80, fightIQ: 1.05 },
-  "All-Rounder": { fightIQ: 1.10, striking: 0.95, wrestling: 0.95, bjj: 0.95 },
+  "All-Rounder": { fightIQ: 1.10, striking: 1.00, wrestling: 1.00, bjj: 1.00 },
 };
 export const ARCH_COLOR = {
   Boxer: "#e14b44", "Muay Thai": "#e88a3a", Wrestler: "#3f8fd4",
