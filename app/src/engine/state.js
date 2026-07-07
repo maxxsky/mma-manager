@@ -111,13 +111,13 @@ export function tick(g) {
         g.log.unshift(`✅ ${f.name} pulih dari cedera.`);
       }
       f.overtraining = clamp(f.overtraining - 10, 0, 100);
-      if (f.injury.costPerWeek) {
+      if (f.injury && f.injury.costPerWeek) {
         // Medical clause affects camp cost: camp=100%, split=50%, fighter=0%
         const medMult = f.contract?.medical === "fighter" ? 0 : f.contract?.medical === "split" ? 0.5 : 1;
         g.cash -= Math.round(f.injury.costPerWeek * medMult);
       }
       // Slight attribute decay during long injuries (realistic ring rust)
-      if (f.injury.weeks > 4) {
+      if (f.injury && f.injury.weeks > 4) {
         const decayAttr = f.injury.tier >= 2 ? ["striking","wrestling","bjj","footwork","strength","cardio"] : ["cardio"];
         decayAttr.forEach((k) => f.attrs[k] = clamp(f.attrs[k] - 0.15, 5, f.ceilings[k]));
       }
