@@ -75,6 +75,19 @@ export default function FighterCard({ f, g, up }) {
               ⚖️ Perubahan kelas: <b style={{ color: f.weightClassDelta > 0 ? C.red : C.blue }}>{f.weightClassDelta > 0 ? `↑ Naik ${f.weightClassDelta} kelas` : `↓ Turun ${Math.abs(f.weightClassDelta)} kelas`}</b> — strength ±{Math.abs(f.weightClassDelta) * 2}% · footwork ∓{Math.abs(f.weightClassDelta) * 1.5}%
             </div>
           )}
+          {f.careerHistory && f.careerHistory.length > 0 && (
+            <div style={{ marginTop: 10, borderTop: `1px solid ${C.line}44`, paddingTop: 10 }}>
+              <div style={{ fontSize: 10, color: C.dim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>📋 Career Timeline</div>
+              <div style={{ maxHeight: 200, overflowY: "auto" }}>
+                {[...f.careerHistory].reverse().slice(0, 15).map((ev, i) => (
+                  <div key={i} style={{ display: "flex", gap: 8, padding: "3px 0", borderBottom: `1px solid ${C.line}22`, fontSize: 10 }}>
+                    <span style={{ color: C.dim, fontFamily: DISPLAY, minWidth: 36, fontSize: 9 }}>W{ev.week}</span>
+                    <span style={{ color: ev.type === "win" ? C.green : ev.type === "loss" ? C.red : ev.type === "injury" ? C.gold : ev.type === "title" ? C.gold : ev.type === "class" ? C.blue : C.chalk, flex: 1 }}>{ev.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div style={{ display: "flex", gap: 12, marginTop: 10, fontSize: 9, color: C.dim, textTransform: "uppercase", letterSpacing: 1 }}>
             <div style={{ flex: 1 }}>Morale<Bar v={f.morale} color={f.morale > 60 ? C.green : C.red} h={6} /></div>
             <div style={{ flex: 1 }}>Overtraining<Bar v={f.overtraining} color={f.overtraining > 50 ? C.red : C.gold} h={6} /></div>

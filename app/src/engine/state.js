@@ -202,6 +202,11 @@ export function tick(g) {
         f.injury = sev;
         f.injuryCount = (f.injuryCount || 0) + 1;
         if (sev.tier >= 2) f.seriousInjuries = (f.seriousInjuries || 0) + 1;
+        // Career history for serious injuries
+        if (sev.tier >= 2) {
+          if (!f.careerHistory) f.careerHistory = [];
+          f.careerHistory.push({ week: g.week, type: "injury", text: `${sev.label} — ${sev.weeks}w recovery${sev.permanent ? ", permanent damage" : ""}` });
+        }
         if (sev.permanent) {
           const attr = pick(ATTRS.filter((k) => k !== "chin"));
           const reduction = RI(3, 8);

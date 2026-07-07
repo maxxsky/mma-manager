@@ -214,6 +214,11 @@ export default function FightNight({ fighter, done }) {
     setResult({ won: false, how: "Doctor Stoppage", r: rnd }); setStage("result");
   };
 
+  const addHistory = (f, week, type, text) => {
+    if (!f.careerHistory) f.careerHistory = [];
+    f.careerHistory.push({ week, type, text });
+  };
+
   const applyResult = () => {
     const fightCtx = {
       fightResult: { won: result.won, how: result.how, draw: result.draw || false },
@@ -253,6 +258,8 @@ export default function FightNight({ fighter, done }) {
         if (result.how === "KO/TKO" || result.how === "Doctor Stoppage") f.record.ko++;
         else if (result.how === "Submission") f.record.sub++;
         else f.record.dec++;
+        // Career history
+        addHistory(f, g2.week, "win", `W vs ${b.opponent.name} via ${result.how} (R${result.r})`);
         f.morale = clamp(f.morale + 12, 0, 100);
         const popMult = (f.traits.includes("Crowd Favorite") ? 2 : 1) * (f.ambition === "Star Power" ? 1.5 : 1);
         f.popularity = clamp(f.popularity + (result.how === "Decision" ? 3 : 7) * popMult * (g2.coaches.some((c) => c.personality === "Player's Coach") ? 1.15 : 1), 0, 100);
@@ -292,7 +299,10 @@ export default function FightNight({ fighter, done }) {
           f.titles.push("Regional Champion"); g2.rep = clamp(g2.rep + 6, 0, 100); g2.legacy += 300;
           g2.log.unshift(`🥇 ${f.name} merebut REGIONAL TITLE!`);
         }
+        // Career title record
+        if (b.titleTier) addHistory(f, g2.week, "title", `🏆 Won ${b.titleTier} Title`);
       } else {
+        addHistory(f, g2.week, "loss", `L vs ${b.opponent.name} via ${result.how} (R${result.r})`);
         f.record.l++; f.streakL = (f.streakL || 0) + 1;
         f.rankPoints = Math.floor((f.rankPoints || 0) * 0.70);
         if (!f.traits.includes("Iron Will")) f.morale = clamp(f.morale - 14, 0, 100);
@@ -322,6 +332,7 @@ export default function FightNight({ fighter, done }) {
       } else if (injRoll < (result.won ? 0.14 : 0.33)) {
         f.injury = { weeks: RI(6, 12), label: "🆘 Serious", tier: 2 };
         f.injuryCount = (f.injuryCount || 0) + 1; f.seriousInjuries = (f.seriousInjuries || 0) + 1;
+        addHistory(f, g2.week, "injury", `🆘 Post-fight serious injury — ${f.injury.weeks}w recovery`);
         g2.log.unshift(`🆘 Post-fight: ${f.name} cedera SERIUS, ${f.injury.weeks} minggu.`);
         if (f.seriousInjuries >= 4 && !f.traits.includes("Injury Prone")) {
           f.traits.push("Injury Prone");
@@ -334,6 +345,7 @@ export default function FightNight({ fighter, done }) {
         f.injuryCount = (f.injuryCount || 0) + 1; f.seriousInjuries = (f.seriousInjuries || 0) + 1;
         f.attrs[attr] = clamp(f.attrs[attr] - reduction, 5, 99);
         f.ceilings[attr] = clamp(f.ceilings[attr] - reduction, f.attrs[attr], 99);
+        addHistory(f, g2.week, "injury", `💀 Career-threatening — ${ATTR_LABEL[attr]} -${reduction} permanent`);
         g2.log.unshift(`💀 Post-fight: ${f.name} cedera PARAH — ${ATTR_LABEL[attr]} -${reduction} permanen. ${f.injury.weeks} minggu.`);
       }
       if (f.seriousInjuries >= 6 && f.age >= 30 && random() < 0.25) {

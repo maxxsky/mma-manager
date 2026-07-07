@@ -151,6 +151,9 @@ export function reducer(g, action) {
         f2.rankPoints = Math.max(0, f2.rankPoints - 20);
         f2.morale = clamp(f2.morale + action.moraleEffect, 0, 100);
         f2.lastClassChange = g.week;
+        // Career history
+        if (!f2.careerHistory) f2.careerHistory = [];
+        f2.careerHistory.push({ week: g.week, type: "class", text: `⚖️ ${oldClass} → ${action.targetClass}` });
         g.log.unshift(`⚖️ ${f2.name} pindah dari ${oldClass} ke ${action.targetClass} (permintaan sendiri).`);
       }
       break;
