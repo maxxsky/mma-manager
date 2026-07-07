@@ -388,10 +388,18 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       }
     }
 
-    // ── KNOCKDOWN CHECK (unchanged logic) ──
+    // ── KNOCKDOWN CHECK ──
+    // Fighter on top can't be knocked down — they're in control position
+    const isOnGround = typeof position === "object";
+    const aOnTop = isOnGround && position.top === "A";
+    const bOnTop = isOnGround && position.top === "B";
     if (!finish && !knockdown && (dmgA > 55 || dmgB > 55)) {
       const kdTarget = dmgA > dmgB ? A : B;
       const isTargetA = kdTarget === A;
+      // Skip KD if target is on top (stunned but not knocked down)
+      if ((isTargetA && aOnTop) || (!isTargetA && bOnTop)) {
+        // Stunned but controlling — no KD
+      } else {
       const chin = effAttr(kdTarget, "chin", isTargetA ? stA : stB);
       // Power matters for knockdown: strength bonus added to KD chance
       const attackerStr = effAttr(isTargetA ? B : A, "strength", isTargetA ? stB : stA) * (1 + (isTargetA ? (matchup.bStrike || 0) : 0));
@@ -407,6 +415,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
           both(exMin + 1, 5, `KO!! ${isTargetA ? B.name : A.name} with the walk-off!`);
         }
       }
+      } // close else (target on top = no KD)
     }
   }
 
