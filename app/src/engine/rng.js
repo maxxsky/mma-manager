@@ -75,8 +75,13 @@ export const pick = (arr) => arr[RI(0, arr.length - 1)];
 export const fmt$ = (n) =>
   (n < 0 ? "-$" : "$") + Math.abs(Math.round(n)).toLocaleString("en-US");
 
-// Deep clone for state snapshots (undo/redo)
-export const snapshot = (obj) => JSON.parse(JSON.stringify(obj));
+// Deep clone for state snapshots (undo/redo) — strips undo/redo to prevent recursive bloat
+export const snapshot = (obj) => {
+  const copy = JSON.parse(JSON.stringify(obj));
+  delete copy._undoStack;
+  delete copy._redoStack;
+  return copy;
+};
 
 let UID = 1;
 export const uid = () => UID++;
