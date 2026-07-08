@@ -607,28 +607,7 @@ export function tick(g) {
       }
     });
 
-    // Investor offer generation
-    const existingTypes = (g.investors || []).map((i) => i.tier);
-    INVESTOR_TYPES.forEach((inv) => {
-      if (g.rep >= inv.repReq && existingTypes.filter((t) => t === inv.tier).length < inv.maxInvestors) {
-        const hasPending = g.inbox.some((m) => m.type === "investor" && m.investorTier === inv.tier);
-        if (!hasPending && random() < 0.12) {
-          const offerAmt = Math.round(R(inv.offerRange[0], inv.offerRange[1]));
-          const equityPct = Math.round(R(inv.equityRange[0], inv.equityRange[1]));
-          g.inbox.unshift({
-            id: uid(), type: "investor", expires: 4,
-            investorTier: inv.tier,
-            title: `💼 Tawaran Investor: ${inv.tier}`,
-            body: `Seorang ${inv.tier.toLowerCase()} tertarik menginvestasikan ${fmt$(offerAmt)} untuk ${equityPct}% equity camp-mu. Potongan bulanan dari income sponsor & fighter. Kamu bisa buy-back nanti dengan harga 3× lipat.`,
-            offerAmt, equityPct, desc: inv.desc,
-            choices: [
-              { label: `Terima ${fmt$(offerAmt)}`, investorAccept: { amt: offerAmt, equity: equityPct, tier: inv.tier } },
-              { label: "Tolak — equity terlalu besar", investorReject: true },
-            ],
-          });
-        }
-      }
-    });
+    // Investor system removed — stub
 
     // Sponsor offer generation
     const activeBrands = (g.sponsors || []).map((s) => s.brand);
