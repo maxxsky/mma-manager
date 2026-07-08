@@ -141,6 +141,14 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
   const tickOnly = (min, sec, msg) =>
     tickLog.push(`[${min}:${String(sec).padStart(2, "0")}] ${msg}`);
 
+  // Commentary variety — pick random template
+  const say = (templates, ...args) => {
+    const t = pick(templates);
+    return typeof t === "function" ? t(...args) : t.replace(/\{(\d+)\}/g, (_, i) => args[i] || "");
+  };
+  const bothS = (min, sec, templates, ...args) => both(min, sec, say(templates, ...args));
+  const tickS = (min, sec, templates, ...args) => tickOnly(min, sec, say(templates, ...args));
+
   both(0, 5, `Round ${rnd} — bell rings! ${A.name} vs ${B.name}!`);
   tickOnly(0, 10, `${A.name} in the center of the cage.`);
   tickOnly(0, 20, `${B.name} circling, looking for opening.`);
@@ -180,10 +188,19 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       ptsB += lb + Math.round(hitA * 0.6);
 
       if (la + lb > 0) {
-        both(exMin, exSec, `${A.name} landed ${la} strikes — ${B.name} ${lb}.`);
+        bothS(exMin, exSec, [
+          "{0} lands {1} strikes — {2} answers with {3}.",
+          "Clean exchange! {0} connects {1} times, {2} fires back {3}.",
+          "{0} with a flurry — {1} shots. {2} counters with {3}.",
+          "Trading leather! {0}: {1} landed, {2}: {3}.",
+        ], A.name, la, B.name, lb);
       }
       if (exType === "power" && la > lb + 3) {
-        tickOnly(exMin, exSec + 5, `Big power shot from ${A.name}! ${B.name} felt that!`);
+        tickS(exMin, exSec + 5, [
+          "Big power shot from {0}! {1} felt that!",
+          "HUGE right hand by {0}! {1} staggers!",
+          "{0} unloads a bomb — {1} is hurt!",
+        ], A.name, B.name);
       }
       mom += (la - lb) * 2;
 
@@ -206,7 +223,10 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
       if (la + lb > 0) {
         const descA = isThaiA ? "knees & elbows" : "dirty boxing";
         const descB = isThaiB ? "knees & elbows" : "dirty boxing";
-        both(exMin, exSec, `Clinch — ${A.name} lands ${descA}, ${B.name} answers with ${descB}.`);
+        bothS(exMin, exSec, [
+          "Clinch — {0} lands {1}, {2} answers with {3}.",
+          "In the clinch: {0}: {1}, {2}: {3}.",
+        ], A.name, descA, B.name, descB);
       }
       if (la > lb + 4) mom += 8;
       else if (lb > la + 4) mom -= 8;
@@ -384,10 +404,17 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum 
     } else if (exType === "scramble") {
       if (random() < 0.45) {
         position = "standing";
-        both(exMin, exSec, `Scramble! Both fighters back up!`);
+        bothS(exMin, exSec, [
+          "Scramble! Both fighters back up!",
+          "Wild scramble — they're back to their feet!",
+          "Scramble on the canvas — both fighters pop up!",
+        ]);
         mom += R(-2, 5);
       } else {
-        both(exMin, exSec, `Scramble on the ground — positions unchanged.`);
+        bothS(exMin, exSec, [
+          "Scramble on the ground — positions unchanged.",
+          "They scramble but no change in position.",
+        ]);
         mom -= 2;
       }
     }
