@@ -397,41 +397,42 @@ export function tick(g) {
       }
 
       const has = (t) => f.titles.includes(t);
+      const sk = avgSkill(f);
       let titleTier = null;
       let titleReason = "";
 
       if (
-        rep >= 80 && r != null && r <= 3 &&
+        rep >= 80 && r != null && r <= 3 && sk >= 80 &&
         has("Major World Champion") && random() < 0.25
       ) {
         titleTier = "Premier";
-        titleReason = `rank #${r} + juara Major + rep ${Math.round(rep)}`;
+        titleReason = `rank #${r} + juara Major + rep ${Math.round(rep)} + skill ${Math.round(sk)}`;
       } else if (
-        rep >= 60 && r != null && r <= 5 &&
+        rep >= 60 && r != null && r <= 5 && sk >= 72 &&
         has("National Champion") && !has("Major World Champion") && random() < 0.35
       ) {
         titleTier = "Major";
-        titleReason = `rank #${r} + juara Nasional + rep ${Math.round(rep)}`;
+        titleReason = `rank #${r} + juara Nasional + rep ${Math.round(rep)} + skill ${Math.round(sk)}`;
       } else if (
-        rep >= 50 && r != null && r <= 8 &&
+        rep >= 50 && r != null && r <= 8 && sk >= 65 &&
         has("National Champion") && !has("Minor World Champion") &&
         f.record.w >= 7 && random() < 0.3
       ) {
         titleTier = "Minor";
-        titleReason = `rank #${r} + juara Nasional + ${f.record.w} menang`;
+        titleReason = `rank #${r} + juara Nasional + ${f.record.w} menang + skill ${Math.round(sk)}`;
       } else if (
-        rep >= 40 && r != null && r <= 10 &&
+        rep >= 40 && r != null && r <= 10 && sk >= 55 &&
         has("Regional Champion") && !has("National Champion") &&
         f.record.w >= 5 && random() < 0.3
       ) {
         titleTier = "National";
-        titleReason = `rank #${r} + juara Regional + ${f.record.w} menang`;
+        titleReason = `rank #${r} + juara Regional + ${f.record.w} menang + skill ${Math.round(sk)}`;
       } else if (
-        rep >= 20 && f.record.w >= 3 &&
+        rep >= 20 && f.record.w >= 3 && sk >= 45 &&
         !has("Regional Champion") && random() < 0.3
       ) {
         titleTier = "Regional";
-        titleReason = `${f.record.w} menang + rep ${Math.round(rep)}`;
+        titleReason = `${f.record.w} menang + rep ${Math.round(rep)} + skill ${Math.round(sk)}`;
       }
 
       let tier, show;
