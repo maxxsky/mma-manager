@@ -326,25 +326,52 @@ export function tick(g) {
     const isChamp = div && div.champ.player && div.champ.fighterId === f.id;
 
     if (isChamp) {
-      if (
-        g.week - (f.lastFightWeek || 0) >= 24 &&
-        !g.inbox.some((m) => m.type === "offer" && m.defense && m.fighterId === f.id)
-      ) {
-        const c0 = div.list[0];
-        const opp = genFighter(clamp((c0.level || 1.3) + 0.05, 0.8, 1.5));
-        opp.name = c0.name; opp.archetype = c0.archetype; opp.weightClass = f.weightClass;
-        opp.record = { w: RI(10, 18), l: RI(0, 3), ko: 0, sub: 0, dec: 0 };
-        g.inbox.unshift({
-          id: uid(), type: "offer", fighterId: f.id, expires: 3,
-          tier: "Major", show: RI(150, 300) * 1000, winBonus: RI(150, 300) * 1000,
-          opponent: opp, title: true, defense: true, oppRank: 1, contenderId: c0.id,
-          titleTier: "Major", titleText: "🛡️ MANDATORY TITLE DEFENSE", weeks: RI(4, 6),
-        });
-        g.log.unshift(
-          `🛡️ Mandatory defense untuk ${f.name} tiba — tolak atau biarkan expire = title dicopot.`,
-        );
+    // Mandatory defense
+    if (
+      g.week - (f.lastFightWeek || 0) >= 24 &&
+      !g.inbox.some((m) => m.type === "offer" && m.defense && m.fighterId === f.id)
+    ) {
+      const c0 = div.list[0];
+      const opp = genFighter(clamp((c0.level || 1.3) + 0.05, 0.8, 1.5));
+      opp.name = c0.name; opp.archetype = c0.archetype; opp.weightClass = f.weightClass;
+      opp.record = { w: RI(10, 18), l: RI(0, 3), ko: 0, sub: 0, dec: 0 };
+      g.inbox.unshift({
+        id: uid(), type: "offer", fighterId: f.id, expires: 3,
+        tier: "Major", show: RI(150, 300) * 1000, winBonus: RI(150, 300) * 1000,
+        opponent: opp, title: true, defense: true, oppRank: 1, contenderId: c0.id,
+        titleTier: "Major", titleText: "🛡️ MANDATORY TITLE DEFENSE", weeks: RI(4, 6),
+      });
+      g.log.unshift(
+        `🛡️ Mandatory defense untuk ${f.name} tiba — tolak atau biarkan expire = title dicopot.`,
+      );
+    }
+    // Super fight: champion vs champion from adjacent weight class (after 2+ defenses)
+    const defenses = f.titles.filter((t) => t.includes("Champion")).length;
+    if (defenses >= 2 && g.week % 16 === 0 && random() < 0.25) {
+      const wcIdx = WEIGHTS.findIndex((w) => w.name === f.weightClass);
+      const adjacentDivs = [];
+      if (wcIdx > 0) adjacentDivs.push(WEIGHTS[wcIdx - 1]);
+      if (wcIdx < WEIGHTS.length - 1) adjacentDivs.push(WEIGHTS[wcIdx + 1]);
+      for (const adj of adjacentDivs) {
+        const adjDiv = g.divisions[adj.name];
+        if (adjDiv && adjDiv.champ && !adjDiv.champ.player) {
+          const superOpp = genFighter(1.5);
+          superOpp.name = adjDiv.champ.name;
+          superOpp.weightClass = adj.name;
+          superOpp.record = { w: RI(15, 22), l: RI(0, 2), ko: 0, sub: 0, dec: 0 };
+          g.inbox.unshift({
+            id: uid(), type: "offer", fighterId: f.id, expires: 4,
+            tier: "Premier", show: RI(500, 1000) * 1000, winBonus: RI(500, 1000) * 1000,
+            opponent: superOpp, title: true, defense: false, oppRank: 0,
+            titleTier: "Super Fight", titleText: "👑👑 CHAMPION VS CHAMPION — DOUBLE CHAMP STATUS",
+            weeks: RI(6, 8), superFight: adj.name,
+          });
+          g.log.unshift(`🌟 SUPER FIGHT: ${f.name} (${f.weightClass} champ) vs ${superOpp.name} (${adj.name} champ)!`);
+          return;
+        }
       }
-      return;
+    }
+    return;
     }
 
     if (random() < 0.35) {
