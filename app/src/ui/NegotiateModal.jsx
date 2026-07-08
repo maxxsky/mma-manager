@@ -63,14 +63,15 @@ export default function NegotiateModal({ fighter, mode, cash, onClose, onCommit 
     if (success) {
       doCommit(buildDeal());
     } else {
-      // Only counter if offer was reasonable (accept >= 30%), otherwise agent walks away
-      if (accept < 30) {
-        doCommit(buildDeal()); // auto-accept anyway — agent likes the offer
-        return;
+      // Counter only if offer is below agent's floor
+      const belowFloor = (cutPct / 100) < ag.cutFloor || signBonus < baseAsking * 0.85;
+      if (!belowFloor) {
+        // Offer is at or above floor — second chance roll
+        if (random() < 0.5) { doCommit(buildDeal()); return; }
       }
-      // Generate counter offer — ensure it's actually better for the agent
-      const cCut = Math.max(Math.round(ag.cutFloor * 100), cutPct); // never go below what player offered
-      const cBonus = Math.max(baseAsking, signBonus); // at least what player offered
+      // Generate counter — never below what player offered, slightly better for agent
+      const cCut = Math.max(Math.round(ag.cutFloor * 100), cutPct + RI(1, 3));
+      const cBonus = Math.max(baseAsking, signBonus + RI(0, Math.round(baseAsking * 0.2)));
       const cFights = ag.hardness > 0.5 ? 3 : RI(2, 4);
       const cDuration = RI(12, 18);
       const cAccept = clamp(85 + RI(0, 10), 80, 97);
