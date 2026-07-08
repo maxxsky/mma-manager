@@ -533,6 +533,10 @@ export default function App() {
                       <span style={{ fontFamily: DISPLAY, color: C.gold, fontSize: 13 }}>VS</span>
                       <span style={{ fontFamily: DISPLAY, color: C.blue, fontSize: 15, textTransform: "uppercase" }}>{m.opponent.name}</span>
                     </div>
+                    {m.story && <div style={{ color: C.dim, fontSize: 10, textAlign: "center", marginBottom: 6, fontStyle: "italic" }}>{m.story}</div>}
+                    {m.isMainEvent && <div style={{ color: C.gold, fontSize: 9, textAlign: "center", marginBottom: 4, letterSpacing: 1 }}>🌟 MAIN EVENT</div>}
+                    {m.isTitleEliminator && <div style={{ color: C.gold, fontSize: 9, textAlign: "center", marginBottom: 4 }}>🥇 TITLE ELIMINATOR</div>}
+                    {m.shortNotice && <div style={{ color: C.red, fontSize: 9, textAlign: "center", marginBottom: 4 }}>⚡ SHORT NOTICE — only {m.weeks} week{m.weeks > 1 ? "s" : ""}!</div>}
                     <div style={{ color: C.dim, fontSize: 11, textAlign: "center", marginBottom: 8 }}>
                       Lawan {m.oppRank ? <b style={{ color: C.gold }}>#{m.oppRank} </b> : m.oppRank === 0 ? <b style={{ color: C.gold }}>👑 </b> : ""}{m.opponent.record.w}-{m.opponent.record.l} ({m.opponent.archetype}) · Show <b style={{ color: C.chalk }}>{fmt$(m.show)}</b> + Win <b style={{ color: C.chalk }}>{fmt$(m.winBonus)}</b> · cut camp {Math.round(((f.contract && f.contract.managerCut) || 0.18) * 100)}% · T-{m.weeks} mgg · expire {m.expires} {m.expires <= 2 ? <b style={{ color: C.red }}>⚠️ SEGERA!</b> : "mgg"}{m.defense && <b style={{ color: C.red }}> · WAJIB — tolak = title dicopot</b>}
                       {g.promoterRel && <div style={{ marginTop: 4, fontSize: 10, color: (g.promoterRel[m.tier] || 30) >= 60 ? C.green : (g.promoterRel[m.tier] || 30) < 30 ? C.red : C.dim }}>🤝 Hubungan {m.tier}: {Math.round(g.promoterRel[m.tier] || 30)}/100</div>}

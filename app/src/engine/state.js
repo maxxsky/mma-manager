@@ -473,34 +473,74 @@ export function tick(g) {
       else { tier = "Local"; show = RI(8, 30) * 100; }
       if (titleTier) show = Math.round(show * 1.5);
 
+      // Streak-based purse adjustment
+      let streakBonus = 1;
+      if (f.streakL >= 2) streakBonus = 0.7; // lose streak → purse lebih rendah, lawan lebih mudah
+      else if (f.streakL >= 1) streakBonus = 0.85;
+      if (f.record.w >= 4) streakBonus = 1.3; // win streak → purse naik
+      else if (f.record.w >= 2) streakBonus = 1.15;
+      show = Math.round(show * streakBonus);
+
+      // Promoter relationship bonus: high rel = better purse + main event
+      const rel = g.promoterRel?.[tier] || 30;
+      if (rel >= 85) show = Math.round(show * 1.4);
+      else if (rel >= 70) show = Math.round(show * 1.2);
+      let isMainEvent = rel >= 70 && random() < 0.4;
+      let isTitleEliminator = rel >= 85 && r != null && r <= 3 && random() < 0.25;
+
+      // Short notice: random chance for urgent replacement fight
+      let shortNotice = false;
+      if (random() < 0.08) { shortNotice = true; show = Math.round(show * RI(15, 20) / 10); }
+
+      // Streak-based opponent selection
+      let oppIdx = r != null ? clamp(r - 2 + RI(-1, 1), 0, 14) : RI(11, 14);
+      if (f.streakL >= 2) oppIdx = clamp(oppIdx - RI(2, 4), 0, 14); // lose streak → easier opponent
+      else if (f.record.w >= 3) oppIdx = clamp(oppIdx + RI(1, 2), 0, 14); // win streak → harder opponent
+
       let opp, oppRank = null, contenderId = null;
       if (titleTier === "Major") {
         opp = genFighter(1.45); opp.name = div.champ.name; oppRank = 0;
-      } else if (
-        div &&
-        ((r != null && random() < 0.6) ||
-          (r == null && f.record.w >= 2 && rep >= 20 && random() < 0.35))
-      ) {
-        const idx = r != null ? clamp(r - 2 + RI(-1, 1), 0, 14) : RI(11, 14);
-        const c = div.list[idx];
+      } else if (div && (r != null || (f.record.w >= 2 && rep >= 20 && random() < 0.35))) {
+        const c = div.list[oppIdx];
         opp = genFighter(clamp(c.level || 1, 0.5, 1.5));
         opp.name = c.name; opp.archetype = c.archetype;
-        oppRank = idx + 1; contenderId = c.id;
+        oppRank = oppIdx + 1; contenderId = c.id;
       } else {
         opp = genFighter(clamp(avgSkill(f) / 60 + R(-0.08, 0.1), 0.3, 1.5));
       }
       opp.weightClass = f.weightClass;
       if (!opp.record.w) opp.record = { w: RI(2, 14), l: RI(0, 5), ko: 0, sub: 0, dec: 0 };
-      if (titleTier)
-        g.log.unshift(
-          `📣 Title shot ${titleTier} untuk ${f.name} — syarat terpenuhi: ${titleReason}.`,
-        );
+
+      // Matchup storytelling
+      const archA = f.archetype;
+      const archB = opp.archetype;
+      let story = "";
+      const strikerH = {Boxer:1,"Muay Thai":1,Wrestler:0,"BJJ Specialist":0,"All-Rounder":1};
+      const isStrikerA = strikerH[archA] === 1;
+      const isStrikerB = strikerH[archB] === 1;
+      if (isStrikerA && isStrikerB) story = "🔥 Firefight! Two strikers — guaranteed KO threat in every exchange.";
+      else if (!isStrikerA && !isStrikerB) story = "🛌 Grind session — both grapplers, this could go to the canvas early.";
+      else if (isStrikerA && !isStrikerB) story = "🎯 Striker vs Grappler — can " + opp.name + " survive the ground?";
+      else story = "🎯 Grappler vs Striker — classic clash of styles!";
+
+      let titleText = "";
+      if (isMainEvent) titleText = "🌟 MAIN EVENT";
+      else if (isTitleEliminator) titleText = "🥇 TITLE ELIMINATOR — winner faces champion";
+      else if (shortNotice) titleText = "⚡ SHORT NOTICE REPLACEMENT — purse boosted!";
+      else if (titleTier) titleText = tier === "Local" ? "" : "Fight Offer — " + tier;
+      
+      if (shortNotice) titleText = "⚡ SHORT NOTICE REPLACEMENT — purse boosted!";
+      else if (isTitleEliminator && !shortNotice) titleText = "🥇 TITLE ELIMINATOR — winner faces champion";
+      else if (isMainEvent && !isTitleEliminator) titleText = "🌟 MAIN EVENT";
+      else if (titleTier) titleText = titleText || "Fight Offer — " + tier;
 
       g.inbox.unshift({
-        id: uid(), type: "offer", fighterId: f.id, expires: 3,
+        id: uid(), type: "offer", fighterId: f.id, expires: shortNotice ? 2 : 3,
         tier, show, winBonus: show, opponent: opp,
         title: titleTier === "Major" || titleTier === "Premier",
         titleTier, oppRank, contenderId,
+        titleText, story, shortNotice, isMainEvent, isTitleEliminator,
+        weeks: shortNotice ? RI(1, 2) : RI(4, 6),
         titleText:
           titleTier === "Premier"
             ? "🏆 PREMIER WORLD TITLE FIGHT"
