@@ -423,6 +423,27 @@ export default function App() {
                   <div key={f.id} style={{ color: C.dim, fontSize: 11, padding: "6px 8px" }}>Belum masuk ranking: <b style={{ color: C.chalk }}>{f.name}</b></div>
                 ))}
               </Card>
+            {/* P4P — Pound-for-Pound Rankings (cross-division) */}
+            {(() => {
+              const allFighters = [];
+              Object.values(g.divisions).forEach((d) => {
+                d.list.forEach((c) => allFighters.push({ name: c.name, arch: c.archetype, wc: "", skill: c.level * 60, record: c.record?.w || 0 }));
+              });
+              g.roster.forEach((f) => allFighters.push({ name: f.name, arch: f.archetype, wc: f.weightClass, skill: avgSkill(f), record: f.record.w, player: true }));
+              allFighters.sort((a, b) => (b.skill * 0.6 + b.record * 2) - (a.skill * 0.6 + a.record * 2));
+              const top10 = allFighters.slice(0, 10);
+              return (
+                <Card accent={C.gold}>
+                  <H>🌍 P4P — Pound-for-Pound Top 10</H>
+                  {top10.map((f, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontSize: 11, borderBottom: i < 9 ? `1px solid ${C.line}22` : "none", color: f.player ? C.gold : C.chalk }}>
+                      <span><b style={{ color: C.dim,fontFamily:DISPLAY }}>#{i + 1}</b> {f.name}{f.wc ? ` (${f.wc})` : ""} {f.player ? "★" : ""}</span>
+                      <span style={{ color: C.dim, fontSize: 10 }}>{f.arch} · {Math.round(f.skill)} ovr · {f.record}W</span>
+                    </div>
+                  ))}
+                </Card>
+              );
+            })()}
             </>
           );
         })()}
