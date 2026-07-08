@@ -326,9 +326,9 @@ export default function FightNight({ fighter, done }) {
         } else if (b.titleTier === "Regional") {
           f.titles.push("Regional Champion"); g2.rep = clamp(g2.rep + 6, 0, 100); g2.legacy += 300;
           g2.log.unshift(`🥇 ${f.name} merebut REGIONAL TITLE!`);
-        } else if (b.titleTier === "Super Fight") {
+        } else if (b.titleTier === "Super Fight" || b.doubleChamp) {
           f.titles.push("Double Champion"); g2.rep = clamp(g2.rep + 50, 0, 100); g2.legacy += 10000;
-          g2.log.unshift(`👑👑 ${f.name} adalah DOUBLE CHAMPION! Menguasai ${f.weightClass} & ${b.superFight || "adjacent"}!`);
+          g2.log.unshift(`👑👑 ${f.name} adalah DOUBLE CHAMPION! ${f.weightClass} & ${b.doubleChamp || b.superFight || "adjacent"}!`);
         }
         // Career title record
         if (b.titleTier) addHistory(f, g2.week, "title", `🏆 Won ${b.titleTier} Title`);

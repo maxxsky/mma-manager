@@ -345,28 +345,27 @@ export function tick(g) {
         `🛡️ Mandatory defense untuk ${f.name} tiba — tolak atau biarkan expire = title dicopot.`,
       );
     }
-    // Super fight: champion vs champion from adjacent weight class (after 2+ defenses)
-    const defenses = f.titles.filter((t) => t.includes("Champion")).length;
-    if (defenses >= 2 && g.week % 16 === 0 && random() < 0.25) {
-      const wcIdx = WEIGHTS.findIndex((w) => w.name === f.weightClass);
-      const adjacentDivs = [];
-      if (wcIdx > 0) adjacentDivs.push(WEIGHTS[wcIdx - 1]);
-      if (wcIdx < WEIGHTS.length - 1) adjacentDivs.push(WEIGHTS[wcIdx + 1]);
-      for (const adj of adjacentDivs) {
-        const adjDiv = g.divisions[adj.name];
-        if (adjDiv && adjDiv.champ && !adjDiv.champ.player) {
-          const superOpp = genFighter(1.5);
-          superOpp.name = adjDiv.champ.name;
-          superOpp.weightClass = adj.name;
+    // Double Champ attempt: champion can challenge adjacent division champion
+    const wcIdx = WEIGHTS.findIndex((w) => w.name === f.weightClass);
+    if (wcIdx >= 0 && g.week % 12 === 0 && random() < 0.20) {
+      const targets = [];
+      if (wcIdx > 0) targets.push(wcIdx - 1); // weight class below
+      if (wcIdx < WEIGHTS.length - 1) targets.push(wcIdx + 1); // weight class above
+      for (const t of targets) {
+        const tDiv = g.divisions[WEIGHTS[t].name];
+        if (tDiv && tDiv.champ && !tDiv.champ.player && !f.titles.includes("Double Champion")) {
+          const superOpp = genFighter(1.45);
+          superOpp.name = tDiv.champ.name; superOpp.archetype = tDiv.champ.archetype;
+          superOpp.weightClass = WEIGHTS[t].name;
           superOpp.record = { w: RI(15, 22), l: RI(0, 2), ko: 0, sub: 0, dec: 0 };
           g.inbox.unshift({
             id: uid(), type: "offer", fighterId: f.id, expires: 4,
             tier: "Premier", show: RI(500, 1000) * 1000, winBonus: RI(500, 1000) * 1000,
             opponent: superOpp, title: true, defense: false, oppRank: 0,
-            titleTier: "Super Fight", titleText: "👑👑 CHAMPION VS CHAMPION — DOUBLE CHAMP STATUS",
-            weeks: RI(6, 8), superFight: adj.name,
+            titleTier: "Major", titleText: "👑👑 DOUBLE CHAMP ATTEMPT — " + f.weightClass + " vs " + WEIGHTS[t].name,
+            weeks: RI(6, 8), doubleChamp: WEIGHTS[t].name,
           });
-          g.log.unshift(`🌟 SUPER FIGHT: ${f.name} (${f.weightClass} champ) vs ${superOpp.name} (${adj.name} champ)!`);
+          g.log.unshift("🌟 DOUBLE CHAMP: " + f.name + " (" + f.weightClass + " champ) challenges " + superOpp.name + " (" + WEIGHTS[t].name + " champ)!");
           return;
         }
       }
