@@ -228,6 +228,10 @@ export function tick(g) {
     }
 
     g.cash += weeklyFee(f);
+    // Record training history (last 8 weeks snapshot)
+    if (!f.trainingHistory) f.trainingHistory = [];
+    f.trainingHistory.push({ week: g.week, attrs: { ...f.attrs } });
+    if (f.trainingHistory.length > 8) f.trainingHistory.shift();
     // Popularity decay: fighters lose 0.5 pop/week when not booked or doing content
     if (!f.booked && !f.injury) {
       f.popularity = clamp(f.popularity - 0.5, 0, 100);

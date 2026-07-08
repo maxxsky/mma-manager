@@ -82,6 +82,43 @@ export default function FighterCard({ f, g, up }) {
               {f.fightHistory.length > 8 && <div style={{ fontSize: 8, color: C.dim, marginTop: 2 }}>...and {f.fightHistory.length - 8} more fights</div>}
             </div>
           )}
+          {/* Training Progress — sparkline of last 8 weeks */}
+          {f.trainingHistory && f.trainingHistory.length >= 2 && (() => {
+            const first = f.trainingHistory[0].attrs;
+            const last = f.trainingHistory[f.trainingHistory.length - 1].attrs;
+            const keys = ATTRS.filter(k => Math.abs(last[k] - first[k]) > 0.5);
+            if (keys.length === 0) return null;
+            return (
+              <div style={{ marginTop: 6, borderTop: `1px solid ${C.line}33`, paddingTop: 4 }}>
+                <div style={{ fontSize: 8, color: C.dim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 }}>
+                  📈 Progress ({f.trainingHistory.length} minggu)
+                </div>
+                {keys.slice(0, 4).map(k => {
+                  const delta = Math.round((last[k] - first[k]) * 10) / 10;
+                  const pct = Math.round(f.attrs[k] / f.ceilings[k] * 100);
+                  return (
+                    <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 8, color: C.dim }}>
+                      <span>{ATTR_LABEL[k]}: <b style={{ color: delta > 0 ? C.green : C.red }}>{delta > 0 ? "+" : ""}{delta}</b> → {Math.round(f.attrs[k])}/{f.ceilings[k]} ({pct}%)</span>
+                      {pct >= 90 && <span style={{ color: C.gold }}>⚠️ Plateau</span>}
+                    </div>
+                  );
+                })}
+                {/* Auto-training suggestion */}
+                {(() => {
+                  const nearMax = ATTRS.find(k => f.attrs[k] / f.ceilings[k] > 0.90 && k === (f.training?.type === "striking" ? "striking" : f.training?.type === "grappling" ? "wrestling" : null));
+                  if (!nearMax) return null;
+                  const suggest = nearMax === "striking" ? "grappling" : "wrestling";
+                  return <div style={{ fontSize: 8, color: C.gold, marginTop: 2 }}>💡 {ATTR_LABEL[nearMax]} plateau — coba training <b>{TRAINING[suggest]?.label || suggest}</b></div>;
+                })()}
+              </div>
+            );
+          })()}
+          {/* Overtraining alert */}
+          {f.overtraining >= 50 && (
+            <div style={{ marginTop: 4, fontSize: 8, color: f.overtraining >= 75 ? C.red : C.gold, animation: f.overtraining >= 75 ? "goldglow 1s infinite" : "none" }}>
+              {f.overtraining >= 90 ? "💀 Breakdown risk!" : f.overtraining >= 75 ? "🔴 Overtraining parah — switch to Recovery" : "🟡 Overtraining mulai — hati-hati"}
+            </div>
+          )}
           {f.weightClassDelta != null && f.weightClassDelta !== 0 && (
             <div style={{ color: C.dim, fontSize: 10, marginTop: 2 }}>
               ⚖️ Perubahan kelas: <b style={{ color: f.weightClassDelta > 0 ? C.red : C.blue }}>{f.weightClassDelta > 0 ? `↑ Naik ${f.weightClassDelta} kelas` : `↓ Turun ${Math.abs(f.weightClassDelta)} kelas`}</b> — strength ±{Math.abs(f.weightClassDelta) * 2}% · footwork ∓{Math.abs(f.weightClassDelta) * 1.5}%

@@ -51,6 +51,7 @@ export function genFighter(level, regionName) {
     rankPoints: 0, joinedWeek: 0, lastFightWeek: 0, fightsThisYear: 0,
     streakL: 0, convincedOnce: false,
     fightHistory: [],
+    trainingHistory: [], // last 8 weeks of {week, attrsSnapshot} for progress graph
     agent: "none", contract: null,
     asking: Math.round(level * 8000 + R(500, 3000)),
     weightClassDelta: 0,

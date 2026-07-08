@@ -99,6 +99,7 @@ export default function App() {
             f.injuryCount = f.injuryCount || 0;
             f.seriousInjuries = f.seriousInjuries || 0;
             if (!f.fightHistory) f.fightHistory = [];
+            if (!f.trainingHistory) f.trainingHistory = [];
           });
           setG(s);
         }
