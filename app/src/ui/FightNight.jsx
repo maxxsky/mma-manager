@@ -358,7 +358,7 @@ export default function FightNight({ fighter, done }) {
         )}
 
         {/* ROUND — commentary */}
-        {(stage === "round" || stage === "corner") && roundLog && (
+        {(stage === "round") && roundLog && (
           <Panel>
             <Eyebrow>Round {rnd} · commentary</Eyebrow>
             {viewMode === "tick" ? (
@@ -371,6 +371,7 @@ export default function FightNight({ fighter, done }) {
               ))
             )}
             {stage === "round" && !roundLog.finish && <Btn color={T.ember} onClick={() => { setStage("corner"); setTimer(60); }} style={{ marginTop: 10 }}>End of round {rnd}</Btn>}
+            {stage === "round" && roundLog.finish && <Btn color={T.gold} onClick={() => { setStage(roundLog.finish.how === "KO" || roundLog.finish.how === "TKO" ? "knockdown" : "result"); processResult(); }} style={{ marginTop: 10 }}>See the finish</Btn>}
           </Panel>
         )}
 
