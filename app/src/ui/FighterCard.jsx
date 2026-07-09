@@ -4,7 +4,7 @@ import { ATTRS, ATTR_LABEL, WEIGHTS, ARCH_COLOR, TRAITS, AMBITIONS, TRAINING, IN
 import { avgSkill, tierOf } from "../engine/fighter.js";
 import { rankOf, vacateTitle } from "../engine/rankings.js";
 import { getRel } from "../engine/relationships.js";
-import { C, DISPLAY, cut, Card, H, Btn, Tag, Bar, OVR } from "./theme.jsx";
+import { T, Panel, Eyebrow, Tag, Btn, Ovr, Meter, AttrTele, Mono } from "./theme.jsx";
 
 export default function FighterCard({ f, g, up }) {
   const [open, setOpen] = useState(false);
@@ -14,164 +14,207 @@ export default function FighterCard({ f, g, up }) {
   const isChamp = div && div.champ.player && div.champ.fighterId === f.id;
 
   return (
-    <Card accent={ac}>
+    <Panel style={{ marginBottom: 10 }}>
+      {/* Header row — click to expand */}
       <div style={{ display: "flex", gap: 12, alignItems: "center", cursor: "pointer" }} onClick={() => setOpen(!open)}>
-        <OVR f={f} />
+        <Mono name={f.name} color={ac} size={40} champ={isChamp || f.titles?.length > 0} />
+        <Ovr f={f} size={36} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: DISPLAY, color: C.chalk, fontSize: 17, letterSpacing: 1, textTransform: "uppercase", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {f.name} {f.titles.length > 0 && "👑"}
+          <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 17, letterSpacing: 1,
+            textTransform: "uppercase", color: T.txt, whiteSpace: "nowrap", overflow: "hidden",
+            textOverflow: "ellipsis" }}>
+            {f.name} {f.titles.length > 0 && "♛"}
           </div>
           <div style={{ marginTop: 2 }}>
-            <Tag color={ac}>{f.archetype}</Tag><Tag color={C.dim}>{f.weightClass}</Tag><Tag color={C.dim}>{f.age} th</Tag>{isChamp ? <Tag color={C.gold}>👑 Champ</Tag> : r ? <Tag color={C.gold}>Rank #{r}</Tag> : null}
-          </div>
-          <div style={{ color: C.dim, fontSize: 11, marginTop: 3 }}>
-            {f.record.w}-{f.record.l} ({f.record.ko} KO · {f.record.sub} SUB) · {tierOf(f)}
+            <Tag color={ac} solid>{f.archetype}</Tag>
+            <Tag color={T.txt2}>{f.weightClass}</Tag>
+            <Tag color={T.txt2}>{f.age}y</Tag>
+            {isChamp ? <Tag color={T.gold} solid>♛ Champ</Tag>
+              : r ? <Tag color={T.gold}>Rank #{r}</Tag> : null}
           </div>
         </div>
         <div style={{ textAlign: "right" }}>
-          {f.injury ? <div style={{ color: f.injury.tier >= 3 ? "#ff2216" : f.injury.tier >= 2 ? C.red : f.injury.tier >= 1 ? C.gold : C.dim, fontFamily: DISPLAY, fontSize: 12, letterSpacing: 1 }}>{f.injury.label || "🚑"} {f.injury.weeks} MGG{f.injury.tier >= 3 ? " ⚠️" : ""}</div>
-            : f.booked ? <div style={{ color: C.gold, fontFamily: DISPLAY, fontSize: 12, letterSpacing: 1 }}>🥊 T-{f.booked.weeksLeft}</div>
-            : <div style={{ color: C.dim, fontSize: 11 }}>{TRAINING[f.training.type].label}</div>}
-          <div style={{ color: C.dim, fontSize: 12, marginTop: 4 }}>{open ? "▲" : "▼"}</div>
+          <div style={{ fontFamily: T.mono, fontSize: 13, color: T.txt2 }}>
+            {f.record.w}-{f.record.l} · {f.record.ko}KO {f.record.sub}SUB
+          </div>
+          {f.injury ? (
+            <div style={{ color: f.injury.tier >= 3 ? T.neg : T.warn, fontFamily: T.body,
+              fontSize: 11, fontWeight: 600 }}>
+              🚑 {f.injury.weeks}w</div>
+          ) : f.booked ? (
+            <div style={{ color: T.ember, fontFamily: T.mono, fontSize: 14, fontWeight: 700 }}>
+              T-{f.booked.weeksLeft}</div>
+          ) : (
+            <div style={{ color: T.txt3, fontSize: 11 }}>{open ? "▲" : "▼"}</div>
+          )}
         </div>
       </div>
+
+      {/* Expanded detail */}
       {open && (
-        <div style={{ marginTop: 12, borderTop: `1px solid ${C.line}`, paddingTop: 10 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 14px" }}>
+        <div style={{ marginTop: 14, borderTop: `1px solid ${T.line}`, paddingTop: 14 }}>
+          {/* Attributes grid — AttrTele */}
+          <Eyebrow>Attributes · value / ceiling</Eyebrow>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0 22px" }}>
             {ATTRS.map((k) => (
-              <div key={k}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.dim, textTransform: "uppercase", letterSpacing: 1 }}>
-                  <span>{ATTR_LABEL[k]}</span>
-                  <span style={{ color: C.chalk, fontFamily: DISPLAY, fontSize: 12 }}>{Math.round(f.attrs[k])}<span style={{ color: "#42506a" }}>/{f.ceilings[k]}</span></span>
-                </div>
-                <Bar v={f.attrs[k]} color={f.attrs[k] / f.ceilings[k] > 0.9 ? C.gold : ac} h={6} />
-              </div>
+              <AttrTele key={k} label={ATTR_LABEL[k]} v={Math.round(f.attrs[k])} ceil={f.ceilings[k]} />
             ))}
           </div>
-          {g.relationships && g.roster.length > 1 && (() => {
-            const scores = g.roster.filter((x) => x.id !== f.id).map((x) => ({ name: x.name, score: getRel(g, f.id, x.id) })).sort((a, b) => b.score - a.score);
-            return <div style={{ color: C.dim, fontSize: 10, marginTop: 5 }}>
-              {scores[0] && scores[0].score > 15 && <span style={{ marginRight: 8 }}>🟢 {scores[0].name}: <b style={{ color: C.green }}>+{Math.round(scores[0].score)}</b></span>}
-              {scores.length > 1 && scores[scores.length - 1].score < -15 && <span>🔴 {scores[scores.length - 1].name}: <b style={{ color: C.red }}>{Math.round(scores[scores.length - 1].score)}</b></span>}
-            </div>;
-          })()}
-          <div style={{ marginTop: 10 }}>{f.traits.map((t) => <Tag key={t} color={C.red}>{t}</Tag>)}</div>
-          <div style={{ color: C.dim, fontSize: 10, marginTop: 3 }}>{f.traits.map((t) => `${t}: ${TRAITS[t]}`).join(" · ")}</div>
-          <div style={{ color: C.dim, fontSize: 10, marginTop: 4 }}>
-            🎯 Ambisi: {f.ambitionRevealed ? <span style={{ color: C.gold }}>{f.ambition} — {AMBITIONS[f.ambition]}</span> : <span>??? (terungkap setelah ±2 bulan di camp, atau lewat scout grade S)</span>}
+
+          {/* Condition meters */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 12 }}>
+            <Meter label="Morale" v={f.morale} color={f.morale > 60 ? T.pos : T.warn} />
+            <Meter label="Overtraining" v={f.overtraining} color={f.overtraining > 50 ? T.neg : T.warn} />
+            <Meter label="Popularity" v={f.popularity} color={T.gold} />
           </div>
-          {f.bio && (
-            <div style={{ color: C.dim, fontSize: 9, marginTop: 3, fontStyle: "italic", lineHeight: 1.3 }}>
-              📖 {f.bio}
-            </div>
-          )}
-          {f.contract && (
-            <div style={{ color: C.dim, fontSize: 10, marginTop: 4 }}>
-              📄 Kontrak: cut <b style={{ color: C.chalk }}>{Math.round(f.contract.managerCut * 100)}%</b> · sisa <b style={{ color: f.contract.fightsLeft <= 1 ? C.red : C.chalk }}>{f.contract.fightsLeft}/{f.contract.fightsTotal}</b> fight · {f.contract.durationMo} bln · 🤝 {AGENT_TYPES[f.agent || "none"].label}
-            </div>
-          )}
-          {f.fightHistory && f.fightHistory.length > 0 && (
-            <div style={{ marginTop: 8, borderTop: `1px solid ${C.line}44`, paddingTop: 6 }}>
-              <div style={{ fontSize: 9, color: C.dim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>📋 Fight History ({f.fightHistory.length} fights)</div>
-              {[...f.fightHistory].reverse().slice(0, 8).map((h, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 9, padding: "1px 0", color: h.result === "W" ? C.green : h.result === "D" ? C.dim : C.red }}>
-                  <span>Wk {h.week} · vs <b>{h.opponent}</b></span>
-                  <span>{h.result} · {h.method} R{h.round} {h.title ? "🏆" : ""} · {h.tier}</span>
-                </div>
+
+          {/* Traits */}
+          {f.traits.length > 0 && (
+            <div style={{ marginTop: 10 }}>
+              {f.traits.map((t) => (
+                <Tag key={t} color={T.ember} solid>{t}</Tag>
               ))}
-              {f.fightHistory.length > 8 && <div style={{ fontSize: 8, color: C.dim, marginTop: 2 }}>...and {f.fightHistory.length - 8} more fights</div>}
+              <div style={{ fontFamily: T.body, fontSize: 10, color: T.txt3, marginTop: 4 }}>
+                {f.traits.map((t) => `${t}: ${TRAITS[t]}`).join(" · ")}
+              </div>
             </div>
           )}
-          {/* Training Progress — sparkline of last 8 weeks */}
+
+          {/* Ambition */}
+          <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3, marginTop: 8 }}>
+            🎯 Ambition: {f.ambitionRevealed
+              ? <span style={{ color: T.gold, fontWeight: 600 }}>{f.ambition} — {AMBITIONS[f.ambition]}</span>
+              : <span>??? (revealed after ~2 months in camp)</span>}
+          </div>
+
+          {/* Bio */}
+          {f.bio && (
+            <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt2, marginTop: 6,
+              fontStyle: "italic", lineHeight: 1.4, padding: "8px 12px",
+              background: T.bg, borderRadius: T.r, borderLeft: `3px solid ${ac}` }}>
+              {f.bio}
+            </div>
+          )}
+
+          {/* Relationships */}
+          {g.relationships && g.roster.length > 1 && (() => {
+            const scores = g.roster.filter((x) => x.id !== f.id)
+              .map((x) => ({ name: x.name, score: getRel(g, f.id, x.id) }))
+              .sort((a, b) => b.score - a.score);
+            if (!scores[0] || (scores[0].score <= 15 && scores[scores.length - 1].score >= -15)) return null;
+            return (
+              <div style={{ fontFamily: T.body, fontSize: 10, color: T.txt3, marginTop: 8 }}>
+                {scores[0] && scores[0].score > 15 &&
+                  <Tag color={T.pos}>🤝 {scores[0].name}: +{Math.round(scores[0].score)}</Tag>}
+                {scores.length > 1 && scores[scores.length - 1].score < -15 &&
+                  <Tag color={T.neg}>⚡ {scores[scores.length - 1].name}: {Math.round(scores[scores.length - 1].score)}</Tag>}
+              </div>
+            );
+          })()}
+
+          {/* Contract */}
+          {f.contract && (
+            <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt2, marginTop: 8 }}>
+              📄 Contract: cut <b style={{ color: T.txt }}>{Math.round(f.contract.managerCut * 100)}%</b>
+              {" · "}left <b style={{ color: f.contract.fightsLeft <= 1 ? T.neg : T.txt }}>{f.contract.fightsLeft}/{f.contract.fightsTotal}</b> fights
+              {" · "}{f.contract.durationMo}mo · {AGENT_TYPES[f.agent || "none"].label}
+            </div>
+          )}
+
+          {/* Weight class delta */}
+          {f.weightClassDelta != null && f.weightClassDelta !== 0 && (
+            <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3, marginTop: 6 }}>
+              ⚖️ Class change: <b style={{ color: f.weightClassDelta > 0 ? T.neg : T.steel }}>
+                {f.weightClassDelta > 0 ? `↑ +${f.weightClassDelta}` : `↓ ${Math.abs(f.weightClassDelta)}`}</b>
+              {" "}— strength ±{Math.abs(f.weightClassDelta) * 2}% · footwork ∓{Math.abs(f.weightClassDelta) * 1.5}%
+            </div>
+          )}
+
+          {/* Fight History */}
+          {f.fightHistory && f.fightHistory.length > 0 && (
+            <div style={{ marginTop: 12, borderTop: `1px solid ${T.line}`, paddingTop: 10 }}>
+              <Eyebrow>Fight History ({f.fightHistory.length})</Eyebrow>
+              <div style={{ display: "grid", gap: 3 }}>
+                {[...f.fightHistory].reverse().slice(0, 8).map((h, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between",
+                    fontFamily: T.mono, fontSize: 10, padding: "2px 0",
+                    color: h.result === "W" ? T.pos : h.result === "D" ? T.txt3 : T.neg }}>
+                    <span>W{h.week} · vs <b>{h.opponent}</b></span>
+                    <span>{h.result} · {h.method} R{h.round} {h.title ? "🏆" : ""} · {h.tier}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Training Progress */}
           {f.trainingHistory && f.trainingHistory.length >= 2 && (() => {
             const first = f.trainingHistory[0].attrs;
             const last = f.trainingHistory[f.trainingHistory.length - 1].attrs;
             const keys = ATTRS.filter(k => Math.abs(last[k] - first[k]) > 0.5);
             if (keys.length === 0) return null;
             return (
-              <div style={{ marginTop: 6, borderTop: `1px solid ${C.line}33`, paddingTop: 4 }}>
-                <div style={{ fontSize: 8, color: C.dim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 }}>
-                  📈 Progress ({f.trainingHistory.length} minggu)
-                </div>
+              <div style={{ marginTop: 10 }}>
+                <Eyebrow>Progress ({f.trainingHistory.length} weeks)</Eyebrow>
                 {keys.slice(0, 4).map(k => {
                   const delta = Math.round((last[k] - first[k]) * 10) / 10;
                   const pct = Math.round(f.attrs[k] / f.ceilings[k] * 100);
                   return (
-                    <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 8, color: C.dim }}>
-                      <span>{ATTR_LABEL[k]}: <b style={{ color: delta > 0 ? C.green : C.red }}>{delta > 0 ? "+" : ""}{delta}</b> → {Math.round(f.attrs[k])}/{f.ceilings[k]} ({pct}%)</span>
-                      {pct >= 90 && <span style={{ color: C.gold }}>⚠️ Plateau</span>}
+                    <div key={k} style={{ display: "flex", justifyContent: "space-between",
+                      fontFamily: T.body, fontSize: 10, color: T.txt3, marginBottom: 2 }}>
+                      <span>{ATTR_LABEL[k]}: <b style={{ color: delta > 0 ? T.pos : T.neg }}>
+                        {delta > 0 ? "+" : ""}{delta}</b> → {Math.round(f.attrs[k])}/{f.ceilings[k]} ({pct}%)
+                      </span>
+                      {pct >= 90 && <span style={{ color: T.gold }}>⚠️ Plateau</span>}
                     </div>
                   );
                 })}
-                {/* Auto-training suggestion */}
-                {(() => {
-                  const nearMax = ATTRS.find(k => f.attrs[k] / f.ceilings[k] > 0.90 && k === (f.training?.type === "striking" ? "striking" : f.training?.type === "grappling" ? "wrestling" : null));
-                  if (!nearMax) return null;
-                  const suggest = nearMax === "striking" ? "grappling" : "wrestling";
-                  return <div style={{ fontSize: 8, color: C.gold, marginTop: 2 }}>💡 {ATTR_LABEL[nearMax]} plateau — coba training <b>{TRAINING[suggest]?.label || suggest}</b></div>;
-                })()}
               </div>
             );
           })()}
+
           {/* Overtraining alert */}
           {f.overtraining >= 50 && (
-            <div style={{ marginTop: 4, fontSize: 8, color: f.overtraining >= 75 ? C.red : C.gold, animation: f.overtraining >= 75 ? "goldglow 1s infinite" : "none" }}>
-              {f.overtraining >= 90 ? "💀 Breakdown risk!" : f.overtraining >= 75 ? "🔴 Overtraining parah — switch to Recovery" : "🟡 Overtraining mulai — hati-hati"}
+            <div style={{ fontFamily: T.body, fontSize: 12, fontWeight: 600, marginTop: 8,
+              padding: "6px 10px", background: `${T.neg}18`, borderRadius: T.r,
+              color: f.overtraining >= 75 ? T.neg : T.warn }}>
+              {f.overtraining >= 90 ? "💀 Breakdown risk!" : f.overtraining >= 75 ? "🔴 Severe overtraining — switch to Recovery" : "🟡 Overtraining building — caution"}
             </div>
           )}
-          {f.weightClassDelta != null && f.weightClassDelta !== 0 && (
-            <div style={{ color: C.dim, fontSize: 10, marginTop: 2 }}>
-              ⚖️ Perubahan kelas: <b style={{ color: f.weightClassDelta > 0 ? C.red : C.blue }}>{f.weightClassDelta > 0 ? `↑ Naik ${f.weightClassDelta} kelas` : `↓ Turun ${Math.abs(f.weightClassDelta)} kelas`}</b> — strength ±{Math.abs(f.weightClassDelta) * 2}% · footwork ∓{Math.abs(f.weightClassDelta) * 1.5}%
-            </div>
-          )}
-          {f.careerHistory && f.careerHistory.length > 0 && (
-            <div style={{ marginTop: 10, borderTop: `1px solid ${C.line}44`, paddingTop: 10 }}>
-              <div style={{ fontSize: 10, color: C.dim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>📋 Career Timeline</div>
-              <div style={{ maxHeight: 200, overflowY: "auto" }}>
-                {[...f.careerHistory].reverse().slice(0, 15).map((ev, i) => (
-                  <div key={i} style={{ display: "flex", gap: 8, padding: "3px 0", borderBottom: `1px solid ${C.line}22`, fontSize: 10 }}>
-                    <span style={{ color: C.dim, fontFamily: DISPLAY, minWidth: 36, fontSize: 9 }}>W{ev.week}</span>
-                    <span style={{ color: ev.type === "win" ? C.green : ev.type === "loss" ? C.red : ev.type === "injury" ? C.gold : ev.type === "title" ? C.gold : ev.type === "class" ? C.blue : C.chalk, flex: 1 }}>{ev.text}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          <div style={{ display: "flex", gap: 12, marginTop: 10, fontSize: 9, color: C.dim, textTransform: "uppercase", letterSpacing: 1 }}>
-            <div style={{ flex: 1 }}>Morale<Bar v={f.morale} color={f.morale > 60 ? C.green : C.red} h={6} /></div>
-            <div style={{ flex: 1 }}>Overtraining<Bar v={f.overtraining} color={f.overtraining > 50 ? C.red : C.gold} h={6} /></div>
-            <div style={{ flex: 1 }}>Popularity<Bar v={f.popularity} color={C.gold} h={6} /></div>
-          </div>
-          {!f.injury && !f.booked && (
-            <div style={{ marginTop: 10, color: C.dim, fontSize: 10, fontStyle: "italic" }}>
-              ⚖️ Pindah kelas sekarang berdasarkan permintaan fighter — cek inbox untuk request pindah divisi. 
-              Dipicu oleh performa (lose streak, win streak, age) dan ambisi fighter.
-            </div>
-          )}
+
+          {/* Training controls */}
           {!f.booked && !f.injury && (
-            <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: 10, color: C.dim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Program minggu ini · {fmt$(TRAINING[f.training.type].cost)}/mgg</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+            <div style={{ marginTop: 14, borderTop: `1px solid ${T.line}`, paddingTop: 12 }}>
+              <Eyebrow>Training · {fmt$(TRAINING[f.training.type].cost)}/week</Eyebrow>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
                 {Object.entries(TRAINING).filter(([k]) => k !== "fightcamp").map(([k, t]) => (
                   <button key={k} onClick={() => up((g2) => { g2.roster.find((x) => x.id === f.id).training.type = k; })}
-                    style={{ background: f.training.type === k ? C.gold : C.panel2, color: f.training.type === k ? "#0a0d14" : C.chalk, border: `1px solid ${C.line}`, padding: "4px 9px", fontSize: 11, cursor: "pointer", fontFamily: DISPLAY, letterSpacing: 1, textTransform: "uppercase", ...cut(5) }}>
+                    style={{ fontFamily: T.disp, fontWeight: 600, fontSize: 12, letterSpacing: .8,
+                      textTransform: "uppercase", padding: "5px 10px", borderRadius: T.r, cursor: "pointer",
+                      border: f.training.type === k ? "none" : `1px solid ${T.line}`,
+                      background: f.training.type === k ? T.gold : "transparent",
+                      color: f.training.type === k ? T.bg : T.txt2 }}>
                     {t.label}
                   </button>
                 ))}
               </div>
-              <div style={{ display: "flex", gap: 5, marginTop: 6, alignItems: "center" }}>
+              <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
                 {Object.keys(INTENSITY).map((k) => (
                   <button key={k} onClick={() => up((g2) => { g2.roster.find((x) => x.id === f.id).training.intensity = k; })}
-                    style={{ background: f.training.intensity === k ? C.red : C.panel2, color: f.training.intensity === k ? "#fff" : C.dim, border: `1px solid ${C.line}`, padding: "4px 9px", fontSize: 11, cursor: "pointer", fontFamily: DISPLAY, letterSpacing: 1, ...cut(5) }}>
+                    style={{ fontFamily: T.mono, fontSize: 11, fontWeight: 600, padding: "4px 10px",
+                      borderRadius: T.r, cursor: "pointer",
+                      border: f.training.intensity === k ? "none" : `1px solid ${T.line}`,
+                      background: f.training.intensity === k ? T.ember : "transparent",
+                      color: f.training.intensity === k ? T.bg : T.txt3 }}>
                     {k.toUpperCase()}
                   </button>
                 ))}
-                <span style={{ color: C.dim, fontSize: 9 }}>keras = gain↑ risiko↑</span>
+                <span style={{ fontFamily: T.body, fontSize: 10, color: T.txt3 }}>hard = gains↑ risk↑</span>
               </div>
             </div>
           )}
         </div>
       )}
-    </Card>
+    </Panel>
   );
 }

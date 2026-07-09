@@ -1,20 +1,20 @@
 import React, { useState } from "react";
 import { R, RI, fmt$, clamp, random } from "../engine/rng.js";
 import { AGENT_TYPES } from "../engine/data.js";
-import { C, DISPLAY, cut, Card, H, Btn, Tag, Bar } from "./theme.jsx";
+import { T, Panel, Eyebrow as H, Btn, Tag } from "./theme.jsx";
 
 const NegoRow = ({ label, children, hint }) => (
   <div style={{ marginBottom: 14 }}>
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
-      <span style={{ fontSize: 11, letterSpacing: 1, color: C.dim, textTransform: "uppercase" }}>{label}</span>
-      {hint && <span style={{ fontSize: 10, color: C.dim }}>{hint}</span>}
+      <span style={{ fontFamily: T.body, fontSize: 11, fontWeight: 600, letterSpacing: 1, color: T.txt3, textTransform: "uppercase" }}>{label}</span>
+      {hint && <span style={{ fontFamily: T.body, fontSize: 10, color: T.txt3 }}>{hint}</span>}
     </div>
     {children}
   </div>
 );
 
 const NegoOpt = ({ v, set, val, children }) => (
-  <button onClick={() => set(val)} style={{ background: v === val ? C.gold : C.panel2, color: v === val ? "#0a0d14" : C.chalk, border: `1px solid ${C.line}`, padding: "6px 10px", fontSize: 12, cursor: "pointer", fontFamily: DISPLAY, letterSpacing: 1, ...cut(5) }}>{children}</button>
+  <button onClick={() => set(val)} style={{ background: v === val ? T.gold : T.raised, color: v === val ? T.bg : T.txt2, border: `1px solid ${T.line}`, padding: "6px 10px", fontSize: 12, cursor: "pointer", fontFamily: T.disp, fontWeight: 600, letterSpacing: 1, borderRadius: T.r }}>{children}</button>
 );
 
 export default function NegotiateModal({ fighter, mode, cash, onClose, onCommit }) {
@@ -94,11 +94,11 @@ export default function NegotiateModal({ fighter, mode, cash, onClose, onCommit 
   if (step === "result-success") {
     return (
       <div style={wrap} onClick={onClose}>
-        <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460, width: "100%", background: `linear-gradient(160deg, ${C.panel2}, ${C.panel})`, border: `2px solid ${C.green}`, padding: 20, textAlign: "center", ...cut(14) }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460, width: "100%", background: `linear-gradient(160deg, ${T.raised}, ${T.surface})`, border: `2px solid ${T.pos}`, padding: 20, textAlign: "center", ...{ borderRadius: T.r } }}>
           <div style={{ fontSize: 48, marginBottom: 6 }}>✅</div>
-          <H color={C.green}>Kontrak Ditandatangani!</H>
-          <div style={{ color: C.chalk, fontSize: 14, margin: "10px 0" }}>{resultMsg}</div>
-          <Btn color={C.green} onClick={onClose}>Tutup</Btn>
+          <H color={T.pos}>Kontrak Ditandatangani!</H>
+          <div style={{ color: T.txt, fontSize: 14, margin: "10px 0" }}>{resultMsg}</div>
+          <Btn color={T.pos} onClick={onClose}>Tutup</Btn>
         </div>
       </div>
     );
@@ -108,23 +108,23 @@ export default function NegotiateModal({ fighter, mode, cash, onClose, onCommit 
   if (step === "counter" && counterDeal) {
     return (
       <div style={wrap} onClick={onClose}>
-        <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460, width: "100%", background: `linear-gradient(160deg, ${C.panel2}, ${C.panel})`, border: `2px solid ${C.gold}`, padding: 16, ...cut(14) }}>
-          <H color={C.gold}>💬 Counter Offer dari {ag.label}</H>
-          <div style={{ color: C.chalk, fontSize: 13, marginBottom: 10 }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460, width: "100%", background: `linear-gradient(160deg, ${T.raised}, ${T.surface})`, border: `2px solid ${T.gold}`, padding: 16, ...{ borderRadius: T.r } }}>
+          <H color={T.gold}>💬 Counter Offer dari {ag.label}</H>
+          <div style={{ color: T.txt, fontSize: 13, marginBottom: 10 }}>
             "{fighter?.name} dan agennya mengajukan tawaran balik:
           </div>
-          <div style={{ background: "#0a0e17", padding: 12, marginBottom: 12, ...cut(8) }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px", fontSize: 12, color: C.dim }}>
-              <span>Cut manager:</span><span style={{ color: C.gold, fontFamily: DISPLAY }}>{Math.round(counterDeal.cut * 100)}%</span>
-              <span>Signing bonus:</span><span style={{ color: C.gold, fontFamily: DISPLAY }}>{fmt$(counterDeal.signBonus)}</span>
-              <span>Fight commitment:</span><span style={{ color: C.gold, fontFamily: DISPLAY }}>{counterDeal.fights} fight</span>
-              <span>Durasi:</span><span style={{ color: C.gold, fontFamily: DISPLAY }}>{counterDeal.duration} bln</span>
+          <div style={{ background: "#0a0e17", padding: 12, marginBottom: 12, ...{ borderRadius: T.r } }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px", fontSize: 12, color: T.txt3 }}>
+              <span>Cut manager:</span><span style={{ color: T.gold, fontFamily: T.disp }}>{Math.round(counterDeal.cut * 100)}%</span>
+              <span>Signing bonus:</span><span style={{ color: T.gold, fontFamily: T.disp }}>{fmt$(counterDeal.signBonus)}</span>
+              <span>Fight commitment:</span><span style={{ color: T.gold, fontFamily: T.disp }}>{counterDeal.fights} fight</span>
+              <span>Durasi:</span><span style={{ color: T.gold, fontFamily: T.disp }}>{counterDeal.duration} bln</span>
             </div>
-            <div style={{ marginTop: 8, fontSize: 11, color: C.dim }}>Estimasi diterima: <b style={{ color: C.green, fontFamily: DISPLAY }}>{counterDeal.accept}%</b></div>
+            <div style={{ marginTop: 8, fontSize: 11, color: T.txt3 }}>Estimasi diterima: <b style={{ color: T.pos, fontFamily: T.disp }}>{counterDeal.accept}%</b></div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <Btn small onClick={handleCounterAccept}>Terima Counter</Btn>
-            <Btn small color={C.red} onClick={onClose}>Tolak — Lanjut Cari Fighter Lain</Btn>
+            <Btn small color={T.neg} onClick={onClose}>Tolak — Lanjut Cari Fighter Lain</Btn>
           </div>
         </div>
       </div>
@@ -134,10 +134,10 @@ export default function NegotiateModal({ fighter, mode, cash, onClose, onCommit 
   // ===== FORM NEGOSIASI =====
   return (
     <div style={wrap} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460, width: "100%", background: `linear-gradient(160deg, ${C.panel2}, ${C.panel})`, border: `1px solid ${C.gold}`, padding: 16, maxHeight: "90vh", overflowY: "auto", ...cut(14) }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460, width: "100%", background: `linear-gradient(160deg, ${T.raised}, ${T.surface})`, border: `1px solid ${T.gold}`, padding: 16, maxHeight: "90vh", overflowY: "auto", ...{ borderRadius: T.r } }}>
         <H>{mode === "extend" ? "Perpanjangan Kontrak" : "Negosiasi Kontrak"}</H>
-        <div style={{ fontFamily: DISPLAY, color: C.chalk, fontSize: 18, letterSpacing: 1, textTransform: "uppercase" }}>{fighter?.name}</div>
-        <div style={{ color: C.dim, fontSize: 11, marginBottom: 12 }}>
+        <div style={{ fontFamily: T.disp, color: T.txt, fontSize: 18, letterSpacing: 1, textTransform: "uppercase" }}>{fighter?.name}</div>
+        <div style={{ color: T.txt3, fontSize: 11, marginBottom: 12 }}>
           {ag.label}{fighter?.agent !== "none" && ` · minta cut ≥ ${Math.round(ag.cutFloor * 100)}% untukmu`}
           {fighter?.agent === "Power" && " · agent agresif, tuntutan tinggi"}
         </div>
@@ -159,54 +159,54 @@ export default function NegotiateModal({ fighter, mode, cash, onClose, onCommit 
         <NegoRow label="Durasi">
           <div style={{ display: "flex", gap: 6 }}>{[12, 18, 24, 36].map((v) => <NegoOpt key={v} v={duration} set={setDuration} val={v}>{v} bln</NegoOpt>)}</div>
         </NegoRow>
-        <div style={{ borderTop: `1px solid ${C.line}44`, paddingTop: 10, marginTop: 10 }}>
-          <div style={{ fontSize: 10, color: C.dim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>📋 Klausul</div>
+        <div style={{ borderTop: `1px solid ${T.line}44`, paddingTop: 10, marginTop: 10 }}>
+          <div style={{ fontSize: 10, color: T.txt3, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>📋 Klausul</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-            <div style={{ background: C.panel, padding: "6px 8px", ...cut(5) }}>
-              <div style={{ fontSize: 9, color: C.dim }}>Exklusivitas</div>
+            <div style={{ background: T.surface, padding: "6px 8px", ...{ borderRadius: T.r } }}>
+              <div style={{ fontSize: 9, color: T.txt3 }}>Exklusivitas</div>
               <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
-                <button onClick={() => setExclusive(true)} style={{ flex: 1, background: exclusive ? C.gold : C.panel2, color: exclusive ? "#0a0d14" : C.chalk, border: "none", padding: "3px 6px", fontSize: 10, cursor: "pointer", ...cut(4) }}>Ya</button>
-                <button onClick={() => setExclusive(false)} style={{ flex: 1, background: !exclusive ? C.gold : C.panel2, color: !exclusive ? "#0a0d14" : C.chalk, border: "none", padding: "3px 6px", fontSize: 10, cursor: "pointer", ...cut(4) }}>Multi</button>
+                <button onClick={() => setExclusive(true)} style={{ flex: 1, background: exclusive ? T.gold : T.raised, color: exclusive ? "#0a0d14" : T.txt, border: "none", padding: "3px 6px", fontSize: 10, cursor: "pointer", ...{ borderRadius: T.r } }}>Ya</button>
+                <button onClick={() => setExclusive(false)} style={{ flex: 1, background: !exclusive ? T.gold : T.raised, color: !exclusive ? "#0a0d14" : T.txt, border: "none", padding: "3px 6px", fontSize: 10, cursor: "pointer", ...{ borderRadius: T.r } }}>Multi</button>
               </div>
             </div>
-            <div style={{ background: C.panel, padding: "6px 8px", ...cut(5) }}>
-              <div style={{ fontSize: 9, color: C.dim }}>Rematch</div>
+            <div style={{ background: T.surface, padding: "6px 8px", ...{ borderRadius: T.r } }}>
+              <div style={{ fontSize: 9, color: T.txt3 }}>Rematch</div>
               <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
-                <button onClick={() => setRematch(false)} style={{ flex: 1, background: !rematch ? C.gold : C.panel2, color: !rematch ? "#0a0d14" : C.chalk, border: "none", padding: "3px 6px", fontSize: 10, cursor: "pointer", ...cut(4) }}>Tidak</button>
-                <button onClick={() => setRematch(true)} style={{ flex: 1, background: rematch ? C.gold : C.panel2, color: rematch ? "#0a0d14" : C.chalk, border: "none", padding: "3px 6px", fontSize: 10, cursor: "pointer", ...cut(4) }}>Ada</button>
+                <button onClick={() => setRematch(false)} style={{ flex: 1, background: !rematch ? T.gold : T.raised, color: !rematch ? "#0a0d14" : T.txt, border: "none", padding: "3px 6px", fontSize: 10, cursor: "pointer", ...{ borderRadius: T.r } }}>Tidak</button>
+                <button onClick={() => setRematch(true)} style={{ flex: 1, background: rematch ? T.gold : T.raised, color: rematch ? "#0a0d14" : T.txt, border: "none", padding: "3px 6px", fontSize: 10, cursor: "pointer", ...{ borderRadius: T.r } }}>Ada</button>
               </div>
             </div>
-            <div style={{ background: C.panel, padding: "6px 8px", ...cut(5) }}>
-              <div style={{ fontSize: 9, color: C.dim }}>Biaya Medis</div>
+            <div style={{ background: T.surface, padding: "6px 8px", ...{ borderRadius: T.r } }}>
+              <div style={{ fontSize: 9, color: T.txt3 }}>Biaya Medis</div>
               <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
                 {[{ k: "camp", l: "Camp" }, { k: "split", l: "Split" }, { k: "fighter", l: "Fighter" }].map((m) => (
-                  <button key={m.k} onClick={() => setMedical(m.k)} style={{ flex: 1, background: medical === m.k ? C.gold : C.panel2, color: medical === m.k ? "#0a0d14" : C.chalk, border: "none", padding: "3px 4px", fontSize: 9, cursor: "pointer", ...cut(3) }}>{m.l}</button>
+                  <button key={m.k} onClick={() => setMedical(m.k)} style={{ flex: 1, background: medical === m.k ? T.gold : T.raised, color: medical === m.k ? "#0a0d14" : T.txt, border: "none", padding: "3px 4px", fontSize: 9, cursor: "pointer", ...{ borderRadius: T.r } }}>{m.l}</button>
                 ))}
               </div>
             </div>
-            <div style={{ background: C.panel, padding: "6px 8px", ...cut(5) }}>
-              <div style={{ fontSize: 9, color: C.dim }}>Camp Equity</div>
+            <div style={{ background: T.surface, padding: "6px 8px", ...{ borderRadius: T.r } }}>
+              <div style={{ fontSize: 9, color: T.txt3 }}>Camp Equity</div>
               <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
                 {[0, 5, 10, 15, 20].map((v) => (
-                  <button key={v} onClick={() => setEquity(v)} style={{ flex: 1, background: equity === v ? C.gold : C.panel2, color: equity === v ? "#0a0d14" : C.chalk, border: "none", padding: "3px 4px", fontSize: 9, cursor: "pointer", ...cut(3) }}>{v}%</button>
+                  <button key={v} onClick={() => setEquity(v)} style={{ flex: 1, background: equity === v ? T.gold : T.raised, color: equity === v ? "#0a0d14" : T.txt, border: "none", padding: "3px 4px", fontSize: 9, cursor: "pointer", ...{ borderRadius: T.r } }}>{v}%</button>
                 ))}
               </div>
             </div>
           </div>
         </div>
-        <div style={{ background: "#0a0e17", padding: 10, margin: "6px 0 12px", ...cut(8) }}>
+        <div style={{ background: "#0a0e17", padding: 10, margin: "6px 0 12px", ...{ borderRadius: T.r } }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 11, color: C.dim }}>Estimasi diterima</span>
-            <span style={{ fontFamily: DISPLAY, fontSize: 20, color: accept >= 60 ? C.green : accept >= 35 ? C.gold : C.red }}>{accept}%</span>
+            <span style={{ fontSize: 11, color: T.txt3 }}>Estimasi diterima</span>
+            <span style={{ fontFamily: T.disp, fontSize: 20, color: accept >= 60 ? T.pos : accept >= 35 ? T.gold : T.neg }}>{accept}%</span>
           </div>
-          <Bar v={accept} color={accept >= 60 ? C.green : accept >= 35 ? C.gold : C.red} h={6} />
-          {accept < 35 && <div style={{ fontSize: 10, color: C.dim, marginTop: 4 }}>Kecil kemungkinan diterima — perbaiki tawaran atau siap-siap counter-offer.</div>}
+          <Bar v={accept} color={accept >= 60 ? T.pos : accept >= 35 ? T.gold : T.neg} h={6} />
+          {accept < 35 && <div style={{ fontSize: 10, color: T.txt3, marginTop: 4 }}>Kecil kemungkinan diterima — perbaiki tawaran atau siap-siap counter-offer.</div>}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <Btn small disabled={tooPoor} onClick={handleSubmit}>
             {tooPoor ? "Kas tak cukup" : mode === "extend" ? "Tawarkan" : "Ajukan Kontrak"}
           </Btn>
-          <Btn small color={C.dim} onClick={onClose}>Batal</Btn>
+          <Btn small color={T.txt3} onClick={onClose}>Batal</Btn>
         </div>
       </div>
     </div>

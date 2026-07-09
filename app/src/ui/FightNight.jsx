@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { R, RI, clamp, pick, fmt$, random, setRNG, resetRNG, mulberry32 } from "../engine/rng.js";
 import { ATTRS, ATTR_LABEL, WEIGHTS, GAME_PLANS } from "../engine/data.js";
 import { prepFighter, simRound } from "../engine/fight.js";
-import { C, DISPLAY, GlobalStyle, cut, Card, H, Btn, Tag, Bar } from "./theme.jsx";
+import { T, C, DISPLAY, GlobalStyle, Card, H, Btn, Tag, Bar } from "./theme.jsx";
 
 export default function FightNight({ fighter, done }) {
   const [stage, setStage] = useState("staredown");
