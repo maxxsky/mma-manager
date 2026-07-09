@@ -3,6 +3,7 @@
 
 import { clamp, RI, R, pick, fmt$, uid, snapshot } from "./rng.js";
 import { onCoachRaiseDenied, onConflictMediated } from "./events.js";
+import { dispatchEvent } from "./dispatch.js";
 import {
   ATTRS, TRAINING, INTENSITY, CAMP_TIERS, SPONSOR_BRANDS, FAC_LABEL,
 } from "./data.js";
@@ -250,116 +251,7 @@ export function reducer(g, action) {
       const m = g.inbox.find((x) => x.id === action.messageId);
       if (!m) break;
       g.inbox = g.inbox.filter((x) => x.id !== action.messageId);
-      const c = action.choice;
-      const findF = (id) => g.roster.find((x) => x.id === id);
-
-      if (c.openExtend != null) {
-        // Handled in App.jsx — setNego modal
-      } else if (c.classChangeAccept != null) {
-        const f = g.roster.find((x) => x.id === c.classChangeAccept.fighterId);
-        if (f) {
-          const oldClass = f.weightClass;
-          const delta = c.classChangeAccept.targetIdx - WEIGHTS.findIndex((w) => w.name === oldClass);
-          f.weightClassDelta = (f.weightClassDelta || 0) + delta;
-          f.weightClass = c.classChangeAccept.targetClass;
-          f.natWeight = Math.round(WEIGHTS[c.classChangeAccept.targetIdx].limit * R(1.0, 1.09));
-          vacateTitle(g, f);
-          f.rankPoints = Math.max(0, f.rankPoints - 20);
-          f.morale = clamp(f.morale + c.classChangeAccept.moraleEffect, 0, 100);
-          f.lastClassChange = g.week;
-          g.log.unshift("⚖️ " + f.name + " pindah ke " + c.classChangeAccept.targetClass + ".");
-        }
-      } else if (c.classChangeReject != null) {
-        const f = g.roster.find((x) => x.id === c.classChangeReject.fighterId);
-        if (f) {
-          f.morale = clamp(f.morale + c.classChangeReject.moralePenalty, 0, 100);
-          f.lastClassChange = g.week;
-          g.log.unshift("🙅 " + f.name + " minta pindah kelas — ditolak.");
-        }
-      } else if (c.release != null) {
-        const f = findF(c.release);
-        if (f) { vacateTitle(g, f); g.roster = g.roster.filter((x) => x.id !== c.release); g.chemistry = clamp(g.chemistry - 5, 0, 100); g.log.unshift("👋 " + f.name + " di-release."); }
-      } else if (c.retire != null) {
-        const f = findF(c.retire);
-        if (f) { vacateTitle(g, f); g.roster = g.roster.filter((x) => x.id !== c.retire); g.rep = clamp(g.rep + 3, 0, 100); g.log.unshift("🎗️ " + f.name + " pensiun. Rep +3."); }
-      } else if (c.convince != null) {
-        const f = findF(c.convince);
-        if (f && f.morale >= 60 && !f.convincedOnce) {
-          f.convincedOnce = true; f.morale = clamp(f.morale - 10, 0, 100);
-          g.log.unshift("🤝 " + f.name + " setuju satu run terakhir.");
-        } else if (f) {
-          vacateTitle(g, f); g.roster = g.roster.filter((x) => x.id !== c.convince);
-          g.log.unshift("🎗️ " + f.name + " tetap pensiun.");
-        }
-      } else if (c.toCoach != null) {
-        const f = findF(c.toCoach);
-        if (f) {
-          vacateTitle(g, f);
-          g.roster = g.roster.filter((x) => x.id !== c.toCoach);
-          const cap2 = g.rep >= 50 ? 3 : g.rep >= 10 ? 2 : 1;
-          if (g.coaches.length < cap2) {
-            const specMap = { Boxer: "Striking", "Muay Thai": "Striking", Wrestler: "Wrestling", "BJJ Specialist": "BJJ", "All-Rounder": "Head" };
-            const sk = clamp(Math.round(avgSkill(f) / 12), 2, 8);
-            g.coaches.push({ id: uid(), name: "Coach " + f.name.split(" ").pop(), spec: specMap[f.archetype], skill: sk, salary: sk * 1800 });
-            g.chemistry = clamp(g.chemistry + 5, 0, 100);
-            g.log.unshift("👨‍🏫 " + f.name + " pensiun dan jadi coach.");
-          }
-        }
-      } else if (c.coachSalary) {
-        const coach = g.coaches.find((x) => x.id === c.coachSalary.id);
-        if (coach) { coach.salary = c.coachSalary.amt; coach.lastRaiseWeek = g.week; g.log.unshift("💰 Coach dinaikkan gajinya."); }
-      } else if (c.viralPop) { const f = findF(c.viralPop); if (f) f.popularity = clamp(f.popularity + 8, 0, 100);
-      } else if (c.cash) { g.cash += c.cash;
-      } else if (c.moraleTo) { const f = findF(c.moraleTo.id); if (f) { f.morale = clamp(f.morale + c.moraleTo.amt, 0, 100); g.log.unshift("💰 Bonus retensi — morale " + f.name + " naik."); }
-      } else if (c.letGo != null) {
-        const f = findF(c.letGo);
-        if (f) { vacateTitle(g, f); g.roster = g.roster.filter((x) => x.id !== c.letGo); g.rep = clamp(g.rep - 3, 0, 100); g.chemistry = clamp(g.chemistry - 5, 0, 100); g.log.unshift("🚪 " + f.name + " pergi ke rival."); }
-      } else if (c.talk != null) {
-        const f = findF(c.talk);
-        if (f && g.chemistry >= 50) { f.morale = clamp(f.morale + 15, 0, 100); g.chemistry = clamp(g.chemistry - 5, 0, 100); g.log.unshift("🤝 " + f.name + " diyakinkan bertahan."); }
-        else if (f) { vacateTitle(g, f); g.roster = g.roster.filter((x) => x.id !== c.talk); g.log.unshift("🚪 " + f.name + " tetap pergi."); }
-      } else if (c.counter != null) {
-        const f = findF(c.counter.fighterId);
-        if (f && g.cash >= c.counter.cost) {
-          g.cash -= c.counter.cost; f.morale = clamp(f.morale + 20, 0, 100);
-          if (f.contract) f.contract.managerCut = clamp((f.contract.managerCut || 0.18) + 0.02, 0, 0.35);
-          g.log.unshift("💰 " + f.name + " dipertahankan.");
-        }
-      } else if (c.coachPoach != null) {
-        const coach = g.coaches.find((x) => x.id === c.coachPoach.id);
-        if (coach && g.cash >= c.coachPoach.newSalary * 4) {
-          coach.hiredWeek = g.week;
-          coach.salary = c.coachPoach.newSalary; g.cash -= c.coachPoach.newSalary * 4;
-          if (g.rivals) { const riv = g.rivals.find((x) => x.id === c.coachPoach.rivalId); if (riv) riv.rivalry = clamp(riv.rivalry + 10, 0, 100); }
-          g.log.unshift("🛡️ " + coach.name + " dipertahankan — gaji naik.");
-        } else if (coach) { g.coaches = g.coaches.filter((x) => x.id !== c.coachPoach.id); g.chemistry = clamp(g.chemistry - 8, 0, 100); g.log.unshift("🦊 Coach pergi ke rival."); }
-      } else if (c.coachResignChance != null) {
-          onCoachRaiseDenied(g, coach);
-        const coach = g.coaches.find((x) => x.id === c.coachResignChance.id);
-        if (coach && Math.random() < c.coachResignChance.chance) {
-          g.coaches = g.coaches.filter((x) => x.id !== coach.id);
-          g.chemistry = clamp(g.chemistry - 8, 0, 100);
-          g.log.unshift("👋 " + coach.name + " resign.");
-        }
-      } else if (c.coachLeave != null) {
-        g.coaches = g.coaches.filter((x) => x.id !== c.coachLeave); g.chemistry = clamp(g.chemistry - 8, 0, 100);
-      } else if (c.fightPromise != null) {
-        const f = findF(c.fightPromise); if (f) f.morale = clamp(f.morale + 3, 0, 100);
-      } else if (c.upgradePromise != null) {
-        const f = findF(c.upgradePromise.fighterId); if (f) f.morale = clamp(f.morale + 4, 0, 100);
-      } else if (c.sponsorAccept != null) {
-        const d = c.sponsorAccept;
-        if (!g.sponsors) g.sponsors = [];
-        if (g.sponsors.length >= 3) { g.log.unshift("📢 Sponsor penuh — maks 3."); break; }
-        g.sponsors.push({ brand: d.brand, terms: d.terms, rate: d.rate, weeksLeft: d.weeksLeft });
-        g.log.unshift("📢 " + d.brand + " sponsor camp.");
-      } else if (c.sponsorReject != null) { g.log.unshift("📢 Sponsor ditolak.");
-      } else {
-        let d = c.chem || 0;
-        if (c.gamble && action.gambleRoll != null) d = action.gambleRoll < 0.5 ? c.gamble[0] : c.gamble[1];
-        g.chemistry = clamp(g.chemistry + d, 0, 100);
-        if (d) g.log.unshift("Chemistry " + (d >= 0 ? "+" : "") + d + ".");
-      }
+      dispatchEvent(g, action);
       break;
     }
     default:
