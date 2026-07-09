@@ -2,6 +2,7 @@
 // Pattern: dispatch({ type, payload }) → pure state transformation
 
 import { clamp, RI, R, pick, fmt$, uid, snapshot } from "./rng.js";
+import { onCoachRaiseDenied, onConflictMediated } from "./events.js";
 import {
   ATTRS, TRAINING, INTENSITY, CAMP_TIERS, SPONSOR_BRANDS, FAC_LABEL,
 } from "./data.js";
@@ -333,6 +334,7 @@ export function reducer(g, action) {
           g.log.unshift("🛡️ " + coach.name + " dipertahankan — gaji naik.");
         } else if (coach) { g.coaches = g.coaches.filter((x) => x.id !== c.coachPoach.id); g.chemistry = clamp(g.chemistry - 8, 0, 100); g.log.unshift("🦊 Coach pergi ke rival."); }
       } else if (c.coachResignChance != null) {
+          onCoachRaiseDenied(g, coach);
         const coach = g.coaches.find((x) => x.id === c.coachResignChance.id);
         if (coach && Math.random() < c.coachResignChance.chance) {
           g.coaches = g.coaches.filter((x) => x.id !== coach.id);
