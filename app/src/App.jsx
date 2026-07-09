@@ -85,6 +85,11 @@ export default function App() {
             f.seriousInjuries = f.seriousInjuries || 0;
             if (!f.fightHistory) f.fightHistory = [];
             if (!f.trainingHistory) f.trainingHistory = [];
+             if (!f.careerHistory) f.careerHistory = [];
+             if (!f.rivalries) f.rivalries = {};
+             f.giantKills = f.giantKills || 0;
+             f.titleDefenses = f.titleDefenses || 0;
+             f.firstFightWeek = f.firstFightWeek || null;
           });
           setG(s);
         }

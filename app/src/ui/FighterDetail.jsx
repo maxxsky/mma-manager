@@ -3,6 +3,7 @@ import { fmt$ } from "../engine/rng.js";
 import { ARCH_COLOR, TRAINING, INTENSITY } from "../engine/data.js";
 import { avgSkill } from "../engine/fighter.js";
 import { reducer } from "../engine/reducer.js";
+import { getStoryTags } from "../engine/career.js";
 import { T, Panel, Eyebrow, Tag, Btn, Ovr, Mono, AttrTele, Meter, OctaRadar, Icon, ICONS, heat } from "./theme.jsx";
 
 export default function FighterDetail({ f, g, onBack, up }) {
@@ -83,6 +84,18 @@ export default function FighterDetail({ f, g, onBack, up }) {
                 Ambition: <b style={{ color: T.gold }}>{f.ambition}</b></span>
             </div>
           )}
+          {/* Career story tags */}
+          {(() => {
+            const tags = getStoryTags(f);
+            if (tags.length === 0) return null;
+            return (
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+                {tags.map((t) => (
+                  <Tag key={t.tag} color={t.color} title={t.desc}>{t.tag}</Tag>
+                ))}
+              </div>
+            );
+          })()}
           <div style={{ display: "grid", gap: 10, marginBottom: 16 }}>
             <Meter label="Morale" v={f.morale} color={f.morale > 60 ? T.pos : T.warn} />
             <Meter label="Overtraining" v={f.overtraining} color={f.overtraining > 50 ? T.neg : T.txt3} />

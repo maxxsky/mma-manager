@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { R, RI, clamp, pick, fmt$, random, setRNG, resetRNG, mulberry32 } from "../engine/rng.js";
+import { R, RI, clamp, pick, fmt$, random, setRNG, resetRNG, mulberry32, uid } from "../engine/rng.js";
 import { ATTRS, ATTR_LABEL, WEIGHTS, GAME_PLANS } from "../engine/data.js";
 import { prepFighter, simRound } from "../engine/fight.js";
+import { processFightResult, processRivalry, updateRivalryResult, processTitleChange } from "../engine/career.js";
 import { T, C, DISPLAY, GlobalStyle, Card, H, Btn, Tag, Bar, CompareBar, Mono, ARCH_COLOR, Panel, Eyebrow } from "./theme.jsx";
 
 /* =============================================================================
@@ -174,6 +175,23 @@ export default function FightNight({ fighter, done }) {
         }
         g2.legacy = (g2.legacy || 0) + (fighter.booked.title ? 2000 : 600);
         g2.log.unshift(`🏆 ${f.name} menang via ${result.how} R${result.r}!`);
+        // Career identity: milestones + rivalry
+        const oppName = fighter.booked.opponent?.name || "Unknown";
+        const careerEvents = processFightResult(f, g2, { won: true, how: result.how });
+        const rivalryEvents = processRivalry(f, { name: oppName }, g2);
+        updateRivalryResult(f, { name: oppName, rivalries: {} }, g2);
+        if (fighter.booked.title) {
+          const titleEvents = processTitleChange(f, g2, f.titleDefenses ? "defense" : "won");
+          careerEvents.push(...titleEvents);
+        }
+        // Push milestone events to inbox
+        [...careerEvents, ...rivalryEvents].forEach((ev) => {
+          g2.inbox.unshift({ id: uid(), type: "event", title: ev.title, body: ev.body, choices: [{ label: "OK", chem: 0 }] });
+        });
+        // Track giant kills (beating higher-ranked opponent)
+        if (fighter.booked.oppRank != null && fighter.booked.oppRank <= 5) {
+          f.giantKills = (f.giantKills || 0) + 1;
+        }
       } else {
         f.record.l++; f.streakL = (f.streakL || 0) + 1; f.streakW = 0;
         // Development trait: Iron Will — reduced morale loss
@@ -182,6 +200,13 @@ export default function FightNight({ fighter, done }) {
         g2.rep = clamp(g2.rep - 3, 2, 100);
         g2.chemistry = clamp(g2.chemistry - 2, 0, 100);
         g2.log.unshift(`❌ ${f.name} kalah via ${result.how} R${result.r}.`);
+        // Career identity: milestones + rivalry (loss)
+        const oppName = fighter.booked.opponent?.name || "Unknown";
+        const careerEvents = processFightResult(f, g2, { won: false, how: result.how });
+        updateRivalryResult({ name: oppName, rivalries: {} }, f, g2);
+        careerEvents.forEach((ev) => {
+          g2.inbox.unshift({ id: uid(), type: "event", title: ev.title, body: ev.body, choices: [{ label: "OK", chem: 0 }] });
+        });
       }
     });
   };

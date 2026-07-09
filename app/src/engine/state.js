@@ -10,6 +10,7 @@ import { genDivisions, rankOf, vacateTitle, stripTitle, initPromoterRel } from "
 import { genRivalCamp } from "./rivals.js";
 import { getRel } from "./relationships.js";
 
+import { calcMentorBonus } from "./career.js";
 // ---------- initial state ----------
 export function newGame() {
   const freeCoach = genCoach();
@@ -118,6 +119,7 @@ export function tick(g) {
               (g.roster.length - 1) / 100
           : 0;
       const relMult = clamp(1 + relAvg * 0.15, 0.85, 1.1);
+      const mentorMult = calcMentorBonus(g, f);
 
       t.gains.forEach((k) => {
         const cap = f.ceilings[k];
@@ -136,6 +138,7 @@ export function tick(g) {
           chemMult *
           coachBonus(g, [k]) *
           facBonus(g, [k]) *
+           mentorMult *
           sparringMult *
           relMult;
         f.attrs[k] = clamp(f.attrs[k] + gain, 0, cap);
