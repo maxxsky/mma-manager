@@ -22,6 +22,8 @@ import { C, DISPLAY, GlobalStyle, cut, Card, H, Btn, Tag, Bar, OVR, Meter } from
 import FightNight from "./ui/FightNight.jsx";
 import FighterCard from "./ui/FighterCard.jsx";
 import NegotiateModal from "./ui/NegotiateModal.jsx";
+import Sidebar from "./ui/Sidebar.jsx";
+import TopBar from "./ui/TopBar.jsx";
 
 // ============================================================
 //   SAVE
@@ -222,51 +224,48 @@ export default function App() {
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: `radial-gradient(ellipse 100% 40% at 50% 0%, ${C.spot} 0%, ${C.bg} 70%)`, fontFamily: "ui-sans-serif, system-ui, sans-serif", paddingBottom: 84 }}>
+    <div style={{ display: "flex", minHeight: "100vh", background: T.bg, color: T.txt, fontFamily: T.body }}>
       <GlobalStyle />
 
       {/* week flash */}
       {weekFlash > 0 && (
-        <div key={weekFlash} style={{ position: "fixed", top: "40%", left: "50%", zIndex: 40, pointerEvents: "none", fontFamily: DISPLAY, fontSize: 40, letterSpacing: 6, color: C.gold, textShadow: "0 0 30px rgba(230,182,76,.6)", animation: "weekpop 1.1s ease both", textTransform: "uppercase" }}>
+        <div key={weekFlash} style={{ position: "fixed", top: "40%", left: "50%", zIndex: 40, pointerEvents: "none", fontFamily: DISPLAY, fontSize: 40, letterSpacing: 6, color: T.gold, textShadow: "0 0 30px rgba(255,209,92,.6)", animation: "weekpop 1.1s ease both", textTransform: "uppercase" }}>
           Week {g.week}
         </div>
       )}
 
-      {/* HEADER */}
-      <div style={{ borderBottom: `2px solid ${C.gold}`, background: "linear-gradient(180deg, #10151f, #07090f)", padding: "12px 14px 10px" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div>
-              <div style={{ fontFamily: DISPLAY, fontSize: 22, letterSpacing: 3, textTransform: "uppercase", background: `linear-gradient(180deg, #f6d98a, ${C.gold} 55%, #a37c2c)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", lineHeight: 1 }}>
-                Iron Path MMA
-              </div>
-              <div style={{ color: C.dim, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginTop: 3 }}>
-                Y{Math.floor((g.week - 1) / 48) + 1} · Bulan {Math.floor(((g.week - 1) % 48) / 4) + 1} · Minggu {((g.week - 1) % 4) + 1}
-              </div>
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 8, letterSpacing: 2, color: C.dim, textTransform: "uppercase" }}>{t("UI.bank")}</div>
-              <div style={{ fontFamily: DISPLAY, fontSize: 20, color: g.cash < 0 ? C.red : C.chalk, lineHeight: 1 }}>{fmt$(g.cash)}</div>
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
-            <Meter label={t("UI.reputation")} v={g.rep} color={C.gold} />
-            <Meter label={t("UI.chemistry")} v={g.chemistry} color={g.chemistry >= 60 ? C.green : C.red} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 8, letterSpacing: 1.5, color: C.dim, textTransform: "uppercase", marginBottom: 2 }}>{t("UI.legacy")}</div>
-              <div style={{ fontFamily: DISPLAY, fontSize: 14, color: C.gold, lineHeight: 1 }}>★ {(g.legacy || 0).toLocaleString()}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* SIDEBAR */}
+      <Sidebar
+        view={tab}
+        setView={setTab}
+        onAdvance={advance}
+        inboxCount={g.inbox ? g.inbox.length : 0}
+      />
 
-      <div style={{ maxWidth: 680, margin: "0 auto", padding: 12 }}>
+      {/* MAIN AREA */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, minHeight: "100vh" }}>
+        <TopBar
+          title={(tabs.find(([k]) => k === tab) || [])[2] || "Dashboard"}
+          cash={fmt$(g.cash)}
+          rep={g.rep}
+          chem={g.chemistry}
+          legacy={g.legacy || 0}
+          week={g.week}
+          saveSlot={saveSlot}
+          onSaveSlotChange={(s) => { setSaveSlotState(s); setTimeout(refreshSlotInfo, 100); }}
+          slotInfo={slotInfo}
+          lang={lang}
+          onLangChange={() => setLang(lang === "id" ? "en" : "id")}
+        />
+
+        <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
+
         {/* Win Condition Display */}
         {(g.legacy || 0) > 0 && (() => {
           const wcLegacy = g.legacy;
           const wc = wcLegacy >= 100000 ? { tier: "GOAT", icon: "🐐", color: "#ff4488", label: "Greatest of All Time", unlocked: true, total: 5 }
             : wcLegacy >= 50000 ? { tier: "Platinum", icon: "💎", color: "#b5e4ff", label: "MMA Empire", unlocked: true, total: 5 }
-            : wcLegacy >= 25000 ? { tier: "Gold", icon: "👑", color: C.gold, label: "World Class Camp", unlocked: true, total: 5 }
+            : wcLegacy >= 25000 ? { tier: "Gold", icon: "👑", color: T.gold, label: "World Class Camp", unlocked: true, total: 5 }
             : wcLegacy >= 12000 ? { tier: "Silver", icon: "🥈", color: "#b0b8c8", label: "Respected Camp", unlocked: true, total: 5 }
             : wcLegacy >= 5000 ? { tier: "Bronze", icon: "🥉", color: "#c48a4a", label: "Rising Camp", unlocked: true, total: 5 }
             : null;
@@ -284,7 +283,6 @@ export default function App() {
             </Card>
           );
         })()}
-
         {g.over && (
           <Card accent={C.red} style={{ textAlign: "center", padding: 24 }}>
             <div style={{ fontFamily: DISPLAY, fontSize: 32, letterSpacing: 3, color: C.red, textTransform: "uppercase", display: "inline-block", border: `3px solid ${C.red}`, padding: "2px 16px", transform: "rotate(-6deg)", ...cut(8) }}>Game Over</div>
@@ -831,9 +829,8 @@ dispatch({ type: "INBOX_EVENT", choiceIndex: i, messageId: m.id, choice: c, gamb
             </>
           );
         })()}
-      </div>
 
-      {/* BOTTOM NAV */}
+      {/* Weekly Summary overlay */}
       {weeklySummary && (
         <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(6,9,14,.88)", display: "flex", alignItems: "center", justifyContent: "center", padding: 14 }} onClick={() => setWeeklySummary(null)}>
           <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440, width: "100%", background: `linear-gradient(160deg, ${C.panel2}, ${C.panel})`, border: `1px solid ${C.gold}`, padding: 18, ...cut(14), animation: "rise .35s ease both" }}>
@@ -857,24 +854,9 @@ dispatch({ type: "INBOX_EVENT", choiceIndex: i, messageId: m.id, choice: c, gamb
           </div>
         </div>
       )}
-      {!g.over && (
-        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 30, background: "linear-gradient(0deg, #05070c, #0b101ae6)", borderTop: `1px solid ${C.line}`, padding: "8px 10px calc(8px + env(safe-area-inset-bottom))" }}>
-          <div style={{ maxWidth: 680, margin: "0 auto", display: "flex", gap: 6, alignItems: "center" }}>
-            <div style={{ display: "flex", flex: 1, justifyContent: "space-around" }}>
-              {tabs.map(([k, icon, label]) => (
-                <button key={k} onClick={() => setTab(k)} style={{ background: "none", border: "none", cursor: "pointer", textAlign: "center", padding: "2px 4px", opacity: tab === k ? 1 : 0.55 }}>
-                  <div style={{ fontSize: 18, filter: tab === k ? "drop-shadow(0 0 6px rgba(230,182,76,.7))" : "none" }}>{icon}</div>
-                  <div style={{ fontFamily: DISPLAY, fontSize: 9, letterSpacing: 1, color: tab === k ? C.gold : C.dim, textTransform: "uppercase" }}>{label}</div>
-                  {tab === k && <div style={{ height: 2, background: C.gold, marginTop: 2, transform: "skewX(-20deg)" }} />}
-                </button>
-              ))}
-            </div>
-            <button onClick={advance} style={{ background: `linear-gradient(180deg, ${C.red}, #a3322c)`, border: "none", color: "#fff", fontFamily: DISPLAY, fontSize: 13, letterSpacing: 1.5, padding: "12px 16px", cursor: "pointer", animation: "pulsering 2s infinite", textTransform: "uppercase", ...cut(8) }}>
-              {t("BTN.advance")}
-            </button>
-          </div>
-        </div>
-      )}
+        </div>{/* close content padding div */}
+
+      </div>{/* close main area */}
 
       {nego && (
         <NegotiateModal
