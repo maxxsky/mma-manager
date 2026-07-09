@@ -205,6 +205,12 @@ export default function App() {
     const report = makeReport(f, grade);
     dispatch({ type: "SCOUT", cost, fighter: f, report, grade, method: label });
   };
+  // Wrapper for Scout component: (method, grade, cost)
+  const scoutFighter = (method, grade, cost) => {
+    const levels = { Bronze: [0.3, 0.5], Silver: [0.4, 0.7], Gold: [0.5, 0.85], Platinum: [0.65, 0.95] };
+    const lv = levels[grade] || [0.4, 0.7];
+    scout(cost, lv, method, scoutFilterArch, scoutFilterWC);
+  };
 
   const monthlyBurn = g.coaches.reduce((s, c) => s + ((!c.freeUntil || g.week > c.freeUntil) ? c.salary : 0), 0)
     + Math.round(Object.values(g.facilities).reduce((s, l) => s + l * 30000, 0) * 0.05)

@@ -39,6 +39,28 @@ export default function Finance({ g, t, fmt$ }) {
   // ── Loan info ─────────────────────────────────────────────────
   const hasLoan = g.loan && g.loan.remaining > 0;
 
+  // ── Mini components (inline — not exported) ──
+  const Row = ({ label, value, color, detail }) => (
+    <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0",
+      borderBottom: `1px solid ${T.line}33` }}>
+      <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt2 }}>{label}</span>
+      <span style={{ textAlign: "right" }}>
+        <span style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 700, color: color || T.txt }}>{fmt$(value)}</span>
+        {detail && <div style={{ fontFamily: T.body, fontSize: 9, color: T.txt3 }}>{detail}</div>}
+      </span>
+    </div>
+  );
+  const SectionHeader = ({ label, color }) => (
+    <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1.2,
+      textTransform: "uppercase", color, marginBottom: 4, marginTop: 8 }}>{label}</div>
+  );
+  const TotalRow = ({ label, value, color }) => (
+    <div style={{ padding: "4px 0", textAlign: "right" }}>
+      <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>{label} </span>
+      <span style={{ fontFamily: T.mono, fontSize: 16, fontWeight: 700, color }}>{fmt$(value)}</span>
+    </div>
+  );
+
   // ── Runway calculation ────────────────────────────────────────
   const runway =
     netMonthly < 0 ? Math.floor(g.cash / Math.abs(netMonthly)) : null;
