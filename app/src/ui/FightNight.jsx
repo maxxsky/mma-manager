@@ -3,6 +3,7 @@ import { R, RI, clamp, pick, fmt$, random, setRNG, resetRNG, mulberry32, uid } f
 import { ATTRS, ATTR_LABEL, WEIGHTS, GAME_PLANS } from "../engine/data.js";
 import { prepFighter, simRound } from "../engine/fight.js";
 import { processFightResult, processRivalry, updateRivalryResult, processTitleChange } from "../engine/career.js";
+import { generateFightNarrative, detectSignatureMoments, getFightContext, createFightRecord } from "../engine/narrative.js";
 import { T, C, DISPLAY, GlobalStyle, Card, H, Btn, Tag, Bar, CompareBar, Mono, ARCH_COLOR, Panel, Eyebrow } from "./theme.jsx";
 
 /* =============================================================================
@@ -484,6 +485,28 @@ export default function FightNight({ fighter, done }) {
             {fighter.booked.title && result.won && (
               <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 17, letterSpacing: 1.5, textTransform: "uppercase", color: T.gold, marginTop: 8 }}>♛ And still {fighter.weightClass} champion</div>
             )}
+            {/* Fight Narrative */}
+            {(() => {
+              const narrative = generateFightNarrative(fighter, opp, [roundLog].filter(Boolean), result);
+              const moments = detectSignatureMoments(fighter, [roundLog].filter(Boolean), result);
+              const stars = '⭐'.repeat(narrative.rating || 3);
+              return (
+                <div style={{ marginTop: 12 }}>
+                  <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Fight Story</div>
+                  <div style={{ fontFamily: T.body, fontSize: 13, color: T.txt2, lineHeight: 1.6, fontStyle: 'italic', maxWidth: 500, margin: '0 auto' }}>
+                    {narrative.narrative}
+                  </div>
+                  <div style={{ marginTop: 10, fontFamily: T.body, fontSize: 14, letterSpacing: 2 }}>{stars}</div>
+                  {moments.length > 0 && (
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginTop: 8 }}>
+                      {moments.map(m => (
+                        <Tag key={m.id} color={T.gold}>{m.icon} {m.label}</Tag>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             <div style={{ display: "inline-grid", gridTemplateColumns: "auto auto", gap: "6px 24px", margin: "20px 0", padding: "14px 22px", background: T.bg, borderRadius: T.r, textAlign: "left" }}>
               {[["Show money", fmt$(fighter.booked.show || 0)], ["Win bonus", fmt$(result.won ? (fighter.booked.winBonus || 0) : 0)], ["Camp cut", fmt$(Math.round(((fighter.contract?.managerCut || 0.18) * (fighter.booked.show + (result.won ? fighter.booked.winBonus : 0)))))], ["Fight of the Night", result.won ? "$50K" : "—"]].map(([l, v], i, arr) => (
                 <React.Fragment key={l}>
