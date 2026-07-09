@@ -34,6 +34,7 @@ import Facility from "./ui/Facility.jsx";
 import RivalsScreen from "./ui/RivalsScreen.jsx";
 import Roster from "./ui/Roster.jsx";
 import Achievements from "./ui/Achievements.jsx";
+import Dynasty from "./ui/Dynasty.jsx";
 
 // ============================================================
 //   MAIN APP

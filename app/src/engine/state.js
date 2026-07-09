@@ -14,6 +14,7 @@ import { worldTick } from "./world.js";
 import { trackCoachCareer, trackSponsorRelations } from "./identity.js";
 import { processEventSystem, onCoachRaiseDenied, onConflictMediated, onWinningStreak } from "./events.js";
 import { calcMentorBonus } from "./career.js";
+import { updateDynasty } from "./dynasty.js";
 import { checkObjectives, getTip } from "./onboarding.js";
 import { tickTraining } from "./tick/training.js";
 import { tickRankings } from "./tick/rankings.js";
@@ -862,6 +863,7 @@ export function tick(g) {
   processEventSystem(g);
   trackCoachCareer(g);
   checkObjectives(g);
+  updateDynasty(g);
   const tip = getTip(g);
   if (tip) {
     g.inbox.unshift({ id: uid(), type: "event", title: tip.title, body: tip.body, choices: [{ label: "Got it", chem: 0 }] });

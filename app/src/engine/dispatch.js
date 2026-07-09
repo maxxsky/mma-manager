@@ -7,6 +7,7 @@ import { avgSkill } from "./fighter.js";
 import { genBio } from "./fighter.js";
 import { WEIGHTS } from "./data.js";
 import { onCoachRaiseDenied } from "./events.js";
+import { checkHallOfFame } from "./dynasty.js";
 
 // Handler registry
 const handlers = {};
@@ -55,6 +56,12 @@ register("retire", (g, c, action) => {
   const f = g.roster.find((x) => x.id === c.retire);
   if (!f) return;
   vacateTitle(g, f);
+  // Hall of Fame check on retirement
+  const hof = checkHallOfFame(f, g);
+  if (hof) {
+    g.log.unshift(`🏛️ ${f.name} inducted into the Hall of Fame!`);
+    g.inbox.unshift({ id: uid(), type: "event", title: `🏛️ Hall of Fame`, body: `${f.name} has been inducted into the Hall of Fame! Record: ${hof.record}. ${hof.highlights.join(" · ")}`, choices: [{ label: "Legendary", chem: 3 }] });
+  }
   g.roster = g.roster.filter((x) => x.id !== c.retire);
   g.rep = clamp(g.rep + 3, 0, 100);
   g.log.unshift(`🎗️ ${f.name} pensiun. Rep +3.`);
