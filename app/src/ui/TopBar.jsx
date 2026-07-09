@@ -10,7 +10,7 @@ const Chip = ({ label, val, color }) => (
 );
 
 export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
-  saveSlot, onSaveSlotChange, slotInfo, lang, onLangChange, onNewGame, extraRight }) {
+  saveSlot, onSaveSlotChange, slotInfo, lang, onLangChange, onNewGame, version, extraRight }) {
   const year = Math.floor((week || 1) / 48) + 1;
   const month = Math.floor(((week || 1) % 48) / 4) + 1;
   const wk = ((week || 1) % 4) + 1;
@@ -28,6 +28,7 @@ export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
           letterSpacing: .5, textTransform: "uppercase", color: T.txt,
           lineHeight: 1 }}>{title || "Dashboard"}</div>
         {crumb && <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>{crumb}</div>}
+        {version && <div style={{ fontFamily: T.mono, fontSize: 9, color: T.txt3, marginTop: 2, letterSpacing: 1 }}>{version}</div>}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
         {/* Date — Year · Month · Week */}

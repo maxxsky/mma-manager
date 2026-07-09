@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLang } from "./ui/LangContext.jsx";
 import { getActiveSlot, setActiveSlot, loadGame, saveGame, deleteGame, getSlotInfo } from "./services/saveService.js";
+import { backupSave, hasBackup, restoreBackup } from "./engine/polish.js";
 
 // ===== ENGINE: pure JS, zero React — bisa di-import oleh server Node nanti =====
 import { R, RI, clamp, pick, fmt$, uid, random } from "./engine/rng.js";
@@ -32,6 +33,7 @@ import Finance from "./ui/Finance.jsx";
 import Facility from "./ui/Facility.jsx";
 import RivalsScreen from "./ui/RivalsScreen.jsx";
 import Roster from "./ui/Roster.jsx";
+import Achievements from "./ui/Achievements.jsx";
 
 // ============================================================
 //   MAIN APP
@@ -45,6 +47,7 @@ export default function App() {
   const [rankDiv, setRankDiv] = useState(null);
   const [resetArm, setResetArm] = useState(false);
   const [nego, setNego] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null);
   const [saveSlot, setSaveSlotState] = useState(getActiveSlot());
   const [weeklySummary, setWeeklySummary] = useState(null);
   const [scoutFilterArch, setScoutFilterArch] = useState(null);
@@ -95,6 +98,7 @@ export default function App() {
         }
       } catch (e) { /* belum ada save */ }
       setLoaded(true);
+      backupSave(saveSlot);
       refreshSlotInfo();
     })();
   }, []);
@@ -248,6 +252,7 @@ export default function App() {
           lang={lang}
           onLangChange={() => setLang(lang === "id" ? "en" : "id")}
           onNewGame={() => { setG(newGame()); deleteGame(saveSlot); }}
+          version="v1.0.0-ea"
         />
 
         <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
