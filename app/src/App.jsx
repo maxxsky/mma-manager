@@ -31,6 +31,7 @@ import Inbox from "./ui/Inbox.jsx";
 import Finance from "./ui/Finance.jsx";
 import Facility from "./ui/Facility.jsx";
 import RivalsScreen from "./ui/RivalsScreen.jsx";
+import Roster from "./ui/Roster.jsx";
 
 // ============================================================
 //   SAVE
@@ -310,7 +311,7 @@ export default function App() {
         )}
 
         {/* ===== ROSTER ===== */}
-        {tab === "roster" && g.roster.map((f) => <FighterCard key={f.id} f={f} g={g} up={up} />)}
+        {tab === "roster" && <Roster g={g} setTab={setTab} up={up} />}
 
         {/* ===== RANKINGS ===== */}
         {tab === "rank" && <Rankings g={g} t={t} rankDiv={rankDiv} setRankDiv={setRankDiv} />}
