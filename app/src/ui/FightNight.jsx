@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { R, RI, clamp, pick, fmt$, random, setRNG, resetRNG, mulberry32 } from "../engine/rng.js";
 import { ATTRS, ATTR_LABEL, WEIGHTS, GAME_PLANS } from "../engine/data.js";
 import { prepFighter, simRound } from "../engine/fight.js";
-import { T, DISPLAY, GlobalStyle, Card, H, Btn, Tag, Bar } from "./theme.jsx";
+import { T, C, DISPLAY, GlobalStyle, Card, H, Btn, Tag, Bar, CompareBar, Mono, ARCH_COLOR } from "./theme.jsx";
 
 export default function FightNight({ fighter, done }) {
   const [stage, setStage] = useState("staredown");
@@ -59,7 +59,7 @@ export default function FightNight({ fighter, done }) {
     Object.entries(mod.b).forEach(([k, v]) => B.attrs[k] = clamp(B.attrs[k] * v, 5, 99));
     return { A, B, attMod: mod };
   }, [fighter, opp, attitude]);
-  const totalRounds = fighter.booked.title ? 5 : 3;
+  const totalRounds = fighter.booked.title === true ? 5 : 3;
 
   // Sync volatile values to ref (prevents stale closure in auto-advance)
   useEffect(() => { tickDataRef.current = { ...tickDataRef.current, roundLog, state, rnd, totalRounds, cutA, cutB, docCheck }; });
@@ -288,6 +288,7 @@ export default function FightNight({ fighter, done }) {
         else f.record.dec++;
         // Career history
         addHistory(f, g2.week, "win", `W vs ${b.opponent.name} via ${result.how} (R${result.r})`);
+        f.streakW = (f.streakW || 0) + 1; f.streakL = 0;
         f.morale = clamp(f.morale + 12, 0, 100);
         const popMult = (f.traits.includes("Crowd Favorite") ? 2 : 1) * (f.ambition === "Star Power" ? 1.5 : 1);
         f.popularity = clamp(f.popularity + (result.how === "Decision" ? 3 : 7) * popMult * (g2.coaches.some((c) => c.personality === "Player's Coach") ? 1.15 : 1), 0, 100);
@@ -306,6 +307,11 @@ export default function FightNight({ fighter, done }) {
           if (div) div.champ = { name: f.name, player: true, fighterId: f.id };
           g2.rep = clamp(g2.rep + 20, 0, 100); g2.legacy += 2000; g2.won = true; g2.log.unshift("⭐ Milestone: Legacy mencapai " + Math.round(g2.legacy).toLocaleString() + " pts!");
           g2.log.unshift(`👑 ${f.name} adalah MAJOR WORLD CHAMPION ${f.weightClass}!`);
+          if (b.doubleChamp) {
+            if (!f.titles.includes("Double Champion")) f.titles.push("Double Champion");
+            g2.rep = clamp(g2.rep + 30, 0, 100); g2.legacy += 8000;
+            g2.log.unshift(`👑👑 ${f.name} adalah DOUBLE CHAMPION! ${f.weightClass} & ${b.doubleChamp}!`);
+          }
         } else if (b.titleTier === "Premier") {
           if (!f.titles.includes("Premier World Champion")) f.titles.push("Premier World Champion");
           if (div) div.champ = { name: f.name, player: true, fighterId: f.id };
@@ -334,6 +340,7 @@ export default function FightNight({ fighter, done }) {
         if (b.titleTier) addHistory(f, g2.week, "title", `🏆 Won ${b.titleTier} Title`);
       } else {
         addHistory(f, g2.week, "loss", `L vs ${b.opponent.name} via ${result.how} (R${result.r})`);
+        f.streakW = 0;
         f.record.l++; f.streakL = (f.streakL || 0) + 1;
         f.rankPoints = Math.floor((f.rankPoints || 0) * 0.70);
         if (!f.traits.includes("Iron Will")) f.morale = clamp(f.morale - 14, 0, 100);
@@ -419,7 +426,7 @@ export default function FightNight({ fighter, done }) {
       <div style={{ maxWidth: 560, margin: "0 auto", padding: 14, position: "relative" }}>
         {/* MARQUEE */}
         <div style={{ textAlign: "center", margin: "10px 0 14px" }}>
-          <div style={{ fontFamily: T.disp, fontSize: 11, letterSpacing: 5, color: T.goldDim }}>{fighter.booked.tier.toUpperCase()} EVENT · {fighter.weightClass.toUpperCase()}</div>
+          <div style={{ fontFamily: T.disp, fontSize: 11, letterSpacing: 5, color: C.goldDim }}>{fighter.booked.tier.toUpperCase()} EVENT · {fighter.weightClass.toUpperCase()}</div>
           {fighter.booked.titleTier && <div style={{ fontFamily: T.disp, color: T.gold, fontSize: 16, letterSpacing: 3, animation: "goldglow 2s infinite" }}>★ {fighter.booked.defense ? "TITLE DEFENSE" : `${fighter.booked.titleTier.toUpperCase()} TITLE FIGHT`} ★</div>}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 4 }}>
             <div style={{ flex: 1, textAlign: "right" }}>
@@ -490,16 +497,21 @@ export default function FightNight({ fighter, done }) {
         {stage === "weighin" && (
           <>
             <Card accent={T.gold}>
-              <H>Tale of the Tape</H>
-              <StatVs label="Striking" a={fighter.attrs.striking} b={opp.attrs.striking} />
-              <StatVs label="Wrestling" a={fighter.attrs.wrestling} b={opp.attrs.wrestling} />
-              <StatVs label="BJJ" a={fighter.attrs.bjj} b={opp.attrs.bjj} />
-              <StatVs label="Footwork" a={fighter.attrs.footwork} b={opp.attrs.footwork} />
-              <StatVs label="Strength" a={fighter.attrs.strength} b={opp.attrs.strength} />
-              <StatVs label="Cardio" a={fighter.attrs.cardio} b={opp.attrs.cardio} />
-              <StatVs label="Chin" a={fighter.attrs.chin} b={opp.attrs.chin} />
-              <StatVs label="Fight IQ" a={fighter.attrs.fightIQ} b={opp.attrs.fightIQ} />
-              <div style={{ textAlign: "center", marginTop: 8, fontSize: 12, color: cutInfo.pen ? T.neg : T.pos }}>
+              {/* Tale of the Tape — centered header */}
+              <div style={{ textAlign: "center", fontFamily: T.body, fontSize: 10, fontWeight: 700,
+                letterSpacing: 2, textTransform: "uppercase", color: T.txt3, marginBottom: 12 }}>
+                Tale of the Tape</div>
+              <CompareBar label="Age" a={fighter.age} b={opp.age || 28} ca={ARCH_COLOR[fighter.archetype] || T.steel} cb={ARCH_COLOR[opp.archetype] || T.steel} />
+              <div style={{ height: 1, background: T.line, margin: "8px 0" }} />
+              <CompareBar label="Striking" a={Math.round(fighter.attrs.striking)} b={Math.round(opp.attrs.striking)} ca={ARCH_COLOR[fighter.archetype] || T.steel} cb={ARCH_COLOR[opp.archetype] || T.steel} />
+              <CompareBar label="Wrestling" a={Math.round(fighter.attrs.wrestling)} b={Math.round(opp.attrs.wrestling)} ca={ARCH_COLOR[fighter.archetype] || T.steel} cb={ARCH_COLOR[opp.archetype] || T.steel} />
+              <CompareBar label="BJJ" a={Math.round(fighter.attrs.bjj)} b={Math.round(opp.attrs.bjj)} ca={ARCH_COLOR[fighter.archetype] || T.steel} cb={ARCH_COLOR[opp.archetype] || T.steel} />
+              <CompareBar label="Footwork" a={Math.round(fighter.attrs.footwork)} b={Math.round(opp.attrs.footwork)} ca={ARCH_COLOR[fighter.archetype] || T.steel} cb={ARCH_COLOR[opp.archetype] || T.steel} />
+              <CompareBar label="Strength" a={Math.round(fighter.attrs.strength)} b={Math.round(opp.attrs.strength)} ca={ARCH_COLOR[fighter.archetype] || T.steel} cb={ARCH_COLOR[opp.archetype] || T.steel} />
+              <CompareBar label="Cardio" a={Math.round(fighter.attrs.cardio)} b={Math.round(opp.attrs.cardio)} ca={ARCH_COLOR[fighter.archetype] || T.steel} cb={ARCH_COLOR[opp.archetype] || T.steel} />
+              <CompareBar label="Chin" a={Math.round(fighter.attrs.chin)} b={Math.round(opp.attrs.chin)} ca={ARCH_COLOR[fighter.archetype] || T.steel} cb={ARCH_COLOR[opp.archetype] || T.steel} />
+              <CompareBar label="Fight IQ" a={Math.round(fighter.attrs.fightIQ)} b={Math.round(opp.attrs.fightIQ)} ca={ARCH_COLOR[fighter.archetype] || T.steel} cb={ARCH_COLOR[opp.archetype] || T.steel} />
+              <div style={{ textAlign: "center", marginTop: 12, fontSize: 12, color: cutInfo.pen ? T.neg : T.pos }}>
                 ⚖️ Weigh-in: {fighter.natWeight} → {limit} lbs · <b>{cutInfo.label}</b>
                 {missedWeight && !weighinIssue && (
                   <div style={{ marginTop: 8, padding: 10, background: "rgba(225,75,68,.12)", border: "1px solid #e14b4466", ...{} }}>

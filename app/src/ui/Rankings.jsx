@@ -17,7 +17,7 @@ export default function Rankings({ g, t }) {
   if (!div) {
     return (
       <Panel>
-        <Eyebrow>Rankings</Eyebrow>
+        <Eyebrow>{t("UI.divRankings")}</Eyebrow>
         <div style={{ color: T.txt3, fontSize: 13 }}>No ranking data available.</div>
       </Panel>
     );
@@ -173,50 +173,32 @@ export default function Rankings({ g, t }) {
 
   return (
     <>
-      {/* ── Division Tab Bar ── */}
-      <Panel pad={12}>
-        <Eyebrow>Division Rankings</Eyebrow>
-        <div
-          style={{
-            display: "flex",
-            gap: 4,
-            overflowX: "auto",
-            paddingBottom: 4,
-            flexWrap: "wrap",
-          }}
-        >
-          {WEIGHTS.map((w) => {
-            const has = g.roster.some((f) => f.weightClass === w.name);
-            const active = selDiv === w.name;
-            return (
-              <button
-                key={w.name}
-                onClick={() => setSelDiv(w.name)}
-                className="tabx"
-                style={{
-                  background: active ? T.gold : T.raised,
-                  color: active ? T.bg : has ? T.txt : T.txt3,
-                  border: `1px solid ${active ? T.gold : T.line}`,
-                  padding: "5px 10px",
-                  fontSize: 10,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  fontFamily: T.disp,
-                  fontWeight: 600,
-                  letterSpacing: 1,
-                  textTransform: "uppercase",
-                  borderRadius: T.r,
-                  flexShrink: 0,
-                  transition: "background .12s, color .12s",
-                }}
-              >
-                {w.name}
-                {has ? " ●" : ""}
-              </button>
-            );
-          })}
-        </div>
-      </Panel>
+      {/* ── Division Chip Selector ── */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
+        {WEIGHTS.map((w) => {
+          const has = g.roster.some((f) => f.weightClass === w.name);
+          const active = selDiv === w.name;
+          return (
+            <button
+              key={w.name}
+              onClick={() => setSelDiv(w.name)}
+              className="chip"
+              aria-label={`${w.name} division${has ? " - has fighters" : ""}`}
+              aria-pressed={active}
+              style={{
+                fontFamily: T.body, fontSize: 12, fontWeight: 600, padding: "6px 13px",
+                borderRadius: 20, cursor: "pointer", letterSpacing: .3,
+                border: `1px solid ${active ? T.ember : has ? `${T.steel}55` : T.line}`,
+                background: active ? `${T.ember}22` : T.surface,
+                color: active ? T.ember : has ? T.txt : T.txt3,
+              }}
+            >
+              {w.name}
+              {has && <span style={{ color: active ? T.ember : T.steel, marginLeft: 5 }}>●</span>}
+            </button>
+          );
+        })}
+      </div>
 
       {/* ── Champion Banner ── */}
       <Panel
@@ -259,15 +241,16 @@ export default function Rankings({ g, t }) {
             </div>
           </div>
           <Tag color={champ.player ? T.pos : T.txt3} solid>
-            {champ.player ? "YOUR CAMP" : "CHAMPION"}
+            {champ.player ? t("UI.yourCamp") : t("UI.champion")}
           </Tag>
         </div>
       </Panel>
 
       {/* ── Ranking Table ── */}
-      <Panel pad={0} style={{ marginTop: 12, overflow: "hidden" }}>
+      <Panel pad={0} style={{ marginTop: 12, overflow: "hidden" }} role="table" aria-label={`${selDiv} ranking table`}>
         {/* Table header */}
         <div
+          role="row"
           style={{
             display: "flex",
             alignItems: "center",
@@ -277,6 +260,7 @@ export default function Rankings({ g, t }) {
           }}
         >
           <div
+            role="columnheader"
             style={{
               width: 36,
               fontFamily: T.body,
@@ -290,6 +274,7 @@ export default function Rankings({ g, t }) {
             #
           </div>
           <div
+            role="columnheader"
             style={{
               flex: 1,
               fontFamily: T.body,
@@ -303,6 +288,7 @@ export default function Rankings({ g, t }) {
             Fighter
           </div>
           <div
+            role="columnheader"
             style={{
               width: 42,
               textAlign: "center",
@@ -317,6 +303,7 @@ export default function Rankings({ g, t }) {
             OVR
           </div>
           <div
+            role="columnheader"
             style={{
               width: 62,
               textAlign: "center",
@@ -331,6 +318,7 @@ export default function Rankings({ g, t }) {
             REC
           </div>
           <div
+            role="columnheader"
             style={{
               width: 46,
               textAlign: "center",
@@ -345,6 +333,7 @@ export default function Rankings({ g, t }) {
             STRK
           </div>
           <div
+            role="columnheader"
             style={{
               width: 38,
               textAlign: "center",
@@ -359,6 +348,7 @@ export default function Rankings({ g, t }) {
             ±
           </div>
           <div
+            role="columnheader"
             style={{
               width: 44,
               textAlign: "right",
@@ -391,6 +381,7 @@ export default function Rankings({ g, t }) {
           <div
             key={f.player ? `p-${f.fighterId || i}` : `ai-${i}`}
             className="row"
+            role="row"
             style={{
               display: "flex",
               alignItems: "center",
@@ -401,6 +392,7 @@ export default function Rankings({ g, t }) {
           >
             {/* Rank number */}
             <div
+              role="cell"
               style={{
                 width: 36,
                 fontFamily: T.disp,
@@ -413,7 +405,7 @@ export default function Rankings({ g, t }) {
             </div>
 
             {/* Name + archetype */}
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div role="cell" style={{ flex: 1, minWidth: 0 }}>
               <div
                 style={{
                   display: "flex",
@@ -454,6 +446,7 @@ export default function Rankings({ g, t }) {
 
             {/* OVR */}
             <div
+              role="cell"
               style={{
                 width: 42,
                 display: "flex",
@@ -474,6 +467,7 @@ export default function Rankings({ g, t }) {
 
             {/* Record */}
             <div
+              role="cell"
               style={{
                 width: 62,
                 textAlign: "center",
@@ -488,6 +482,7 @@ export default function Rankings({ g, t }) {
 
             {/* Streak */}
             <div
+              role="cell"
               style={{
                 width: 46,
                 textAlign: "center",
@@ -530,7 +525,7 @@ export default function Rankings({ g, t }) {
       {/* ── Outside Top 15 (player only) ── */}
       {outsideTop15.length > 0 && (
         <Panel pad={12} style={{ marginTop: 12, borderColor: T.warn }}>
-          <Eyebrow color={T.warn}>Outside Top 15</Eyebrow>
+          <Eyebrow color={T.warn}>{t("UI.outsideTop15")}</Eyebrow>
           {outsideTop15.map((f, i) => (
             <div
               key={`out-${i}`}
@@ -561,7 +556,7 @@ export default function Rankings({ g, t }) {
       {/* ── Unranked (no rank points) ── */}
       {unranked.length > 0 && (
         <Panel pad={12} style={{ marginTop: 12, borderColor: T.txt3 }}>
-          <Eyebrow>Unranked</Eyebrow>
+          <Eyebrow>{t("UI.unranked")}</Eyebrow>
           {unranked.map((f) => (
             <div
               key={f.id}

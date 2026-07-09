@@ -121,7 +121,7 @@ function pickExchange(pos, A, B, planA, matchup) {
 }
 
 // ── MAIN FIGHT ROUND ──
-export function simRound(rnd, A, B, stA, stB, planA, cornerA, cutPenA, momentum = 0) {
+export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
   const summaryLog = [];
   const tickLog = [];
   let dmgA = 0, dmgB = 0, bodyDmgA = 0, bodyDmgB = 0, legDmgA = 0, legDmgB = 0;

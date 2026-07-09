@@ -36,9 +36,7 @@ export function newGame() {
     prospects: [], legacy: 0, over: null, won: false,
     rivals: [genRivalCamp(0), genRivalCamp(1), genRivalCamp(2)],
     promoterRel: initPromoterRel(),
-    loan: null,
     relationships: {},
-    openGymActive: false,
     sponsors: [],
   };
 }
@@ -61,16 +59,6 @@ function calcSparringMult(f, g) {
 // ---------- tick logic ----------
 export function tick(g) {
   g.week++;
-
-  // ---------- loan repayment ----------
-  if (g.loan && g.loan.remaining > 0) {
-    const pay = Math.min(g.loan.weeklyPayment, g.loan.remaining);
-    g.cash -= pay;
-    g.loan.remaining -= pay;
-    if (g.loan.remaining <= 0) g.loan = null;
-  }
-  // open gym: small weekly income when active
-  if (g.openGymActive) g.cash += Math.round(g.rep * 50 + g.roster.length * 100);
 
   const chemMult = g.chemistry >= 80 ? 1.15 : g.chemistry < 40 ? 0.9 : 1;
 
@@ -273,7 +261,7 @@ export function tick(g) {
             label: `Naikkan ke ${fmt$(newSalary)} (+${Math.round(raisePct * 100)}%)`,
             coachSalary: { id: coachTarget.id, amt: newSalary },
           },
-          { label: "Tolak — risiko resign", chem: -5, coachResignChance: clamp(raisePct * 1.5, 0.15, 0.60) },
+          { label: "Tolak — risiko resign", chem: -5, coachResignChance: { id: coachTarget.id, chance: clamp(raisePct * 1.5, 0.15, 0.60) } },
         ],
       });
     } else if (roll < 0.65 && fa && fb) {
@@ -477,8 +465,8 @@ export function tick(g) {
       let streakBonus = 1;
       if (f.streakL >= 2) streakBonus = 0.7; // lose streak → purse lebih rendah, lawan lebih mudah
       else if (f.streakL >= 1) streakBonus = 0.85;
-      if (f.record.w >= 4) streakBonus = 1.3; // win streak → purse naik
-      else if (f.record.w >= 2) streakBonus = 1.15;
+      if (f.streakW >= 4) streakBonus = 1.3; // win streak → purse naik
+      else if (f.streakW >= 2) streakBonus = 1.15;
       show = Math.round(show * streakBonus);
 
       // Promoter relationship bonus: high rel = better purse + main event
@@ -495,7 +483,7 @@ export function tick(g) {
       // Streak-based opponent selection
       let oppIdx = r != null ? clamp(r - 2 + RI(-1, 1), 0, 14) : RI(11, 14);
       if (f.streakL >= 2) oppIdx = clamp(oppIdx - RI(2, 4), 0, 14); // lose streak → easier opponent
-      else if (f.record.w >= 3) oppIdx = clamp(oppIdx + RI(1, 2), 0, 14); // win streak → harder opponent
+      else if (f.streakW >= 3) oppIdx = clamp(oppIdx + RI(1, 2), 0, 14); // win streak → harder opponent
 
       let opp, oppRank = null, contenderId = null;
       if (titleTier === "Major") {
@@ -524,15 +512,15 @@ export function tick(g) {
       else story = "🎯 Grappler vs Striker — classic clash of styles!";
 
       let titleText = "";
-      if (isMainEvent) titleText = "🌟 MAIN EVENT";
+      if (titleTier === "Premier") titleText = "🏆 PREMIER WORLD TITLE FIGHT";
+      else if (titleTier === "Major") titleText = "🏆 MAJOR WORLD TITLE FIGHT";
+      else if (titleTier === "Minor") titleText = "🌍 MINOR WORLD TITLE FIGHT";
+      else if (titleTier === "National") titleText = "🥇 NATIONAL TITLE FIGHT";
+      else if (titleTier === "Regional") titleText = "🥇 REGIONAL TITLE FIGHT";
+      else if (isMainEvent) titleText = "🌟 MAIN EVENT";
       else if (isTitleEliminator) titleText = "🥇 TITLE ELIMINATOR — winner faces champion";
       else if (shortNotice) titleText = "⚡ SHORT NOTICE REPLACEMENT — purse boosted!";
-      else if (titleTier) titleText = tier === "Local" ? "" : "Fight Offer — " + tier;
-      
-      if (shortNotice) titleText = "⚡ SHORT NOTICE REPLACEMENT — purse boosted!";
-      else if (isTitleEliminator && !shortNotice) titleText = "🥇 TITLE ELIMINATOR — winner faces champion";
-      else if (isMainEvent && !isTitleEliminator) titleText = "🌟 MAIN EVENT";
-      else if (titleTier) titleText = titleText || "Fight Offer — " + tier;
+      else if (tier !== "Local") titleText = "Fight Offer — " + tier;
 
       g.inbox.unshift({
         id: uid(), type: "offer", fighterId: f.id, expires: shortNotice ? 2 : 3,
@@ -541,19 +529,6 @@ export function tick(g) {
         titleTier, oppRank, contenderId,
         titleText, story, shortNotice, isMainEvent, isTitleEliminator,
         weeks: shortNotice ? RI(1, 2) : RI(4, 6),
-        titleText:
-          titleTier === "Premier"
-            ? "🏆 PREMIER WORLD TITLE FIGHT"
-            : titleTier === "Major"
-              ? "🏆 MAJOR WORLD TITLE FIGHT"
-              : titleTier === "Minor"
-                ? "🌍 MINOR WORLD TITLE FIGHT"
-                : titleTier === "National"
-                  ? "🥇 NATIONAL TITLE FIGHT"
-                  : titleTier === "Regional"
-                    ? "🥇 REGIONAL TITLE FIGHT"
-                    : null,
-        weeks: RI(4, 6),
       });
     }
   });
@@ -1058,6 +1033,9 @@ export function tick(g) {
       }
     }
   }
+
+  // Cap log at 200 entries to prevent unbounded growth
+  if (g.log.length > 200) g.log.length = 200;
 
   if (g.cash < -50000) g.over = "BANGKRUT — kas di bawah -$50,000. Camp ditutup.";
 }

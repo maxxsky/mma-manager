@@ -31,7 +31,7 @@ export function checkAchievements(g, context = {}) {
   if (g.cash >= 100000) add("cash_100k");
   if (g.cash >= 1000000) add("cash_1m");
   if (g.campTier >= 3) add("tier_3");
-  if (g.campTier >= 5) add("tier_5");
+  if (g.campTier >= 4) add("tier_5");
   if (context.signedSProspect) add("sign_s_prospect");
   if (context.koStreak >= 3) add("ko_streak_3"); // tracked per-fighter
 

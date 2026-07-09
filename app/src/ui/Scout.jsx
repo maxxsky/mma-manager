@@ -79,7 +79,7 @@ export default function Scout({
     <>
       {/* ── Scouting Network Panel ── */}
       <Panel>
-        <Eyebrow>🔍 Scouting Network · Grade {grade}</Eyebrow>
+        <Eyebrow>{t("UI.scoutNetwork")} · {t("UI.grade")} {grade}</Eyebrow>
         <div
           style={{
             color: T.txt3,
@@ -111,7 +111,7 @@ export default function Scout({
               color: T.txt3,
             }}
           >
-            Archetype:
+            >{t("UI.selectClass")}
           </span>
           <button
             onClick={() => setScoutFilterArch(null)}
@@ -177,7 +177,7 @@ export default function Scout({
               color: T.txt3,
             }}
           >
-            Division:
+            >{t("UI.division")}:
           </span>
           <button
             onClick={() => setScoutFilterWC(null)}
@@ -319,10 +319,10 @@ export default function Scout({
                   }
                 >
                   {!canAfford
-                    ? "Not Enough Cash"
+                    ? t("UI.notEnoughCash")
                     : isRosterFull
-                    ? "Roster Full"
-                    : "Send Scout"}
+                    ? t("UI.rosterFull")
+                    : t("UI.sendScout")}
                 </Btn>
               </div>
             );
@@ -338,8 +338,7 @@ export default function Scout({
               textAlign: "center",
             }}
           >
-            Camp roster is full ({rosterCap} fighters). Upgrade camp tier or
-            release a fighter to make room.
+            {t("UI.rosterFull")} ({rosterCap} fighters).
           </div>
         )}
       </Panel>
@@ -351,8 +350,7 @@ export default function Scout({
             color={T.gold}
             style={{ marginTop: 18, marginBottom: 8 }}
           >
-            📋 Scouting Reports · {g.prospects.length} prospect
-            {g.prospects.length !== 1 ? "s" : ""}
+            📋 {t("UI.prospects")} · {g.prospects.length}
           </Eyebrow>
 
           {g.prospects.map((p) => {
@@ -447,7 +445,7 @@ export default function Scout({
                       color: T.gold,
                     }}
                   >
-                    Grade {p.grade}
+                    {t("UI.grade")} {p.grade}
                   </span>
                   <span
                     style={{
@@ -523,14 +521,14 @@ export default function Scout({
                   }}
                 >
                   <div>
-                    ⭐ Potential:{" "}
+                    ⭐ {t("UI.potential")}:{" "}
                     <span style={{ color: T.gold, fontFamily: T.mono, fontWeight: 700 }}>
                       {p.report.pot}
                     </span>
                   </div>
                   {p.report.traits?.length > 0 && (
                     <div style={{ marginTop: 3 }}>
-                      Traits:{" "}
+                      >{t("TRAIT.sparring")}:{" "}
                       {p.report.traits.map((tr, i) => (
                         <Tag key={i} color={T.neg}>
                           {tr}
@@ -545,7 +543,7 @@ export default function Scout({
                   )}
                   {p.report.bestCeiling && (
                     <div style={{ marginTop: 3 }}>
-                      📈 Top ceiling:{" "}
+                      📈 {t("UI.condition")}:{" "}
                       <span style={{ color: T.gold }}>
                         {ATTR_LABEL[p.report.bestCeiling.attr]}{" "}
                         {p.report.bestCeiling.val}
@@ -564,7 +562,7 @@ export default function Scout({
                 >
                   🤝{" "}
                   {AGENT_TYPES[p.fighter.agent || "none"]?.label ||
-                    "No Agent"}{" "}
+                    t("AGENT.none")}{" "}
                   · asking ~{fmt$(p.fighter.asking)}
                 </div>
 
@@ -582,7 +580,7 @@ export default function Scout({
                       })
                     }
                   >
-                    Negotiate
+                    {t("UI.negotiate")}
                   </Btn>
                   <Btn
                     sm
@@ -595,7 +593,7 @@ export default function Scout({
                       })
                     }
                   >
-                    Pass
+                    {t("UI.pass")}
                   </Btn>
                 </div>
               </Panel>
@@ -627,7 +625,7 @@ export default function Scout({
               marginBottom: 4,
             }}
           >
-            No Scouts Deployed
+            {t("UI.noScouts")}
           </div>
           <div style={{ fontSize: 12, color: T.txt3, lineHeight: 1.5 }}>
             Send scouts to discover new talent. Higher-grade scouting

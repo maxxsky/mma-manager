@@ -1,16 +1,17 @@
 import React from "react";
 import { T, Icon, ICONS, Btn } from "./theme.jsx";
+import { t } from "../engine/i18n.js";
 
 // Maps app tab keys to sidebar nav items
 const NAV = [
-  ["dashboard", "Dashboard", ICONS.dash],
-  ["roster", "Roster", ICONS.roster],
-  ["rank", "Rankings", ICONS.rank],
-  ["scout", "Scout", ICONS.scout],
-  ["inbox", "Inbox", ICONS.inbox],
-  ["finance", "Finance", ICONS.money],
-  ["mgmt", "Facility", ICONS.facility],
-  ["rivals", "Rivals", ICONS.rivals],
+  ["dashboard", "UI.dashboard", ICONS.dash],
+  ["roster", "UI.roster", ICONS.roster],
+  ["rank", "UI.rankings", ICONS.rank],
+  ["scout", "UI.scout", ICONS.scout],
+  ["inbox", "UI.inbox", ICONS.inbox],
+  ["finance", "UI.finance", ICONS.money],
+  ["mgmt", "UI.facility", ICONS.facility],
+  ["rivals", "UI.rivals", ICONS.rivals],
 ];
 
 export default function Sidebar({ view, setView, onAdvance, inboxCount }) {
@@ -33,7 +34,7 @@ export default function Sidebar({ view, setView, onAdvance, inboxCount }) {
             <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 19,
               letterSpacing: .5, color: T.txt, lineHeight: 1 }}>IRONFIST</div>
             <div style={{ fontFamily: T.body, fontSize: 9, letterSpacing: 2,
-              color: T.txt3, textTransform: "uppercase" }}>Fight Management</div>
+              color: T.txt3, textTransform: "uppercase" }}>{t("UI.fightManagement")}</div>
           </div>
         </div>
       </div>
@@ -44,6 +45,7 @@ export default function Sidebar({ view, setView, onAdvance, inboxCount }) {
           const on = active === k;
           return (
             <button key={k} className="nav-item" onClick={() => setView(k === "roster" ? "roster" : k)}
+              aria-label={label} aria-current={on ? "page" : undefined}
               style={{ display: "flex", alignItems: "center", gap: 11, width: "100%",
                 textAlign: "left", padding: "9px 12px", marginBottom: 2, borderRadius: T.r,
                 border: "none", background: on ? T.raised : "transparent", cursor: "pointer",
@@ -54,7 +56,7 @@ export default function Sidebar({ view, setView, onAdvance, inboxCount }) {
                 <Icon d={icon} />
               </span>
               <span style={{ fontFamily: T.body, fontSize: 13.5, fontWeight: on ? 600 : 500,
-                letterSpacing: .3 }}>{label}</span>
+                letterSpacing: .3 }}>{t(label)}</span>
               {k === "inbox" && (inboxCount || 0) > 0 && (
                 <span style={{ marginLeft: "auto", fontFamily: T.mono, fontSize: 10,
                   fontWeight: 700, color: T.bg, background: T.ember, borderRadius: 10,
@@ -69,7 +71,7 @@ export default function Sidebar({ view, setView, onAdvance, inboxCount }) {
       <div style={{ padding: 12, borderTop: `1px solid ${T.line}` }}>
         <Btn onClick={onAdvance} wide color={T.ember}
           style={{ boxShadow: `0 3px 14px ${T.ember}44`, justifyContent: "center", display: "flex", alignItems: "center", gap: 8 }}>
-          <Icon d={ICONS.chevR} size={16} /> Advance Week
+          <Icon d={ICONS.chevR} size={16} /> {t("UI.advanceWeek")}
         </Btn>
       </div>
     </aside>

@@ -1,6 +1,7 @@
 import { fmt$ } from "../engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag } from "./theme.jsx";
+import { t } from "../engine/i18n.js";
 import { weeklyFee } from "../engine/fighter.js";
 import { TRAINING } from "../engine/data.js";
 
@@ -37,9 +38,6 @@ export default function Finance({ g }) {
   const totalExpense = coachSal + maint + trainingCost;
   const netMonthly = totalIncome - totalExpense;
 
-  // ── Loan info ─────────────────────────────────────────────────
-  const hasLoan = g.loan && g.loan.remaining > 0;
-
   // ── Mini components (inline — not exported) ──
   const Row = ({ label, value, color, detail }) => (
     <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0",
@@ -50,10 +48,6 @@ export default function Finance({ g }) {
         {detail && <div style={{ fontFamily: T.body, fontSize: 9, color: T.txt3 }}>{detail}</div>}
       </span>
     </div>
-  );
-  const SectionHeader = ({ label, color }) => (
-    <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1.2,
-      textTransform: "uppercase", color, marginBottom: 4, marginTop: 8 }}>{label}</div>
   );
   const TotalRow = ({ label, value, color }) => (
     <div style={{ padding: "4px 0", textAlign: "right" }}>
@@ -71,12 +65,12 @@ export default function Finance({ g }) {
     <div>
       {/* ── P&L SUMMARY CARD ─────────────────────────────────── */}
       <Panel style={{ marginBottom: 14 }}>
-        <Eyebrow color={T.gold}>💵 Monthly Cash Flow</Eyebrow>
+        <Eyebrow color={T.gold}>{t("UI.monthlyCashFlow")}</Eyebrow>
 
         {/* Income section */}
-        <SectionHeader label="📥 Income" color={T.pos} />
+        <SectionHeader label={t("UI.income")} color={T.pos} />
         <Row
-          label="Sponsors"
+          label={t("SPONSOR.placement")}
           value={sponsorIncome}
           color={T.pos}
           detail={
@@ -97,12 +91,12 @@ export default function Finance({ g }) {
           color={T.pos}
           detail="weekly fighter contributions"
         />
-        <TotalRow label="Total Income" value={totalIncome} color={T.pos} />
+        <TotalRow label={t("UI.income") + " Total"} value={totalIncome} color={T.pos} />
 
         <div style={{ marginTop: 4 }} />
 
         {/* Expense section */}
-        <SectionHeader label="📤 Expenses" color={T.neg} />
+        <SectionHeader label={t("UI.expense")} color={T.neg} />
         <Row
           label="Coach Salaries"
           value={coachSal}
@@ -121,7 +115,7 @@ export default function Finance({ g }) {
           color={T.neg}
           detail={`${g.roster.filter((f) => !f.injury).length} active fighter${g.roster.filter((f) => !f.injury).length !== 1 ? "s" : ""}`}
         />
-        <TotalRow label="Total Expenses" value={totalExpense} color={T.neg} />
+        <TotalRow label={t("UI.expense") + " Total"} value={totalExpense} color={T.neg} />
 
         {/* Net */}
         <div
@@ -135,7 +129,7 @@ export default function Finance({ g }) {
           }}
         >
           <span style={{ fontSize: 12, color: T.txt3, letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>
-            Net / Month
+            {t("UI.netPerMonth")}
           </span>
           <span
             style={{
@@ -153,7 +147,7 @@ export default function Finance({ g }) {
 
       {/* ── CASH RESERVE CARD ────────────────────────────────── */}
       <Panel style={{ marginBottom: 14 }}>
-        <Eyebrow color={T.gold}>💎 Cash Reserve</Eyebrow>
+        <Eyebrow color={T.gold}>{t("UI.cashReserve")}</Eyebrow>
 
         <div
           style={{
@@ -176,11 +170,11 @@ export default function Finance({ g }) {
           <div style={{ textAlign: "right" }}>
             {runway !== null && (
               <div style={{ fontSize: 12, color: T.warn }}>
-                Runway: {runway} month{runway !== 1 ? "s" : ""}
+                {t("UI.runway")}: {runway} month{runway !== 1 ? "s" : ""}
               </div>
             )}
             <div style={{ fontSize: 11, color: T.txt3 }}>
-              Bankrupt at &lt; {fmt$(bankruptcyThreshold)}
+              {t("UI.bankruptAt")} &lt; {fmt$(bankruptcyThreshold)}
             </div>
           </div>
         </div>
@@ -218,40 +212,19 @@ export default function Finance({ g }) {
         </div>
       </Panel>
 
-      {/* ── LOAN CARD ─────────────────────────────────────────── */}
-      {hasLoan && (
-        <Panel style={{ marginBottom: 14, borderColor: T.warn }}>
-          <Eyebrow color={T.warn}>🏦 Active Loan</Eyebrow>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px" }}>
-            <Detail label="Remaining" value={fmt$(g.loan.remaining)} color={T.neg} />
-            <Detail
-              label="Weekly Payment"
-              value={fmt$(g.loan.weeklyPayment)}
-              color={T.warn}
-            />
-            {g.loan.weeksLeft != null && (
-              <Detail label="Weeks Left" value={`${g.loan.weeksLeft}`} />
-            )}
-            {g.loan.interest != null && (
-              <Detail label="Interest Rate" value={`${Math.round(g.loan.interest * 100)}%`} />
-            )}
-          </div>
-        </Panel>
-      )}
-
       {/* ── INCOME SPLIT VISUAL ───────────────────────────────── */}
       <Panel style={{ marginBottom: 14 }}>
-        <Eyebrow color={T.txt2}>📊 Income Split</Eyebrow>
+        <Eyebrow color={T.txt2}>{t("UI.incomeSplit")}</Eyebrow>
         {totalIncome > 0 ? (
           <div>
             <SplitBar
-              label="Sponsors"
+              label={t("SPONSOR.placement")}
               value={sponsorIncome}
               total={totalIncome}
               color={T.steel}
             />
             <SplitBar
-              label="Popularity"
+              label={t("UI.popularity")}
               value={popTotal}
               total={totalIncome}
               color={T.pos}
@@ -264,13 +237,13 @@ export default function Finance({ g }) {
             />
           </div>
         ) : (
-          <div style={{ color: T.txt3, fontSize: 12 }}>No income yet.</div>
+          <div style={{ color: T.txt3, fontSize: 12 }}>{t("UI.noEventsHint")}</div>
         )}
       </Panel>
 
       {/* ── EXPENSE SPLIT VISUAL ──────────────────────────────── */}
       <Panel>
-        <Eyebrow color={T.txt2}>📊 Expense Split</Eyebrow>
+        <Eyebrow color={T.txt2}>{t("UI.expenseSplit")}</Eyebrow>
         {totalExpense > 0 ? (
           <div>
             <SplitBar
@@ -280,7 +253,7 @@ export default function Finance({ g }) {
               color={T.neg}
             />
             <SplitBar
-              label="Maintenance"
+              label={t("FAC.mats") + " " + t("UI.upgrade")}
               value={maint}
               total={totalExpense}
               color={T.warn}
@@ -293,7 +266,7 @@ export default function Finance({ g }) {
             />
           </div>
         ) : (
-          <div style={{ color: T.txt3, fontSize: 12 }}>No expenses yet.</div>
+          <div style={{ color: T.txt3, fontSize: 12 }}>{t("UI.noEventsHint")}</div>
         )}
       </Panel>
     </div>

@@ -1,8 +1,8 @@
 import { fmt$ } from "../engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Icon, ICONS, Mono, ARCH_COLOR } from "./theme.jsx";
-import { TRAINING } from "../engine/data.js";
-import { weeklyFee } from "../engine/fighter.js";
+import { t } from "../engine/i18n.js";
+import { monthlyBurn, monthlyIn } from "../engine/finance.js";
 
 /* =============================================================================
    IRONFIST DASHBOARD — Verbatim from prototype, wired to real g state
@@ -10,11 +10,9 @@ import { weeklyFee } from "../engine/fighter.js";
 
 export default function Dashboard({ g, setTab, setActiveFight }) {
   // ---- Monthly financials (same formulas as App.jsx) -----------------------
-  const monthlyBurn = g.coaches.reduce((s, c) => s + ((!c.freeUntil || g.week > c.freeUntil) ? c.salary : 0), 0)
-    + Math.round(Object.values(g.facilities).reduce((s, l) => s + l * 30000, 0) * 0.05)
-    + g.roster.reduce((s, f) => s + (f.injury ? 0 : TRAINING[f.booked ? "fightcamp" : f.training.type].cost * 4), 0);
-  const monthlyIn = g.roster.reduce((s, f) => s + weeklyFee(f) * 4, 0) + g.rep * 500 + g.roster.reduce((s, f) => s + f.popularity * 150, 0);
-  const netMonthly = monthlyIn - monthlyBurn;
+  const burn = monthlyBurn(g);
+  const inc = monthlyIn(g);
+  const netMonthly = inc - burn;
 
   // ---- Booked fighters sorted -------------------------------------------------
   const bookedSorted = g.roster.filter(f => f.booked).sort((a, b) => a.booked.weeksLeft - b.booked.weeksLeft);
@@ -31,35 +29,35 @@ export default function Dashboard({ g, setTab, setActiveFight }) {
   // ---- KPI data ---------------------------------------------------------------
   const kpis = [
     [
-      "Next fight",
+      t("UI.nextFight"),
       nextFight ? `T-${nextFight.booked.weeksLeft}w` : "—",
       nextFight ? (nextFight.booked.weeksLeft <= 2 ? T.ember : T.steel) : T.txt3,
       nextFight
         ? `${nextFight.name} vs ${nextFight.booked.opponent.name}${nextFight.booked.title ? " · title defense" : ""}`
-        : "No fights booked",
+        : t("UI.noFightsBooked"),
       "card",
     ],
     [
-      "Pending offers",
+      t("UI.pendingOffers"),
       String(pendingOffers),
       pendingOffers > 0 ? T.steel : T.txt3,
       pendingOffers > 0
-        ? `${pendingOffers} ${pendingOffers === 1 ? "offer" : "offers"}${g.inbox.some(m => m.type === "offer" && m.expires != null && m.expires <= 1) ? " · 1 expires this week" : ""}`
-        : "Inbox is clear",
+        ? `${pendingOffers} ${pendingOffers === 1 ? t("UI.offer") : t("UI.offers")}${g.inbox.some(m => m.type === "offer" && m.expires != null && m.expires <= 1) ? " · 1 " + t("UI.expiresWeek") : ""}`
+        : t("UI.inboxClear"),
       "inbox",
     ],
     [
-      "Net / month",
+      t("UI.netPerMonth"),
       `${netMonthly >= 0 ? "+" : ""}${fmt$(netMonthly)}`,
       netMonthly >= 0 ? T.pos : T.neg,
-      `income ${fmt$(monthlyIn)} · expense ${fmt$(monthlyBurn)}`,
+      `income ${fmt$(inc)} · expense ${fmt$(burn)}`,
       "finance",
     ],
     [
-      "Roster",
+      t("UI.roster"),
       String(g.roster.length),
       T.txt,
-      `${overtrainedCount > 0 ? `${overtrainedCount} overtrained` : ""}${overtrainedCount > 0 && injuredCount > 0 ? " · " : ""}${injuredCount > 0 ? `${injuredCount} injured` : injuredCount === 0 && overtrainedCount === 0 ? "All healthy" : ""}`,
+      `${overtrainedCount > 0 ? `${overtrainedCount} overtrained` : ""}${overtrainedCount > 0 && injuredCount > 0 ? " · " : ""}${injuredCount > 0 ? `${injuredCount} injured` : injuredCount === 0 && overtrainedCount === 0 ? t("UI.allHealthy") : ""}`,
       "roster",
     ],
   ];
@@ -138,7 +136,7 @@ export default function Dashboard({ g, setTab, setActiveFight }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
         {kpis.map(([l, v, c, d, to]) => (
           <Panel key={l} pad={0}>
-            <button className="row" onClick={() => setTab(to)} style={{ display: "block", width: "100%", textAlign: "left", padding: 14, border: "none", background: "transparent", cursor: "pointer", borderRadius: T.r2 }}>
+            <button className="row" onClick={() => setTab(to)} aria-label={`${l} - ${v}`} style={{ display: "block", width: "100%", textAlign: "left", padding: 14, border: "none", background: "transparent", cursor: "pointer", borderRadius: T.r2 }}>
               <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 600, letterSpacing: 1.2, textTransform: "uppercase", color: T.txt3, marginBottom: 4 }}>{l}</div>
               <div style={{ fontFamily: T.mono, fontSize: 24, fontWeight: 700, color: c, lineHeight: 1 }}>{v}</div>
               <div style={{ fontFamily: T.body, fontSize: 10.5, color: T.txt3, marginTop: 5 }}>{d}</div>
@@ -149,12 +147,12 @@ export default function Dashboard({ g, setTab, setActiveFight }) {
 
       {/* PRIORITIES THIS WEEK */}
       <Panel pad={0}>
-        <div style={{ padding: "14px 18px 2px" }}><Eyebrow color={T.ember}>Priorities this week</Eyebrow></div>
+        <div style={{ padding: "14px 18px 2px" }}><Eyebrow color={T.ember}>{t("UI.priorities")}</Eyebrow></div>
         {topPriorities.length === 0 && (
-          <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, padding: "11px 18px" }}>All clear — nothing needs attention right now.</div>
+          <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, padding: "11px 18px" }}>{t("UI.allClearHint")}</div>
         )}
         {topPriorities.map(([txt, to, c], i, arr) => (
-          <button key={i} className="row" onClick={() => setTab(to)} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", padding: "11px 18px", border: "none", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none", background: "transparent", cursor: "pointer" }}>
+          <button key={i} className="row" onClick={() => setTab(to)} aria-label={`Priority ${i+1}: ${txt}`} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", padding: "11px 18px", border: "none", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none", background: "transparent", cursor: "pointer" }}>
             <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: c, width: 18 }}>{i + 1}</span>
             <span style={{ width: 6, height: 6, borderRadius: 3, background: c, flexShrink: 0 }} />
             <span style={{ fontFamily: T.body, fontSize: 13, color: T.txt, flex: 1 }}>{txt}</span>
@@ -165,16 +163,16 @@ export default function Dashboard({ g, setTab, setActiveFight }) {
 
       {/* UPCOMING FIGHTS TABLE */}
       <Panel pad={0} style={{ overflow: "hidden" }}>
-        <div style={{ padding: "14px 18px 2px" }}><Eyebrow>Upcoming fights</Eyebrow></div>
+        <div style={{ padding: "14px 18px 2px" }}><Eyebrow>{t("UI.upcomingFights")}</Eyebrow></div>
         {fights.length === 0 && (
           <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, padding: "11px 18px" }}>
-            No fights scheduled. Check <span style={{ color: T.steel, cursor: "pointer", fontWeight: 600 }} onClick={() => setTab("inbox")}>Inbox</span> for fight offers.
+            {t("UI.noFightsHint")}
           </div>
         )}
         {fights.length > 0 && (
           <>
             <div style={{ display: "grid", gridTemplateColumns: "minmax(180px,1.2fr) minmax(160px,1fr) 1fr 90px 130px 60px 30px", alignItems: "center", padding: "0 18px", height: 32, background: T.raised, borderTop: `1px solid ${T.line}`, borderBottom: `1px solid ${T.line}` }}>
-              {["Fighter", "Opponent", "Event", "Tier", "Purse", "In", ""].map((col, i) => (
+              {[t("UI.fighter"), t("UI.opponent"), t("UI.event"), t("UI.tier"), t("UI.purse"), t("UI.weeksIn"), ""].map((col, i) => (
                 <span key={i} style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: T.txt3, textAlign: i === 4 || i === 5 ? "right" : "left" }}>{col}</span>
               ))}
             </div>
@@ -182,7 +180,7 @@ export default function Dashboard({ g, setTab, setActiveFight }) {
               const bk = f.booked;
               const oppName = bk.opponent.name;
               const oppRank = bk.oppRank != null ? `#${bk.oppRank}` : "";
-              const event = bk.title ? `${bk.tier} Championship` : `${bk.tier} Fight Night`;
+              const event = bk.title ? `${bk.tier} ${t("UI.championship")}` : `${bk.tier} ${t("UI.fightNight")}`;
               const purseStr = `${fmt$(bk.show)} + ${fmt$(bk.winBonus)}`;
               const weeks = bk.weeksLeft;
               const ac = ARCH_COLOR[f.archetype] || T.steel;
@@ -197,7 +195,7 @@ export default function Dashboard({ g, setTab, setActiveFight }) {
                   </div>
                   <span style={{ fontFamily: T.body, fontSize: 13, color: T.txt2 }}>{oppName}{oppRank ? " " : ""}<span style={{ fontFamily: T.mono, fontSize: 11, color: T.gold }}>{oppRank}</span></span>
                   <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt3 }}>{event}</span>
-                  <span>{bk.title ? <Tag color={T.gold} solid>Title</Tag> : <Tag color={T.steel}>{bk.tier}</Tag>}</span>
+                  <span>{bk.title ? <Tag color={T.gold} solid>{t("UI.title")}</Tag> : <Tag color={T.steel}>{bk.tier}</Tag>}</span>
                   <span style={{ fontFamily: T.mono, fontSize: 12.5, color: T.txt2, textAlign: "right" }}>{purseStr}</span>
                   <span style={{ fontFamily: T.mono, fontSize: 15, fontWeight: 700, color: T.ember, textAlign: "right" }}>{weeks}w</span>
                   <span style={{ color: T.txt3, display: "flex", justifyContent: "flex-end" }}><Icon d={ICONS.chevR} size={14} /></span>
@@ -210,9 +208,9 @@ export default function Dashboard({ g, setTab, setActiveFight }) {
 
       {/* CAMP FEED */}
       <Panel pad={0}>
-        <div style={{ padding: "14px 18px 2px" }}><Eyebrow>Camp feed</Eyebrow></div>
+        <div style={{ padding: "14px 18px 2px" }}><Eyebrow>{t("UI.campFeed")}</Eyebrow></div>
         {dedupedFeed.length === 0 && (
-          <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, padding: "9px 18px" }}>No events yet. Advance a week to start the journey.</div>
+          <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, padding: "9px 18px" }}>{t("UI.noEventsHint")}</div>
         )}
         {dedupedFeed.map(([wk, who, txt, c], i, arr) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 18px", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none" }}>

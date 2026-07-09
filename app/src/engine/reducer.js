@@ -121,17 +121,6 @@ export function reducer(g, action) {
       }
       break;
     }
-    case "TOGGLE_OPEN_GYM": {
-      g.openGymActive = !g.openGymActive;
-      break;
-    }
-    case "TAKE_LOAN": {
-      if (!g.loan) {
-        g.cash += action.amount;
-        g.loan = { amount: action.amount, weeklyPayment: action.weekly, remaining: action.amount + Math.round(action.amount * 0.12) };
-      }
-      break;
-    }
     case "CLASS_CHANGE_ACCEPT": {
       const f2 = g.roster.find((x) => x.id === action.fighterId);
       if (f2) {
@@ -170,10 +159,11 @@ export function reducer(g, action) {
       break;
     }
     case "SCOUT": {
+      if (!g.prospects) g.prospects = [];
       g.cash -= action.cost;
       g.prospects.unshift({ id: uid(), fighter: action.fighter, report: action.report, grade: action.grade, method: action.method, scoutedWeek: g.week });
       if (g.prospects.length > 5) {
-        const dropped = g.prospects[5];
+        const dropped = g.prospects[g.prospects.length - 1];
         g.log.unshift("📋 " + dropped.fighter.name + " (prospect) di-drop — slot scouting penuh.");
       }
       g.prospects = g.prospects.slice(0, 5);
@@ -205,7 +195,7 @@ export function reducer(g, action) {
       if (g.promoterRel) g.promoterRel[action.tier] = clamp((g.promoterRel[action.tier] || 30) - 8, 0, 100);
       if (action.stripTitle) {
         const f3 = g.roster.find((x) => x.id === action.fighterId);
-        if (f3) { f3.titles = f3.titles.filter((t) => t !== "Major World Champion"); }
+        if (f3) { f3.titles = f3.titles.filter((t) => !t.includes("Champion")); }
       }
       break;
     }
@@ -358,6 +348,7 @@ export function reducer(g, action) {
       } else if (c.sponsorAccept != null) {
         const d = c.sponsorAccept;
         if (!g.sponsors) g.sponsors = [];
+        if (g.sponsors.length >= 3) { g.log.unshift("📢 Sponsor penuh — maks 3."); break; }
         g.sponsors.push({ brand: d.brand, terms: d.terms, rate: d.rate, weeksLeft: d.weeksLeft });
         g.log.unshift("📢 " + d.brand + " sponsor camp.");
       } else if (c.sponsorReject != null) { g.log.unshift("📢 Sponsor ditolak.");

@@ -1,7 +1,8 @@
 import React from "react";
 import { fmt$ } from "../engine/rng.js";
-import { ARCH_COLOR } from "../engine/data.js";
+import { ARCH_COLOR, TRAINING, INTENSITY } from "../engine/data.js";
 import { avgSkill } from "../engine/fighter.js";
+import { reducer } from "../engine/reducer.js";
 import { T, Panel, Eyebrow, Tag, Btn, Ovr, Mono, AttrTele, Meter, OctaRadar, Icon, ICONS, heat } from "./theme.jsx";
 
 export default function FighterDetail({ f, g, onBack, up }) {
@@ -105,6 +106,50 @@ export default function FighterDetail({ f, g, onBack, up }) {
               </div>
             </>
           )}
+        </Panel>
+
+        {/* Training assignment */}
+        <Panel style={{ gridColumn: "span 2" }}>
+          <Eyebrow color={T.ember}>Training</Eyebrow>
+          <div style={{ display: "flex", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 300 }}>
+              <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1,
+                textTransform: "uppercase", color: T.txt3, marginBottom: 8 }}>Program</div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {Object.entries(TRAINING).map(([k, v]) => {
+                  const active = f.booked ? k === "fightcamp" : f.training?.type === k;
+                  return (
+                    <button key={k} className="chip" disabled={!!f.booked}
+                      onClick={() => up(g2 => reducer(g2, { type: "SET_TRAINING", fighterId: f.id, program: k, intensity: f.training?.intensity || "Medium" }))}
+                      style={{ fontFamily: T.body, fontSize: 11, fontWeight: 600, padding: "6px 12px",
+                        borderRadius: 8, cursor: f.booked ? "default" : "pointer", border: `1px solid ${active ? T.ember : T.line}`,
+                        background: active ? `${T.ember}22` : "transparent", color: active ? T.ember : T.txt3,
+                        opacity: f.booked && k !== "fightcamp" ? 0.4 : 1 }}>
+                      {v.label} {k === "fightcamp" ? "🔒" : `$${v.cost}/wk`}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div style={{ minWidth: 140 }}>
+              <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1,
+                textTransform: "uppercase", color: T.txt3, marginBottom: 8 }}>Intensity</div>
+              <div style={{ display: "flex", gap: 4 }}>
+                {Object.entries(INTENSITY).map(([k, v]) => {
+                  const active = f.training?.intensity === k;
+                  return (
+                    <button key={k} className="chip" disabled={!!f.booked}
+                      onClick={() => { const type = f.booked ? "fightcamp" : f.training?.type || "striking"; up(g2 => reducer(g2, { type: "SET_TRAINING", fighterId: f.id, program: type, intensity: k })); }}
+                      style={{ fontFamily: T.body, fontSize: 11, fontWeight: 600, padding: "5px 10px",
+                        borderRadius: 6, cursor: f.booked ? "default" : "pointer", border: `1px solid ${active ? T.gold : T.line}`,
+                        background: active ? `${T.gold}22` : "transparent", color: active ? T.gold : T.txt3 }}>
+                      {k} <span style={{ fontSize: 9, color: T.txt3 }}>{Math.round(v.mult * 100)}%</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </Panel>
 
         {/* fight history table full width */}

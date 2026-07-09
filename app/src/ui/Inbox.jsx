@@ -1,6 +1,7 @@
 import { fmt$ } from "../engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
+import { t } from "../engine/i18n.js";
 import { random } from "../engine/rng.js";
 
 /* =============================================================================
@@ -12,10 +13,10 @@ export default function Inbox({ g, dispatch, setTab }) {
   if (!g.inbox || g.inbox.length === 0) {
     return (
       <Panel style={{ textAlign: "center", padding: "40px 20px" }}>
-        <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.6 }}>📨</div>
-        <Eyebrow>Inbox Empty</Eyebrow>
+        <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.6 }}>✉</div>
+        <Eyebrow>{t("UI.inboxClear")}</Eyebrow>
         <div style={{ fontSize: 13, color: T.txt3 }}>
-          No messages yet — advance the week and offers &amp; events will arrive.
+          {t("UI.noEventsHint")}
         </div>
       </Panel>
     );
@@ -35,18 +36,18 @@ export default function Inbox({ g, dispatch, setTab }) {
   });
 
   const TYPE_META = {
-    offer: { color: T.steel, icon: "🤝", label: "Fight Offer" },
-    event: { color: T.warn, icon: "⚡", label: "Event" },
+    offer: { color: T.steel, label: t("UI.inbox") },
+    event: { color: T.warn, label: t("UI.event") },
   };
 
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <Eyebrow color={T.gold}>
-          Inbox · {g.inbox.length} message{g.inbox.length !== 1 ? "s" : ""}
+          {t("UI.inbox")} · {g.inbox.length} message{g.inbox.length !== 1 ? "s" : ""}
         </Eyebrow>
         {g.inbox.some((m) => m.expires != null && m.expires <= 2) && (
-          <Tag color={T.neg} solid>⚠ Expiring</Tag>
+          <Tag color={T.neg} solid>{t("UI.expiresWeek")}</Tag>
         )}
       </div>
 
@@ -65,11 +66,11 @@ export default function Inbox({ g, dispatch, setTab }) {
               {/* Header row */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  {m.isMainEvent && <Tag color={T.gold} solid>Main Event</Tag>}
-                  {m.title && <Tag color={T.gold}>{m.titleTier || "Title"}</Tag>}
-                  {m.defense && <Tag color={T.neg}>Defense</Tag>}
-                  {m.isTitleEliminator && <Tag color={T.warn}>Title Eliminator</Tag>}
-                  {m.shortNotice && <Tag color={T.neg}>Short Notice</Tag>}
+                  {m.isMainEvent && <Tag color={T.gold} solid>{t("UI.upcomingFights")}</Tag>}
+                  {m.title && <Tag color={T.gold}>{m.titleTier || t("UI.title")}</Tag>}
+                  {m.defense && <Tag color={T.neg}>{t("UI.title") + " Defense"}</Tag>}
+                  {m.isTitleEliminator && <Tag color={T.warn}>{t("UI.rankings") + " Eliminator"}</Tag>}
+                  {m.shortNotice && <Tag color={T.neg}>{t("UI.expiresWeek")}</Tag>}
                   <Tag color={accent}>{m.tier}</Tag>
                 </div>
                 {m.expires != null && (
@@ -106,9 +107,9 @@ export default function Inbox({ g, dispatch, setTab }) {
 
               {/* Details grid */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 12px", marginBottom: 10 }}>
-                <Detail label="Show" value={fmt$(m.show)} />
-                <Detail label="Win Bonus" value={fmt$(m.winBonus)} color={T.pos} />
-                <Detail label="Opponent" value={`${m.opponent.record.w}-${m.opponent.record.l} · ${m.opponent.archetype}`} />
+                <Detail label={t("UI.purse")} value={fmt$(m.show)} />
+                <Detail label={t("UI.purse")} value={fmt$(m.winBonus)} color={T.pos} />
+                <Detail label={t("UI.opponent")} value={`${m.opponent.record.w}-${m.opponent.record.l} · ${m.opponent.archetype}`} />
                 <Detail label="Rank" value={m.oppRank != null ? `#${m.oppRank}` : m.oppRank === 0 ? "👑" : "—"} color={T.gold} />
                 <Detail label="Camp Cut" value={`${Math.round(((f.contract && f.contract.managerCut) || 0.18) * 100)}%`} />
                 <Detail label="Weeks Out" value={`T-${m.weeks}w`} color={m.weeks <= 3 ? T.warn : T.txt2} />
@@ -117,7 +118,7 @@ export default function Inbox({ g, dispatch, setTab }) {
               {/* Promoter relationship */}
               {g.promoterRel && (
                 <div style={{ fontSize: 10, color: T.txt3, marginBottom: 10, textAlign: "center" }}>
-                  🤝 {m.tier} Relationship:{" "}
+                  {m.tier} Relationship:{" "}
                   <span style={{
                     color: (g.promoterRel[m.tier] || 30) >= 60 ? T.pos
                       : (g.promoterRel[m.tier] || 30) < 30 ? T.neg : T.txt2,
@@ -135,7 +136,7 @@ export default function Inbox({ g, dispatch, setTab }) {
                   padding: 6, borderRadius: T.r, marginBottom: 10, textAlign: "center",
                   fontSize: 11, color: T.neg, fontWeight: 600,
                 }}>
-                  ⚠ MANDATORY — rejecting this fight will strip the title
+                  MANDATORY — rejecting this fight will strip the title
                 </div>
               )}
 
@@ -146,7 +147,7 @@ export default function Inbox({ g, dispatch, setTab }) {
                   padding: 6, borderRadius: T.r, marginBottom: 10, textAlign: "center",
                   fontSize: 11, color: T.warn, fontWeight: 600,
                 }}>
-                  ⏰ Expiring in {m.expires} week{m.expires !== 1 ? "s" : ""} — respond now!
+                  Expiring in {m.expires} week{m.expires !== 1 ? "s" : ""} — respond now!
                 </div>
               )}
 
@@ -162,7 +163,7 @@ export default function Inbox({ g, dispatch, setTab }) {
                     oppRank: m.oppRank, contenderId: m.contenderId, messageId: m.id,
                   })}
                 >
-                  Accept
+                  {t("UI.accept")}
                 </Btn>
                 <Btn
                   sm
@@ -197,9 +198,44 @@ export default function Inbox({ g, dispatch, setTab }) {
                     messageId: m.id, stripTitle: m.defense,
                   })}
                 >
-                  Reject
+                  {t("UI.reject")}
                 </Btn>
               </div>
+            </Panel>
+          );
+        }
+
+        // ── SPONSOR OFFER ────────────────────────────────────────
+        if (m.type === "sponsor") {
+          return (
+            <Panel key={m.id} style={{ marginBottom: 12, borderColor: T.gold }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <Tag color={T.gold} solid>Sponsor</Tag>
+                <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 15, textTransform: "uppercase",
+                  letterSpacing: .5, color: T.txt }}>{m.sponsorBrand || m.title}</span>
+                {m.expires != null && (
+                  <span style={{ marginLeft: "auto", fontFamily: T.mono, fontSize: 11, color: T.txt3 }}>
+                    Exp: {m.expires}w
+                  </span>
+                )}
+              </div>
+              {m.body && (
+                <div style={{ color: T.txt2, fontSize: 13, marginBottom: 12, lineHeight: 1.5 }}>{m.body}</div>
+              )}
+              {m.choices && m.choices.length > 0 && (
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {m.choices.map((c, i) => (
+                    <Btn key={i} sm color={c.sponsorReject ? T.txt3 : T.pos}
+                      ghost={!!c.sponsorReject}
+                      onClick={() => dispatch({
+                        type: "INBOX_EVENT", choiceIndex: i, messageId: m.id,
+                        choice: c, gambleRoll: null,
+                      })}>
+                      {c.label}
+                    </Btn>
+                  ))}
+                </div>
+              )}
             </Panel>
           );
         }
@@ -210,7 +246,7 @@ export default function Inbox({ g, dispatch, setTab }) {
           <Panel key={m.id} style={{ marginBottom: 12, borderColor: eventColor }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <Tag color={eventColor}>{(TYPE_META[m.type] || TYPE_META.event).icon} {m.type}</Tag>
+                <Tag color={eventColor}>{(TYPE_META[m.type] || TYPE_META.event).label}</Tag>
               </div>
               {m.expires != null && (
                 <span style={{
@@ -243,7 +279,7 @@ export default function Inbox({ g, dispatch, setTab }) {
                       if (c.openExtend != null) {
                         const f = g.roster.find((x) => x.id === c.openExtend);
                         dispatch({ type: "INBOX_REMOVE", messageId: m.id });
-                        if (f) setTab("roster"); // navigate so user can find the fighter
+                        if (f) dispatch({ type: "SIGN_CONTRACT_PRE", fighter: f, mode: "extend", fighterId: f.id });
                         return;
                       }
                       dispatch({

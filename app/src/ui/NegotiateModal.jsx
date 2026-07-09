@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { R, RI, fmt$, clamp, random } from "../engine/rng.js";
 import { AGENT_TYPES } from "../engine/data.js";
-import { T, Panel, Eyebrow as H, Btn, Tag } from "./theme.jsx";
+import { T, Panel, Eyebrow as H, Btn, Tag, Bar } from "./theme.jsx";
 
 const NegoRow = ({ label, children, hint }) => (
   <div style={{ marginBottom: 14 }}>

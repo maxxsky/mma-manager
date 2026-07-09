@@ -3,6 +3,7 @@ import { ARCH_COLOR } from "../engine/data.js";
 import { avgSkill } from "../engine/fighter.js";
 import { rankOf } from "../engine/rankings.js";
 import { T, Panel, Tag, Ovr, Mono, heat, Btn } from "./theme.jsx";
+import { t } from "../engine/i18n.js";
 import FighterDetail from "./FighterDetail.jsx";
 
 export default function Roster({ g, setTab, up }) {
@@ -12,7 +13,7 @@ export default function Roster({ g, setTab, up }) {
     const f = g.roster.find((x) => x.id === detailFighter.id);
     return f ? (
       <div>
-        <Btn sm ghost onClick={() => setDetailFighter(null)} style={{ marginBottom: 14 }}>← Back to Roster</Btn>
+        <Btn sm ghost onClick={() => setDetailFighter(null)} style={{ marginBottom: 14 }}>← {t("UI.back")}</Btn>
         <FighterDetail f={f} g={g} up={up} />
       </div>
     ) : null;
@@ -22,13 +23,13 @@ export default function Roster({ g, setTab, up }) {
   const keys = ["striking", "wrestling", "bjj", "footwork", "strength", "cardio", "chin", "fightIQ"];
 
   return (
-    <Panel pad={0} style={{ overflow: "hidden" }}>
-      <div style={{ display: "grid",
+    <Panel pad={0} style={{ overflow: "hidden" }} role="table" aria-label="Fighter roster table">
+      <div role="row" style={{ display: "grid",
         gridTemplateColumns: "minmax(200px,1.4fr) 46px repeat(8, 40px) 90px 70px",
         alignItems: "center", padding: "0 16px", height: 40, background: T.raised,
         borderBottom: `1px solid ${T.line}` }}>
-        {["Fighter", "OVR", ...cols, "Status", "Cond"].map((c, i) => (
-          <span key={i} style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1,
+        {[t("UI.fighter"), t("UI.overall"), ...cols, t("UI.status"), t("UI.condition")].map((c, i) => (
+          <span key={i} role="columnheader" style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1,
             textTransform: "uppercase", color: T.txt3, textAlign: i === 0 ? "left" : "center" }}>{c}</span>
         ))}
       </div>
@@ -39,17 +40,18 @@ export default function Roster({ g, setTab, up }) {
         const isChamp = div && div.champ.player && div.champ.fighterId === f.id;
         return (
           <div key={f.id} className="row" onClick={() => { setDetailFighter(f); }}
+            role="row" aria-label={`${f.name} - ${f.weightClass}`}
             style={{ display: "grid",
               gridTemplateColumns: "minmax(200px,1.4fr) 46px repeat(8, 40px) 90px 70px",
               alignItems: "center", padding: "0 16px", height: 52, cursor: "pointer",
               borderBottom: `1px solid ${T.line}` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+            <div role="cell" style={{ display: "flex", alignItems: "center", gap: 11 }}>
               <Mono name={f.name} color={ac} size={34} champ={isChamp || f.titles?.length > 0} />
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontFamily: T.body, fontSize: 14, fontWeight: 600, color: T.txt,
                   display: "flex", alignItems: "center", gap: 6 }}>
                   {f.name}
-                  {isChamp ? <Tag color={T.gold} solid>Champ</Tag>
+                  {isChamp ? <Tag color={T.gold} solid>{t("UI.champion")}</Tag>
                     : f.titles?.length > 0 ? <Tag color={T.gold}>🏆</Tag>
                     : r ? <Tag color={T.gold}>#{r}</Tag> : null}
                 </div>
@@ -59,22 +61,22 @@ export default function Roster({ g, setTab, up }) {
                 </div>
               </div>
             </div>
-            <div style={{ textAlign: "center" }}>
-              <span style={{ fontFamily: T.mono, fontSize: 15, fontWeight: 700, color: heat(avgSkill(f)) }}>
-                {avgSkill(f)}</span>
+            <div role="cell" style={{ textAlign: "center" }}>
+              <span style={{ fontFamily: T.mono, fontSize: 15, fontWeight: 700, color: heat(Math.round(avgSkill(f))) }}>
+                {Math.round(avgSkill(f))}</span>
             </div>
             {keys.map((k) => (
-              <span key={k} style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 600,
+              <span key={k} role="cell" style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 600,
                 textAlign: "center", color: heat(f.attrs[k]) }}>{Math.round(f.attrs[k])}</span>
             ))}
-            <div style={{ textAlign: "center" }}>
-              {isChamp ? <Tag color={T.gold}>Champ</Tag>
-                : f.booked ? <Tag color={T.ember}>Booked</Tag>
-                : f.injury ? <Tag color={T.neg}>Injured</Tag>
-                : f.overtraining >= 50 ? <Tag color={T.warn}>Fatigued</Tag>
-                : <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>Training</span>}
+            <div role="cell" style={{ textAlign: "center" }}>
+              {isChamp ? <Tag color={T.gold}>{t("UI.champion")}</Tag>
+                : f.booked ? <Tag color={T.ember}>{t("UI.booked")}</Tag>
+                : f.injury ? <Tag color={T.neg}>{t("UI.injured")}</Tag>
+                : f.overtraining >= 50 ? <Tag color={T.warn}>{t("UI.fatigued")}</Tag>
+                : <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>{t("TRAIN.sparring")}</span>}
             </div>
-            <div style={{ paddingLeft: 8 }}>
+            <div role="cell" style={{ paddingLeft: 8 }}>
               <div style={{ height: 4, background: T.bg, borderRadius: 2, marginBottom: 3 }}>
                 <div style={{ height: "100%", width: `${f.morale}%`,
                   background: f.morale > 60 ? T.pos : T.warn, borderRadius: 2 }} /></div>

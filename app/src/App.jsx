@@ -5,11 +5,11 @@ import { useLang } from "./ui/LangContext.jsx";
 import { R, RI, clamp, pick, fmt$, uid, random } from "./engine/rng.js";
 import {
   ATTRS, ATTR_LABEL, WEIGHTS, ARCH_COLOR, TRAITS, AMBITIONS, AMBITION_KEYS,
-  AGENT_TYPES, GAME_PLANS, TRAINING, INTENSITY, COACH_PERSONALITIES,
+  AGENT_TYPES, GAME_PLANS, INTENSITY, COACH_PERSONALITIES,
   CAMP_TIERS, SPONSOR_BRANDS, FAC_LABEL, RIVAL_TRAITS, PROMO_TIERS,
   ACHIEVEMENTS,
 } from "./engine/data.js";
-import { genFighter, assignAgent, agentFor, avgSkill, tierOf, weeklyFee, scoutGrade, makeReport, genCoach, genBio } from "./engine/fighter.js";
+import { genFighter, assignAgent, agentFor, avgSkill, tierOf, scoutGrade, makeReport, genCoach, genBio } from "./engine/fighter.js";
 import { genDivisions, rankOf, vacateTitle, stripTitle, initPromoterRel } from "./engine/rankings.js";
 import { genRivalCamp } from "./engine/rivals.js";
 import { facilityCost } from "./engine/economy.js";
@@ -20,7 +20,6 @@ import { checkAchievements } from "./engine/achievements.js";
 // ===== UI: React components =====
 import { C, DISPLAY, T, GlobalStyle, cut, Card, H, Btn, Tag, Bar, OVR, Meter } from "./ui/theme.jsx";
 import FightNight from "./ui/FightNight.jsx";
-import FighterCard from "./ui/FighterCard.jsx";
 import NegotiateModal from "./ui/NegotiateModal.jsx";
 import Sidebar from "./ui/Sidebar.jsx";
 import TopBar from "./ui/TopBar.jsx";
@@ -86,17 +85,14 @@ export default function App() {
         const raw = localStorage.getItem(SAVE_KEY);
         if (raw) {
           const s = JSON.parse(raw);
-          if (s.week == null || !s.roster || s.cash == null) {
+          if (s.week == null || !s.roster || s.cash == null || isNaN(s.cash)) {
             s.week = 1; s.cash = 100000; s.roster = []; s.log = ["Save rusak — dimulai ulang."];
           }
           if (!s.divisions) s.divisions = genDivisions();
           if (!s.rivals) s.rivals = [genRivalCamp(0), genRivalCamp(1), genRivalCamp(2)];
           if (!s.promoterRel) s.promoterRel = initPromoterRel();
           if (s.campTier == null) s.campTier = 0;
-          if (s.loan == null) s.loan = null;
           if (!s.relationships) s.relationships = {};
-          if (s.openGymActive == null) s.openGymActive = false;
-          if (s.sponsor == null) s.sponsor = null;
           if (s.rep == null || isNaN(s.rep) || s.rep <= 0) s.rep = 8;
           if (!s.sponsors) {
             s.sponsors = s.sponsor ? [{ brand: s.sponsor.brand, terms: "placement", rate: s.sponsor.rate, weeksLeft: null }] : [];
@@ -106,6 +102,11 @@ export default function App() {
             if (!f.ambition) f.ambition = pick(AMBITION_KEYS);
             if (!f.agent) f.agent = agentFor(f);
             if (!f.contract) f.contract = { managerCut: 0.18, fightsLeft: 4, fightsTotal: 4, durationMo: 24, signedWeek: f.joinedWeek || 0, renegoFlagged: false };
+            if (!f.training) f.training = { type: "conditioning", intensity: "Medium" };
+            if (!f.ceilings) {
+              f.ceilings = {};
+              ATTRS.forEach((k) => (f.ceilings[k] = clamp(f.attrs[k] + RI(8, 30), f.attrs[k], 99)));
+            }
             f.injuryCount = f.injuryCount || 0;
             f.seriousInjuries = f.seriousInjuries || 0;
             if (!f.fightHistory) f.fightHistory = [];
@@ -150,7 +151,7 @@ export default function App() {
     const clean = Object.assign({}, old);
     delete clean._undoStack;
     delete clean._redoStack;
-    const n = JSON.parse(JSON.stringify(clean));
+    const n = structuredClone(clean);
     fn(n);
     // Throttle localStorage saves
     clearTimeout(saveTimer.current);
@@ -161,6 +162,10 @@ export default function App() {
   });
 
   const dispatch = (action) => {
+    if (action.type === "SIGN_CONTRACT_PRE") {
+      setNego({ fighter: action.fighter, mode: action.mode || "sign", prospectId: action.prospectId, fighterId: action.fighterId });
+      return;
+    }
     up((n) => reducer(n, action));
   };
 
@@ -206,17 +211,10 @@ export default function App() {
     const report = makeReport(f, grade);
     dispatch({ type: "SCOUT", cost, fighter: f, report, grade, method: label });
   };
-  // Wrapper for Scout component: (method, grade, cost)
-  const scoutFighter = (method, grade, cost) => {
-    const levels = { Bronze: [0.3, 0.5], Silver: [0.4, 0.7], Gold: [0.5, 0.85], Platinum: [0.65, 0.95] };
-    const lv = levels[grade] || [0.4, 0.7];
-    scout(cost, lv, method, scoutFilterArch, scoutFilterWC);
+  // Wrapper for Scout component: (cost, level, label, filterArch, filterWC)
+  const scoutFighter = (cost, level, label, filterArch, filterWC) => {
+    scout(cost, level, label, filterArch, filterWC);
   };
-
-  const monthlyBurn = g.coaches.reduce((s, c) => s + ((!c.freeUntil || g.week > c.freeUntil) ? c.salary : 0), 0)
-    + Math.round(Object.values(g.facilities).reduce((s, l) => s + l * 30000, 0) * 0.05)
-    + g.roster.reduce((s, f) => s + (f.injury ? 0 : TRAINING[f.booked ? "fightcamp" : f.training.type].cost * 4), 0);
-  const monthlyIn = g.roster.reduce((s, f) => s + weeklyFee(f) * 4, 0) + g.rep * 500 + g.roster.reduce((s, f) => s + f.popularity * 150, 0);
 
   const tier = CAMP_TIERS[g.campTier || 0];
   const coachCap = tier.coachCap;
@@ -260,7 +258,7 @@ export default function App() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, minHeight: "100vh" }}>
         <TopBar
           title={(tabs.find(([k]) => k === tab) || [])[2] || "Dashboard"}
-          cash={fmt$(g.cash)}
+          cash={g.cash}
           rep={g.rep}
           chem={g.chemistry}
           legacy={g.legacy || 0}
@@ -270,6 +268,7 @@ export default function App() {
           slotInfo={slotInfo}
           lang={lang}
           onLangChange={() => setLang(lang === "id" ? "en" : "id")}
+          onNewGame={() => { setG(newGame()); localStorage.removeItem(SAVE_KEY); }}
         />
 
         <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
@@ -386,7 +385,7 @@ export default function App() {
       {fightFighter && fightFighter.booked && (
         <FightNight key={fightFighter.id} fighter={fightFighter} done={(fx, fightCtx) => {
           setG((old) => {
-            const n = JSON.parse(JSON.stringify(old));
+            const n = structuredClone(old);
             fx(n);
             if (fightCtx) checkAchievements(n, fightCtx);
             try { localStorage.setItem(SAVE_KEY, JSON.stringify(n)); } catch (e) {}
