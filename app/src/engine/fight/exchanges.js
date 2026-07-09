@@ -1,5 +1,6 @@
 import { clamp, pick } from "../rng.js";
 import { GROUND } from "./ground.js";
+import { getArchetypeBehavior } from "../archetype-expression.js";
 
 export const EXCHANGES = {
   strike:  { pos: ["standing"],                label: "Striking exchange" },
@@ -23,7 +24,14 @@ export function pickExchange(pos, A, B, planA) {
     pool.push("clinch", "clinch");
     const tdWeightA = A.attrs.wrestling > 55 || planA === "Take It Down" ? 4 : 1;
     const tdWeightB = B.attrs.wrestling > 55 ? 4 : 1;
-    for (let i = 0; i < tdWeightA; i++) pool.push("td");
+        // Archetype expression: add behavior-weighted entries
+    const behaviorA = getArchetypeBehavior(A);
+    const behaviorB = getArchetypeBehavior(B);
+    for (let i = 0; i < (behaviorA.strikeWeight || 0); i++) pool.push("strike");
+    for (let i = 0; i < (behaviorB.strikeWeight || 0); i++) pool.push("strike");
+    for (let i = 0; i < (behaviorA.clinchWeight || 0); i++) pool.push("clinch");
+    for (let i = 0; i < (behaviorB.clinchWeight || 0); i++) pool.push("clinch");
+    for (let i = 0; i < tdWeightA + (behaviorA.tdWeight || 0); i++) pool.push("td");
     for (let i = 0; i < tdWeightB; i++) pool.push("tdB");
   } else {
     const topFighter = pos.top === "A" ? A : B;
@@ -33,10 +41,10 @@ export function pickExchange(pos, A, B, planA) {
     const subFromBottom = Math.round(g.bottomSub * 4);
     const sweepW = Math.round(g.sweepChance * 6);
     const advW = Math.round(g.advanceChance * 4);
-    for (let i = 0; i < gnpW; i++) pool.push("gnp");
+    for (let i = 0; i < gnpW + (behaviorA.topControlBonus ? 1 : 0); i++) pool.push("gnp");
     for (let i = 0; i < subFromTop; i++) pool.push("sub");
     for (let i = 0; i < subFromBottom; i++) pool.push("sub");
-    for (let i = 0; i < sweepW; i++) pool.push("sweep");
+    for (let i = 0; i < sweepW + (behaviorA.sweepWeight || 0); i++) pool.push("sweep");
     for (let i = 0; i < advW; i++) pool.push("advance");
     pool.push("scramble", "scramble");
   }

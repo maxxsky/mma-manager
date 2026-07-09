@@ -6,6 +6,7 @@ import { reducer } from "../engine/reducer.js";
 import { getStoryTags } from "../engine/career.js";
 import { generateFighterNickname } from "../engine/identity.js";
 import { getTrainingCycle, getCoachRecommendation, getDevelopmentPhilosophy, getTrainingIdentity, saveLastTraining } from "../engine/training-philosophy.js";
+import { getCoachArchetypeSynergy, getFightStyleSummary, getArchetypeBehavior } from "../engine/archetype-expression.js";
 import { T, Panel, Eyebrow, Tag, Btn, Ovr, Mono, AttrTele, Meter, OctaRadar, Icon, ICONS, heat } from "./theme.jsx";
 
 export default function FighterDetail({ f, g, onBack, up }) {
@@ -150,15 +151,38 @@ export default function FighterDetail({ f, g, onBack, up }) {
                 </div>
               );
             })()}
+            {/* Fighting Style */}
+            {(() => {
+              const style = getFightStyleSummary(f);
+              if (!style) return null;
+              return (
+                <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+                  <Tag color={ac} solid>{style.style}</Tag>
+                  {style.isFinisher && <Tag color={T.ember}>Finisher</Tag>}
+                  {style.isGrinder && <Tag color={T.steel}>Decision Machine</Tag>}
+                </div>
+              );
+            })()}
             {/* Coach Recommendation */}
             {(() => {
               const coach = g.coaches?.[0];
               if (!coach) return null;
               const recs = getCoachRecommendation(coach, f);
-              if (!recs || recs.length === 0) return null;
+              const synergy = coach ? getCoachArchetypeSynergy(coach, f) : null;
+              if (!recs || recs.length === 0) {
+                if (synergy) {
+                  return (
+                    <div style={{ padding: '6px 10px', background: T.bg, borderRadius: T.r, marginBottom: 8, fontFamily: T.body, fontSize: 11, color: T.txt3, fontStyle: 'italic', borderLeft: '2px solid ' + T.steel }}>
+                      {coach.name} ({coach.specialty}) · {synergy.label}: {synergy.rating === 'perfect' ? '⭐ Ideal synergy with ' + f.archetype : synergy.rating === 'good' ? 'Good fit' : 'Adequate'}
+                    </div>
+                  );
+                }
+                return null;
+              }
               return (
                 <div style={{ padding: '6px 10px', background: T.bg, borderRadius: T.r, marginBottom: 8, fontFamily: T.body, fontSize: 11, color: T.txt3, fontStyle: 'italic', borderLeft: '2px solid ' + T.steel }}>
                   {recs[0].reason}
+                  {synergy && <span style={{ display: 'block', marginTop: 2, color: synergy.rating === 'perfect' ? T.pos : T.txt3, fontSize: 10 }}>Synergy: {synergy.label}</span>}
                 </div>
               );
             })()}
