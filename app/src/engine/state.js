@@ -14,6 +14,7 @@ import { worldTick } from "./world.js";
 import { trackCoachCareer, trackSponsorRelations } from "./identity.js";
 import { processEventSystem, onCoachRaiseDenied, onConflictMediated, onWinningStreak } from "./events.js";
 import { calcMentorBonus } from "./career.js";
+import { checkObjectives, getTip } from "./onboarding.js";
 import { tickTraining } from "./tick/training.js";
 import { tickRankings } from "./tick/rankings.js";
 import { tickContracts } from "./tick/contracts.js";
@@ -212,7 +213,10 @@ export function tick(g) {
     return;
     }
 
-    if (random() < 0.35) {
+    // FTUE: guarantee fight offer in first 2 weeks
+    const isFirstWeeks = g.week <= 2 && !f.booked && f.record.w === 0 && f.record.l === 0;
+    const offerChance = isFirstWeeks ? 1.0 : 0.35;
+    if (random() < offerChance) {
       const rep = g.rep;
       const r = rankOf(g, f);
 
@@ -857,6 +861,11 @@ export function tick(g) {
   worldTick(g);
   processEventSystem(g);
   trackCoachCareer(g);
+  checkObjectives(g);
+  const tip = getTip(g);
+  if (tip) {
+    g.inbox.unshift({ id: uid(), type: "event", title: tip.title, body: tip.body, choices: [{ label: "Got it", chem: 0 }] });
+  }
   trackSponsorRelations(g);
   // Cap log at 200 entries to prevent unbounded growth
   if (g.log.length > 200) g.log.length = 200;

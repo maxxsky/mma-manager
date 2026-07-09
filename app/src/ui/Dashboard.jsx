@@ -3,6 +3,7 @@ import React from "react";
 import { T, Panel, Eyebrow, Tag, Icon, ICONS, Mono, ARCH_COLOR } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 import { monthlyBurn, monthlyIn } from "../engine/finance.js";
+import { getObjectives } from "../engine/onboarding.js";
 
 /* =============================================================================
    IRONFIST DASHBOARD — Verbatim from prototype, wired to real g state
@@ -145,6 +146,25 @@ export default function Dashboard({ g, setTab, setActiveFight }) {
         ))}
       </div>
 
+      {/* FTUE Objectives */}
+      {(() => {
+        const objectives = getObjectives(g);
+        if (objectives.length === 0) return null;
+        return (
+          <Panel pad={0} style={{ borderColor: T.gold, border: `1px solid ${T.gold}44`, background: `${T.gold}08` }}>
+            <div style={{ padding: "12px 18px" }}>
+              <Eyebrow color={T.gold}>📋 Getting Started</Eyebrow>
+              {objectives.slice(0, 3).map((o, i) => (
+                <div key={o.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", fontFamily: T.body, fontSize: 13, color: T.txt2 }}>
+                  <span style={{ width: 20, height: 20, borderRadius: 10, background: `${T.gold}22`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.mono, fontSize: 11, color: T.gold, flexShrink: 0 }}>{i + 1}</span>
+                  <span>{o.label}</span>
+                  <span style={{ marginLeft: "auto", fontSize: 10, color: T.txt3 }}>{o.hint}</span>
+                </div>
+              ))}
+             </div>
+           </Panel>
+        );
+      })()}
       {/* PRIORITIES THIS WEEK */}
       <Panel pad={0}>
         <div style={{ padding: "14px 18px 2px" }}><Eyebrow color={T.ember}>{t("UI.priorities")}</Eyebrow></div>
