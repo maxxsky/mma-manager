@@ -10,7 +10,7 @@ import { random, clamp } from "../engine/rng.js";
    Rivalry cards: head-to-head, story, top fighters, poach.
 ============================================================================= */
 
-export default function RivalsScreen({ g, t, fmt$, up }) {
+export default function RivalsScreen({ g, up }) {
   if (!g.rivals || g.rivals.length === 0) {
     return (
       <Panel style={{ textAlign: "center", padding: "40px 20px" }}>
@@ -32,13 +32,13 @@ export default function RivalsScreen({ g, t, fmt$, up }) {
       </div>
 
       {g.rivals.map((rc) => (
-        <RivalCard key={rc.id} rc={rc} g={g} t={t} fmt$={fmt$} up={up} />
+        <RivalCard key={rc.id} rc={rc} g={g} up={up} />
       ))}
     </div>
   );
 }
 
-function RivalCard({ rc, g, t, fmt$, up }) {
+function RivalCard({ rc, g, up }) {
   const traitData = RIVAL_TRAITS[rc.trait] || {};
   const rivalryLevel =
     rc.rivalry > 60 ? "hostile" : rc.rivalry > 30 ? "heated" : rc.rivalry > 10 ? "cool" : "cold";

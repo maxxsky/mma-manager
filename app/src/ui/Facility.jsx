@@ -2,7 +2,7 @@ import { fmt$ } from "../engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn, Meter } from "./theme.jsx";
 
-export default function Facility({ g, dispatch, t, fmt$, coachCap, rosterCap }) {
+export default function Facility({ g, dispatch, coachCap, rosterCap }) {
   const facLabels = { mats: "Mats", ring: "Ring", weights: "Weights", medical: "Medical" };
   const facCost = (lvl) => Math.round(lvl * 30000 * 0.05);
 

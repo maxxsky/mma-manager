@@ -9,7 +9,7 @@ import { TRAINING } from "../engine/data.js";
    P&L summary: income breakdown, expense breakdown, net monthly, cash reserve.
 ============================================================================= */
 
-export default function Finance({ g, t }) {
+export default function Finance({ g }) {
   // ── Income breakdown ──────────────────────────────────────────
   const feeTotal = g.roster.reduce((s, f) => s + weeklyFee(f) * 4, 0);
   const popTotal = g.roster.reduce((s, f) => s + f.popularity * 150, 0);

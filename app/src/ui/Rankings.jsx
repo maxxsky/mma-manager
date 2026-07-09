@@ -1,3 +1,4 @@
+import { fmt$ } from "../engine/rng.js";
 import React, { useState } from "react";
 import { WEIGHTS, ARCH_COLOR as DATA_ARCH_COLOR } from "../engine/data.js";
 import { avgSkill, tierOf } from "../engine/fighter.js";

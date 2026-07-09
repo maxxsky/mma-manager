@@ -8,7 +8,7 @@ import { random } from "../engine/rng.js";
    Message list with type tags, expiration warnings, action buttons.
 ============================================================================= */
 
-export default function Inbox({ g, dispatch, setTab, t }) {
+export default function Inbox({ g, dispatch, setTab }) {
   if (!g.inbox || g.inbox.length === 0) {
     return (
       <Panel style={{ textAlign: "center", padding: "40px 20px" }}>

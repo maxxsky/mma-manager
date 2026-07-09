@@ -326,22 +326,22 @@ export default function App() {
 
         {/* ===== INBOX ===== */}
         {tab === "inbox" && (
-          <Inbox g={g} dispatch={dispatch} setTab={setTab} t={t} fmt$={fmt$} />
+          <Inbox g={g} dispatch={dispatch} setTab={setTab} />
         )}
 
         {/* ===== RIVALS ===== */}
         {tab === "rivals" && (
-          <RivalsScreen g={g} t={t} fmt$={fmt$} />
+          <RivalsScreen g={g} up={up} />
         )}
 
         {/* ===== MGMT / FACILITY ===== */}
         {tab === "mgmt" && (
-          <Facility g={g} dispatch={dispatch} t={t} fmt$={fmt$} coachCap={coachCap} rosterCap={rosterCap} />
+          <Facility g={g} dispatch={dispatch} coachCap={coachCap} rosterCap={rosterCap} />
         )}
 
         {/* ===== FINANCE ===== */}
         {tab === "finance" && (
-          <Finance g={g} t={t} fmt$={fmt$} />
+          <Finance g={g} />
         )}
       {/* Weekly Summary overlay */}
       {weeklySummary && (
