@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useLang } from "./ui/LangContext.jsx";
 import { getActiveSlot, setActiveSlot, loadGame, saveGame, deleteGame, getSlotInfo } from "./services/saveService.js";
 import { backupSave, hasBackup, restoreBackup } from "./engine/polish.js";
+import { rememberTab, getLastTab } from "./ui/ui-utils.js";
 
 // ===== ENGINE: pure JS, zero React — bisa di-import oleh server Node nanti =====
 import { R, RI, clamp, pick, fmt$, uid, random } from "./engine/rng.js";
@@ -41,7 +42,8 @@ import Dynasty from "./ui/Dynasty.jsx";
 // ============================================================
 export default function App() {
   const [g, setG] = useState(newGame);
-  const [tab, setTab] = useState("dashboard");
+  const [tab, setTabRaw] = useState(getLastTab());
+  const setTab = (t) => { rememberTab(t); setTabRaw(t); };
   const [activeFight, setActiveFight] = useState(null);
   const [weekFlash, setWeekFlash] = useState(0);
   const [loaded, setLoaded] = useState(false);

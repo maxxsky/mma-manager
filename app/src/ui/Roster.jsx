@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ARCH_COLOR } from "../engine/data.js";
+import { ARCH_COLOR, TRAINING } from "../engine/data.js";
 import { avgSkill } from "../engine/fighter.js";
 import { rankOf } from "../engine/rankings.js";
 import { T, Panel, Tag, Ovr, Mono, heat, Btn } from "./theme.jsx";
