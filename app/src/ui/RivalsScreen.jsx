@@ -2,6 +2,7 @@ import { fmt$ } from "../engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
 import { ARCH_COLOR, RIVAL_TRAITS, CAMP_TIERS } from "../engine/data.js";
+import { getCampLifecycleLabel } from "../engine/shadow-ai.js";
 import { avgSkill, tierOf } from "../engine/fighter.js";
 import { random, clamp } from "../engine/rng.js";
 
@@ -136,6 +137,7 @@ function RivalCard({ rc, g, up }) {
         <MiniStat label="Fighters" value={rc.fighters.length} color={T.txt} />
         <MiniStat label="Coaches" value={rc.coaches.length} color={T.txt} />
         <MiniStat label="Chemistry" value={Math.round(rc.chemistry)} color={T.steel} />
+        {(() => { const life = getCampLifecycleLabel(rc); return <div style={{ marginTop: 6 }}><Tag color={life.color}>{life.icon} {life.label}</Tag></div>; })()}
       </div>
 
       {/* Rivalry story snippet */}

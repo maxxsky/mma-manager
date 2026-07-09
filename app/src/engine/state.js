@@ -12,9 +12,11 @@ import { getRel } from "./relationships.js";
 
 import { worldTick } from "./world.js";
 import { trackCoachCareer, trackSponsorRelations } from "./identity.js";
+  tickAllShadowCamps(g);
 import { processEventSystem, onCoachRaiseDenied, onConflictMediated, onWinningStreak } from "./events.js";
 import { calcMentorBonus } from "./career.js";
 import { updateDynasty } from "./dynasty.js";
+import { tickAllShadowCamps } from "./shadow-ai.js";
 import { checkObjectives, getTip } from "./onboarding.js";
 import { tickTraining } from "./tick/training.js";
 import { tickRankings } from "./tick/rankings.js";
@@ -862,6 +864,7 @@ export function tick(g) {
   worldTick(g);
   processEventSystem(g);
   trackCoachCareer(g);
+  tickAllShadowCamps(g);
   checkObjectives(g);
   updateDynasty(g);
   const tip = getTip(g);
