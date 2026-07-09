@@ -174,7 +174,7 @@ export function tick(g) {
       opp.record = { w: RI(10, 18), l: RI(0, 3), ko: 0, sub: 0, dec: 0 };
       g.inbox.unshift({
         id: uid(), type: "offer", fighterId: f.id, expires: 3,
-        tier: "Major", show: RI(150, 300) * 1000, winBonus: RI(150, 300) * 1000,
+        tier: "Major", show: RI(100, 220) * 1000, winBonus: RI(100, 220) * 1000,
         opponent: opp, title: true, defense: true, oppRank: 1, contenderId: c0.id,
         titleTier: "Major", titleText: "🛡️ MANDATORY TITLE DEFENSE", weeks: RI(4, 6),
       });
@@ -191,13 +191,15 @@ export function tick(g) {
       for (const t of targets) {
         const tDiv = g.divisions[WEIGHTS[t].name];
         if (tDiv && tDiv.champ && !tDiv.champ.player && !f.titles.includes("Double Champion")) {
-          const superOpp = genFighter(1.45);
+          const worldYear2 = Math.floor(g.week / 48);
+          const superScale = worldYear2 > 5 ? clamp(1.45 + (worldYear2 - 5) * 0.02, 1.45, 1.7) : 1.45;
+          const superOpp = genFighter(superScale);
           superOpp.name = tDiv.champ.name; superOpp.archetype = tDiv.champ.archetype;
           superOpp.weightClass = WEIGHTS[t].name;
           superOpp.record = { w: RI(15, 22), l: RI(0, 2), ko: 0, sub: 0, dec: 0 };
           g.inbox.unshift({
             id: uid(), type: "offer", fighterId: f.id, expires: 4,
-            tier: "Premier", show: RI(500, 1000) * 1000, winBonus: RI(500, 1000) * 1000,
+            tier: "Premier", show: RI(250, 500) * 1000, winBonus: RI(250, 500) * 1000,
             opponent: superOpp, title: true, defense: false, oppRank: 0,
             titleTier: "Major", titleText: "👑👑 DOUBLE CHAMP ATTEMPT — " + f.weightClass + " vs " + WEIGHTS[t].name,
             weeks: RI(6, 8), doubleChamp: WEIGHTS[t].name,
@@ -226,7 +228,7 @@ export function tick(g) {
           if (interimChamp && !interimChamp.booked && !interimChamp.injury && !g.inbox.some((m) => m.type === "offer" && m.unificationFor === interimChamp.id)) {
             g.inbox.unshift({
               id: uid(), type: "offer", fighterId: interimChamp.id, expires: 4,
-              tier: "Major", show: RI(250, 500) * 1000, winBonus: RI(250, 500) * 1000,
+              tier: "Major", show: RI(150, 350) * 1000, winBonus: RI(150, 350) * 1000,
               opponent: { name: currentChamp.name, archetype: currentChamp.archetype, record: currentChamp.record, weightClass: interimChamp.weightClass },
               title: true, defense: false, oppRank: 0, contenderId: null,
               titleTier: "Major", titleText: "🤝 INTERIM TITLE UNIFICATION", weeks: RI(4, 6),
@@ -303,8 +305,8 @@ export function tick(g) {
       }
 
       let tier, show;
-      if (rep >= 80 && f.record.w >= 8) { tier = "Premier"; show = RI(300, 600) * 1000; }
-      else if (rep >= 60 && f.record.w >= 6) { tier = "Major"; show = RI(60, 200) * 1000; }
+      if (rep >= 80 && f.record.w >= 8) { tier = "Premier"; show = RI(150, 350) * 1000; }
+      else if (rep >= 60 && f.record.w >= 6) { tier = "Major"; show = RI(40, 140) * 1000; }
       else if (rep >= 40 && f.record.w >= 4) { tier = "National"; show = RI(12, 60) * 1000; }
       else if (rep >= 20 && f.record.w >= 2) { tier = "Regional"; show = RI(3, 12) * 1000; }
       else { tier = "Local"; show = RI(8, 30) * 100; }
@@ -336,7 +338,9 @@ export function tick(g) {
 
       let opp, oppRank = null, contenderId = null;
       if (titleTier === "Major") {
-        opp = genFighter(1.45); opp.name = div.champ.name; oppRank = 0;
+        const worldYear = Math.floor(g.week / 48);
+        const aiScale = worldYear > 5 ? clamp(1.45 + (worldYear - 5) * 0.02, 1.45, 1.7) : 1.45;
+        opp = genFighter(aiScale); opp.name = div.champ.name; oppRank = 0;
       } else if (div && (r != null || (f.record.w >= 2 && rep >= 20 && random() < 0.35))) {
         const c = div.list[oppIdx];
         opp = genFighter(clamp(c.level || 1, 0.5, 1.5));

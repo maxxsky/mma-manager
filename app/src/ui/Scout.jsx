@@ -68,7 +68,7 @@ export default function Scout({
     },
     {
       label: "Diamond in the Rough",
-      cost: 10000,
+      cost: 10000 + Math.floor(g.rep * 150),
       level: [1.0, 1.45],
       gradeHint: "A–S",
       desc: "Deep international search. Can uncover elite talent.",

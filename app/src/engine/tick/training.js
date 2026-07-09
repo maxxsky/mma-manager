@@ -32,6 +32,9 @@ export function tickTraining(g) {
       f.injury.weeks--;
       if (f.injury.weeks <= 0) {
         f.injury = null;
+        // Medical facility: small morale boost on recovery
+        const medMorale = (g.facilities.medical - 1) * 2;
+        if (medMorale > 0) f.morale = clamp(f.morale + medMorale, 0, 100);
         g.log.unshift(`✅ ${f.name} pulih dari cedera.`);
       }
       if (f.injury && f.injury.costPerWeek) {
