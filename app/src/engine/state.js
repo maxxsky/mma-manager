@@ -103,6 +103,11 @@ export function tick(g) {
     const inten = INTENSITY[f.training.intensity];
     g.cash -= t.cost;
 
+    // Training attention: if more fighters than coaches, quality degrades
+    const activeFighters = g.roster.filter(x => !x.injury && x.training?.type !== "recovery").length;
+    const availableCoaches = g.coaches.filter(c => !c.freeUntil || g.week > c.freeUntil).length;
+    const attentionMult = activeFighters > 0 ? clamp(availableCoaches / Math.max(activeFighters, 1), 0.7, 1.0) : 1.0;
+
     if (f.training.type === "recovery" && !f.booked) {
       f.overtraining = clamp(f.overtraining - 30, 0, 100);
       f.morale = clamp(f.morale + 4, 0, 100);
@@ -142,7 +147,8 @@ export function tick(g) {
           facBonus(g, [k]) *
            mentorMult *
           sparringMult *
-          relMult;
+          relMult *
+          attentionMult;
         f.attrs[k] = clamp(f.attrs[k] + gain, 0, cap);
       });
 
@@ -240,12 +246,17 @@ export function tick(g) {
     const coachTarget = pick(g.coaches.filter((c) => !c.freeUntil || g.week > c.freeUntil));
 
     if (roll < 0.25 && fa && fb) {
+      // Context-dependent: risk gamble viable at high chemistry
+      const highChem = g.chemistry >= 70;
+      const gambleUp = highChem ? 8 : 6;
+      const gambleDown = highChem ? -4 : -8;
+      const gambleLabel = highChem ? "Biarkan — chemistry kuat, risiko rendah" : "Biarkan — bisa akur (+6) atau makin parah (-8)";
       g.inbox.unshift({
         id: uid(), type: "event", title: "Konflik sparring",
-        body: `${fa.name} dan ${fb.name} clash saat sparring — suasana camp tegang.`,
+        body: `${fa.name} dan ${fb.name} clash saat sparring — suasana camp tegang.${highChem ? " Tapi chemistry camp solid — mungkin reda sendiri." : ""}`,
         choices: [
           { label: "Pisahkan jadwal", chem: 2 },
-          { label: "Biarkan — bisa akur (+6) atau makin parah (-8)", gamble: [6, -8] },
+          { label: gambleLabel, gamble: [gambleUp, gambleDown] },
           { label: "Mediasi", chem: 5 },
         ],
       });
@@ -291,12 +302,14 @@ export function tick(g) {
         ],
       });
     } else {
+      // Team bonding cost scales with camp tier
+      const tierCost = (CAMP_TIERS[g.campTier || 0]?.rosterCap || 4) * 750;
       g.inbox.unshift({
         id: uid(), type: "event", title: "Team bonding",
         body: `${fa.name} dan ${fb.name} akur akhir-akhir ini. ${pick(["Mereka pergi makan bersama", "Mereka latihan bareng di luar jadwal", "Mereka saling support di sesi sparring"])}.`,
         choices: [
           { label: "Biarkan saja", chem: 3 },
-          { label: "Kasih bonus kegiatan tim", chem: 6, cash: -5000 },
+          { label: `Kasih bonus kegiatan tim (${fmt$(tierCost)})`, chem: 6, cash: -tierCost },
         ],
       });
     }
@@ -782,7 +795,9 @@ export function tick(g) {
       }
 
       if (f.morale < 20 && !g.inbox.some((m) => m.releaseFighterId === f.id)) {
-        const bonus = RI(3, 8) * 1000;
+        // Retention bonus scales with fighter's weekly fee (more valuable = more expensive to retain)
+        const fee = weeklyFee(f);
+        const bonus = Math.round(fee * RI(4, 10));
         g.inbox.unshift({
           id: uid(), type: "event", releaseFighterId: f.id,
           title: `${f.name} minta release`,
