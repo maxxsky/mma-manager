@@ -5,6 +5,7 @@ import { avgSkill } from "../engine/fighter.js";
 import { reducer } from "../engine/reducer.js";
 import { getStoryTags } from "../engine/career.js";
 import { generateFighterNickname } from "../engine/identity.js";
+import { getTrainingCycle, getCoachRecommendation, getDevelopmentPhilosophy, getTrainingIdentity, saveLastTraining } from "../engine/training-philosophy.js";
 import { T, Panel, Eyebrow, Tag, Btn, Ovr, Mono, AttrTele, Meter, OctaRadar, Icon, ICONS, heat } from "./theme.jsx";
 
 export default function FighterDetail({ f, g, onBack, up }) {
@@ -126,6 +127,41 @@ export default function FighterDetail({ f, g, onBack, up }) {
         {/* Training assignment */}
         <Panel style={{ gridColumn: "span 2" }}>
           <Eyebrow color={T.ember}>Training</Eyebrow>
+            {/* Training Cycle */}
+            {(() => {
+              const cycle = getTrainingCycle(f);
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <span style={{ fontSize: 16 }}>{cycle.icon}</span>
+                  <span style={{ fontFamily: T.disp, fontSize: 14, fontWeight: 700, color: cycle.phase === 'recovery' || cycle.phase === 'warning' ? T.warn : T.steel, textTransform: 'uppercase', letterSpacing: 1 }}>{cycle.label}</span>
+                  <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>{cycle.desc}</span>
+                </div>
+              );
+            })()}
+            {/* Development Philosophy */}
+            {(() => {
+              const philosophies = getDevelopmentPhilosophy(f);
+              if (!philosophies || philosophies.length === 0) return null;
+              return (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                  {philosophies.slice(0, 2).map(p => (
+                    <Tag key={p.id} color={T.steel}>{p.label}</Tag>
+                  ))}
+                </div>
+              );
+            })()}
+            {/* Coach Recommendation */}
+            {(() => {
+              const coach = g.coaches?.[0];
+              if (!coach) return null;
+              const recs = getCoachRecommendation(coach, f);
+              if (!recs || recs.length === 0) return null;
+              return (
+                <div style={{ padding: '6px 10px', background: T.bg, borderRadius: T.r, marginBottom: 8, fontFamily: T.body, fontSize: 11, color: T.txt3, fontStyle: 'italic', borderLeft: '2px solid ' + T.steel }}>
+                  {recs[0].reason}
+                </div>
+              );
+            })()}
           <div style={{ display: "flex", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 300 }}>
               <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1,
@@ -135,7 +171,7 @@ export default function FighterDetail({ f, g, onBack, up }) {
                   const active = f.booked ? k === "fightcamp" : f.training?.type === k;
                   return (
                     <button key={k} className="chip" disabled={!!f.booked}
-                      onClick={() => up(g2 => reducer(g2, { type: "SET_TRAINING", fighterId: f.id, program: k, intensity: f.training?.intensity || "Medium" }))}
+                            onClick={() => { saveLastTraining(f, k, f.training?.intensity || "Medium"); up(g2 => reducer(g2, { type: "SET_TRAINING", fighterId: f.id, program: k, intensity: f.training?.intensity || "Medium" })); }}
                       style={{ fontFamily: T.body, fontSize: 11, fontWeight: 600, padding: "6px 12px",
                         borderRadius: 8, cursor: f.booked ? "default" : "pointer", border: `1px solid ${active ? T.ember : T.line}`,
                         background: active ? `${T.ember}22` : "transparent", color: active ? T.ember : T.txt3,
