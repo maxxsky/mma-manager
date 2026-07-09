@@ -4,6 +4,7 @@ import { ARCH_COLOR, TRAINING, INTENSITY } from "../engine/data.js";
 import { avgSkill } from "../engine/fighter.js";
 import { reducer } from "../engine/reducer.js";
 import { getStoryTags } from "../engine/career.js";
+import { generateFighterNickname } from "../engine/identity.js";
 import { T, Panel, Eyebrow, Tag, Btn, Ovr, Mono, AttrTele, Meter, OctaRadar, Icon, ICONS, heat } from "./theme.jsx";
 
 export default function FighterDetail({ f, g, onBack, up }) {
@@ -26,6 +27,7 @@ export default function FighterDetail({ f, g, onBack, up }) {
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 34, letterSpacing: .5,
                 textTransform: "uppercase", color: T.txt, lineHeight: 1 }}>{f.name}</div>
+                {(() => { const nick = generateFighterNickname(f); return nick ? <div style={{ fontFamily: T.body, fontSize: 12, color: T.gold, fontStyle: "italic", letterSpacing: .5 }}>"{nick}"</div> : null; })()}
               <div style={{ marginTop: 6 }}>
                 <Tag color={ac} solid>{f.archetype}</Tag><Tag color={T.txt2}>{f.weightClass}</Tag>
                 <Tag color={T.txt2}>{f.age}y</Tag><Tag color={T.txt2}>{f.reach}cm reach</Tag>

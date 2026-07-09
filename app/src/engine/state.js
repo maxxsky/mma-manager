@@ -11,6 +11,7 @@ import { genRivalCamp } from "./rivals.js";
 import { getRel } from "./relationships.js";
 
 import { worldTick } from "./world.js";
+import { trackCoachCareer, trackSponsorRelations } from "./identity.js";
 import { processEventSystem, onCoachRaiseDenied, onConflictMediated, onWinningStreak } from "./events.js";
 import { calcMentorBonus } from "./career.js";
 // ---------- initial state ----------
@@ -1058,6 +1059,8 @@ export function tick(g) {
   // World simulation — AI title defenses, career progression, monthly events
   worldTick(g);
   processEventSystem(g);
+  trackCoachCareer(g);
+  trackSponsorRelations(g);
   // Cap log at 200 entries to prevent unbounded growth
   if (g.log.length > 200) g.log.length = 200;
 

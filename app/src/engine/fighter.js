@@ -3,6 +3,7 @@ import {
   ATTRS, WEIGHTS, ARCHETYPES, REGIONS, TRAITS, TRAIT_KEYS, TRAIT_CONFLICTS,
   AMBITIONS, AMBITION_KEYS, AGENT_TYPES, COACH_SPECS, COACH_NAMES, COACH_PERSONALITIES,
 } from "./data.js";
+import { getRegionFlavor, weightedPick } from "./identity.js";
 
 // ---------- generators ----------
 export function genAttrs(level) {
@@ -26,7 +27,8 @@ export function genFighter(level, regionName) {
   let attempts = 0;
   while (traits.length < 2 && attempts < 100) {
     attempts++;
-    const t = pick(TRAIT_KEYS);
+    const flavor = getRegionFlavor(region);
+    const t = flavor ? weightedPick(flavor.traitWeights, TRAIT_KEYS) : pick(TRAIT_KEYS);
     if (!traits.includes(t)) {
       // Check conflicts: skip trait that conflicts with an already-assigned trait
       const conflicts = TRAIT_CONFLICTS[t];
@@ -47,7 +49,7 @@ export function genFighter(level, regionName) {
     booked: null,
     record: { w: 0, l: 0, ko: 0, sub: 0, dec: 0 },
     titles: [],
-    ambition: pick(AMBITION_KEYS), ambitionRevealed: false,
+    ambition: flavor ? weightedPick(flavor.ambitionWeights, AMBITION_KEYS) : pick(AMBITION_KEYS), ambitionRevealed: false,
     rankPoints: 0, joinedWeek: 0, lastFightWeek: 0, fightsThisYear: 0,
     streakL: 0, convincedOnce: false,
     fightHistory: [],
