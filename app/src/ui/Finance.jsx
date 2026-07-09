@@ -1,7 +1,7 @@
 import { fmt$ } from "../engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag } from "./theme.jsx";
-import { t } from "../engine/i18n.js";
+import { t } from "../i18n/index.js";
 import { weeklyFee } from "../engine/fighter.js";
 import { TRAINING } from "../engine/data.js";
 

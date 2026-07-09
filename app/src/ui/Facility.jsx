@@ -1,7 +1,7 @@
 import { fmt$ } from "../engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn, Meter, Mono, heat } from "./theme.jsx";
-import { t } from "../engine/i18n.js";
+import { t } from "../i18n/index.js";
 import { CAMP_TIERS } from "../engine/data.js";
 
 export default function Facility({ g, dispatch, coachCap, rosterCap }) {

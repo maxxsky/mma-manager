@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLang } from "./ui/LangContext.jsx";
+import { getActiveSlot, setActiveSlot, loadGame, saveGame, deleteGame, getSlotInfo } from "./services/saveService.js";
 
 // ===== ENGINE: pure JS, zero React — bisa di-import oleh server Node nanti =====
 import { R, RI, clamp, pick, fmt$, uid, random } from "./engine/rng.js";
@@ -55,34 +56,19 @@ export default function App() {
   const [rankDiv, setRankDiv] = useState(null);
   const [resetArm, setResetArm] = useState(false);
   const [nego, setNego] = useState(null);
-  const [saveSlot, setSaveSlotState] = useState(getSaveSlot());
+  const [saveSlot, setSaveSlotState] = useState(getActiveSlot());
   const [weeklySummary, setWeeklySummary] = useState(null);
   const [scoutFilterArch, setScoutFilterArch] = useState(null);
   const [scoutFilterWC, setScoutFilterWC] = useState(null);
   const [slotInfo, setSlotInfo] = useState([]);
   const { t, lang, setLang } = useLang();
 
-  const SAVE_KEY = saveKey(saveSlot);
-
-  // Load slot previews
-  const refreshSlotInfo = () => {
-    const info = [];
-    for (let i = 1; i <= 3; i++) {
-      try {
-        const raw = localStorage.getItem(saveKey(i));
-        if (raw) {
-          const s = JSON.parse(raw);
-          info.push({ slot: i, exists: true, week: s.week || "?", cash: s.cash, rep: s.rep, roster: s.roster?.length || 0 });
-        } else info.push({ slot: i, exists: false });
-      } catch { info.push({ slot: i, exists: false }); }
-    }
-    setSlotInfo(info);
-  };
+  const refreshSlotInfo = () => setSlotInfo(getSlotInfo());
 
   useEffect(() => {
     (async () => {
       try {
-        const raw = localStorage.getItem(SAVE_KEY);
+        const raw = loadGame(saveSlot);
         if (raw) {
           const s = JSON.parse(raw);
           if (s.week == null || !s.roster || s.cash == null || isNaN(s.cash)) {
@@ -156,7 +142,7 @@ export default function App() {
     // Throttle localStorage saves
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      try { localStorage.setItem(SAVE_KEY, JSON.stringify(n)); } catch (e) { /* skip */ }
+      saveGame(saveSlot, n);
     }, 1000);
     return n;
   });
@@ -264,11 +250,11 @@ export default function App() {
           legacy={g.legacy || 0}
           week={g.week}
           saveSlot={saveSlot}
-          onSaveSlotChange={(s) => { setSaveSlotState(s); setTimeout(refreshSlotInfo, 100); }}
+          onSaveSlotChange={(s) => { setSaveSlotState(s); setActiveSlot(s); setTimeout(refreshSlotInfo, 100); }}
           slotInfo={slotInfo}
           lang={lang}
           onLangChange={() => setLang(lang === "id" ? "en" : "id")}
-          onNewGame={() => { setG(newGame()); localStorage.removeItem(SAVE_KEY); }}
+          onNewGame={() => { setG(newGame()); deleteGame(saveSlot); }}
         />
 
         <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
@@ -388,7 +374,7 @@ export default function App() {
             const n = structuredClone(old);
             fx(n);
             if (fightCtx) checkAchievements(n, fightCtx);
-            try { localStorage.setItem(SAVE_KEY, JSON.stringify(n)); } catch (e) {}
+            saveGame(saveSlot, n);
             return n;
           });
           setActiveFight(null);

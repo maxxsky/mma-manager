@@ -1,6 +1,6 @@
 import React from "react";
 import { T, Icon, ICONS, Btn } from "./theme.jsx";
-import { t } from "../engine/i18n.js";
+import { t } from "../i18n/index.js";
 
 // Maps app tab keys to sidebar nav items
 const NAV = [
