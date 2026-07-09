@@ -20,6 +20,8 @@ export function effAttr(f, k, sta, mods) {
     if (f.traits?.includes("Iron Chin")) v += 8;
     if (f.traits?.includes("Glass Jaw")) v -= 10;
   }
+  // Trait: Showboat — flashy but defensively vulnerable
+  if (k === "footwork" && f.traits?.includes("Showboat")) v *= 0.95;
   return v * (mods?.[k] || 1);
 }
 
@@ -43,6 +45,12 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
   let position = "standing";
   let mom = momentum || 0;
   const agg = cornerA === "go" ? CFG.CORNER_GO_MULT : cornerA === "save" ? CFG.CORNER_SAVE_MULT : 1;
+  // Trait: Explosive — stronger early, weaker late
+  const explosiveA = A.traits?.includes("Explosive");
+  const explosiveMult = explosiveA ? (rnd === 1 ? 1.15 : rnd >= 3 ? 0.85 : 1) : 1;
+  // Trait: Cautious — reduced finish rate
+  const cautiousA = A.traits?.includes("Cautious");
+  const cautiousMult = cautiousA ? 0.85 : 1;
   const matchup = matchupMods(A, B);
 
   let subProgress = 0;
@@ -70,11 +78,13 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
       const strikeModA = (matchup.aStrike || 0);
       const defA = effAttr(B, "footwork", stB, {}) * clamp(1 - (legDmgA || 0) * CFG.LEG_DMG_DEF_MULT, CFG.DEF_MIN_CLAMP, 1);
       const defB = effAttr(A, "footwork", stA, {}) * clamp(1 - (legDmgB || 0) * CFG.LEG_DMG_DEF_MULT, CFG.DEF_MIN_CLAMP, 1);
-      const outA = effAttr(A, "striking", stA, {}) * agg * phase * momMult * pow * (1 + strikeModA);
+      const outA = effAttr(A, "striking", stA, {}) * agg * phase * momMult * pow * (1 + strikeModA) * explosiveMult;
+      // Trait: Warrior — bonus damage while losing
+      const warriorBonus = A.traits?.includes("Warrior") && ptsA < ptsB ? 1.15 : 1;
       const outB = effAttr(B, "striking", stB, {}) * phase * pow * (1 + (matchup.bStrike || 0));
       const la = Math.round(R(CFG.STRIKE_LAND_MIN_A, CFG.STRIKE_LAND_MAX_A) * (outA / (defA + CFG.STRIKING_DEF_DIVISOR)));
       const lb = Math.round(R(CFG.STRIKE_LAND_MIN_B, CFG.STRIKE_LAND_MAX_B) * (outB / (defB + CFG.STRIKING_DEF_DIVISOR)));
-      const hitB = la * (effAttr(A, "strength", stA) / CFG.STR_MULT) * R(CFG.HIT_VAR_MIN, CFG.HIT_VAR_MAX);
+      const hitB = la * (effAttr(A, "strength", stA) / CFG.STR_MULT) * R(CFG.HIT_VAR_MIN, CFG.HIT_VAR_MAX) * warriorBonus;
       const hitA = lb * (effAttr(B, "strength", stB) / CFG.STR_MULT) * R(CFG.HIT_VAR_MIN, CFG.HIT_VAR_MAX);
       dmgB += hitB; dmgA += hitA;
       bodyDmgB += hitB * (cornerA === "body" ? CFG.CORNER_BODY_MULT : 0.3);
@@ -300,7 +310,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
       } else {
         const chin = effAttr(kdTarget, "chin", isTargetA ? stA : stB);
         const attackerStr = effAttr(isTargetA ? B : A, "strength", isTargetA ? stB : stA) * (1 + (isTargetA ? (matchup.bStrike || 0) : 0));
-        const kdChance = clamp(((isTargetA ? dmgA : dmgB) - 40) / chin * CFG.KD_CHIN_MULT + (attackerStr - 40) * CFG.KD_STR_MULT, 0, CFG.KD_CHANCE_MAX) * (planA === "Finish It" ? 1.5 : 1);
+        const kdChance = clamp(((isTargetA ? dmgA : dmgB) - 40) / chin * CFG.KD_CHIN_MULT + (attackerStr - 40) * CFG.KD_STR_MULT, 0, CFG.KD_CHANCE_MAX) * (planA === "Finish It" ? 1.5 : 1) * cautiousMult;
         if (random() < kdChance) {
           knockdown = { fighter: isTargetA ? "A" : "B", name: kdTarget.name, canRecover: true };
           comm.both(exMin + 1, 0, `${kdTarget.name} IS DOWN! He's hurt bad!`);

@@ -162,7 +162,11 @@ export default function FightNight({ fighter, done }) {
         else if (result.how === "Submission") f.record.sub++;
         else f.record.dec++;
         f.morale = clamp(f.morale + 12, 0, 100);
-        f.popularity = clamp(f.popularity + 7, 0, 100);
+        // Personality traits: popularity
+        const popBase = result.how === "Decision" ? 3 : 7;
+        const crowdMult = f.traits?.includes("Crowd Favorite") ? 2 : 1;
+        const showboatBonus = f.traits?.includes("Showboat") && result.how !== "Decision" ? 5 : 0;
+        f.popularity = clamp(f.popularity + popBase * crowdMult + showboatBonus, 0, 100);
         g2.rep = clamp(g2.rep + 7, 0, 100);
         if (fighter.booked.title) {
           if (!f.titles.includes("Major World Champion")) f.titles.push("Major World Champion");
@@ -172,7 +176,9 @@ export default function FightNight({ fighter, done }) {
         g2.log.unshift(`🏆 ${f.name} menang via ${result.how} R${result.r}!`);
       } else {
         f.record.l++; f.streakL = (f.streakL || 0) + 1; f.streakW = 0;
-        f.morale = clamp(f.morale - 14, 0, 100);
+        // Development trait: Iron Will — reduced morale loss
+        const moraleLoss = f.traits?.includes("Iron Will") ? -4 : -14;
+        f.morale = clamp(f.morale + moraleLoss, 0, 100);
         g2.rep = clamp(g2.rep - 3, 2, 100);
         g2.chemistry = clamp(g2.chemistry - 2, 0, 100);
         g2.log.unshift(`❌ ${f.name} kalah via ${result.how} R${result.r}.`);
