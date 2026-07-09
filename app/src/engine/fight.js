@@ -43,7 +43,7 @@ function matchupMods(A, B) {
   const keyBA = `${B.archetype}_vs_${A.archetype}`;
   const table = {
     "Boxer_vs_Wrestler":          { aStrike: 0.10, aTDDef: -0.08 },
-    "Boxer_vs_BJJ Specialist":    { aStrike: 0.15, aTDDef: 0.10 },
+    "Boxer_vs_BJJ Specialist":    { aStrike: 0.10, aTDDef: 0.05 },
     "Boxer_vs_Boxer":             { aStrike: -0.05 },
     "Muay Thai_vs_Wrestler":      { aClinch: 0.15, aTDDef: 0.05 },
     "Muay Thai_vs_BJJ Specialist":{ aClinch: 0.10, aTDDef: -0.10 },
@@ -55,10 +55,11 @@ function matchupMods(A, B) {
     "BJJ Specialist_vs_Muay Thai":{ aSub: 0.06, aSweep: 0.10 },
     "BJJ Specialist_vs_Boxer":    { aTD: -0.05, aSub: 0.05 },
     "All-Rounder_vs_Boxer":       { aStrike: 0.08 },
-    "All-Rounder_vs_Muay Thai":   { aTDDef: 0.08 },
+    "All-Rounder_vs_Muay Thai":   { aTDDef: 0.04 },
     "All-Rounder_vs_Wrestler":    { aTDDef: 0.01 },
     "All-Rounder_vs_BJJ Specialist": { aSweep: 0.12 },
     "Boxer_vs_All-Rounder":       { aStrike: 0.05 },
+    "Muay Thai_vs_All-Rounder":   { aClinch: 0.05 },
     "BJJ Specialist_vs_All-Rounder": { aSub: 0.05 },
   };
   // A's bonuses come from A_vs_B, B's bonuses come from B_vs_A (mirrored keys)
@@ -88,8 +89,6 @@ function pickExchange(pos, A, B, planA, matchup) {
   const pool = [];
   const isGround = typeof pos === "object" && pos.type;
   const groundType = isGround ? pos.type : null;
-  const isTop = isGround ? pos.top === "A" : false;
-
   if (!isGround) {
     // Standing — both fighters can attempt takedowns
     pool.push("strike", "strike", "strike", "strike");
@@ -100,15 +99,19 @@ function pickExchange(pos, A, B, planA, matchup) {
     for (let i = 0; i < tdWeightA; i++) pool.push("td");
     for (let i = 0; i < tdWeightB; i++) pool.push("tdB");
   } else {
-    // Ground — exchange type depends on position and who's on top
+    // Ground — exchange type depends on position and who's on top (A or B)
+    const topFighter = pos.top === "A" ? A : B;
     const g = GROUND[groundType] || GROUND.guard;
-    const gnpW = isTop ? Math.round(g.topGNP * 8) : 0;
-    const subW = isTop ? Math.round(clamp((A.attrs.bjj - 20) / 15, 2, 6)) : Math.round(g.bottomSub * 6);
-    const sweepW = !isTop ? Math.round(g.sweepChance * 6) : 0;
-    const advW = isTop ? Math.round(g.advanceChance * 4) : 0;
+    // Both top fighters get GNP + advance + sub from top; bottom fighters get sweep + sub from bottom
+    const gnpW = Math.round(g.topGNP * 8);
+    const subFromTop = Math.round(clamp((topFighter.attrs.bjj - 20) / 15, 2, 6));
+    const subFromBottom = Math.round(g.bottomSub * 4);
+    const sweepW = Math.round(g.sweepChance * 6);
+    const advW = Math.round(g.advanceChance * 4);
 
     for (let i = 0; i < gnpW; i++) pool.push("gnp");
-    for (let i = 0; i < subW; i++) pool.push("sub");
+    for (let i = 0; i < subFromTop; i++) pool.push("sub");
+    for (let i = 0; i < subFromBottom; i++) pool.push("sub");
     for (let i = 0; i < sweepW; i++) pool.push("sweep");
     for (let i = 0; i < advW; i++) pool.push("advance");
     pool.push("scramble", "scramble");
