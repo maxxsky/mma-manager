@@ -1,3 +1,4 @@
+import { fmt$ } from "../engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
 import { ARCH_COLOR, RIVAL_TRAITS, CAMP_TIERS } from "../engine/data.js";

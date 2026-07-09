@@ -1,3 +1,4 @@
+import { fmt$ } from "../engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn, Ovr, heat, ARCH_COLOR, Icon, ICONS, Mono, Meter } from "./theme.jsx";
 import { TRAINING } from "../engine/data.js";
@@ -78,7 +79,7 @@ function KPICard({ label, value, sub, color, onClick }) {
 }
 
 /* ---- MAIN COMPONENT ------------------------------------------------------- */
-export default function Dashboard({ g, setTab, setActiveFight, t, fmt$ }) {
+export default function Dashboard({ g, setTab, setActiveFight, t }) {
   // ---- Financials (same formulas as App.jsx) -------------------------------
   const monthlyBurn = g.coaches.reduce((s, c) => s + ((!c.freeUntil || g.week > c.freeUntil) ? c.salary : 0), 0)
     + Math.round(Object.values(g.facilities).reduce((s, l) => s + l * 30000, 0) * 0.05)

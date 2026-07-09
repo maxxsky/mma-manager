@@ -331,7 +331,7 @@ export default function App() {
 
         {/* ===== RIVALS ===== */}
         {tab === "rivals" && (
-          <RivalsScreen g={g} t={t} />
+          <RivalsScreen g={g} t={t} fmt$={fmt$} />
         )}
 
         {/* ===== MGMT / FACILITY ===== */}

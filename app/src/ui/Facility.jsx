@@ -1,3 +1,4 @@
+import { fmt$ } from "../engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn, Meter } from "./theme.jsx";
 

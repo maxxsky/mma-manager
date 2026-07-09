@@ -1,3 +1,4 @@
+import { fmt$ } from "../engine/rng.js";
 import React from "react";
 import {
   ATTRS,

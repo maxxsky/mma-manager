@@ -1,3 +1,4 @@
+import { fmt$ } from "../engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
 import { random } from "../engine/rng.js";
@@ -7,7 +8,7 @@ import { random } from "../engine/rng.js";
    Message list with type tags, expiration warnings, action buttons.
 ============================================================================= */
 
-export default function Inbox({ g, dispatch, setTab, t, fmt$ }) {
+export default function Inbox({ g, dispatch, setTab, t }) {
   if (!g.inbox || g.inbox.length === 0) {
     return (
       <Panel style={{ textAlign: "center", padding: "40px 20px" }}>
