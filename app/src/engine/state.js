@@ -10,6 +10,7 @@ import { genDivisions, rankOf, vacateTitle, stripTitle, initPromoterRel } from "
 import { genRivalCamp } from "./rivals.js";
 import { getRel } from "./relationships.js";
 
+import { worldTick } from "./world.js";
 import { calcMentorBonus } from "./career.js";
 // ---------- initial state ----------
 export function newGame() {
@@ -1037,6 +1038,9 @@ export function tick(g) {
     }
   }
 
+  
+  // World simulation — AI title defenses, career progression, monthly events
+  worldTick(g);
   // Cap log at 200 entries to prevent unbounded growth
   if (g.log.length > 200) g.log.length = 200;
 
