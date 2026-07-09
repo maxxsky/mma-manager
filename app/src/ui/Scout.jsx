@@ -111,7 +111,7 @@ export default function Scout({
               color: T.txt3,
             }}
           >
-            >{t("UI.selectClass")}
+            {t("UI.selectClass")}
           </span>
           <button
             onClick={() => setScoutFilterArch(null)}
