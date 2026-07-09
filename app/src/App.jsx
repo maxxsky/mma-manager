@@ -34,17 +34,6 @@ import RivalsScreen from "./ui/RivalsScreen.jsx";
 import Roster from "./ui/Roster.jsx";
 
 // ============================================================
-//   SAVE
-// ============================================================
-// Save version: bump when schema changes. Use migrationMap for backward compat.
-// v3 → v4: added medical clause to default contracts (2026-07-07)
-const SAVE_PREFIX = "mma-manager-save-v4";
-
-function saveKey(slot) { return `${SAVE_PREFIX}-slot${slot}`; }
-function getSaveSlot() { try { return parseInt(localStorage.getItem(`${SAVE_PREFIX}-active`)) || 1; } catch { return 1; } }
-function setSaveSlot(s) { try { localStorage.setItem(`${SAVE_PREFIX}-active`, String(s)); } catch {} }
-
-// ============================================================
 //   MAIN APP
 // ============================================================
 export default function App() {
@@ -68,9 +57,8 @@ export default function App() {
   useEffect(() => {
     (async () => {
       try {
-        const raw = loadGame(saveSlot);
-        if (raw) {
-          const s = JSON.parse(raw);
+        const s = loadGame(saveSlot);
+        if (s) {
           if (s.week == null || !s.roster || s.cash == null || isNaN(s.cash)) {
             s.week = 1; s.cash = 100000; s.roster = []; s.log = ["Save rusak — dimulai ulang."];
           }
