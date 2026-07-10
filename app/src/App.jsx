@@ -34,9 +34,9 @@ import Roster from "./ui/Roster.jsx";
 import WinConditionBanner from "./components/WinConditionBanner.jsx";
 import GameOverBanner from "./components/GameOverBanner.jsx";
 import WeeklySummary from "./components/WeeklySummary.jsx";
+import FightCard from "./components/FightCard.jsx";
 import Achievements from "./ui/Achievements.jsx";
 import Dynasty from "./ui/Dynasty.jsx";
-import FightCardFull from "./ui/FightCardFull.jsx";
 import { rememberTab, getLastTab } from "./ui/ui-utils.js";
 import { saveGame } from "./services/saveService.js";
 
@@ -51,7 +51,7 @@ export default function App() {
   const [rankDiv, setRankDiv] = useState(null);
   const [scoutFilterArch, setScoutFilterArch] = useState(null);
   const [scoutFilterWC, setScoutFilterWC] = useState(null);
-  const [showFightCard, setShowFightCard] = useState(false);
+  const [showFightCard, setShowFightCard] = useState(true);
 
   // Save/load hook
   const [g, setG] = useState(() => newGame());
@@ -162,19 +162,12 @@ export default function App() {
         />
       )}
 
-      {fightFighter?.booked && !showFightCard && (
-        <FightCardFull key={fightFighter.id} fighter={fightFighter}
-          message={fightFighter.booked} g={g}
-          onAccept={() => setShowFightCard(true)}
-          onCounter={() => setShowFightCard(true)}
-          onReject={() => {
-            setActiveFight(null);
-            dispatch({ type: "REJECT_FIGHT", fighterId: fightFighter.id, messageId: fightFighter.booked.messageId });
-          }}
-        />
+      {fightFighter?.booked && showFightCard && (
+        <FightCard key={fightFighter.id} fighter={fightFighter} g={g}
+          onProceed={() => setShowFightCard(false)} />
       )}
 
-      {fightFighter?.booked && showFightCard && (
+      {fightFighter?.booked && !showFightCard && (
         <FightNight key={fightFighter.id} fighter={fightFighter} done={(fx, fightCtx) => {
           setG((old) => { const n = structuredClone(old); fx(n); if (fightCtx) checkAchievements(n, fightCtx); saveGame(saveSlot, n); return n; });
           setActiveFight(null);
