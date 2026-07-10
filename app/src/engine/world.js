@@ -28,12 +28,12 @@ export function ageAIFighters(g) {
       c.age++;
 
       if (c.age <= PEAK_AGE && !c.peaked) {
-        c.level = clamp(c.level + R(0.005, 0.015), SKILL_MIN, SKILL_MAX);
-        c.points = clamp(c.points + RI(1, 3), POINTS_MIN, POINTS_MAX);
+        c.level = clamp(c.level + R(0.015, 0.04), SKILL_MIN, SKILL_MAX);
+        c.points = clamp(c.points + RI(2, 8), POINTS_MIN, POINTS_MAX);
       } else if (c.age >= DECLINE_AGE) {
         c.peaked = true;
-        c.level = clamp(c.level - R(0.005, 0.02), SKILL_MIN, SKILL_MAX);
-        c.points = clamp(c.points - RI(1, 5), POINTS_MIN, POINTS_MAX);
+        c.level = clamp(c.level - R(0.01, 0.03), SKILL_MIN, SKILL_MAX);
+        c.points = clamp(c.points - RI(2, 8), POINTS_MIN, POINTS_MAX);
       }
     });
 
