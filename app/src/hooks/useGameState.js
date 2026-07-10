@@ -55,6 +55,7 @@ export function useGameState(g, setGOrig, saveSlot) {
       });
     });
     setWeekFlash((x) => x + 1);
+    setTimeout(() => setWeekFlash(0), 1200);
   };
 
   // Fight queue detection
