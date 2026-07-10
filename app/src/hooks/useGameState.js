@@ -5,8 +5,7 @@ import { checkAchievements } from "../engine/achievements.js";
 import { tick } from "../engine/state.js";
 import { reducer } from "../engine/reducer.js";
 
-export function useGameState(saveSlot) {
-  const [g, setGOrig] = useState(() => ({})); // initialized by useSaveLoad
+export function useGameState(g, setGOrig, saveSlot) {
   const [activeFight, setActiveFight] = useState(null);
   const [weekFlash, setWeekFlash] = useState(0);
   const [weeklySummary, setWeeklySummary] = useState(null);
@@ -16,10 +15,11 @@ export function useGameState(saveSlot) {
 
   // Cloned state setter with auto-save throttle
   const up = (fn) => setGOrig((old) => {
+    if (!old.roster) console.error('UP OLD CORRUPTED', Object.keys(old));
     const clean = Object.assign({}, old);
     delete clean._undoStack;
     delete clean._redoStack;
-    const n = structuredClone(clean);
+    const n = JSON.parse(JSON.stringify(clean));
     fn(n);
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
@@ -41,25 +41,20 @@ export function useGameState(saveSlot) {
 
   // Weekly advance
   const advance = () => {
-    up((n) => { tick(n); n.log = n.log.slice(0, 30); checkAchievements(n); });
-    setWeekFlash((x) => x + 1);
-    setTimeout(() => {
-      setGOrig((current) => {
-        const highlights = current.log.slice(0, 5);
-        const injured = current.roster.filter((f) => f.injury);
-        setWeeklySummary({
-          week: current.week,
-          cash: current.cash,
-          rep: current.rep,
-          rosterCount: current.roster.length,
-          inboxCount: current.inbox.length,
-          injuredCount: injured.length,
-          injuredNames: injured.map((f) => f.name).slice(0, 3),
-          highlights,
-        });
-        return current;
+    up((n) => { tick(n); if (n.log) n.log = n.log.slice(0, 30); checkAchievements(n);
+      // Build weekly summary directly from n (already the updated state)
+      const highlights = n.log ? n.log.slice(0, 5) : [];
+      const injured = n.roster ? n.roster.filter((f) => f.injury) : [];
+      setWeeklySummary({
+        week: n.week, cash: n.cash, rep: n.rep,
+        rosterCount: n.roster ? n.roster.length : 0,
+        inboxCount: n.inbox ? n.inbox.length : 0,
+        injuredCount: injured.length,
+        injuredNames: injured.map((f) => f.name).slice(0, 3),
+        highlights,
       });
-    }, 50);
+    });
+    setWeekFlash((x) => x + 1);
   };
 
   // Fight queue detection
@@ -69,7 +64,7 @@ export function useGameState(saveSlot) {
   }, [g.week, activeFight, g.roster?.length]);
 
   return {
-    g, setG, up, dispatch, advance,
+    up, dispatch, advance,
     activeFight, setActiveFight,
     weekFlash, setWeekFlash,
     weeklySummary, setWeeklySummary,

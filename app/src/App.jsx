@@ -59,7 +59,7 @@ export default function App() {
     activeFight, setActiveFight,
     weekFlash, weeklySummary, setWeeklySummary,
     nego, setNego,
-  } = useGameState(saveSlot);
+  } = useGameState(g, setG, saveSlot);
 
   // Keyboard shortcuts
   useKeyboard({

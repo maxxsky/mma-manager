@@ -49,6 +49,16 @@ export function newGame() {
 export function tick(g) {
   g.week++;
 
+  // DEBUG: check state integrity
+  if (!g.roster || !g.log || !g.coaches || !g.inbox) {
+    console.error('TICK STATE CORRUPTED:', {
+      hasRoster: !!g.roster, rosterType: typeof g.roster,
+      hasLog: !!g.log, logType: typeof g.log,
+      hasCoaches: !!g.coaches, hasInbox: !!g.inbox,
+      hasCash: !!g.cash, hasWeek: !!g.week
+    });
+  }
+
   // Phase 1: Training
   tickTraining(g);
 
@@ -91,6 +101,6 @@ export function tick(g) {
 
   // Final state checks
   // Cap log to prevent unbounded memory growth
-  if (g.log.length > 200) g.log = g.log.slice(0, 200);
+  if (g.log && g.log.length > 200) g.log = g.log.slice(0, 200);
   if (g.cash < -50000) g.over = "BANGKRUT — kas di bawah -$50,000. Camp ditutup.";
 }
