@@ -24,10 +24,10 @@ export function genFighter(level, regionName) {
   ATTRS.forEach((k) => (ceilings[k] = clamp(attrs[k] + RI(8, 30), attrs[k], 99)));
   const wc = pick(WEIGHTS);
   const traits = [];
+  const flavor = getRegionFlavor(region);
   let attempts = 0;
   while (traits.length < 2 && attempts < 100) {
     attempts++;
-    const flavor = getRegionFlavor(region);
     const t = flavor ? weightedPick(flavor.traitWeights, TRAIT_KEYS) : pick(TRAIT_KEYS);
     if (!traits.includes(t)) {
       // Check conflicts: skip trait that conflicts with an already-assigned trait

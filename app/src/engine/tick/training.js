@@ -1,6 +1,6 @@
 // Training domain — fighter growth, overtraining, injury, recovery, history
 import { clamp, R, RI, random, pick, fmt$, uid } from "../rng.js";
-import { ATTRS, ATTR_LABEL, TRAINING, INTENSITY, CAMP_TIERS } from "../data.js";
+import { ATTRS, ATTR_LABEL, TRAINING, INTENSITY, CAMP_TIERS, SPARRING_MATCH } from "../data.js";
 import { coachBonus, facBonus } from "../economy.js";
 import { calcMentorBonus } from "../career.js";
 import { getRel } from "../relationships.js";
@@ -9,7 +9,6 @@ function calcSparringMult(f, g) {
   if (!g.roster || g.roster.length <= 1) return 1;
   const partners = g.roster.filter(x => x.id !== f.id && !x.injury && !x.booked);
   if (partners.length === 0) return 1;
-  const{ SPARRING_MATCH } = require("../data.js");
   let best = 0;
   partners.forEach(p => {
     const m = (SPARRING_MATCH[f.archetype] || {})[p.archetype] || 0.3;

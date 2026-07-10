@@ -16,8 +16,10 @@ export const EXCHANGES = {
 
 export function pickExchange(pos, A, B, planA) {
   const pool = [];
-  const isGround = typeof pos === "object" && pos.type;
+  const isGround = pos && pos.type && pos.type !== "standing";
   const groundType = isGround ? pos.type : null;
+  const behaviorA = getArchetypeBehavior(A);
+  const behaviorB = getArchetypeBehavior(B);
   if (!isGround) {
     pool.push("strike", "strike", "strike", "strike");
     pool.push("power");
@@ -25,8 +27,6 @@ export function pickExchange(pos, A, B, planA) {
     const tdWeightA = A.attrs.wrestling > 55 || planA === "Take It Down" ? 4 : 1;
     const tdWeightB = B.attrs.wrestling > 55 ? 4 : 1;
         // Archetype expression: add behavior-weighted entries
-    const behaviorA = getArchetypeBehavior(A);
-    const behaviorB = getArchetypeBehavior(B);
     for (let i = 0; i < (behaviorA.strikeWeight || 0); i++) pool.push("strike");
     for (let i = 0; i < (behaviorB.strikeWeight || 0); i++) pool.push("strike");
     for (let i = 0; i < (behaviorA.clinchWeight || 0); i++) pool.push("clinch");
