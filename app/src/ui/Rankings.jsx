@@ -29,9 +29,9 @@ export default function Rankings({ g, t }) {
     g.roster.filter((f) => f.weightClass === selDiv).map((f) => f.name)
   );
 
-  // AI fighters (exclude names that match player fighters)
+  // AI fighters (exclude champion and player fighters)
   const aiFighters = div.list
-    .filter((c) => !playerNames.has(c.name))
+    .filter((c) => !playerNames.has(c.name) && c.name !== champ?.name)
     .map((c) => ({
       name: c.name,
       archetype: c.archetype,
