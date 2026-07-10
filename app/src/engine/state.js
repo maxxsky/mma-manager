@@ -70,8 +70,11 @@ export function tick(g) {
   // Phase 7: Rival simulation
   tickRivals(g);
 
-  // Phase 8: World simulation
-  worldTick(g);
+  // Phase 8: World simulation — returns events, deliver to inbox
+  const worldEvents = worldTick(g);
+  worldEvents.forEach((ev) => {
+    g.inbox.unshift({ id: uid(), type: "event", title: ev.title, body: ev.body, choices: [{ label: "OK", chem: 0 }] });
+  });
   processEventSystem(g);
   trackCoachCareer(g);
   tickAllShadowCamps(g);

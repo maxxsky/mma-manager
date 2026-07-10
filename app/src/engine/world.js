@@ -1,77 +1,70 @@
 // ============================================================
 //   WORLD SIMULATION — Lightweight AI world that feels alive
-//   No full fight engine. No AI camp management.
-//   Runs on monthly tick. Preserves player balance.
+//   Orchestration layer — delegates to world/ modules.
+//   Returns events array; caller delivers to inbox.
 // ============================================================
 
-import { R, RI, clamp, pick, random, uid } from "./rng.js";
+import { R, RI, clamp, random } from "./rng.js";
+import { createAIFighter, createVeteranFighter } from "./world/ai-fighter.js";
+import { recordTitleChange, recordRetirement } from "./world/history.js";
+import {
+  TICK_YEARLY, TICK_TITLE_DEFENSE, TICK_MONTHLY, TICK_QUARTERLY,
+  MIN_DIVISION_SIZE, MAX_FIGHTER_AGE, RETIREMENT_AGE, RETIREMENT_CHANCE,
+  UPSET_BASE_CHANCE, UPSET_MIN, UPSET_MAX,
+  STREAK_THRESHOLD, STREAK_MAX, STREAK_MIN,
+  BREAKTHROUGH_AGE, BREAKTHROUGH_POINTS,
+  CHAMP_AGE_DECLINE, PEAK_AGE, DECLINE_AGE,
+  SKILL_MIN, SKILL_MAX, POINTS_MIN, POINTS_MAX,
+} from "./world/config.js";
 
 // ── AI CAREER PROGRESSION ──
 
 export function ageAIFighters(g) {
-  if (g.week % 48 !== 0) return; // yearly
+  if (g.week % TICK_YEARLY !== 0) return;
 
   Object.values(g.divisions).forEach((d) => {
     d.list.forEach((c) => {
-      // Track age if not set
       if (!c.age) c.age = RI(22, 32);
       c.age++;
 
-      // Lightweight skill adjustments by age
-      if (c.age <= 26 && !c.peaked) {
-        c.level = clamp(c.level + R(0.005, 0.015), 0.3, 1.5);
-        c.points = clamp(c.points + RI(1, 3), 5, 120);
-      } else if (c.age >= 34) {
+      if (c.age <= PEAK_AGE && !c.peaked) {
+        c.level = clamp(c.level + R(0.005, 0.015), SKILL_MIN, SKILL_MAX);
+        c.points = clamp(c.points + RI(1, 3), POINTS_MIN, POINTS_MAX);
+      } else if (c.age >= DECLINE_AGE) {
         c.peaked = true;
-        c.level = clamp(c.level - R(0.005, 0.02), 0.3, 1.5);
-        c.points = clamp(c.points - RI(1, 5), 5, 120);
+        c.level = clamp(c.level - R(0.005, 0.02), SKILL_MIN, SKILL_MAX);
+        c.points = clamp(c.points - RI(1, 5), POINTS_MIN, POINTS_MAX);
       }
     });
 
     // Champion aging
-    if (d.champ && d.champ.age) {
-      d.champ.age++;
-    }
-    if (d.champ && !d.champ.age) {
-      d.champ.age = RI(28, 35);
-    }
+    if (d.champ && d.champ.age) d.champ.age++;
+    if (d.champ && !d.champ.age) d.champ.age = RI(28, 35);
   });
 }
 
 // ── AI TITLE DEFENSES ──
 
 export function simulateAITitleDefenses(g) {
-  if (g.week % 24 !== 0) return []; // every ~6 months
+  if (g.week % TICK_TITLE_DEFENSE !== 0) return [];
   const events = [];
 
   Object.entries(g.divisions).forEach(([wc, d]) => {
-    // Only simulate if AI champ exists and has a #1 contender
     if (!d.champ || d.champ.player) return;
     if (!d.list || d.list.length < 1) return;
 
     const contender = d.list[0];
     const champ = d.champ;
 
-    // Simple outcome: champ skill proxy vs contender skill proxy
-    const champSkill = (champ.level || 1.2) * (1 - (champ.age > 33 ? 0.1 : 0));
+    const champSkill = (champ.level || 1.2) * (1 - (champ.age > CHAMP_AGE_DECLINE ? 0.1 : 0));
     const contSkill = (contender.level || 0.9) * (1 + (contender.points > 90 ? 0.1 : 0));
-    const upsetChance = 0.25; // 25% base chance of title change
     const skillRatio = contSkill / Math.max(champSkill, 0.1);
-    const changeChance = clamp(upsetChance * skillRatio, 0.1, 0.5);
+    const changeChance = clamp(UPSET_BASE_CHANCE * skillRatio, UPSET_MIN, UPSET_MAX);
 
     if (random() < changeChance) {
-      // Title changes hands!
       const oldChamp = champ.name;
-      d.champ = {
-        name: contender.name,
-        player: false,
-        age: contender.age || RI(27, 33),
-      };
-      // Track world history
-      if (!g._worldHistory) g._worldHistory = { titleChanges: [], retiredChamps: [] };
-      g._worldHistory.titleChanges.push({
-        week: g.week, division: wc, newChamp: contender.name, oldChamp,
-      });
+      d.champ = { name: contender.name, player: false, age: contender.age || RI(27, 33) };
+      recordTitleChange(g, g.week, wc, contender.name, oldChamp);
 
       events.push({
         title: `👑 New ${wc} Champion!`,
@@ -82,15 +75,12 @@ export function simulateAITitleDefenses(g) {
       const oldIdx = d.list.findIndex((c) => c.name === oldChamp);
       if (oldIdx >= 0 && oldIdx < d.list.length - 5) {
         d.list.splice(oldIdx, 1);
-        d.list.push({
-          id: uid(),
+        d.list.push(createVeteranFighter({
           name: oldChamp,
-          archetype: pick(["Boxer", "Wrestler", "BJJ Specialist", "Muay Thai", "All-Rounder"]),
-          points: Math.round(clamp(contender.points - RI(10, 20), 5, 100)),
-          level: clamp(champ.level - 0.1, 0.3, 1.5),
-          record: { w: RI(8, 18), l: 1, ko: 0, sub: 0, dec: 0 },
+          points: Math.round(clamp(contender.points - RI(10, 20), POINTS_MIN, POINTS_MAX)),
+          level: clamp(champ.level - 0.1, SKILL_MIN, SKILL_MAX),
           age: champ.age || 33,
-        });
+        }));
       }
     } else {
       events.push({
@@ -106,26 +96,25 @@ export function simulateAITitleDefenses(g) {
 // ── MONTHLY WORLD EVENTS ──
 
 export function generateWorldEvents(g) {
-  if (g.week % 4 !== 0) return []; // monthly
+  if (g.week % TICK_MONTHLY !== 0) return [];
   const events = [];
 
   // Win streak tracker (AI)
   Object.values(g.divisions).forEach((d) => {
     d.list.forEach((c) => {
-      // Track form
       if (!c._streak) c._streak = 0;
       const r = random();
       if (r < 0.4) {
-        c._streak = clamp(c._streak + 1, 0, 8);
-        c.points = clamp(c.points + RI(2, 5), 5, 120);
+        c._streak = clamp(c._streak + 1, 0, STREAK_MAX);
+        c.points = clamp(c.points + RI(2, 5), POINTS_MIN, POINTS_MAX);
       } else if (r < 0.7) {
         c._streak = 0;
       } else {
-        c._streak = clamp(c._streak - 1, -3, 8);
-        c.points = clamp(c.points - RI(1, 3), 5, 120);
+        c._streak = clamp(c._streak - 1, STREAK_MIN, STREAK_MAX);
+        c.points = clamp(c.points - RI(1, 3), POINTS_MIN, POINTS_MAX);
       }
 
-      if (c._streak >= 5 && g.week % 12 === 0) {
+      if (c._streak >= STREAK_THRESHOLD && g.week % TICK_QUARTERLY === 0) {
         events.push({
           title: `🔥 ${c.name} on fire!`,
           body: `${c.name} has won ${c._streak} straight in the ${Object.keys(g.divisions).find(k => g.divisions[k].list.includes(c))} division. Title shot incoming?`,
@@ -135,12 +124,12 @@ export function generateWorldEvents(g) {
   });
 
   // Top contender breakthroughs
-  if (g.week % 12 === 0) {
+  if (g.week % TICK_QUARTERLY === 0) {
     Object.entries(g.divisions).forEach(([wc, d]) => {
       if (!d.champ || d.champ.player) return;
       const top3 = d.list.slice(0, 3);
       top3.forEach((c) => {
-        if (c.age <= 24 && c.points >= 80 && !c._breakthroughNotified) {
+        if (c.age <= BREAKTHROUGH_AGE && c.points >= BREAKTHROUGH_POINTS && !c._breakthroughNotified) {
           c._breakthroughNotified = true;
           events.push({
             title: `⭐ ${c.name} — Breakthrough Prospect`,
@@ -151,18 +140,15 @@ export function generateWorldEvents(g) {
     });
   }
 
-  // Veteran retirements (heavyweight division only, for flavor)
-  if (g.week % 48 === 0 && g._worldHistory) {
+  // Veteran retirements
+  if (g.week % TICK_YEARLY === 0 && g._worldHistory) {
     const retiring = [];
     Object.values(g.divisions).forEach((d) => {
       d.list.forEach((c) => {
-        if (c.age >= 38 && random() < 0.3) {
+        if (c.age >= RETIREMENT_AGE && random() < RETIREMENT_CHANCE) {
           c.retiring = true;
           retiring.push(c);
-          if (!g._worldHistory.retiredChamps) g._worldHistory.retiredChamps = [];
-          if (!g._worldHistory.retiredChamps.some((r) => r.name === c.name)) {
-            g._worldHistory.retiredChamps.push({ name: c.name, week: g.week, division: Object.keys(g.divisions).find(k => g.divisions[k].list.includes(c)) });
-          }
+          recordRetirement(g, g.week, Object.keys(g.divisions).find(k => g.divisions[k].list.includes(c)), c.name);
         }
       });
     });
@@ -180,28 +166,19 @@ export function generateWorldEvents(g) {
 // ── DIVISION HEALTH MAINTENANCE ──
 
 export function maintainDivisions(g) {
-  if (g.week % 48 !== 0) return []; // yearly
+  if (g.week % TICK_YEARLY !== 0) return [];
   const events = [];
 
   Object.entries(g.divisions).forEach(([wc, d]) => {
-    // Ensure minimum 15 fighters
-    while (d.list.length < 15) {
-      const nf = {
-        id: uid(),
-        name: generateAIName(),
-        archetype: pick(["Boxer", "Wrestler", "BJJ Specialist", "Muay Thai", "All-Rounder"]),
-        points: Math.round(R(5, 20)),
-        level: R(0.4, 0.7),
-        record: { w: 0, l: 0, ko: 0, sub: 0, dec: 0 },
-        age: RI(18, 25),
-      };
-      d.list.push(nf);
+    // Ensure minimum division size
+    while (d.list.length < MIN_DIVISION_SIZE) {
+      d.list.push(createAIFighter());
     }
 
     // Retire old veterans
     const retired = [];
     d.list = d.list.filter((c) => {
-      if (c.age >= 40 || c.retiring) {
+      if (c.age >= MAX_FIGHTER_AGE || c.retiring) {
         retired.push(c.name);
         return false;
       }
@@ -231,44 +208,21 @@ export function maintainDivisions(g) {
   return events;
 }
 
-// ── HELPERS ──
-
-const AI_FIRST = ["Marcus", "Carlos", "Dmitri", "Kaito", "Jamal", "Rafael", "Andre", "Sergei", "Takeshi", "Miguel", "Chris", "Ryan", "Diego", "Yuki", "Viktor"];
-const AI_LAST = ["Silva", "Johnson", "Volkov", "Tanaka", "Carter", "Lima", "Santos", "Ivanov", "Sato", "Reyes", "Miller", "Garcia", "Kozlov", "Mori", "Petrov"];
-
-function generateAIName() {
-  return `${pick(AI_FIRST)} ${pick(AI_LAST)}`;
-}
-
-// ── WORLD TICK — called from state.js monthly cycle ──
+// ── WORLD TICK — orchestration ──
 
 export function worldTick(g) {
   const events = [];
 
-  // AI career progression (yearly)
   ageAIFighters(g);
 
-  // AI title defenses (every 24 weeks)
   const titleEvents = simulateAITitleDefenses(g);
   events.push(...titleEvents);
 
-  // Monthly world events
   const worldEvents = generateWorldEvents(g);
   events.push(...worldEvents);
 
-  // Division health maintenance (yearly)
   const healthEvents = maintainDivisions(g);
   events.push(...healthEvents);
 
-  // Push events to inbox
-  events.forEach((ev) => {
-    if (!g.inbox) g.inbox = [];
-    g.inbox.unshift({
-      id: uid(), type: "event",
-      title: ev.title, body: ev.body,
-      choices: [{ label: "OK", chem: 0 }],
-    });
-  });
-
-  return events.length;
+  return events;
 }
