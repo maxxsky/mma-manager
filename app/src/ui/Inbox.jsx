@@ -10,6 +10,7 @@ import { random } from "../engine/rng.js";
 ============================================================================= */
 
 export default function Inbox({ g, dispatch, setTab }) {
+  const [filter, setFilter] = React.useState("all");
   if (!g.inbox || g.inbox.length === 0) {
     return (
       <Panel style={{ textAlign: "center", padding: "40px 20px" }}>

@@ -259,6 +259,35 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
             ))}
           </Panel>
         )}
+
+        {/* Training Progress — attribute growth tracking */}
+        <Panel style={{ gridColumn: "span 2" }}>
+          <Eyebrow color={T.pos}>Training Progress</Eyebrow>
+          <div style={{ display: "grid", gap: 6 }}>
+            {[["striking","Striking"],["wrestling","Wrestling"],["bjj","BJJ"],["footwork","Footwork"],["strength","Strength"],["cardio","Cardio"],["chin","Chin"],["fightIQ","Fight IQ"]].map(([k, label]) => {
+              const val = Math.round(f.attrs[k] || 0);
+              const ceil = f.ceilings?.[k] || 99;
+              const pct = Math.round((val / ceil) * 100);
+              const color = pct >= 90 ? T.gold : pct >= 70 ? T.pos : pct >= 45 ? T.steel : T.warn;
+              const plateau = pct >= 90;
+              return (
+                <div key={k} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt3, width: 72, textAlign: "right" }}>{label}</span>
+                  <div style={{ flex: 1, height: 6, background: T.bg, borderRadius: 3, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: 3, transition: "width 0.3s" }} />
+                  </div>
+                  <span style={{ fontFamily: T.mono, fontSize: 11, fontWeight: 700, color, minWidth: 60 }}>
+                    {val}/{ceil}
+                  </span>
+                  <span style={{ fontFamily: T.mono, fontSize: 10, color: T.txt3, minWidth: 32 }}>
+                    {pct}%
+                  </span>
+                  {plateau && <Tag color={T.warn}>Plateau</Tag>}
+                </div>
+              );
+            })}
+          </div>
+        </Panel>
       </div>
     </div>
   );

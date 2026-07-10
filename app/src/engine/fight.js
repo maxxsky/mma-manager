@@ -104,6 +104,9 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
       if (exType === "power" && result.landA > result.landB + 3) {
         comm.tickS(exMin, exSec + 5, POWER_TEMPLATES, A.name, B.name);
       }
+      // Archetype clash feedback
+      if (matchup.aStrike > 0.15) comm.tickOnly(exMin, exSec + 8, `${A.name}'s ${A.archetype} striking advantage showing.`);
+      else if (matchup.bStrike > 0.15) comm.tickOnly(exMin, exSec + 8, `${B.name}'s ${B.archetype} striking giving him the edge.`);
 
     // ── CLINCH ──
     } else if (exType === "clinch") {
@@ -115,6 +118,9 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
       ptsA += result.ptsA; ptsB += result.ptsB;
       mom += result.momDelta;
       if (result.newPosition) position = result.newPosition;
+      // Archetype clash: clinch
+      if (matchup.aClinch > 0.15 && result.landA > result.landB) comm.tickOnly(exMin, exSec + 8, `${A.name} dominating the clinch — ${A.archetype} advantage.`);
+      else if (matchup.bClinch > 0.15 && result.landB > result.landA) comm.tickOnly(exMin, exSec + 8, `${B.name} controlling the clinch — ${B.archetype} edge.`);
 
     // ── TAKEDOWN ──
     } else if (exType === "td" || exType === "tdB") {

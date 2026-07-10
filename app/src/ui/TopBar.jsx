@@ -10,7 +10,7 @@ const Chip = ({ label, val, color }) => (
 );
 
 export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
-  saveSlot, onSaveSlotChange, slotInfo, lang, onLangChange, onNewGame, version, extraRight }) {
+  saveSlot, onSaveSlotChange, slotInfo, lang, onLangChange, onNewGame, version, extraRight, dispatch }) {
   const year = Math.floor((week || 1) / 48) + 1;
   const month = Math.floor(((week || 1) % 48) / 4) + 1;
   const wk = ((week || 1) % 4) + 1;
@@ -66,6 +66,14 @@ export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
                     border: `1px solid ${T.line}`, borderRadius: T.r, color: T.txt3,
                     padding: "3px 6px", cursor: "pointer" }}>
                   {lang.toUpperCase()}
+                </button>
+              )}
+              {dispatch && (
+                <button onClick={() => dispatch({ type: "UNDO" })} aria-label="Undo"
+                  style={{ fontFamily: T.mono, fontSize: 10, background: "transparent",
+                    border: `1px solid ${T.line}`, borderRadius: T.r, color: T.txt3,
+                    padding: "3px 8px", cursor: "pointer" }}>
+                  ↩ Undo
                 </button>
               )}
             {onNewGame && (

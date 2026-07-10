@@ -125,6 +125,7 @@ export default function App() {
           lang={lang}
           onLangChange={() => setLang(lang === "id" ? "en" : "id")}
           onNewGame={() => startNew(newGame())}
+          dispatch={dispatch}
           version="v1.0.0-ea"
         />
 
