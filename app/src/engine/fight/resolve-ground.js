@@ -12,7 +12,7 @@ export function resolveGround(exType, A, B, stA, stB, position, matchup, subProg
 
   switch (exType) {
     case "gnp":
-      return resolveGNP(A, B, isTopA, gType, matchup, comm, exMin, exSec);
+      return resolveGNP(A, B, isTopA, gType, matchup, position, comm, exMin, exSec);
     case "sub":
       return resolveSubmission(A, B, stA, stB, isTopA, gType, subProgress, SUB_THRESHOLD, matchup, bjjGuardProgress, comm, exMin, exSec);
     case "sweep":
@@ -24,7 +24,7 @@ export function resolveGround(exType, A, B, stA, stB, position, matchup, subProg
   }
 }
 
-function resolveGNP(A, B, isTopA, gType, matchup, comm, exMin, exSec) {
+function resolveGNP(A, B, isTopA, gType, matchup, position, comm, exMin, exSec) {
   const g = GROUND[gType] || GROUND.guard;
   const gnpMult = g.topGNP + (matchup.aGNP || 0) + (matchup.bGNP || 0);
   const dmg = R(CFG.GNP_DMG_MIN, CFG.GNP_DMG_MAX) * gnpMult;
