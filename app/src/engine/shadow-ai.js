@@ -2,86 +2,54 @@
 //   SHADOW AI CAMP SIMULATION — Lightweight abstract management
 //   No weekly training. No finances. No detailed contracts.
 //   Quarterly update cycle with abstract organizational values.
+//   Uses shadow-ai/ modules for config, state factory, history.
 // ============================================================
 
-import { clamp, R, RI, pick, random, uid } from "./rng.js";
-import { genFighter } from "./fighter.js";
-import { genCoach } from "./fighter.js";
+import { R, RI, clamp, random } from "./rng.js";
+import { genFighter, genCoach } from "./fighter.js";
+import { createShadowState, assignPhilosophy, calculateRosterQuality } from "./shadow-ai/state.js";
+import { recordCampHistory } from "./shadow-ai/history.js";
+import {
+  SHADOW_TICK_INTERVAL,
+  DEV_AGE_YOUNG, DEV_AGE_PRIME, DEV_AGE_MATURE, DEV_AGE_VETERAN, DEV_AGE_STOP,
+  AGE_MULT_YOUNG, AGE_MULT_PRIME, AGE_MULT_MATURE, AGE_MULT_VETERAN, AGE_MULT_DECLINE,
+  LEVEL_MIN, LEVEL_MAX,
+  DEV_QUALITY_DIVISOR, DEV_GROWTH_MIN, DEV_GROWTH_MAX, DEV_DECLINE_MIN, DEV_DECLINE_MAX, DEV_CHAMPIONSHIP_BONUS,
+  COACH_SKILL_MAX, COACH_GROWTH_CHANCE, COACH_GROWTH_MIN, COACH_GROWTH_MAX, COACH_RETIRE_AGE, COACH_RETIRE_CHANCE,
+  LC_CHAMPIONSHIP_QUALITY, LC_CHAMPIONSHIP_REP, LC_DECLINE_QUALITY, LC_DECLINE_REP,
+  LC_REBUILD_QUALITY, LC_GROWTH_QUALITY, LC_GROWTH_REP, LC_EXPANSION_QUALITY, LC_EXPANSION_REP, LC_REBUILD_RECOVERY,
+  ELITE_TARGET_SIZE, DEFAULT_TARGET_MIN, DEFAULT_TARGET_MAX, ROSTER_OVERFLOW_PAD, ACQUIRE_MIN_BUDGET,
+  RECRUIT_QUALITY_DIVISOR, ELITE_LEVEL_MIN, ELITE_LEVEL_MAX, ROOKIE_LEVEL_MIN, ROOKIE_LEVEL_MAX,
+  RECRUIT_AGE_MIN, RECRUIT_AGE_MAX, RECRUIT_COST_MIN, RECRUIT_COST_MAX,
+  REP_QUALITY_WEIGHT, REP_MOMENTUM_WEIGHT, REP_DRIFT_RATE,
+  MOMENTUM_QUALITY_OFFSET, MOMENTUM_QUALITY_MULT, MOMENTUM_JITTER_MIN, MOMENTUM_JITTER_MAX, MOMENTUM_MIN, MOMENTUM_MAX,
+  HOF_MIN_WINS,
+  RETIRE_AGE_CHECK, RETIRE_AGE_FORCE,
+} from "./shadow-ai/config.js";
 
 // ── CAMP STATE INITIALIZATION ──
 
 export function initShadowCamp(camp) {
   if (camp._shadow) return;
-  camp._shadow = {
-    // Abstract resources
-    budget: RI(30000, 120000),
-    coachingQuality: clamp(Math.round(camp.coaches?.[0]?.skill || RI(2, 5)), 1, 10),
-    developmentQuality: RI(30, 70),
-    recruitmentQuality: RI(20, 60),
-    organizationalMomentum: RI(-20, 30),
-    // History
-    totalFightersDeveloped: camp.fighters?.length || 0,
-    championsProduced: 0,
-    generationsCompleted: 0,
-    peakReputation: camp.rep || 0,
-    // Cycle tracking
-    lastUpdateWeek: 0,
-    philosophy: assignPhilosophy(camp),
-    lifecycle: "expansion", // expansion, growth, championship, decline, rebuild
-    rosterQuality: calculateRosterQuality(camp),
-  };
-}
-
-function assignPhilosophy(camp) {
-  const trait = camp.trait || "Balanced Development";
-  const philosophies = {
-    "Striking Factory": { id: "striking", recruitBias: "striking", devFocus: ["striking", "footwork"], turnoverRate: 0.15 },
-    "Wrestling Hub": { id: "wrestling", recruitBias: "wrestling", devFocus: ["wrestling", "bjj"], turnoverRate: 0.12 },
-    "BJJ Academy": { id: "bjj", recruitBias: "bjj", devFocus: ["bjj", "wrestling"], turnoverRate: 0.12 },
-    "Prospect Mill": { id: "prospect", recruitBias: "young", devFocus: ["all"], turnoverRate: 0.25 },
-    "Elite Stable": { id: "elite", recruitBias: "elite", devFocus: ["all"], turnoverRate: 0.08 },
-    "Balanced Development": { id: "balanced", recruitBias: "balanced", devFocus: ["all"], turnoverRate: 0.15 },
-  };
-  return philosophies[trait] || philosophies["Balanced Development"];
-}
-
-function calculateRosterQuality(camp) {
-  if (!camp.fighters || camp.fighters.length === 0) return 30;
-  const avgLevel = camp.fighters.reduce((s, f) => s + (f.level || 0.5), 0) / camp.fighters.length;
-  return clamp(Math.round(avgLevel * 60), 10, 95);
+  camp._shadow = createShadowState(camp);
 }
 
 // ── QUARTERLY MANAGEMENT CYCLE ──
 
 export function shadowCampTick(camp, week) {
   if (!camp._shadow) initShadowCamp(camp);
-  if (week - camp._shadow.lastUpdateWeek < 12) return; // quarterly
+  if (week - camp._shadow.lastUpdateWeek < SHADOW_TICK_INTERVAL) return;
   camp._shadow.lastUpdateWeek = week;
 
   const s = camp._shadow;
 
-  // 1. Update lifecycle phase
   updateLifecycle(camp);
-
-  // 2. Fighter development
   developFighters(camp);
-
-  // 3. Prospect acquisition (if below target size)
   acquireProspects(camp, week);
-
-  // 4. Coach development
   developCoaches(camp);
-
-  // 5. Reputation changes
   updateReputation(camp);
-
-  // 6. Roster turnover (retire old, promote young)
   manageRoster(camp, week);
-
-  // 7. Update organizational momentum
   updateMomentum(camp);
-
-  // 8. Track history
   updateHistory(camp);
 }
 
@@ -92,17 +60,17 @@ function updateLifecycle(camp) {
   const quality = calculateRosterQuality(camp);
   const rep = camp.rep || 30;
 
-  if (quality >= 80 && rep >= 60) {
+  if (quality >= LC_CHAMPIONSHIP_QUALITY && rep >= LC_CHAMPIONSHIP_REP) {
     s.lifecycle = random() < 0.8 ? "championship" : "growth";
-  } else if (quality < 30 && rep < 20 && s.lifecycle === "championship") {
+  } else if (quality < LC_DECLINE_QUALITY && rep < LC_DECLINE_REP && s.lifecycle === "championship") {
     s.lifecycle = "decline";
-  } else if (quality < 20) {
+  } else if (quality < LC_REBUILD_QUALITY) {
     s.lifecycle = random() < 0.6 ? "rebuild" : "decline";
-  } else if (quality >= 50 && rep >= 30 && (s.lifecycle === "decline" || s.lifecycle === "rebuild")) {
+  } else if (quality >= LC_GROWTH_QUALITY && rep >= LC_GROWTH_REP && (s.lifecycle === "decline" || s.lifecycle === "rebuild")) {
     s.lifecycle = "growth";
-  } else if (quality >= 35 && rep >= 15 && s.lifecycle === "expansion") {
+  } else if (quality >= LC_EXPANSION_QUALITY && rep >= LC_EXPANSION_REP && s.lifecycle === "expansion") {
     s.lifecycle = "growth";
-  } else if (s.lifecycle === "rebuild" && quality >= 40) {
+  } else if (s.lifecycle === "rebuild" && quality >= LC_REBUILD_RECOVERY) {
     s.lifecycle = "growth";
   }
 }
@@ -112,14 +80,16 @@ function updateLifecycle(camp) {
 function developFighters(camp) {
   const s = camp._shadow;
   camp.fighters?.forEach(f => {
-    if (f.age > 36) return; // too old to develop
-    // Lightweight: small level increase based on dev quality and age
-    const ageMult = f.age <= 24 ? 1.3 : f.age <= 28 ? 1.15 : f.age <= 32 ? 1.0 : f.age <= 35 ? 0.7 : 0.4;
-    const growth = R(0.002, 0.008) * (s.developmentQuality / 50) * ageMult * (s.lifecycle === "championship" ? 1.2 : 1);
-    f.level = clamp(f.level + growth, 0.3, 1.5);
+    if (f.age > DEV_AGE_STOP) return;
+    const ageMult = f.age <= DEV_AGE_YOUNG ? AGE_MULT_YOUNG
+      : f.age <= DEV_AGE_PRIME ? AGE_MULT_PRIME
+      : f.age <= DEV_AGE_MATURE ? AGE_MULT_MATURE
+      : f.age <= DEV_AGE_VETERAN ? AGE_MULT_VETERAN
+      : AGE_MULT_DECLINE;
+    const growth = R(DEV_GROWTH_MIN, DEV_GROWTH_MAX) * (s.developmentQuality / DEV_QUALITY_DIVISOR) * ageMult * (s.lifecycle === "championship" ? DEV_CHAMPIONSHIP_BONUS : 1);
+    f.level = clamp(f.level + growth, LEVEL_MIN, LEVEL_MAX);
 
-    // Aging
-    if (f.age >= 34) f.level = clamp(f.level - R(0.003, 0.01), 0.3, f.level);
+    if (f.age >= DEV_AGE_VETERAN) f.level = clamp(f.level - R(DEV_DECLINE_MIN, DEV_DECLINE_MAX), LEVEL_MIN, f.level);
   });
 }
 
@@ -127,19 +97,18 @@ function developFighters(camp) {
 
 function acquireProspects(camp, week) {
   const s = camp._shadow;
-  const targetSize = s.philosophy?.id === "elite" ? 4 : RI(5, 8);
+  const targetSize = s.philosophy?.id === "elite" ? ELITE_TARGET_SIZE : RI(DEFAULT_TARGET_MIN, DEFAULT_TARGET_MAX);
   if ((camp.fighters?.length || 0) >= targetSize) return;
-  if (s.budget < 5000) return;
+  if (s.budget < ACQUIRE_MIN_BUDGET) return;
 
-  const quality = s.recruitmentQuality / 100;
-  const level = s.philosophy?.id === "elite" ? R(0.65, 1.1) : R(0.3, 0.7);
+  const level = s.philosophy?.id === "elite" ? R(ELITE_LEVEL_MIN, ELITE_LEVEL_MAX) : R(ROOKIE_LEVEL_MIN, ROOKIE_LEVEL_MAX);
   const newFighter = genFighter(level);
   newFighter.joinedWeek = week;
-  newFighter.age = RI(19, 26);
+  newFighter.age = RI(RECRUIT_AGE_MIN, RECRUIT_AGE_MAX);
   newFighter.level = level;
 
   camp.fighters.push(newFighter);
-  s.budget -= RI(2000, 8000);
+  s.budget -= RI(RECRUIT_COST_MIN, RECRUIT_COST_MAX);
   s.totalFightersDeveloped++;
 }
 
@@ -148,32 +117,29 @@ function acquireProspects(camp, week) {
 function developCoaches(camp) {
   const s = camp._shadow;
   camp.coaches?.forEach(c => {
-    if (c.skill < 10 && random() < 0.3) {
-      c.skill = clamp(c.skill + R(0.2, 0.5), 1, 10);
+    if (c.skill < COACH_SKILL_MAX && random() < COACH_GROWTH_CHANCE) {
+      c.skill = clamp(c.skill + R(COACH_GROWTH_MIN, COACH_GROWTH_MAX), 1, COACH_SKILL_MAX);
     }
-    // Coach aging/retirement
     if (!c._age) c._age = RI(30, 50);
     c._age++;
-    if (c._age > 60 && random() < 0.2) {
-      // Replace retired coach
+    if (c._age > COACH_RETIRE_AGE && random() < COACH_RETIRE_CHANCE) {
       const newCoach = genCoach();
       Object.assign(c, newCoach);
       c._age = RI(30, 40);
     }
   });
   s.coachingQuality = clamp(Math.round(
-    (camp.coaches?.reduce((s, c) => s + (c.skill || 3), 0) || 3) / (camp.coaches?.length || 1)
-  ), 1, 10);
+    (camp.coaches?.reduce((sum, c) => sum + (c.skill || 3), 0) || 3) / (camp.coaches?.length || 1)
+  ), 1, COACH_SKILL_MAX);
 }
 
 // ── REPUTATION ──
 
 function updateReputation(camp) {
   const s = camp._shadow;
-  // Base drift toward equilibrium based on roster quality
   const quality = calculateRosterQuality(camp);
-  const target = quality * 0.7 + s.organizationalMomentum * 0.3;
-  camp.rep = clamp(camp.rep + (target - camp.rep) * 0.05, 2, 100);
+  const target = quality * REP_QUALITY_WEIGHT + s.organizationalMomentum * REP_MOMENTUM_WEIGHT;
+  camp.rep = clamp(camp.rep + (target - camp.rep) * REP_DRIFT_RATE, 2, 100);
   s.peakReputation = Math.max(s.peakReputation, camp.rep);
 }
 
@@ -185,16 +151,15 @@ function manageRoster(camp, week) {
 
   // Retire old fighters
   camp.fighters = camp.fighters?.filter(f => {
-    if (f.age >= 38 && random() < 0.3 * turnoverRate * 3) {
-      // Check Hall of Fame potential
+    if (f.age >= RETIRE_AGE_CHECK && random() < 0.3 * turnoverRate * 3) {
       const wins = f.record?.w || 0;
-      if (wins >= 8 && s.championsProduced >= 1) {
+      if (wins >= HOF_MIN_WINS && s.championsProduced >= 1) {
         s.championsProduced++;
       }
       s.generationsCompleted++;
       return false;
     }
-    if (f.age >= 40) {
+    if (f.age >= RETIRE_AGE_FORCE) {
       s.generationsCompleted++;
       return false;
     }
@@ -202,8 +167,8 @@ function manageRoster(camp, week) {
   });
 
   // Release worst performers if over target
-  const targetSize = s.philosophy?.id === "elite" ? 4 : RI(5, 8);
-  while ((camp.fighters?.length || 0) > targetSize + 2) {
+  const targetSize = s.philosophy?.id === "elite" ? ELITE_TARGET_SIZE : RI(DEFAULT_TARGET_MIN, DEFAULT_TARGET_MAX);
+  while ((camp.fighters?.length || 0) > targetSize + ROSTER_OVERFLOW_PAD) {
     const worst = camp.fighters.reduce((a, b) => (a.level || 0) < (b.level || 0) ? a : b);
     camp.fighters = camp.fighters.filter(f => f !== worst);
   }
@@ -214,26 +179,16 @@ function manageRoster(camp, week) {
 function updateMomentum(camp) {
   const s = camp._shadow;
   const quality = calculateRosterQuality(camp);
-  const momentumChange = (quality - 40) * 0.3 + R(-5, 5);
-  s.organizationalMomentum = clamp(s.organizationalMomentum + momentumChange, -50, 50);
+  const momentumChange = (quality - MOMENTUM_QUALITY_OFFSET) * MOMENTUM_QUALITY_MULT + R(MOMENTUM_JITTER_MIN, MOMENTUM_JITTER_MAX);
+  s.organizationalMomentum = clamp(s.organizationalMomentum + momentumChange, MOMENTUM_MIN, MOMENTUM_MAX);
 }
 
 // ── HISTORY ──
 
 function updateHistory(camp) {
-  const s = camp._shadow;
   const quality = calculateRosterQuality(camp);
   const rep = camp.rep || 30;
-
-  // Track championship eras
-  if (quality >= 80 && rep >= 60 && !s._eraFlagged) {
-    s._eraFlagged = true;
-    if (!camp._campHistory) camp._campHistory = [];
-    camp._campHistory.push({ type: "championship_era", week: 0, detail: `${camp.name} enters a championship era.` });
-  }
-  if (quality < 30 && s._eraFlagged) {
-    s._eraFlagged = false;
-  }
+  recordCampHistory(camp, quality, rep);
 }
 
 // ── PUBLIC API ──
