@@ -1,6 +1,6 @@
 import { fmt$ } from "../engine/rng.js";
 import React from "react";
-import { T, Panel, Eyebrow, Tag, Icon, ICONS, Mono, ARCH_COLOR } from "./theme.jsx";
+import { T, Panel, Eyebrow, Tag, Btn, Icon, ICONS, Mono, ARCH_COLOR } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 import { monthlyBurn, monthlyIn } from "../engine/finance.js";
 import { getObjectives } from "../engine/onboarding.js";
