@@ -1,0 +1,30 @@
+{
+  "app_start": "OK",
+  "navigation": {
+    "dashboard": "OK",
+    "roster": "OK",
+    "inbox": "OK",
+    "finance": "OK",
+    "facility": "OK",
+    "scout": "OK",
+    "rankings": "OK",
+    "rivals": "OK"
+  },
+  "buttons": "0 tested, 0 failed",
+  "modals": [],
+  "weekly_progression": "0/26 weeks OK",
+  "fight_flow": null,
+  "save_load": null,
+  "console_errors": [
+    "[error] Failed to load resource: the server responded with a status of 404 (File not found)",
+    "[error] TypeError: Cannot read properties of undefined (reading 'length')\n    at Ry (http://localhost:8096/assets/index-BaI953dN.js:40:155695)\n    at http://l"
+  ],
+  "page_errors": [],
+  "bugs_found": [
+    {
+      "phase": "week_2",
+      "error": "Cannot read properties of undefined (reading 'length')\\nTypeError: Cannot read properties of undefined (reading 'length')\n    at Ry (http://localhost:8096/assets/index-BaI953dN.js:40:155695)\n    at http://localhost:8096/assets/index-BaI953dN.js:40:169620\n    at http://localhost:8096/assets/index-BaI"
+    }
+  ],
+  "bugs_fixed": []
+}

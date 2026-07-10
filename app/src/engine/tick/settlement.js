@@ -6,6 +6,7 @@ import { rankOf } from "../rankings.js";
 import { tickRankings } from "./rankings.js";
 
 export function tickSettlement(g) {
+  if (!g || !g.roster) return;
   if (g.week % 4 !== 0) return;
 
   // ---------- monthly settlement ----------

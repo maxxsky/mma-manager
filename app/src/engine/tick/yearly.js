@@ -3,6 +3,7 @@ import { clamp, uid, random } from "../rng.js";
 import { FAC_LABEL } from "../data.js";
 
 export function tickYearly(g) {
+  if (!g || !g.roster) return;
   if (g.week % 48 !== 0) return;
 
   g.roster.forEach((f) => {

@@ -3,6 +3,7 @@ import { RI, clamp, R, uid } from "../rng.js";
 import { genFighter } from "../fighter.js";
 
 export function tickRankings(g) {
+  if (!g || !g.divisions) return;
   // AI ranking jitter
   Object.values(g.divisions).forEach((d) =>
     d.list.forEach((c) => { c.points = clamp(c.points + RI(-8, 12), 5, 120); })

@@ -4,6 +4,7 @@ import { WEIGHTS } from "../data.js";
 import { rankOf } from "../rankings.js";
 
 export function tickWeightChange(g) {
+  if (!g || !g.roster) return;
   if (g.week % 12 !== 0) return;
 
   g.roster.forEach((f) => {
