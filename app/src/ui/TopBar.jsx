@@ -55,7 +55,7 @@ export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
                     border: `1px solid ${T.line}`, borderRadius: T.r, padding: "3px 6px", cursor: "pointer" }}>
                   {[1, 2, 3].map((s) => (
                     <option key={s} value={s}>
-                      S{s}{slotInfo && slotInfo[s - 1] ? ` W${slotInfo[s - 1].week}` : ""}
+                      S{s}{slotInfo && slotInfo[s - 1]?.week != null ? ` W${slotInfo[s - 1].week}` : ""}
                     </option>
                   ))}
                 </select>
