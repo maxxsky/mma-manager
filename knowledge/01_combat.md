@@ -14,7 +14,47 @@ The combat system is not a fighting game. The player does not control individual
 
 ---
 
-## 2 — Responsibilities
+## 2 — Combat Philosophy
+
+### Purpose in the game
+
+Combat is the payoff. Everything the player does — training, contracts, scouting, game planning — leads to the fight. The fight system must deliver a satisfying resolution to those decisions, not override them with randomness.
+
+### Fun over realism
+
+Absolute realism would mean one-punch KOs, frequent injuries, and boring decisions. The system prioritizes dramatic tension: comebacks are possible, championship fights feel different from prelims, and the player's strategic choices visibly affect the outcome.
+
+### Emergent stories over scripted outcomes
+
+The best fight stories come from the simulation: the underdog who survives a beating and wins by submission in the 5th round. The system should generate these moments naturally, not through authored sequences.
+
+### Consistency over perfect simulation
+
+A fighter who is clearly better (higher stats, favourable matchup) should win reliably but not always. The upset rate must be calibrated — too high and stats feel meaningless, too low and RNG is irrelevant. The current calibration targets approximately a 15-25% upset rate based on skill disparity.
+
+---
+
+## 3 — Design Goals
+
+- **Every fight feels unique** — archetype matchups, trait interactions, and game plan choices produce different textures.
+- **All archetypes remain viable** — no single fighting style dominates. Wrestlers have a path to victory against strikers and vice versa.
+- **Player decisions outweigh RNG** — game plan selection, corner advice, and attitude matter more than the random exchange outcomes.
+- **Comebacks are possible but rare** — a fighter who is losing badly should have a narrow path to victory, not a guaranteed loss.
+- **The better fighter usually wins** — but upsets happen often enough to keep tension alive.
+
+---
+
+## 4 — Non Goals
+
+- **Not a skill-based fighting game** — the player does not time buttons or execute combos.
+- **Not a physics simulation** — strike trajectories, hitboxes, and collision detection do not exist.
+- **Not a career mode** — long-term fighter development is owned by Training.
+- **Not a matchmaker** — which fights get offered is owned by World / Fight Offers.
+- **Not fully deterministic** — RNG introduces variance, but the seedable RNG ensures reproducibility for testing.
+
+---
+
+## 5 — Responsibilities
 
 ### Combat owns
 
@@ -36,7 +76,7 @@ The combat system is not a fighting game. The player does not control individual
 
 ---
 
-## 3 — Core Concepts
+## 6 — Core Concepts
 
 ### Fight Structure
 
@@ -105,7 +145,7 @@ Position transitions: standing → halfGuard → guard → sideControl → mount
 
 ---
 
-## 4 — Combat Lifecycle
+## 7 — Combat Lifecycle
 
 ```
                 Pre-Fight
@@ -139,7 +179,7 @@ Position transitions: standing → halfGuard → guard → sideControl → mount
 
 ---
 
-## 5 — State Changes
+## 8 — State Changes
 
 ### What Combat Reads
 
@@ -168,7 +208,7 @@ Position transitions: standing → halfGuard → guard → sideControl → mount
 
 ---
 
-## 6 — Key Objects
+## 9 — Key Objects
 
 ### Fighter (input to simRound)
 
@@ -203,80 +243,68 @@ A fighter object must provide these properties for combat:
 
 ---
 
-## 7 — Business Rules
+## 10 — Business Rules
 
-### Effective Attribute Calculation
+### Effective Attribute
 
-A fighter's effective attribute for an exchange is not their raw `attrs[k]`. It is computed as:
-
-```
-effAttr(fighter, attr, stamina, modifiers)
-  = fighter.attrs[attr]
-    * stamina_weight(STA_BASE_WEIGHT + STA_SCALE_WEIGHT * stamina/100)
-    * trait_modifier (Iron Chin, Glass Jaw, Showboat)
-    * passed_in_modifiers (attitude, game plan, momentum, phase)
-```
-
-This means a tired fighter fights poorly, and traits can shift specific attributes.
+A fighter's effective attribute is their raw stat, scaled by stamina, modified by traits and game plan. A tired fighter fights poorly regardless of their max stats.
 
 ### Game Plan Effects
 
 | Plan | Effect |
 |------|--------|
-| Keep It Standing | Neutral — no special bonus |
-| Take It Down | +0.18 takedown chance, affects exchange pool |
-| Finish It | +50% knockdown chance, +30% stamina drain |
-| Survive & Outpoint | -25% stamina drain, reduced output |
-
-### Corner Strategy Effects
-
-| Strategy | Effect |
-|----------|--------|
-| Go | Aggression multiplier increased, higher KO chance |
-| Save | Stamina drain reduced, defense prioritized |
-| Body | Body damage accumulation prioritized |
-
-### Archetype Matchups
-
-Archetype matchup modifiers are computed in `matchup.js`. The system tracks:
-
-- `aStrike / bStrike` — striking advantage
-- `aClinch / bClinch` — clinch advantage
-- `aTD / bTD` — takedown advantage
-- `aTDDef / bTDDef` — takedown defense advantage
-- `aGNP / bGNP` — ground-and-pound advantage
-- `aSweep / bSweep` — sweep advantage
-- `aSub / bSub` — submission advantage
-
-These modifiers affect exchange outcomes but are not explicitly shown to the player. The archetype clash commentary (in `commentary.js`) narrates them.
+| Keep It Standing | Neutral |
+| Take It Down | Increased takedown attempts, affects exchange weighting |
+| Finish It | Higher KO chance, higher stamina drain |
+| Survive & Outpoint | Reduced stamina drain, lower output |
 
 ### Knockdown Check
 
-After each exchange, if cumulative damage exceeds `KD_DMG_THRESHOLD`, a knockdown check runs:
-
-```
-kdChance = clamp((damage - 40) / chin * KD_CHIN_MULT + (strength - 40) * KD_STR_MULT,
-                 0, KD_CHANCE_MAX)
-            * (Finish It ? 1.5 : 1)
-            * cautMult
-```
-
-If the check passes, the fighter goes down. If `KD_FINISH_CHANCE` also passes, the fight ends via KO/TKO.
+After damage exceeds a threshold, a chin check runs. The chance depends on the fighter's chin attribute, the attacker's strength, and the current game plan. Traits like Iron Chin and Cautious modulate this chance.
 
 ### Submission Logic
 
-Submission progress accumulates across exchanges within a round (resets between rounds):
-
-```
-adv = (attacker.bjj * 0.8 + attacker.str * 0.2 + position_bonus + sub_mod)
-      - (defender.bjj * 0.5 + defender.fightIQ * 0.25)
-subProgress += adv
-if subProgress >= SUB_THRESHOLD → finish
-```
+Submission progress accumulates across exchanges within a single round (resets between rounds). It is a contest between the attacker's BJJ + position bonus and the defender's BJJ + fight IQ. Once enough progress accumulates, the fight ends.
 
 ---
 
-## 8 — Extension Points
+## 11 — Balancing Philosophy
+
+### No dominant strategy
+
+Every game plan, archetype, and corner choice should have clear trade-offs. If one option becomes the default pick in every situation, it needs to be weakened or the alternatives strengthened.
+
+### Power creep is the enemy
+
+Adding new traits, moves, or modifiers increases the overall power level. Each addition must be offset somewhere else or be intentionally situational. The safest approach is to add situational power (strong in specific matchups) rather than universal power (strong always).
+
+### Changes ripple through the entire system
+
+A +5% damage buff to Boxers does not just affect Boxers — it affects Wrestlers (who now lose faster to Boxers), BJJ Specialists (who now face sharper strikers), and every game plan that involves striking exchanges. Consider the full match matrix when tuning.
+
+### Preserve existing calibration
+
+If a change is labelled as a bug fix, its gameplay impact should be minimal. If a change is labelled as a balance tweak, its gameplay impact should be isolated. Do not mix the two.
+
+---
+
+## 12 — AI Decision Heuristics
+
+When modifying combat, follow these guidelines before reaching for new systems.
+
+**Use existing patterns.** Before adding a new exchange type, check if the existing 10 types can be repurposed. Before adding a new modifier, check if an existing trait or game plan covers the need.
+
+**Avoid new stats if modifiers suffice.** A new fighter attribute requires save migration, UI changes, and balancing across all 8 existing attributes. A modifier (trait, game plan flag, temporary buff) achieves the same effect with less surface area.
+
+**Avoid new subsystems if extension points suffice.** A new phase in the exchange loop, a new entry in the commentary table, or a new case in the resolver switch is cheaper than a new orchestration path.
+
+**Prefer the smallest possible change.** A single-line guard in an existing resolver is better than a new resolver. A new constant in config.js is better than a new data file. A new if-branch is better than a new subsystem.
+
+**Consider player visibility.** A change that the player never sees (e.g., a 2% damage adjustment) is probably not worth making. A change that creates new commentary text or a new fight dynamic is visible and therefore valuable.
+
+---
+
+## 13 — Extension Points
 
 ### Adding a new exchange type
 
@@ -306,7 +334,7 @@ if subProgress >= SUB_THRESHOLD → finish
 
 ---
 
-## 9 — Invariants
+## 14 — Invariants
 
 These must never be violated. If a change breaks one, the change is wrong.
 
@@ -323,7 +351,7 @@ These must never be violated. If a change breaks one, the change is wrong.
 
 ---
 
-## 10 — Common Mistakes
+## 15 — Common Mistakes
 
 ### Position as string
 
@@ -347,7 +375,7 @@ Combat uses floating-point values throughout. When displaying scores or damage i
 
 ---
 
-## 11 — Related Documents
+## 16 — Related Documents
 
 | Document | What It Covers |
 |----------|---------------|
