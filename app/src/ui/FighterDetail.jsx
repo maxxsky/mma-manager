@@ -9,7 +9,7 @@ import { getTrainingCycle, getCoachRecommendation, getDevelopmentPhilosophy, get
 import { getCoachArchetypeSynergy, getFightStyleSummary, getArchetypeBehavior } from "../engine/archetype-expression.js";
 import { T, Panel, Eyebrow, Tag, Btn, Ovr, Mono, AttrTele, Meter, OctaRadar, Icon, ICONS, heat } from "./theme.jsx";
 
-export default function FighterDetail({ f, g, onBack, up }) {
+export default function FighterDetail({ f, g, onBack, up, dispatch }) {
   const ac = ARCH_COLOR[f.archetype];
   const groups = [
     ["Striking", [["striking", "Striking"], ["footwork", "Footwork"]]],
@@ -121,6 +121,12 @@ export default function FighterDetail({ f, g, onBack, up }) {
                   </div>
                 ))}
               </div>
+              {dispatch && (
+                <Btn sm ghost style={{ marginTop: 8, width: "100%" }}
+                  onClick={() => dispatch({ type: "SIGN_CONTRACT_PRE", mode: "extend", fighterId: f.id, fighter: f })}>
+                  Perpanjang Kontrak
+                </Btn>
+              )}
             </>
           )}
         </Panel>

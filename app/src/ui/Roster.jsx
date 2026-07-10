@@ -6,7 +6,7 @@ import { T, Panel, Tag, Ovr, Mono, heat, Btn } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 import FighterDetail from "./FighterDetail.jsx";
 
-export default function Roster({ g, setTab, up }) {
+export default function Roster({ g, setTab, up, dispatch }) {
   const [detailFighter, setDetailFighter] = useState(null);
 
   if (detailFighter) {
@@ -14,7 +14,7 @@ export default function Roster({ g, setTab, up }) {
     return f ? (
       <div>
         <Btn sm ghost onClick={() => setDetailFighter(null)} style={{ marginBottom: 14 }}>← {t("UI.back")}</Btn>
-        <FighterDetail f={f} g={g} up={up} />
+        <FighterDetail f={f} g={g} up={up} dispatch={dispatch} />
       </div>
     ) : null;
   }

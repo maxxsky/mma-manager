@@ -246,6 +246,26 @@ export default function Rankings({ g, t }) {
         </div>
       </Panel>
 
+      {/* ── Title History ── */}
+      {g._worldHistory?.titleChanges && (() => {
+        const divHistory = g._worldHistory.titleChanges.filter(tc => tc.division === selDiv).slice(-5).reverse();
+        if (divHistory.length === 0) return null;
+        return (
+          <Panel style={{ marginTop: 12 }}>
+            <Eyebrow>Title History — {selDiv}</Eyebrow>
+            {divHistory.map((tc, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: i < divHistory.length - 1 ? `1px solid ${T.line}22` : "none" }}>
+                <span style={{ fontFamily: T.mono, fontSize: 10, color: T.txt3, minWidth: 32 }}>W{tc.week}</span>
+                <span style={{ color: T.gold, fontSize: 13 }}>👑</span>
+                <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt2 }}>
+                  <b style={{ color: T.txt }}>{tc.newChamp}</b> def. {tc.oldChamp}
+                </span>
+              </div>
+            ))}
+          </Panel>
+        );
+      })()}
+
       {/* ── Ranking Table ── */}
       <Panel pad={0} style={{ marginTop: 12, overflow: "hidden" }} role="table" aria-label={`${selDiv} ranking table`}>
         {/* Table header */}

@@ -67,6 +67,16 @@ export function tickRivals(g) {
     }
     // Rival activity visible in log
     if (rc.rep > g.rep + 10 && g.week % 12 === 0) g.log.unshift(`📈 ${rc.name} rep ${Math.round(rc.rep)} — melewati camp kita!`);
+    // Milestone: rival enters championship contention
+    if (rc.rep >= 70 && !rc._milestoneChampNotified) {
+      rc._milestoneChampNotified = true;
+      g.inbox.unshift({ id: uid(), type: "event", title: `⭐ ${rc.name} — Championship Contender`, body: `${rc.name} has reached ${Math.round(rc.rep)} reputation. They are now a legitimate championship-level camp. Watch your back.`, choices: [{ label: "Noted", chem: 0 }] });
+    }
+    // Milestone: rival produces top-tier rep
+    if (rc.rep >= 85 && !rc._milestoneEliteNotified) {
+      rc._milestoneEliteNotified = true;
+      g.inbox.unshift({ id: uid(), type: "event", title: `👑 ${rc.name} — Elite Camp`, body: `${rc.name} has reached elite status at ${Math.round(rc.rep)} reputation. They are now one of the top camps in the world.`, choices: [{ label: "Impressive", chem: 0 }] });
+    }
   });
 
   // poaching

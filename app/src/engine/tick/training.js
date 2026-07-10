@@ -79,6 +79,9 @@ export function tickTraining(g) {
       const relMult = clamp(1 + relAvg * 0.15, 0.85, 1.1);
       const mentorMult = calcMentorBonus(g, f);
 
+      let totalGain = 0;
+      let bestGain = 0;
+      let bestAttr = "";
       t.gains.forEach((k) => {
         const cap = f.ceilings[k];
         const prog = f.attrs[k] / cap;
@@ -86,7 +89,13 @@ export function tickTraining(g) {
         const gain = R(0.5, 1.4) * inten.mult * ageMult * otMult * traitMult * moraleMult * capMult
           * chemMult * coachBonus(g, [k]) * facBonus(g, [k]) * mentorMult * sparringMult * relMult * attentionMult;
         f.attrs[k] = clamp(f.attrs[k] + gain, 0, cap);
+        totalGain += gain;
+        if (gain > bestGain) { bestGain = gain; bestAttr = k; }
       });
+      // Training feedback: log meaningful growth
+      if (totalGain > 0.5 && bestAttr) {
+        g.log.unshift(`🥊 ${f.name} +${totalGain.toFixed(1)} attr (best: ${bestAttr} +${bestGain.toFixed(1)}) — ${t.label}`);
+      }
 
       // Overtraining
       const discMult = g.coaches.some((c) => c.personality === "Disciplinarian") ? 0.75 : 1;
