@@ -3,6 +3,7 @@ import { clamp, pick, fmt$, uid, random } from "../rng.js";
 import { CAMP_TIERS } from "../data.js";
 
 export function tickChemistry(g) {
+  if (!g || !g.roster) return true;
   // ---------- chemistry events ----------
   if (random() < 0.30 && g.roster.length >= 2) {
     const roll = random();

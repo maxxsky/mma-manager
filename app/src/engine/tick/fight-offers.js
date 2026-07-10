@@ -5,6 +5,7 @@ import { genFighter, avgSkill } from "../fighter.js";
 import { rankOf, stripTitle } from "../rankings.js";
 
 export function tickFightOffers(g) {
+  if (!g || !g.roster) return;
   g.roster.forEach((f) => {
     if (f.injury || f.booked) return;
     const div = g.divisions[f.weightClass];

@@ -18,6 +18,7 @@ function calcSparringMult(f, g) {
 }
 
 export function tickTraining(g) {
+  if (!g || !g.roster) return;
   const chemMult = g.chemistry >= 80 ? 1.15 : g.chemistry < 40 ? 0.9 : 1;
 
   g.roster.forEach((f) => {
@@ -55,8 +56,8 @@ export function tickTraining(g) {
     }
 
     // Training
-    const t = f.booked && f.booked.weeksLeft <= 2 ? TRAINING.fightcamp : TRAINING[f.training.type];
-    const inten = INTENSITY[f.training.intensity];
+    const t = f.booked && f.booked.weeksLeft <= 2 ? TRAINING.fightcamp : (TRAINING[f.training.type] || TRAINING.conditioning);
+    const inten = INTENSITY[f.training.intensity] || INTENSITY.Medium;
     g.cash -= t.cost;
 
     // Training attention constraint
