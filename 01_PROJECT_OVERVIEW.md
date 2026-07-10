@@ -6,6 +6,21 @@
 
 ---
 
+## Documentation Read Order
+
+Before modifying any code, read these documents in order:
+
+1. **PROJECT_CONSTITUTION.md** — binding rules, priorities, DoD
+2. **01_PROJECT_OVERVIEW.md** — this document, systems map
+3. **Relevant Architecture document** — per-system design
+4. **Relevant Knowledge document** — per-system context
+5. **Relevant Skill document** — per-task procedures
+6. **Current task** — the specific requirement
+
+If any document is missing, skip it and continue. Never skip the constitution.
+
+---
+
 ## Project Summary
 
 MMA Manager is a single-player browser-based camp management simulation. The player manages a mixed martial arts gym: hires coaches, trains fighters, accepts fights, and builds a legacy over hundreds of in-game weeks.
@@ -52,6 +67,25 @@ The game has 30+ interconnected systems. These are the ones you will encounter m
 │  shadow-ai.js — rival camp simulation                        │
 └──────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## System Ownership
+
+Each major system has a primary owner — the module where its core logic lives. Smaller systems borrow from these owners.
+
+| Domain | Owner Module | Responsibilities |
+|--------|-------------|------------------|
+| **Combat** | `fight/` + `career.js` | Fight simulation, matchmaking, fight results, title changes, rankings |
+| **Training** | `tick/training.js` + `data/training.js` | Attribute growth, overtraining, injury, coach/facility bonuses |
+| **World** | `world/` + `tick/rivals.js` | AI fighter progression, division maintenance, rival camp simulation |
+| **Narrative** | `narrative/` + `events/` | Story generation, camp events, delayed consequences, flags, memory |
+| **Economy** | `tick/settlement.js` + `economy.js` | Cash flow, sponsors, expenses, fight purses |
+| **Persistence** | `hooks/useSaveLoad.js` + `services/saveService.js` | Save/load, migration, slot management |
+| **State** | `state.js` + `reducer/` | Game state initialization, tick orchestration, all player actions |
+| **UI** | `ui/` + `components/` | Screens, modals, overlays, routing, visual primitives |
+
+When modifying a system, start with its owner module. Composing multiple owners is orchestrated by `state.js` (tick) and `App.jsx` (UI).
 
 ---
 
@@ -153,6 +187,8 @@ app/src/
     ├── helpers.js
     └── *.test.js               # invariants, fight, regression, reducer
 ```
+
+Files outside these folders (`engine/*.js`, `data/`, `i18n/`, `services/`) are stable infrastructure and should rarely need modification. Most changes happen inside the sub-folders listed above.
 
 ---
 
@@ -269,6 +305,8 @@ These are the files you will most frequently modify:
 | New UI component | `components/*.jsx` | Reusable UI |
 | New narrative | `engine/narrative/generators/` + `templates.js` | Story generation |
 | Save fix | `hooks/useSaveLoad.js` + `services/saveService.js` | Migration |
+
+If unsure where to start, search for existing implementations before introducing a new one. Consistency with existing patterns is preferred over inventing a fresh approach.
 
 ---
 
