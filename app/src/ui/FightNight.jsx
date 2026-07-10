@@ -60,7 +60,17 @@ export default function FightNight({ fighter, done }) {
     const cA = corner === "go" ? "go" : corner === "save" ? "save" : corner === "body" ? "body" : "go";
     const res = simRound(rn, A, B, st0?.staA ?? 100, st0?.staB ?? 100, plan || "Keep It Standing", cA, st0?.momentum ?? 0);
     setRoundLog(res);
-    setState(st0 ? { ...st0, staA: res.staA, staB: res.staB, hpA: 100, hpB: 100 } : { staA: 100, staB: 100, hpA: 100, hpB: 100 });
+    const prevDmgA = st0?.totalDmgA || 0;
+    const prevDmgB = st0?.totalDmgB || 0;
+    const totalDmgA = prevDmgA + res.dmgA;
+    const totalDmgB = prevDmgB + res.dmgB;
+    setState({
+      ...(st0 || {}),
+      staA: res.staA, staB: res.staB,
+      hpA: Math.max(0, 100 - totalDmgA / 1.5),
+      hpB: Math.max(0, 100 - totalDmgB / 1.5),
+      totalDmgA, totalDmgB,
+    });
     setTickIdx(0);
     setRnd(rn);
     setStage("round");
