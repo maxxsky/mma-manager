@@ -60,7 +60,7 @@ export default function FightCard({ fighter, message, g, onAccept, onCounter, on
             <Mono name={f.name} color={ca} size={58} champ={f.titles?.length > 0} />
             <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 19, textTransform: "uppercase",
               color: T.txt, marginTop: 8 }}>{f.name}</div>
-            <div style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>{f.record.w}-{f.record.l}</div>
+            <div style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>{f.record?.w ?? 0}-{f.record?.l ?? 0}</div>
             <Tag color={ca}>{f.archetype}</Tag>
           </div>
           <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 30, color: T.ember,
@@ -70,7 +70,7 @@ export default function FightCard({ fighter, message, g, onAccept, onCounter, on
             <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 19, textTransform: "uppercase",
               color: T.txt, marginTop: 8 }}>{m.opponent.name}</div>
             <div style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>
-              {m.opponent.record.w}-{m.opponent.record.l}
+              {m.opponent.record?.w ?? "?"}-{m.opponent.record?.l ?? "?"}
               {m.oppRank != null && <span style={{ color: T.gold }}> · #{m.oppRank}</span>}
             </div>
             <Tag color={cb}>{m.opponent.archetype}</Tag>
@@ -90,7 +90,7 @@ export default function FightCard({ fighter, message, g, onAccept, onCounter, on
           <div style={{ textAlign: "center", fontFamily: T.body, fontSize: 10, fontWeight: 700,
             letterSpacing: 2, textTransform: "uppercase", color: T.txt3, margin: "6px 0 10px" }}>
             Tale of the Tape</div>
-          <CompareBar label="Age" a={f.age} b={m.opponent.age || 28} ca={ca} cb={cb} />
+          <CompareBar label="Age" a={f.age ?? 0} b={m.opponent.age || 28} ca={ca} cb={cb} />
           <div style={{ height: 1, background: T.line, margin: "8px 0" }} />
           {rows.map(([lb, k]) => (
             <CompareBar key={k} label={lb}

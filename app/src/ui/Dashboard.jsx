@@ -86,7 +86,7 @@ export default function Dashboard({ g, setTab, setActiveFight }) {
   });
   // 5) Injured
   g.roster.filter(f => f.injury).forEach(f => {
-    priorities.push([`${f.name} injured — ${f.injury.label || "recovering"} (${f.injury.weeks}w remaining)`, "roster", T.warn]);
+    priorities.push([`${f.name} injured — ${f.injury.label || "recovering"} (${f.injury?.weeks ?? "?"}w remaining)`, "roster", T.warn]);
   });
   // 6) Contract expiring (1 fight left)
   g.roster.filter(f => f.contract && f.contract.fightsLeft === 1).forEach(f => {

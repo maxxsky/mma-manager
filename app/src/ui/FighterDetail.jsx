@@ -32,14 +32,14 @@ export default function FighterDetail({ f, g, onBack, up }) {
                 {(() => { const nick = generateFighterNickname(f); return nick ? <div style={{ fontFamily: T.body, fontSize: 12, color: T.gold, fontStyle: "italic", letterSpacing: .5 }}>"{nick}"</div> : null; })()}
               <div style={{ marginTop: 6 }}>
                 <Tag color={ac} solid>{f.archetype}</Tag><Tag color={T.txt2}>{f.weightClass}</Tag>
-                <Tag color={T.txt2}>{f.age}y</Tag><Tag color={T.txt2}>{f.reach}cm reach</Tag>
+                <Tag color={T.txt2}>{f.age ?? "?"}y</Tag><Tag color={T.txt2}>{f.reach ?? "?"}cm reach</Tag>
                 {f.titles?.length > 0 ? <Tag color={T.gold} solid>♛ Champion</Tag> : f.rank ? <Tag color={T.gold}>Rank #{f.rank}</Tag> : null}
               </div>
             </div>
             <div style={{ display: "flex", gap: 22, alignItems: "center" }}>
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontFamily: T.mono, fontSize: 26, fontWeight: 700, color: T.txt }}>
-                  {f.record.w}-{f.record.l}</div>
+                  {f.record?.w ?? 0}-{f.record?.l ?? 0}</div>
                 <div style={{ fontFamily: T.body, fontSize: 10, letterSpacing: 1, textTransform: "uppercase",
                   color: T.txt3 }}>{f.record.ko} KO · {f.record.sub} SUB</div>
               </div>

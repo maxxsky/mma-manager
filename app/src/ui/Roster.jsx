@@ -56,8 +56,8 @@ export default function Roster({ g, setTab, up }) {
                     : r ? <Tag color={T.gold}>#{r}</Tag> : null}
                 </div>
                 <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>
-                  <span style={{ color: ac }}>{f.archetype}</span> · {f.weightClass} · {f.age}y ·{" "}
-                  <span style={{ fontFamily: T.mono }}>{f.record.w}-{f.record.l}</span>
+                  <span style={{ color: ac }}>{f.archetype}</span> · {f.weightClass} · {f.age ?? "?"}y ·{" "}
+                  <span style={{ fontFamily: T.mono }}>{f.record?.w ?? 0}-{f.record?.l ?? 0}</span>
                 </div>
               </div>
             </div>

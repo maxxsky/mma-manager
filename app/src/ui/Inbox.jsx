@@ -109,7 +109,7 @@ export default function Inbox({ g, dispatch, setTab }) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 12px", marginBottom: 10 }}>
                 <Detail label={t("UI.purse")} value={fmt$(m.show)} />
                 <Detail label={t("UI.purse")} value={fmt$(m.winBonus)} color={T.pos} />
-                <Detail label={t("UI.opponent")} value={`${m.opponent.record.w}-${m.opponent.record.l} · ${m.opponent.archetype}`} />
+                <Detail label={t("UI.opponent")} value={`${m.opponent.record?.w ?? "?"}-${m.opponent.record?.l ?? "?"} · ${m.opponent.archetype}`} />
                 <Detail label="Rank" value={m.oppRank != null ? `#${m.oppRank}` : m.oppRank === 0 ? "👑" : "—"} color={T.gold} />
                 <Detail label="Camp Cut" value={`${Math.round(((f.contract && f.contract.managerCut) || 0.18) * 100)}%`} />
                 <Detail label="Weeks Out" value={`T-${m.weeks}w`} color={m.weeks <= 3 ? T.warn : T.txt2} />

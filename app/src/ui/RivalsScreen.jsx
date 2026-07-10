@@ -203,7 +203,7 @@ function RivalCard({ rc, g, up }) {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11 }}>
                   <span style={{ color: T.txt2 }}>
-                    {f.record.w}-{f.record.l}
+                    {f.record?.w ?? 0}-{f.record?.l ?? 0}
                   </span>
                   <span style={{ color: T.txt3 }}>{tierOf(f)}</span>
                   <span style={{ color: T.txt3 }}>{f.weightClass}</span>

@@ -403,7 +403,7 @@ export default function Scout({
                         {p.fighter.archetype}
                       </Tag>
                       <Tag color={T.txt3}>{p.fighter.weightClass}</Tag>
-                      <Tag color={T.txt3}>{p.fighter.age}y</Tag>
+                      <Tag color={T.txt3}>{p.fighter.age ?? "?"}y</Tag>
                       <Tag color={T.txt3}>{p.fighter.region}</Tag>
                     </div>
                   </div>

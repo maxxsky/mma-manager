@@ -33,7 +33,7 @@ export default function WeighIn({ fighter, opp, cutInfo, cutPct, missedWeight, w
       {/* Tale of the Tape */}
       <Panel>
         <div style={{ textAlign: "center", fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: T.txt3, marginBottom: 12 }}>Tale of the Tape</div>
-        <CompareBar label="Age" a={fighter.age} b={opp.age || 28} ca={ca} cb={cb} />
+        <CompareBar label="Age" a={fighter.age ?? 0} b={opp.age || 28} ca={ca} cb={cb} />
         <div style={{ height: 1, background: T.line, margin: "8px 0" }} />
         {[["Striking","striking"],["Wrestling","wrestling"],["BJJ","bjj"],["Footwork","footwork"],["Strength","strength"],["Cardio","cardio"],["Chin","chin"],["Fight IQ","fightIQ"]].map(([lb,k]) => (
           <CompareBar key={k} label={lb} a={Math.round(fighter.attrs[k])} b={Math.round(opp.attrs?.[k] || 50)} ca={ca} cb={cb} />

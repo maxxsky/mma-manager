@@ -23,19 +23,19 @@ export default function FighterCard({ f, g, up }) {
           <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 17, letterSpacing: 1,
             textTransform: "uppercase", color: T.txt, whiteSpace: "nowrap", overflow: "hidden",
             textOverflow: "ellipsis" }}>
-            {f.name} {f.titles.length > 0 && "♛"}
+            {f.name} {f.titles?.length > 0 && "♛"}
           </div>
           <div style={{ marginTop: 2 }}>
             <Tag color={ac} solid>{f.archetype}</Tag>
             <Tag color={T.txt2}>{f.weightClass}</Tag>
-            <Tag color={T.txt2}>{f.age}y</Tag>
+            <Tag color={T.txt2}>{f.age ?? "?"}y</Tag>
             {isChamp ? <Tag color={T.gold} solid>♛ Champ</Tag>
               : r ? <Tag color={T.gold}>Rank #{r}</Tag> : null}
           </div>
         </div>
         <div style={{ textAlign: "right" }}>
           <div style={{ fontFamily: T.mono, fontSize: 13, color: T.txt2 }}>
-            {f.record.w}-{f.record.l} · {f.record.ko}KO {f.record.sub}SUB
+            {f.record?.w ?? 0}-{f.record?.l ?? 0} · {f.record.ko}KO {f.record.sub}SUB
           </div>
           {f.injury ? (
             <div style={{ color: f.injury.tier >= 3 ? T.neg : T.warn, fontFamily: T.body,
