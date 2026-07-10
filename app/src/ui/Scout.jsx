@@ -177,7 +177,7 @@ export default function Scout({
               color: T.txt3,
             }}
           >
-            >{t("UI.division")}:
+            {t("UI.division")}:
           </span>
           <button
             onClick={() => setScoutFilterWC(null)}
@@ -528,7 +528,7 @@ export default function Scout({
                   </div>
                   {p.report.traits?.length > 0 && (
                     <div style={{ marginTop: 3 }}>
-                      >{t("TRAIT.sparring")}:{" "}
+                      {t("TRAIT.sparring")}:{" "}
                       {p.report.traits.map((tr, i) => (
                         <Tag key={i} color={T.neg}>
                           {tr}
