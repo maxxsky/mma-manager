@@ -18,6 +18,7 @@ export default function FightCard({ fighter, g, onProceed }) {
     ["Chin", "chin"], ["Fight IQ", "fightIQ"],
   ];
 
+  /* cache-bust */
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 55, background: "rgba(6,9,14,.92)", display: "flex", alignItems: "center", justifyContent: "center", padding: 14, overflowY: "auto" }}>
       <div style={{ maxWidth: 860, width: "100%", maxHeight: "95vh", overflowY: "auto" }}>
