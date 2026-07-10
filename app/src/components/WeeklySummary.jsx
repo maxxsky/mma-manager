@@ -11,6 +11,14 @@ export default function WeeklySummary({ summary, onClose, t }) {
         <div style={{ display: "flex", gap: 12, marginBottom: 10, fontSize: 10, color: C.dim }}>
           <span>{fmt$(summary.cash)} · Rep {Math.round(summary.rep)} · {summary.rosterCount} fighters · {summary.inboxCount} inbox</span>
         </div>
+        {summary.achievements && summary.achievements.length > 0 && (
+          <div style={{ marginBottom: 10, padding: "8px 12px", background: `${C.gold}15`, border: `1px solid ${C.gold}44`, borderRadius: 8 }}>
+            <div style={{ fontFamily: DISPLAY, fontSize: 11, color: C.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>🏆 Achievement Unlocked</div>
+            {summary.achievements.map((a, i) => (
+              <div key={i} style={{ fontSize: 12, color: C.gold, fontWeight: 600 }}>{a}</div>
+            ))}
+          </div>
+        )}
         {summary.highlights.length > 0 && (
           <div style={{ maxHeight: 200, overflowY: "auto", marginBottom: 10 }}>
             {summary.highlights.map((l, i) => (

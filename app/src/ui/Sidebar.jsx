@@ -12,6 +12,8 @@ const NAV = [
   ["finance", "UI.finance", ICONS.money],
   ["mgmt", "UI.facility", ICONS.facility],
   ["rivals", "UI.rivals", ICONS.rivals],
+  ["achievements", "UI.achievements", ICONS.trophy],
+  ["dynasty", "UI.dynasty", ICONS.crown],
 ];
 
 export default function Sidebar({ view, setView, onAdvance, inboxCount }) {

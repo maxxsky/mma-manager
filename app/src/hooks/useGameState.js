@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { saveGame } from "../services/saveService.js";
 import { checkAchievements } from "../engine/achievements.js";
+import { ACHIEVEMENTS } from "../engine/data.js";
 import { tick } from "../engine/state.js";
 import { reducer } from "../engine/reducer.js";
 
@@ -41,7 +42,12 @@ export function useGameState(g, setGOrig, saveSlot) {
 
   // Weekly advance
   const advance = () => {
-    up((n) => { tick(n); if (n.log) n.log = n.log.slice(0, 30); checkAchievements(n);
+    up((n) => { tick(n); if (n.log) n.log = n.log.slice(0, 30);
+      const newly = checkAchievements(n);
+      // Surface achievement unlocks in weekly summary
+      const achieveNames = newly && newly.length > 0
+        ? newly.map(id => (ACHIEVEMENTS[id]?.name || id)).filter(Boolean)
+        : [];
       // Build weekly summary directly from n (already the updated state)
       const highlights = n.log ? n.log.slice(0, 5) : [];
       const injured = n.roster ? n.roster.filter((f) => f.injury) : [];
@@ -52,6 +58,7 @@ export function useGameState(g, setGOrig, saveSlot) {
         injuredCount: injured.length,
         injuredNames: injured.map((f) => f.name).slice(0, 3),
         highlights,
+        achievements: achieveNames,
       });
     });
     setWeekFlash((x) => x + 1);
