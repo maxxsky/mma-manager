@@ -1,7 +1,7 @@
 import { fmt$ } from "../engine/rng.js";
 import React from "react";
 import { ARCH_COLOR } from "../engine/data.js";
-import { T, Panel, Eyebrow, Tag, Btn, Mono, CompareBar, Icon, ICONS, ARCH_COLOR } from "./theme.jsx";
+import { T, Panel, Eyebrow, Tag, Btn, Mono, CompareBar, Icon, ICONS } from "./theme.jsx";
 
 /* =============================================================================
    FIGHT CARD — Tale of the Tape standalone view
