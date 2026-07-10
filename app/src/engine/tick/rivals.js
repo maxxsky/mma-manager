@@ -77,6 +77,22 @@ export function tickRivals(g) {
       rc._milestoneEliteNotified = true;
       g.inbox.unshift({ id: uid(), type: "event", title: `👑 ${rc.name} — Elite Camp`, body: `${rc.name} has reached elite status at ${Math.round(rc.rep)} reputation. They are now one of the top camps in the world.`, choices: [{ label: "Impressive", chem: 0 }] });
     }
+    // Grudge match: high rivalry triggers challenge fights
+    if (rc.rivalry > 50 && g.week % 24 === 0 && random() < 0.25 && g.roster.length > 0 && rc.fighters.length > 0) {
+      const yourFighter = pick(g.roster.filter(f => !f.injury && !f.booked));
+      const theirFighter = pick(rc.fighters.filter(f => !f.injury));
+      if (yourFighter && theirFighter) {
+        g.inbox.unshift({
+          id: uid(), type: "offer", fighterId: yourFighter.id, expires: 4,
+          tier: "National", show: RI(20, 60) * 1000, winBonus: RI(20, 60) * 1000,
+          opponent: { name: theirFighter.name, archetype: theirFighter.archetype, record: theirFighter.record || { w: 0, l: 0 }, weightClass: yourFighter.weightClass },
+          title: false, defense: false, oppRank: null, contenderId: null,
+          titleTier: null, titleText: `⚔️ GRUDGE MATCH — ${rc.name} rivalry`,
+          weeks: RI(4, 6),
+        });
+        g.log.unshift(`⚔️ ${rc.name} challenges ${yourFighter.name} — grudge match offered!`);
+      }
+    }
   });
 
   // poaching

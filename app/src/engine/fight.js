@@ -66,6 +66,16 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
   comm.tickOnly(0, 10, `${A.name} in the center of the cage.`);
   comm.tickOnly(0, 20, `${B.name} circling, looking for opening.`);
 
+  // In-fight feedback: game plan effect
+  if (planA === "Finish It") comm.tickOnly(0, 25, `Coach: "${A.name}, finish this! Aggression up, but watch your gas tank."`);
+  else if (planA === "Survive & Outpoint") comm.tickOnly(0, 25, `Coach: "Stay smart, ${A.name}. Conserve energy and outpoint him."`);
+  else if (planA === "Take It Down") comm.tickOnly(0, 25, `Coach: "Take him down, ${A.name}. Wrestle-heavy game plan."`);
+
+  // In-fight feedback: corner strategy  
+  if (cornerA === "go") comm.tickOnly(0, 30, `Corner urges ${A.name} to push the pace — aggression boosted.`);
+  else if (cornerA === "save") comm.tickOnly(0, 30, `Corner tells ${A.name} to save energy — defense up, output down.`);
+  else if (cornerA === "body") comm.tickOnly(0, 30, `Corner: "Work the body, ${A.name}! It'll pay off late."`);
+
   const nEx = RI(CFG.EXCHANGES_PER_ROUND.min, CFG.EXCHANGES_PER_ROUND.max);
   for (let ex = 0; ex < nEx; ex++) {
     if (finish) break;
@@ -156,6 +166,10 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
             finish = { by: isTargetA ? "B" : "A", how: "KO/TKO" };
             comm.both(exMin + 1, 5, `KO!! ${isTargetA ? B.name : A.name} with the walk-off!`);
           }
+        } else if (kdTarget.traits?.includes("Iron Chin")) {
+          comm.tickOnly(exMin + 1, 0, `${kdTarget.name}'s iron chin holds up — he eats the shot and keeps coming!`);
+        } else if (kdTarget.traits?.includes("Warrior") && kdChance > 0.3) {
+          comm.tickOnly(exMin + 1, 0, `${kdTarget.name} is hurt but refuses to go down — pure warrior heart!`);
         }
       }
     }

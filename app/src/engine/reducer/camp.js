@@ -2,7 +2,7 @@
 import { clamp, fmt$ } from "../rng.js";
 import { CAMP_TIERS, SPONSOR_BRANDS } from "../data.js";
 import { facilityCost } from "../economy.js";
-import { CHEM_BOOST_UPGRADE } from "./constants.js";
+import { CHEM_BOOST_UPGRADE, TEAM_BONDING_COST, TEAM_BONDING_CHEM, TEAM_BONDING_COOLDOWN } from "./constants.js";
 
 export function reduceCamp(g, action) {
   switch (action.type) {
@@ -44,6 +44,20 @@ export function reduceCamp(g, action) {
     case "TERMINATE_SPONSOR": {
       g.sponsors = g.sponsors.filter((x) => x.brand !== action.brand);
       g.log.unshift("❌ Kontrak " + action.brand + " diakhiri.");
+      break;
+    }
+    case "TEAM_BONDING": {
+      if (!g._lastTeamBonding || g.week - g._lastTeamBonding >= TEAM_BONDING_COOLDOWN) {
+        if (g.cash >= TEAM_BONDING_COST) {
+          g.cash -= TEAM_BONDING_COST;
+          g.chemistry = clamp(g.chemistry + TEAM_BONDING_CHEM, 0, 100);
+          g._lastTeamBonding = g.week;
+          g.log.unshift("🤝 Team bonding session — chemistry +" + TEAM_BONDING_CHEM + ". ($" + (TEAM_BONDING_COST/1000) + "K)");
+        }
+      } else {
+        const remaining = TEAM_BONDING_COOLDOWN - (g.week - g._lastTeamBonding);
+        g.log.unshift("⏳ Team bonding on cooldown — available in " + remaining + " weeks.");
+      }
       break;
     }
   }

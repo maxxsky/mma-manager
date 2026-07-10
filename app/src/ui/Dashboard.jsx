@@ -9,7 +9,7 @@ import { getObjectives } from "../engine/onboarding.js";
    IRONFIST DASHBOARD — Verbatim from prototype, wired to real g state
 ============================================================================= */
 
-export default function Dashboard({ g, setTab, setActiveFight }) {
+export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
   // ---- Monthly financials (same formulas as App.jsx) -----------------------
   const burn = monthlyBurn(g);
   const inc = monthlyIn(g);
@@ -240,6 +240,17 @@ export default function Dashboard({ g, setTab, setActiveFight }) {
           </div>
         ))}
       </Panel>
+      {dispatch && (
+        <Panel style={{ marginTop: 12 }}>
+          <Eyebrow>Quick Actions</Eyebrow>
+          <Btn onClick={() => dispatch({ type: "TEAM_BONDING" })} style={{ width: "100%" }}>
+            🤝 Team Bonding ($2K) — Chemistry +8
+          </Btn>
+          <div style={{ fontFamily: T.body, fontSize: 10, color: T.txt3, marginTop: 4, textAlign: "center" }}>
+            Cooldown: 12 weeks · Current chemistry: {Math.round(g.chemistry)}
+          </div>
+        </Panel>
+      )}
     </div>
   );
 }

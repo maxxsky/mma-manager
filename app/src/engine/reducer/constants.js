@@ -31,6 +31,11 @@ export const DEFAULT_MANAGER_CUT = 0.18;
 // Chemistry thresholds
 export const CHEM_MIN_TALK_POACH = 50;
 
+// Team bonding
+export const TEAM_BONDING_COST = 2000;
+export const TEAM_BONDING_CHEM = 8;
+export const TEAM_BONDING_COOLDOWN = 12; // weeks
+
 // Game state
 export const BANKRUPT_THRESHOLD = -50000;
 

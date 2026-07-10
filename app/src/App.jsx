@@ -134,7 +134,7 @@ export default function App() {
           {g.over && <GameOverBanner message={g.over} onRestart={() => startNew(newGame())} />}
 
           {/* Tab content */}
-          {tab === "dashboard" && !g.over && <Dashboard g={g} setTab={setTab} setActiveFight={setActiveFight} t={t} fmt$={fmt$} />}
+          {tab === "dashboard" && !g.over && <Dashboard g={g} setTab={setTab} setActiveFight={setActiveFight} dispatch={dispatch} t={t} fmt$={fmt$} />}
           {tab === "roster" && <Roster g={g} setTab={setTab} up={up} dispatch={dispatch} />}
           {tab === "rank" && <Rankings g={g} t={t} rankDiv={rankDiv} setRankDiv={setRankDiv} />}
           {tab === "scout" && <Scout g={g} dispatch={dispatch} t={t} fmt$={fmt$} scoutFilterArch={scoutFilterArch} setScoutFilterArch={setScoutFilterArch} scoutFilterWC={scoutFilterWC} setScoutFilterWC={setScoutFilterWC} scoutFighter={scoutFighter} tier={tier} />}
