@@ -151,4 +151,90 @@ A task is done only when ALL of these are satisfied:
 
 ---
 
+## 8 — Priority Order
+
+When principles conflict, follow this priority order:
+
+1. **Preserve save data and player progression.**
+2. **Prevent regressions in existing features.**
+3. **Preserve public APIs and established interfaces.**
+4. **Respect the existing project architecture.**
+5. **Make the smallest possible change.**
+6. **Improve code quality only when it does not violate any rule above.**
+
+Never sacrifice a higher priority to satisfy a lower one.
+
+---
+
+## 9 — Scope Boundaries
+
+AI may:
+
+- Add new files when appropriate.
+- Add helper functions.
+- Add defensive guards.
+- Improve readability within the task scope.
+
+AI must NOT:
+
+- Rename public APIs.
+- Rewrite unrelated modules.
+- Move project structure.
+- Change architecture.
+- Modify files outside the requested scope unless required to fix a regression caused by its own changes.
+
+If additional changes become necessary, explain why before proceeding.
+
+---
+
+## 10 — Escalation Rules
+
+Stop and report instead of guessing when:
+
+- Requirements are ambiguous.
+- Two project rules conflict.
+- Required information is missing.
+- Multiple valid implementations exist with different trade-offs.
+- A requested change would violate this constitution.
+
+Prefer asking for clarification over making assumptions.
+
+---
+
+## 11 — Existing Pattern First
+
+Before introducing a new implementation pattern:
+
+1. Search for similar implementations.
+2. Follow existing conventions whenever possible.
+3. Introduce a new pattern only if existing ones cannot reasonably solve the problem.
+
+Consistency is preferred over novelty.
+
+---
+
+## 12 — Never Assume
+
+Do not invent missing information.
+
+If behavior, architecture, or business rules are unclear:
+
+- Report what is known.
+- State what is uncertain.
+- Continue only when there is sufficient evidence.
+
+Evidence is preferred over inference.
+
+---
+
+## 13 — Respect Existing Gameplay
+
+When modifying gameplay systems:
+
+- Preserve existing game balance unless the task explicitly requests balance changes.
+- Avoid changing player-facing behavior as a side effect of technical work.
+- Separate bug fixes from gameplay balancing whenever possible.
+
+---
+
 *This constitution is a living document. Amendments require a documented rationale and approval.*
