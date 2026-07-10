@@ -46,7 +46,7 @@ export function useGameState(g, setGOrig, saveSlot) {
       const newly = checkAchievements(n);
       // Surface achievement unlocks in weekly summary
       const achieveNames = newly && newly.length > 0
-        ? newly.map(id => (ACHIEVEMENTS[id]?.name || id)).filter(Boolean)
+        ? newly.map(id => (ACHIEVEMENTS.find(a => a.id === id)?.title || id)).filter(Boolean)
         : [];
       // Build weekly summary directly from n (already the updated state)
       const highlights = n.log ? n.log.slice(0, 5) : [];
