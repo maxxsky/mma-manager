@@ -260,34 +260,43 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
           </Panel>
         )}
 
-        {/* Training Progress — attribute growth tracking */}
-        <Panel style={{ gridColumn: "span 2" }}>
-          <Eyebrow color={T.pos}>Training Progress</Eyebrow>
-          <div style={{ display: "grid", gap: 6 }}>
-            {[["striking","Striking"],["wrestling","Wrestling"],["bjj","BJJ"],["footwork","Footwork"],["strength","Strength"],["cardio","Cardio"],["chin","Chin"],["fightIQ","Fight IQ"]].map(([k, label]) => {
-              const val = Math.round(f.attrs[k] || 0);
-              const ceil = f.ceilings?.[k] || 99;
-              const pct = Math.round((val / ceil) * 100);
-              const color = pct >= 90 ? T.gold : pct >= 70 ? T.pos : pct >= 45 ? T.steel : T.warn;
-              const plateau = pct >= 90;
-              return (
-                <div key={k} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt3, width: 72, textAlign: "right" }}>{label}</span>
-                  <div style={{ flex: 1, height: 6, background: T.bg, borderRadius: 3, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: 3, transition: "width 0.3s" }} />
-                  </div>
-                  <span style={{ fontFamily: T.mono, fontSize: 11, fontWeight: 700, color, minWidth: 60 }}>
-                    {val}/{ceil}
-                  </span>
-                  <span style={{ fontFamily: T.mono, fontSize: 10, color: T.txt3, minWidth: 32 }}>
-                    {pct}%
-                  </span>
-                  {plateau && <Tag color={T.warn}>Plateau</Tag>}
-                </div>
-              );
-            })}
-          </div>
-        </Panel>
+        {/* Training Progress — delta from trainingHistory */}
+        {f.trainingHistory && f.trainingHistory.length >= 2 && (() => {
+          const first = f.trainingHistory[0].attrs;
+          const last = f.trainingHistory[f.trainingHistory.length - 1].attrs;
+          const weeks = f.trainingHistory.length;
+          const deltas = [];
+          for (const k of ["striking","wrestling","bjj","footwork","strength","cardio","chin","fightIQ"]) {
+            const d = (last[k] || 0) - (first[k] || 0);
+            if (Math.abs(d) > 0.5) deltas.push({ key: k, delta: d, now: Math.round(f.attrs[k] || 0), ceil: f.ceilings?.[k] || 99 });
+          }
+          if (deltas.length === 0) return null;
+          const labels = { striking: "Striking", wrestling: "Wrestling", bjj: "BJJ", footwork: "Footwork", strength: "Strength", cardio: "Cardio", chin: "Chin", fightIQ: "Fight IQ" };
+          return (
+            <Panel style={{ gridColumn: "span 2" }}>
+              <Eyebrow color={T.pos}>Progress ({weeks} weeks)</Eyebrow>
+              <div style={{ display: "grid", gap: 6 }}>
+                {deltas.map(({ key, delta, now, ceil }) => {
+                  const pct = Math.round((now / ceil) * 100);
+                  const plateau = pct >= 90;
+                  return (
+                    <div key={key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt3, width: 72, textAlign: "right" }}>{labels[key]}</span>
+                      <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: delta > 0 ? T.pos : T.neg, minWidth: 50 }}>
+                        {delta > 0 ? "+" : ""}{delta.toFixed(1)}
+                      </span>
+                      <div style={{ flex: 1, height: 6, background: T.bg, borderRadius: 3, overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${pct}%`, background: pct >= 90 ? T.gold : pct >= 70 ? T.pos : T.steel, borderRadius: 3 }} />
+                      </div>
+                      <span style={{ fontFamily: T.mono, fontSize: 11, color: T.txt2, minWidth: 44 }}>{now}/{ceil}</span>
+                      {plateau && <Tag color={T.warn}>Plateau</Tag>}
+                    </div>
+                  );
+                })}
+              </div>
+            </Panel>
+          );
+        })()}
       </div>
     </div>
   );

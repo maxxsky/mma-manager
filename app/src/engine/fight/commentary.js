@@ -64,3 +64,40 @@ export function traitCommentary(fight, A, B, rnd, dmgA, dmgB, landA) {
   if (A.traits?.includes("Warrior") && dmgA > 40) msgs.push(`${A.name} keeps firing despite taking damage — true warrior spirit!`);
   return msgs;
 }
+
+// ── ARCHETYPE CLASH COMMENTARY ──
+export function archetypeCommentary(A, B, exType, matchup) {
+  const msgs = [];
+  const archA = A.archetype;
+  const archB = B.archetype;
+
+  // Wrestler vs Striker — takedown threat
+  if ((archA === "Wrestler" && (archB === "Boxer" || archB === "Muay Thai")) && exType === "td") {
+    msgs.push(`${A.name} doing what wrestlers do — hunting the takedown against the striker.`);
+  }
+  if ((archB === "Wrestler" && (archA === "Boxer" || archA === "Muay Thai")) && exType === "tdB") {
+    msgs.push(`${B.name} the wrestler trying to ground the dangerous striker.`);
+  }
+
+  // BJJ vs Wrestler — submission threat from bottom
+  if (archA === "BJJ Specialist" && archB === "Wrestler" && (exType === "sub" || exType === "sweep")) {
+    msgs.push(`${A.name}'s BJJ is a constant threat — even off his back, the wrestler must be careful.`);
+  }
+
+  // Boxer vs Grappler — striking advantage
+  if ((archA === "Boxer" && (archB === "Wrestler" || archB === "BJJ Specialist")) && (exType === "strike" || exType === "power") && matchup.aStrike > 0.1) {
+    msgs.push(`${A.name} keeping distance — the boxer doesn't want any part of ${B.name}'s ground game.`);
+  }
+
+  // Muay Thai — clinch dominance
+  if (archA === "Muay Thai" && exType === "clinch" && matchup.aClinch > 0.1) {
+    msgs.push(`The Thai clinch of ${A.name} is devastating — knees and elbows from every angle.`);
+  }
+
+  // All-Rounder adaptability
+  if (archA === "All-Rounder" && (exType === "td" || exType === "sub")) {
+    msgs.push(`${A.name} showing that all-rounder versatility — dangerous everywhere.`);
+  }
+
+  return msgs;
+}

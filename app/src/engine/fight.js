@@ -16,7 +16,7 @@ import { ATTRS } from "./data.js";
 import * as CFG from "./fight/config.js";
 import { matchupMods } from "./fight/matchup.js";
 import { pickExchange } from "./fight/exchanges.js";
-import { createCommentary, STRIKE_TEMPLATES, POWER_TEMPLATES, traitCommentary } from "./fight/commentary.js";
+import { createCommentary, STRIKE_TEMPLATES, POWER_TEMPLATES, traitCommentary, archetypeCommentary } from "./fight/commentary.js";
 import { explosiveMult, cautiousMult, chinModifier, footworkModifier } from "./fight/trait-effects.js";
 import { resolveStriking } from "./fight/resolve-striking.js";
 import { resolveClinch } from "./fight/resolve-clinch.js";
@@ -89,6 +89,8 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
 
     // ── STRIKING ──
     if (exType === "strike" || exType === "power") {
+      const archMsgs = archetypeCommentary(A, B, exType, matchup);
+      archMsgs.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
       const pow = exType === "power" ? CFG.POWER_SHOT_MULT : 1;
       const result = resolveStriking(exType, A, B, stA, stB, cornerA, agg, phase, momMult, pow, matchup, expMult, ptsA, ptsB, legDmgA, legDmgB, comm, exMin, exSec);
       dmgA += result.dmgA; dmgB += result.dmgB;
@@ -110,6 +112,8 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
 
     // ── CLINCH ──
     } else if (exType === "clinch") {
+      const archMsgs2 = archetypeCommentary(A, B, exType, matchup);
+      archMsgs2.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
       const result = resolveClinch(exType, A, B, stA, stB, agg, matchup, comm, exMin, exSec);
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
@@ -124,6 +128,8 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
 
     // ── TAKEDOWN ──
     } else if (exType === "td" || exType === "tdB") {
+      const archMsgs3 = archetypeCommentary(A, B, exType, matchup);
+      archMsgs3.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
       const result = resolveTakedown(exType, A, B, stA, stB, planA, cornerA, matchup, comm, exMin, exSec);
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
@@ -136,6 +142,8 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
 
     // ── GROUND ──
     } else {
+      const archMsgs4 = archetypeCommentary(A, B, exType, matchup);
+      archMsgs4.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
       const result = resolveGround(exType, A, B, stA, stB, position, matchup, subProgress, bjjGuardProgress, SUB_THRESHOLD, comm, exMin, exSec);
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
