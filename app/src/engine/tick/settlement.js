@@ -186,11 +186,20 @@ export function tickSettlement(g) {
   g.roster.forEach((f) => {
     const r = rankOf(g, f);
     if (f.ambition === "Belt Chaser") {
-      if (r) f.morale = clamp(f.morale + 3, 0, 100);
-      else if (f.record.w >= 4) f.morale = clamp(f.morale - 3, 0, 100);
+      if (r) {
+        f.morale = clamp(f.morale + 3, 0, 100);
+      } else if (f.record.w >= 4) {
+        f.morale = clamp(f.morale - 3, 0, 100);
+        if (!g.inbox.some((m) => m.beltChaserMsg === f.id)) {
+          g.inbox.unshift({ id: uid(), type: "event", beltChaserMsg: f.id, title: `${f.name} frustrasi`, body: `${f.name} sudah ${f.record.w} menang tapi belum dapat kesempatan title — morale turun.`, choices: [{ label: "Janji cari title shot", chem: 0 }] });
+        }
+      }
     }
     if (f.ambition === "Star Power" && f.popularity < 30) {
       f.morale = clamp(f.morale - 2, 0, 100);
+      if (!g.inbox.some((m) => m.starPowerMsg === f.id)) {
+        g.inbox.unshift({ id: uid(), type: "event", starPowerMsg: f.id, title: `${f.name} kurang sorotan`, body: `${f.name} ingin jadi bintang tapi popularitas masih ${Math.round(f.popularity)}.`, choices: [{ label: "Cari exposure", chem: 0 }] });
+      }
     }
 
     if (f.contract) {

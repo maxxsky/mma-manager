@@ -18,6 +18,7 @@ export function genRivalCamp(idx) {
   }
   return {
     id: uid(), name, trait: traitKey, traitData: trait, rep,
+    philosophy: { id: traitKey === "Elite Stable" ? "elite" : "balanced" },
     fighters, coaches: [genCoach(), genCoach()].slice(0, traitKey === "Elite Stable" ? 2 : 1),
     chemistry: RI(40, 75), cash: RI(30000, 100000),
     rivalry: 0,
