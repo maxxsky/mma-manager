@@ -16,6 +16,8 @@
 //   tick/rivals.js       — rival camp simulation, poaching
 
 import { uid } from "./rng.js";
+import { BANKRUPT_THRESHOLD, CASH_WARNING_THRESHOLD, CASH_WARNING_RESET_BUFFER } from "./reducer/constants.js";
+import { fmt$ } from "./rng.js";
 import { createEconomy, createCamp, createRoster, createCoaches, createWorld } from "./builders.js";
 import { tickTraining } from "./tick/training.js";
 import { tickChemistry } from "./tick/chemistry.js";
@@ -43,6 +45,21 @@ export function newGame() {
     ...createWorld(),
     legacy: 0, over: null, won: false,
   };
+}
+
+// ---------- cash warning ----------
+function checkCashWarning(g) {
+  if (g.cash < CASH_WARNING_THRESHOLD && !g.cashWarningActive) {
+    g.cashWarningActive = true;
+    g.inbox.unshift({
+      id: uid(), type: "event",
+      title: "⚠️ Kas Menipis",
+      body: `Kas camp tinggal ${fmt$(g.cash)}. Kalau terus minus, camp bisa bangkrut di ${fmt$(BANKRUPT_THRESHOLD)}. Cek tab Finance.`,
+      choices: [{ label: "Mengerti", chem: 0 }],
+    });
+  } else if (g.cash >= CASH_WARNING_THRESHOLD + CASH_WARNING_RESET_BUFFER) {
+    g.cashWarningActive = false;
+  }
 }
 
 // ---------- tick orchestration ----------
@@ -100,7 +117,8 @@ export function tick(g) {
   trackSponsorRelations(g);
 
   // Final state checks
+  checkCashWarning(g);
   // Cap log to prevent unbounded memory growth
   if (g.log && g.log.length > 200) g.log = g.log.slice(0, 200);
-  if (g.cash < -50000) g.over = "BANGKRUT — kas di bawah -$50,000. Camp ditutup.";
+  if (g.cash < BANKRUPT_THRESHOLD) g.over = `BANGKRUT — kas di bawah ${fmt$(BANKRUPT_THRESHOLD)}. Camp ditutup.`;
 }
