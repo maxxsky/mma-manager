@@ -26,7 +26,7 @@ export function commitFightResult(g, fighter, result) {
 
     if (fighter.booked?.title) {
       if (!f.titles.includes("Major World Champion")) f.titles.push("Major World Champion");
-      if (g.divisions?.[f.weightClass]) g.divisions[f.weightClass].champ = { name: f.name, player: true, fighterId: f.id };
+      if (g.divisions?.[f.weightClass]) g.divisions[f.weightClass].champ = { name: f.name, player: true, fighterId: f.id, wonWeek: g.week, lastDefenseWeek: g.week };
     }
     g.legacy = (g.legacy || 0) + (fighter.booked?.title ? 2000 : 600);
     g.log.unshift(`🏆 ${f.name} menang via ${result.how} R${result.r}!`);
