@@ -18,7 +18,7 @@ MMA Manager is a single-player camp management simulation game. The player runs 
 
 ### What this game is not
 
-- Not a multiplayer game.
+- Single-player camp management simulation (multiplayer backend exploration exists in docs/ but is not committed scope for Phase 1).
 - Not a AAA graphics title.
 - Not a mobile app.
 - Not a casino/gacha game.

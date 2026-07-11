@@ -52,9 +52,9 @@ data.js ──────────── (zero deps — constants, config)
   │                     Action-based state mutation — 19 action types
   │
   ├─ state.js ───────── (rng, data, fighter, economy, rankings, rivals, relationships)
-  │                     Game loop (tick) + initialization — 1,041 LOC
+  │                     Game loop (tick) + initialization — 145 LOC (decomposed into tick/ submodules)
   │
-  └─ fight.js ───────── (rng, data) — round simulation — 510 LOC
+  └─ fight.js ───────── (rng, data) — round simulation — 332 LOC
 ```
 
 ### 2.2 Pattern: Data → Generator → Simulation → Mutation
@@ -77,12 +77,12 @@ The engine follows a clean layered pattern:
 - **Seeded RNG enables reproducibility** — `mulberry32(seed)` provides deterministic fight outcomes for debugging and balance testing. The `tools/` directory leverages this for batch simulations.
 - **i18n is engine-level** — Translation tables live in the engine, not the UI. The engine could be used server-side with full i18n support.
 
-### 2.4 Weaknesses
+### 2.4 Weaknesses (resolved)
 
-- **`state.js` is too large (1,041 LOC)** — The `tick()` function handles training, injuries, chemistry, morale, sponsors, contracts, fight offers, title fights, rankings, retirement, class changes, rival simulation, coach market, and bankruptcy — all in one monolithic function. Should be decomposed into `tick/training.js`, `tick/fights.js`, `tick/sponsors.js`, etc.
-- **`reducer.js` `INBOX_EVENT` handler is 200+ lines** — A single switch-else chain with 20+ branches. Each branch mutates state directly. Refactoring into handler functions would improve readability and testability.
+- ~~**`state.js` is too large (1,041 LOC)**~~ — **RESOLVED.** Decomposed into `tick/training.js`, `tick/fight-offers.js`, `tick/settlement.js`, `tick/yearly.js`, `tick/weight-change.js`, `tick/rankings.js`, `tick/rivals.js`. `state.js` now 145 LOC — pure orchestration.
+- ~~**`reducer.js` `INBOX_EVENT` handler is 200+ lines**~~ — **RESOLVED.** Replaced with 6 domain reducers (`reducer/camp.js`, `reducer/fighter.js`, `reducer/coach.js`, `reducer/contract.js`, `reducer/fight.js`, `reducer/ui.js`). Main reducer is 75 LOC — delegates to domain modules.
 - **In-place mutation everywhere** — The engine mutates state objects directly. This is performant for a game loop but makes undo/redo fragile (deep snapshots) and complicates debugging (no immutable state history).
-- **No type system** — JSDoc typedefs exist in `rng.js` but are not enforced. Property shape mismatches (`coachResignChance` number vs object) are only caught at runtime. TypeScript would catch these at compile time.
+- **No type system** — JSDoc typedefs exist in `rng.js` but are not enforced. Property shape mismatches are only caught at runtime. TypeScript would catch these at compile time.
 
 ---
 
@@ -130,10 +130,10 @@ The `theme.jsx` file defines a centralized design token system:
 
 ### 3.4 Weaknesses
 
-- **No code splitting / lazy loading** — The entire app is a single 350KB JS bundle. FightNight (700+ LOC) and theme.jsx could be lazy-loaded since they're not needed on initial render.
+- **No code splitting / lazy loading** — The entire app is a single ~427KB JS bundle. FightNight (186 LOC) and theme.jsx (276 LOC) could be lazy-loaded since they're not needed on initial render.
 - **Props drilling** — `g`, `dispatch`, `t`, `fmt$` are passed through 3+ component levels. Context or a state management library would reduce boilerplate.
-- **All inline styles** — While consistent with the design token approach, 4,500 LOC of inline style objects have zero tooling support (no autocomplete, no linting, no extraction). A CSS-in-JS library or separate stylesheet would improve DX.
-- **No `React.memo` / `useMemo` / `useCallback`** — Every state change in `App.jsx` causes a full re-render of the entire component tree. The dashboard KPI strip, roster table, and rankings P4P all recompute on every render.
+- **All inline styles** — While consistent with the design token approach, all 32+ JSX files use inline style objects with zero tooling support (no autocomplete, no linting, no extraction). A CSS-in-JS library or separate stylesheet would improve DX.
+- **No `React.memo` / `useMemo` / `useCallback`** — Every state change in `App.jsx` causes a full re-render of the entire component tree. The dashboard KPI strip, roster table, and rankings all recompute on every render.
 
 ---
 
@@ -205,12 +205,12 @@ App mount → localStorage.getItem(SAVE_KEY)
 
 | Anti-Pattern | Where | Impact |
 |-------------|-------|--------|
-| **God object** | `state.js` tick() | 1,041 LOC monolithic function — impossible to test in isolation |
+| ~~**God object**~~ | ~~`state.js` tick()~~ | ~~1,041 LOC monolithic — ~~**RESOLVED.** Decomposed into 8 tick modules, state.js is now 145 LOC of orchestration only. |
 | **Deep clone for immutability** | `App.jsx` up() | O(n) per mutation on entire game state — linear degradation |
 | **Props drilling** | All components | `g`, `dispatch`, `t` threaded through 3+ levels |
-| **Inline style sprawl** | All UI files | 4,500 LOC of inline style objects — no tooling, no reuse |
-| **No lazy loading** | Vite config | Single 350KB bundle — FightNight, theme, Rankings load on first paint |
-| **switch-else chain** | `reducer.js` INBOX_EVENT | 200+ lines of if/else — each branch mutates state directly |
+| **Inline style sprawl** | All UI files | All 32+ JSX files use inline styles — no tooling, no reuse |
+| **No lazy loading** | Vite config | Single ~427KB bundle — FightNight, theme, Rankings load on first paint |
+| ~~**switch-else chain**~~ | ~~`reducer.js` INBOX_EVENT~~ | ~~200+ lines of if/else —~~ **RESOLVED.** 6 domain reducers, 75 LOC main reducer. |
 
 ---
 
