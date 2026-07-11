@@ -88,7 +88,7 @@ export function tickTraining(g) {
         const capMult = f.traits?.includes("Grinder") ? 0.9 : prog < 0.7 ? 1 : prog < 0.9 ? 0.6 : 0.3;
         const gain = R(0.5, 1.4) * inten.mult * ageMult * otMult * traitMult * moraleMult * capMult
           * chemMult * coachBonus(g, [k]) * facBonus(g, [k]) * mentorMult * sparringMult * relMult * attentionMult;
-        f.attrs[k] = clamp(f.attrs[k] + gain, 0, cap);
+        f.attrs[k] = clamp(f.attrs[k] + gain, 5, cap);
         totalGain += gain;
         if (gain > bestGain) { bestGain = gain; bestAttr = k; }
       });
