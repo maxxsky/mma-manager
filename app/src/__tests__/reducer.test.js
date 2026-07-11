@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { createTestGame, useSeed, createTestFighter } from './helpers.js'
 import { reducer } from '../engine/reducer.js'
+import { setRNG } from '../engine/rng.js'
 
 describe('Reducer', () => {
   describe('SET_TRAINING', () => {
@@ -121,6 +122,120 @@ describe('Reducer', () => {
       expect(g.cash).toBe(cashBefore - 1000)
       expect(g.rivals.find((x) => x.id === rivalId).rivalry).toBe(35) // 30 + 5
       expect(g.rivals.find((x) => x.id === rivalId).fighters.length).toBe(1) // still there
+    })
+  })
+
+  describe('RESOLVE_INJURY_CHOICE', () => {
+    it('physio: cash berkurang sesuai formula, weeks turun 30% (rounded), no risk', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const f = g.roster[0]
+      f.injury = { weeks: 10, label: '🚑 Test', cost: 5000, tier: 1, costPerWeek: 500 }
+      const startCash = g.cash
+      const physioCost = Math.round(5000 * 0.5 * (1 - (g.facilities.medical - 1) * 0.05))
+      const expectedReduction = Math.max(1, Math.round(10 * 0.3))
+
+      reducer(g, { type: 'RESOLVE_INJURY_CHOICE', fighterId: f.id, choice: 'physio', messageId: -1, physioCost })
+
+      expect(g.cash).toBe(startCash - physioCost)
+      expect(f.injury.weeks).toBe(10 - expectedReduction) // 10 - 3 = 7
+    })
+
+    it('push: weeks turun 40% kalau berhasil', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const f = g.roster[0]
+      g.facilities.medical = 5
+      f.injury = { weeks: 10, label: '🚑 Test', cost: 5000, tier: 1, costPerWeek: 500 }
+      const weekBefore = f.injury.weeks
+
+      // Use seed where random() >= reinjuryChance (0.25 - 4*0.03 = 0.13)
+      // Try multiple seeds to find one where random() >= 0.13
+      let foundSuccess = false
+      let successWeeks = 0
+      for (let s = 0; s < 100; s++) {
+        useSeed(s * 137 + 7)
+        const g2 = createTestGame()
+        const f2 = g2.roster[0]
+        g2.facilities.medical = 5
+        f2.injury = { weeks: 10, label: '🚑 Test', cost: 5000, tier: 1, costPerWeek: 500 }
+        const cash2 = g2.cash
+        reducer(g2, { type: 'RESOLVE_INJURY_CHOICE', fighterId: f2.id, choice: 'push', messageId: -1 })
+        const diff = f2.injury.weeks - 10
+        if (diff < 0) {
+          // Success: weeks decreased
+          foundSuccess = true
+          successWeeks = f2.injury.weeks
+          expect(g2.cash).toBe(cash2) // no cash change
+          break
+        }
+      }
+      expect(foundSuccess).toBe(true)
+      // 40% of 10 = 4 weeks reduction
+      expect(successWeeks).toBe(6)
+    })
+
+    it('push: re-injury terjadi — weeks nambah, cash unchanged', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const f = g.roster[0]
+      g.facilities.medical = 1 // reinjuryChance = 0.25
+      f.injury = { weeks: 10, label: '🚑 Test', cost: 5000, tier: 1, costPerWeek: 500 }
+      const cashBefore = g.cash
+
+      // Override RNG to always return 0.1 (< 0.25 → triggers re-injury)
+      setRNG(() => 0.1)
+
+      const weekBefore = f.injury.weeks
+      reducer(g, { type: 'RESOLVE_INJURY_CHOICE', fighterId: f.id, choice: 'push', messageId: -1 })
+
+      // Re-injury: weeks = 10 + 4 + 2 = 16
+      expect(f.injury.weeks).toBe(16)
+      expect(g.cash).toBe(cashBefore) // no cash change
+    })
+
+    it('rest: no changes to weeks or cash', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const f = g.roster[0]
+      f.injury = { weeks: 10, label: '🚑 Test', cost: 5000, tier: 1, costPerWeek: 500 }
+      const weekBefore = f.injury.weeks
+      const cashBefore = g.cash
+
+      reducer(g, { type: 'RESOLVE_INJURY_CHOICE', fighterId: f.id, choice: 'rest', messageId: -1 })
+
+      expect(f.injury.weeks).toBe(weekBefore) // unchanged
+      expect(g.cash).toBe(cashBefore) // unchanged
+    })
+
+    it('permanent injury (tier 3): choice "ok" removes inbox item, no other changes', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const f = g.roster[0]
+      f.injury = { weeks: 52, label: '💀 Career', cost: 50000, tier: 3, permanent: true, costPerWeek: 1000 }
+      const weekBefore = f.injury.weeks
+      const cashBefore = g.cash
+      const msgId = 999
+      g.inbox = [{ id: msgId, type: 'injury', fighterId: f.id, choices: [{ label: 'OK', choice: 'ok' }] }]
+
+      reducer(g, { type: 'RESOLVE_INJURY_CHOICE', fighterId: f.id, choice: 'ok', messageId: msgId })
+
+      // Inbox item removed, no stat changes
+      expect(g.inbox.length).toBe(0)
+      expect(f.injury.weeks).toBe(weekBefore) // unchanged
+      expect(g.cash).toBe(cashBefore) // unchanged
+    })
+
+    it('RESOLVE_INJURY_CHOICE with no injury does nothing', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const f = g.roster[0]
+      f.injury = null
+      const cashBefore = g.cash
+
+      reducer(g, { type: 'RESOLVE_INJURY_CHOICE', fighterId: f.id, choice: 'physio', messageId: -1, physioCost: 9999 })
+
+      expect(g.cash).toBe(cashBefore) // no change
     })
   })
 })

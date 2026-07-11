@@ -86,5 +86,32 @@ export function reduceFighter(g, action) {
       }
       break;
     }
+    case "RESOLVE_INJURY_CHOICE": {
+      const f = g.roster.find((x) => x.id === action.fighterId);
+      if (!f || !f.injury) break;
+      if (action.choice === "ok") {
+        g.inbox = g.inbox.filter((x) => x.id !== action.messageId);
+        break;
+      }
+      if (action.choice === "physio") {
+        g.cash -= action.physioCost;
+        const reduction = Math.max(1, Math.round(f.injury.weeks * 0.3));
+        f.injury.weeks = Math.max(1, f.injury.weeks - reduction);
+        g.log.unshift(`🏥 ${f.name} menjalani physio therapy. Waktu pulih berkurang.`);
+      } else if (action.choice === "push") {
+        const reduction = Math.max(1, Math.round(f.injury.weeks * 0.4));
+        const reinjuryChance = 0.25 - (g.facilities.medical - 1) * 0.03;
+        if (random() < reinjuryChance) {
+          f.injury.weeks += reduction + 2;
+          g.log.unshift(`💥 ${f.name} memaksakan diri — re-injury! Waktu pulih bertambah.`);
+        } else {
+          f.injury.weeks = Math.max(1, f.injury.weeks - reduction);
+          g.log.unshift(`💪 ${f.name} push recovery berhasil — waktu pulih berkurang.`);
+        }
+      }
+      // choice === "rest": no change
+      g.inbox = g.inbox.filter((x) => x.id !== action.messageId);
+      break;
+    }
   }
 }

@@ -121,6 +121,26 @@ export function tickTraining(g) {
       else sev = { weeks: RI(20, 36), label: "💀 Career-Threatening", cost: RI(15000, 40000), tier: 3, permanent: true };
       sev.costPerWeek = Math.round(sev.cost / sev.weeks);
       f.injury = sev;
+      // ── Injury inbox choice (once per injury) ──
+      if (sev.permanent) {
+        g.inbox.unshift({ id: uid(), type: "injury", fighterId: f.id,
+          title: "💀 " + f.name + ": " + sev.label,
+          body: f.name + " mengalami cedera permanen. Karirnya telah berakhir. Tidak ada pemulihan yang bisa dilakukan.",
+          choices: [{ label: "OK", choice: "ok" }],
+        });
+      } else {
+        const medMult = 1 - (g.facilities.medical - 1) * 0.05;
+        const physioCost = Math.round(sev.cost * 0.5 * medMult);
+        g.inbox.unshift({ id: uid(), type: "injury", fighterId: f.id,
+          title: "🚑 " + f.name + ": " + sev.label + " (" + sev.weeks + " minggu)",
+          body: f.name + " mengalami " + sev.label.toLowerCase() + ". Biaya perawatan " + fmt$(sev.cost) + ".",
+          choices: [
+            { label: "🏥 Physio Therapy ($" + physioCost + ") — kurangi 30% waktu", choice: "physio", fighterId: f.id, physioCost: physioCost },
+            { label: "💪 Push Recovery (gratis) — kurangi 40%, risiko re-injury", choice: "push", fighterId: f.id },
+            { label: "🛌 Rest Normally — biarkan sembuh alami", choice: "rest", fighterId: f.id },
+          ],
+        });
+      }
       f.injuryCount = (f.injuryCount || 0) + 1;
       if (sev.tier >= 2) f.seriousInjuries = (f.seriousInjuries || 0) + 1;
       if (sev.tier >= 2) {

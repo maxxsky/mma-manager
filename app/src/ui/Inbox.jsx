@@ -276,6 +276,39 @@ export default function Inbox({ g, dispatch, setTab }) {
           );
         }
 
+        // ── INJURY ────────────────────────────────────────
+        if (m.type === "injury") {
+          return (
+            <Panel key={m.id} style={{ marginBottom: 12, borderColor: T.neg }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <Tag color={T.neg} solid>Injury</Tag>
+                <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 15, textTransform: "uppercase", letterSpacing: .5, color: T.txt }}>{m.title}</span>
+              </div>
+              {m.body && (
+                <div style={{ color: T.txt2, fontSize: 13, marginBottom: 12, lineHeight: 1.5 }}>{m.body}</div>
+              )}
+              {m.choices && m.choices.length > 0 && (
+                <div style={{ display: "flex", gap: 6, flexDirection: "column" }}>
+                  {m.choices.map((c, i) => (
+                    <Btn key={i} sm
+                      color={c.choice === "physio" ? T.pos : c.choice === "push" ? T.warn : T.txt2}
+                      ghost={c.choice === "rest" || c.choice === "ok"}
+                      onClick={() => dispatch({
+                        type: "RESOLVE_INJURY_CHOICE", fighterId: m.fighterId,
+                        choice: c.choice, messageId: m.id,
+                        physioCost: c.physioCost,
+                      })}
+                      style={{ justifyContent: "flex-start", textAlign: "left" }}
+                    >
+                      {c.label}
+                    </Btn>
+                  ))}
+                </div>
+              )}
+            </Panel>
+          );
+        }
+
         // ── EVENT / OTHER ────────────────────────────────────────
         const eventColor = m.type === "event" ? T.warn : T.steel;
         return (
