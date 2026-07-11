@@ -32,6 +32,8 @@ export const PRESSURE_CASH_MAX = 10000;
 export const PRESSURE_REP_MAX = 10;
 export const PRESSURE_MIN_WEEK = 50;
 export const PRESSURE_CASH_CLEAR = 50000;
+export const TRAINING_CRISIS_OT_THRESHOLD = 70;
+export const TRAINING_CRISIS_RATIO = 0.4;
 
 // ── Event probabilities ──
 export const PROB_TIER_EVENT = 0.3;
@@ -39,6 +41,7 @@ export const PROB_TENSION = 0.4;
 export const PROB_MOMENTUM_SPONSOR = 0.35;
 export const PROB_REBUILD_MENTOR = 0.3;
 export const PROB_PRESSURE = 0.35;
+export const PROB_TRAINING_CRISIS = 0.35;
 
 // ── Delayed consequence thresholds ──
 export const COACH_RAISE_DENIED_MAX = 3;

@@ -9,6 +9,7 @@ import {
   WIN_STREAK_MIN, WIN_MOMENTUM_CHEM_MIN, WIN_MOMENTUM_MORALE_MAX,
   REBUILDING_MAX_FIGHTS, REBUILDING_RATIO, REBUILDING_MIN_ROSTER, REBUILDING_CLEAR,
   PRESSURE_CASH_MAX, PRESSURE_REP_MAX, PRESSURE_MIN_WEEK, PRESSURE_CASH_CLEAR,
+  TRAINING_CRISIS_OT_THRESHOLD, TRAINING_CRISIS_RATIO,
 } from "./config.js";
 
 // ── CAMP STATE ──
@@ -56,6 +57,16 @@ export function computeCampState(g) {
   } else if (g.cash >= PRESSURE_CASH_CLEAR) {
     delete g._campState.under_pressure;
   }
+
+  // Training Crisis
+  const overtrainedCount = g.roster?.filter((f) => (f.overtraining || 0) >= TRAINING_CRISIS_OT_THRESHOLD).length || 0;
+  const injuredCount = g.roster?.filter((f) => f.injury).length || 0;
+  const crisisCount = overtrainedCount + injuredCount;
+  if (g.roster?.length > 0 && crisisCount / g.roster.length >= TRAINING_CRISIS_RATIO) {
+    g._campState.training_crisis = true;
+  } else if (crisisCount === 0) {
+    delete g._campState.training_crisis;
+  }
 }
 
 export function hasCampState(g, state) {
@@ -77,6 +88,7 @@ export function createEventContext(g) {
     isRebuilding: hasCampState(g, "rebuilding"),
     isUnderPressure: hasCampState(g, "under_pressure"),
     isHighMorale: hasCampState(g, "high_morale"),
+    isTrainingCrisis: hasCampState(g, "training_crisis"),
 
     // Tier
     tier,
