@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { createTestFighter, useSeed, TEST_SEED } from './helpers.js'
 import { simRound, prepFighter, autoGamePlan, runFight } from '../engine/fight.js'
+import { pickExchange } from '../engine/fight/exchanges.js'
 import { mulberry32, setRNG } from '../engine/rng.js'
 
 describe('Fight Engine', () => {
@@ -171,6 +172,40 @@ describe('Fight Engine', () => {
         expect(r.totalDmgA).toBeGreaterThanOrEqual(0)
         expect(r.totalDmgB).toBeGreaterThanOrEqual(0)
       }
+    })
+  })
+
+  describe('exchange symmetry', () => {
+    function tdRatio(A, B, n) {
+      let td = 0, tdB = 0
+      for (let i = 0; i < n; i++) {
+        const ex = pickExchange({ type: 'standing', top: null }, A, B, 'Balanced')
+        if (ex === 'td') td++
+        else if (ex === 'tdB') tdB++
+      }
+      return td / Math.max(td + tdB, 1)
+    }
+
+    it('td/tdB ratio is similar when wrestler is A vs when wrestler is B', () => {
+      const wrestler = createTestFighter({ id: 'w', name: 'Wrestler', archetype: 'Wrestler', attrs: {
+        striking: 50, wrestling: 75, bjj: 40, cardio: 60, strength: 70, chin: 55, footwork: 50, fightIQ: 50
+      }})
+      const boxer = createTestFighter({ id: 'b', name: 'Boxer', archetype: 'Boxer', attrs: {
+        striking: 70, wrestling: 40, bjj: 30, cardio: 55, strength: 60, chin: 50, footwork: 65, fightIQ: 55
+      }})
+
+      const N = 500
+      const ratioA = tdRatio(wrestler, boxer, N)
+      const ratioB = tdRatio(boxer, wrestler, N)
+
+      // Ketika Wrestler adalah A: proporsi td harusnya > tdB
+      expect(ratioA).toBeGreaterThan(0.5)
+      // Ketika Wrestler adalah B: proporsi td (A=Boxer) harusnya < tdB (B=Wrestler)
+      expect(ratioB).toBeLessThan(0.5)
+      // Kedua rasio harus simetris dalam toleransi: jarak dari 0.5 tidak boleh beda > 0.3
+      const distA = Math.abs(ratioA - 0.5)
+      const distB = Math.abs(ratioB - 0.5)
+      expect(Math.abs(distA - distB)).toBeLessThan(0.3)
     })
   })
 })

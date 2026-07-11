@@ -14,7 +14,7 @@ export function resolveTakedown(exType, A, B, stA, stB, planA, cornerA, matchup,
 
 function resolveTakedownByA(A, B, stA, stB, planA, cornerA, matchup, comm, exMin, exSec) {
   const tdBonus = (matchup.aTD || 0) + (planA === "Take It Down" ? 0.18 : 0) + (cornerA === "tdd" ? -0.10 : 0);
-  const tdDefBonus = (matchup.aTDDef || 0);
+  const tdDefBonus = -(matchup.bTDDef || 0);
   const p = clamp(CFG.TD_BASE_CHANCE + (effAttr(A, "wrestling", stA, {}) - effAttr(B, "wrestling", stB, {})) / CFG.TD_SKILL_DIVISOR + tdBonus + tdDefBonus, CFG.TD_MIN_CHANCE, CFG.TD_MAX_CHANCE);
 
   if (random() < p) {

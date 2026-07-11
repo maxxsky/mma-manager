@@ -32,19 +32,22 @@ export function pickExchange(pos, A, B, planA) {
     for (let i = 0; i < (behaviorA.clinchWeight || 0); i++) pool.push("clinch");
     for (let i = 0; i < (behaviorB.clinchWeight || 0); i++) pool.push("clinch");
     for (let i = 0; i < tdWeightA + (behaviorA.tdWeight || 0); i++) pool.push("td");
-    for (let i = 0; i < tdWeightB; i++) pool.push("tdB");
+    for (let i = 0; i < tdWeightB + (behaviorB.tdWeight || 0); i++) pool.push("tdB");
   } else {
     const topFighter = pos.top === "A" ? A : B;
+    const bottomFighter = pos.top === "A" ? B : A;
     const g = GROUND[groundType] || GROUND.guard;
+    const behaviorTop = getArchetypeBehavior(topFighter);
+    const behaviorBottom = getArchetypeBehavior(bottomFighter);
     const gnpW = Math.round(g.topGNP * 8);
     const subFromTop = Math.round(clamp((topFighter.attrs.bjj - 20) / 15, 2, 6));
     const subFromBottom = Math.round(g.bottomSub * 4);
     const sweepW = Math.round(g.sweepChance * 6);
     const advW = Math.round(g.advanceChance * 4);
-    for (let i = 0; i < gnpW + (behaviorA.topControlBonus ? 1 : 0); i++) pool.push("gnp");
+    for (let i = 0; i < gnpW + (behaviorTop.topControlBonus ? 1 : 0); i++) pool.push("gnp");
     for (let i = 0; i < subFromTop; i++) pool.push("sub");
     for (let i = 0; i < subFromBottom; i++) pool.push("sub");
-    for (let i = 0; i < sweepW + (behaviorA.sweepWeight || 0); i++) pool.push("sweep");
+    for (let i = 0; i < sweepW + (behaviorBottom.sweepWeight || 0); i++) pool.push("sweep");
     for (let i = 0; i < advW; i++) pool.push("advance");
     pool.push("scramble", "scramble");
   }
