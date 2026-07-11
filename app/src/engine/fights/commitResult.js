@@ -33,6 +33,7 @@ export function commitFightResult(g, fighter, result) {
           // Defense — update in-place, preserve wonWeek
           div.champ.titleDefenses = (div.champ.titleDefenses || 0) + 1;
           div.champ.lastDefenseWeek = g.week;
+          g.log.unshift(`🛡️ ${f.name} berhasil pertahankan gelar ${f.weightClass}.`);
         } else {
           // New reign — create fresh champ object
           div.champ = { name: f.name, player: true, fighterId: f.id, wonWeek: g.week, lastDefenseWeek: g.week, titleDefenses: 0 };

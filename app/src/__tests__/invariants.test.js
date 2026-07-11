@@ -264,4 +264,21 @@ describe('Game State Invariants', () => {
     // AI should have filled the title
     expect(g.divisions[wc].champ).not.toBeNull()
   })
+
+  it('champion monthly bonus: $5,000 per Major World Champion appears in settlement log', () => {
+    useSeed(42)
+    const g = createTestGame()
+    g.cash = 999999
+    const f1 = g.roster[0]
+    const f2 = g.roster[1]
+    f1.titles = ['Major World Champion']
+    f2.titles = ['Major World Champion']
+
+    // Run to first settlement (week 4)
+    for (let i = 0; i < 4; i++) tick(g)
+
+    // Settlement log should mention champion bonus
+    const hasBonusLog = g.log.some((l) => l.includes('champion bonus') && l.includes('10,000'))
+    expect(hasBonusLog).toBe(true)
+  })
 })
