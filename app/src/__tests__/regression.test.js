@@ -101,3 +101,44 @@ describe('Calibration — Training Rate (seed=42)', () => {
     expect(totalGain).toBeLessThan(9.0)
   })
 })
+
+describe('Calibration — Upset Rate (Combat)', () => {
+  function simulateFight(weak, strong, seed) {
+    useSeed(seed)
+    const A = prepFighter(weak)
+    const B = prepFighter(strong)
+    let staA = 100, staB = 100, mom = 0
+    let scoreA = 0, scoreB = 0
+    for (let r = 1; r <= 3; r++) {
+      const result = simRound(r, A, B, staA, staB, 'Balanced', 'neutral', mom)
+      staA = result.staA; staB = result.staB; mom = result.momentum
+      scoreA += result.scoreA; scoreB += result.scoreB
+      if (result.finish) return result.finish.by === 'A' ? 'weak' : 'strong'
+    }
+    return scoreA > scoreB ? 'weak' : scoreA < scoreB ? 'strong' : 'draw'
+  }
+
+  it('10-point stat gap produces a plausible (non-zero, non-dominant) upset rate', () => {
+    const N = 300
+    let weakWins = 0
+    const uniformAttrs = (v) => ({
+      striking: v, wrestling: v, bjj: v, cardio: v,
+      strength: v, chin: v, footwork: v, fightIQ: v,
+    })
+
+    for (let i = 0; i < N; i++) {
+      const weak = createTestFighter({ id: 'w1', name: 'Weak', attrs: uniformAttrs(50) })
+      const strong = createTestFighter({ id: 's1', name: 'Strong', attrs: uniformAttrs(60) })
+      const outcome = simulateFight(weak, strong, i * 137 + 7)
+      if (outcome === 'weak') weakWins++
+    }
+
+    const upsetRate = weakWins / N
+    // Baseline empiris (gap=10 poin di semua attribut): ~3.7% (11/300).
+    // Band [1%, 15%] — cukup ketat buat nangkep kalau upset jadi mustahil (0%,
+    // engine kelewat deterministik) atau kelewat sering (>15%, skill gak lagi berarti),
+    // tapi cukup longgar buat variance wajar dari perubahan kecil di sistem lain.
+    expect(upsetRate).toBeGreaterThan(0.01)
+    expect(upsetRate).toBeLessThan(0.15)
+  })
+})
