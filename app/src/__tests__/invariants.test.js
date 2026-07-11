@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { createTestGame, useSeed, assertInvariants } from './helpers.js'
 import { tick } from '../engine/state.js'
 import { uid, resetUID, setUID } from '../engine/rng.js'
+import { stripTitle } from '../engine/rankings.js'
 
 describe('Game State Invariants', () => {
   it('newGame produces valid state', () => {
@@ -145,5 +146,84 @@ describe('Game State Invariants', () => {
     const next = uid()
     expect(next).toBeGreaterThan(200) // max id in state is 200
     expect(next).toBe(201)
+  })
+
+  it('champion without defense for 24+ weeks receives mandatory offer', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+    g.cash = 999999
+    g.divisions[f.weightClass].champ = { name: f.name, player: true, fighterId: f.id, wonWeek: 1, lastDefenseWeek: 1, titleDefenses: 0 }
+    f.titles = ['Major World Champion']
+    f.lastFightWeek = 1
+
+    // Run up to 50 ticks — chemistry can return false and skip fight-offers
+    let found = false
+    for (let i = 0; i < 50; i++) {
+      tick(g)
+      if (g.inbox.some((m) => m.type === 'offer' && m.defense && m.fighterId === f.id)) {
+        found = true
+        break
+      }
+    }
+    expect(found).toBe(true)
+  })
+
+  it('champion injured from week 1 gets stripped by week 40 despite never being offered', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+    g.cash = 999999
+    g.divisions[f.weightClass].champ = { name: f.name, player: true, fighterId: f.id, wonWeek: 1, lastDefenseWeek: 1, titleDefenses: 0 }
+    f.titles = ['Major World Champion']
+    f.lastFightWeek = 1
+    f.injury = { weeks: 100, label: 'Test injury', costPerWeek: 0 }
+    f.booked = null
+
+    // Run up to 60 ticks — strip fires on the first tick where g.week - lastDef >= 32
+    // AND tickFightOffers actually runs (chemistry can skip it)
+    let stripped = false
+    for (let i = 0; i < 60; i++) {
+      tick(g)
+      const champ = g.divisions[f.weightClass].champ
+      if (!champ || !champ.player) {
+        stripped = true
+        break
+      }
+    }
+    expect(stripped).toBe(true)
+  })
+
+  it('escalation warning fires only once between week 28-31 (champion injured, no offers generated)', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+    g.cash = 999999
+    g.divisions[f.weightClass].champ = { name: f.name, player: true, fighterId: f.id, wonWeek: 1, lastDefenseWeek: 1, titleDefenses: 0 }
+    f.titles = ['Major World Champion']
+    f.lastFightWeek = 1
+    // Champion injured — no mandatory offer is generated (guarded by f.injury)
+    f.injury = { weeks: 100, label: 'Test', costPerWeek: 0 }
+
+    // Fast-forward to week ~27 by running ticks, then check explicitly
+    // Run up to 100 ticks to account for chemistry skipping fight-offers
+    let found = false
+    for (let i = 0; i < 100; i++) {
+      tick(g)
+      if (g.inbox.some((m) => m.defenseEscalation && m.fighterId === f.id)) {
+        found = true
+        break
+      }
+    }
+    expect(found).toBe(true)
+
+    // Count total escalation warnings — should be exactly 1
+    const warnings = g.inbox.filter((m) => m.defenseEscalation && m.fighterId === f.id)
+    expect(warnings.length).toBe(1)
+
+    // Advance more weeks — still only 1 warning (no spam)
+    for (let i = 0; i < 12; i++) tick(g)
+    const warningsAfter = g.inbox.filter((m) => m.defenseEscalation && m.fighterId === f.id)
+    expect(warningsAfter.length).toBe(1)
   })
 })

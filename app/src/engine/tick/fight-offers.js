@@ -7,14 +7,38 @@ import { rankOf, stripTitle } from "../rankings.js";
 export function tickFightOffers(g) {
   if (!g || !g.roster) return;
   g.roster.forEach((f) => {
-    if (f.injury || f.booked) return;
+    // ── Defense escalation (sebelum guard injury/booked — strip tetap jalan walau cedera) ──
     const div = g.divisions[f.weightClass];
     const isChamp = div && div.champ.player && div.champ.fighterId === f.id;
+    if (isChamp) {
+      const lastDef = div.champ.lastDefenseWeek || f.lastFightWeek || 0;
+      // Escalation warning: 28 minggu tanpa defense (tidak perlu < 32 — chemistry bisa skip fight-offers)
+      if (g.week - lastDef >= 28) {
+        const warned = g.inbox.some((m) => m.defenseEscalation && m.fighterId === f.id);
+        if (!warned) {
+          g.inbox.unshift({
+            id: uid(), type: "event", fighterId: f.id, expires: null,
+            defenseEscalation: true,
+            tier: "Major", show: 0, winBonus: 0,
+            title: true, defense: false, oppRank: 0, contenderId: null,
+            titleTier: "Major",
+            titleText: `⚠️ DEFENSE OVERDUE — ${f.name} akan dicopot dalam 4 minggu`,
+            weeks: 0,
+          });
+          g.log.unshift(`⚠️ ${f.name} — defense overdue. Title otomatis dicopot minggu ke-${g.week + (32 - (g.week - lastDef))}.`);
+        }
+      }
+      // Auto-strip: 32 minggu tanpa defense
+      if (g.week - lastDef >= 32) {
+        stripTitle(g, f.id);
+      }
+    }
+    if (f.injury || f.booked) return;
 
     if (isChamp) {
     // Mandatory defense
     if (
-      g.week - (f.lastFightWeek || 0) >= 24 &&
+      g.week - (div.champ.lastDefenseWeek || f.lastFightWeek || 0) >= 24 &&
       !g.inbox.some((m) => m.type === "offer" && m.defense && m.fighterId === f.id)
     ) {
       const c0 = div.list[0];
