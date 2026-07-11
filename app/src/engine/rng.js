@@ -85,3 +85,4 @@ export const snapshot = (obj) => {
 let UID = 1;
 export const uid = () => UID++;
 export const resetUID = () => { UID = 1; };
+export const setUID = (n) => { UID = n; };

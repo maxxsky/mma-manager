@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { createTestGame, useSeed, assertInvariants } from './helpers.js'
 import { tick } from '../engine/state.js'
+import { uid, resetUID, setUID } from '../engine/rng.js'
 
 describe('Game State Invariants', () => {
   it('newGame produces valid state', () => {
@@ -123,5 +124,26 @@ describe('Game State Invariants', () => {
     // reducer diimport terpisah kalau perlu; intinya assert booked gak keubah
     // kalau ACCEPT_FIGHT dipanggil lagi buat fighter yang sudah booked
     expect(g.roster[0].booked).toEqual(bookedBefore)
+  })
+
+  it('uid rehydration from nested state produces uids above max existing id', () => {
+    const state = {
+      roster: [{ id: 42, name: 'A' }, { id: 99, name: 'B' }],
+      inbox: [{ id: 7 }],
+      coaches: [{ id: 15 }],
+      nested: { list: [{ id: 200 }, { x: [{ id: 88 }] }] },
+    }
+    resetUID() // force UID back to 1
+    let maxId = 0
+    ;(function walk(v) {
+      if (v == null || typeof v !== 'object') return
+      if (Array.isArray(v)) { v.forEach(walk); return }
+      if (typeof v.id === 'number' && v.id > maxId) maxId = v.id
+      Object.values(v).forEach(walk)
+    })(state)
+    setUID(maxId + 1)
+    const next = uid()
+    expect(next).toBeGreaterThan(200) // max id in state is 200
+    expect(next).toBe(201)
   })
 })
