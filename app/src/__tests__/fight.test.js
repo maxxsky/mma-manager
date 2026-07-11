@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { createTestFighter, useSeed, TEST_SEED } from './helpers.js'
 import { simRound, prepFighter, autoGamePlan } from '../engine/fight.js'
+import { mulberry32, setRNG } from '../engine/rng.js'
 
 describe('Fight Engine', () => {
   const fighterA = createTestFighter({ name: 'Alpha', id: 'a1' })
@@ -115,6 +116,21 @@ describe('Fight Engine', () => {
         expect(prepped.attrs[k]).toBeGreaterThanOrEqual(5)
         expect(prepped.attrs[k]).toBeLessThanOrEqual(99)
       }
+    })
+  })
+
+  describe('deterministic seed', () => {
+    it('same seed + same inputs = identical fight result (deep equal)', () => {
+      const seed = 123456
+      const run = () => {
+        setRNG(mulberry32(seed))
+        const A = prepFighter(fighterA)
+        const B = prepFighter(fighterB)
+        return simRound(1, A, B, 100, 100, 'Balanced', 'neutral', 0)
+      }
+      const r1 = run()
+      const r2 = run()
+      expect(r1).toEqual(r2)
     })
   })
 })

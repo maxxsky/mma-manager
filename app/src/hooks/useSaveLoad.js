@@ -59,6 +59,7 @@ export function useSaveLoad(setG) {
             f.giantKills = f.giantKills || 0;
             f.titleDefenses = f.titleDefenses || 0;
             f.firstFightWeek = f.firstFightWeek || null;
+            if (f.booked && f.booked.seed == null) f.booked.seed = (Math.random() * 2**31) | 0;
           });
           setG(s);
 
