@@ -226,4 +226,42 @@ describe('Game State Invariants', () => {
     const warningsAfter = g.inbox.filter((m) => m.defenseEscalation && m.fighterId === f.id)
     expect(warningsAfter.length).toBe(1)
   })
+
+  it('vacant title: player rank #1 receives offer, AI resolution skipped', () => {
+    useSeed(42)
+    const g = createTestGame()
+    g.cash = 999999
+    const f = g.roster[0]
+    f.streakW = 3
+    f.rankPoints = 95
+    f.record = { w: 6, l: 0, ko: 0, sub: 0, dec: 0 }
+    g.divisions[f.weightClass].champ = null // vacant title
+
+    let found = false
+    for (let i = 0; i < 20; i++) {
+      tick(g)
+      if (g.inbox.some((m) => m.type === 'offer' && m.vacantTitle && m.fighterId === f.id)) {
+        found = true
+        break
+      }
+    }
+    expect(found).toBe(true)
+    // AI should NOT have filled the title
+    expect(g.divisions[f.weightClass].champ).toBeNull()
+  })
+
+  it('vacant title: no eligible player — AI fills the title', () => {
+    useSeed(42)
+    const g = createTestGame()
+    g.cash = 999999
+    const wc = g.roster[0].weightClass
+    g.divisions[wc].champ = null // vacant title
+    // Ensure no player fighter has rankPoints in this division
+    g.roster.forEach((f) => { f.rankPoints = 0; f.streakW = 0 })
+
+    for (let i = 0; i < 30; i++) tick(g)
+
+    // AI should have filled the title
+    expect(g.divisions[wc].champ).not.toBeNull()
+  })
 })

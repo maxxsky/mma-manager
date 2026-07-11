@@ -35,6 +35,27 @@ export function tickFightOffers(g) {
     }
     if (f.injury || f.booked) return;
 
+    // ── Vacant title: fighter rank #1/#2 gets title shot ──
+    if (div && div.champ === null) {
+      const r = rankOf(g, f);
+      if (r != null && r <= 2 && !g.inbox.some((m) => m.type === "offer" && m.vacantTitle && m.fighterId === f.id && m.weightClass === f.weightClass)) {
+        const opp = div.list[0] || genFighter(0.9);
+        const isPlayerRank1 = r === 1;
+        const opponent = isPlayerRank1 ? opp : (div.list[1] || div.list[0] || genFighter(0.9));
+        const oppName = opponent.name || "Unknown";
+        g.inbox.unshift({
+          id: uid(), type: "offer", fighterId: f.id, expires: 4,
+          tier: "Major", show: RI(80, 150) * 1000, winBonus: RI(80, 150) * 1000,
+          opponent: opponent, title: true, defense: false,
+          oppRank: isPlayerRank1 ? 2 : 1, contenderId: opponent.id,
+          titleTier: "Major", vacantTitle: true, weightClass: f.weightClass,
+          titleText: `👑 VACANT TITLE FIGHT — ${f.weightClass} belt up for grabs!`,
+          weeks: RI(4, 6),
+        });
+        g.log.unshift(`🥊 ${f.name} ditawari perebutan gelar ${f.weightClass} yang kosong.`);
+      }
+    }
+
     if (isChamp) {
     // Mandatory defense
     if (

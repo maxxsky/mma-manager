@@ -34,10 +34,9 @@ export function rankOf(g, f) {
 
 export function vacateTitle(g, f) {
   const div = g.divisions && g.divisions[f.weightClass];
-  if (div && div.champ.player && div.champ.fighterId === f.id) {
-    const newChamp = div.list[0];
-    div.champ = { name: newChamp.name, player: false, fighterId: null };
-    g.log.unshift(`👑 Title ${f.weightClass} vakum — ${newChamp.name} (#1 contender) naik jadi juara baru.`);
+  if (div && div.champ && div.champ.player && div.champ.fighterId === f.id) {
+    div.champ = null;
+    g.log.unshift(`👑 Title ${f.weightClass} kosong — akan diperebutkan.`);
   }
 }
 

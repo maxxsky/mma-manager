@@ -3,6 +3,7 @@ import { clamp } from "../rng.js";
 import {
   PROMOTER_REL_GAIN_ACCEPT, PROMOTER_REL_LOSS_COUNTER, PROMOTER_REL_LOSS_REJECT,
 } from "./constants.js";
+import { vacateTitle } from "../rankings.js";
 
 export function reduceFight(g, action) {
   switch (action.type) {
@@ -47,6 +48,11 @@ export function reduceFight(g, action) {
         const f3 = g.roster.find((x) => x.id === action.fighterId);
         if (f3) { f3.titles = f3.titles.filter((t) => !t.includes("Champion")); }
       }
+      break;
+    }
+    case "VACATE_TITLE": {
+      const f = g.roster.find((x) => x.id === action.fighterId);
+      if (f) vacateTitle(g, f);
       break;
     }
   }

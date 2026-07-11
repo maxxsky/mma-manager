@@ -7,6 +7,7 @@
 import { R, RI, clamp, random } from "./rng.js";
 import { createAIFighter, createVeteranFighter } from "./world/ai-fighter.js";
 import { recordTitleChange, recordRetirement } from "./world/history.js";
+import { rankOf } from "./rankings.js";
 import {
   TICK_YEARLY, TICK_TITLE_DEFENSE, TICK_MONTHLY, TICK_QUARTERLY,
   MIN_DIVISION_SIZE, MAX_FIGHTER_AGE, RETIREMENT_AGE, RETIREMENT_CHANCE,
@@ -51,7 +52,25 @@ export function simulateAITitleDefenses(g) {
   const events = [];
 
   Object.entries(g.divisions).forEach(([wc, d]) => {
-    if (!d.champ || d.champ.player) return;
+    if (d.champ && d.champ.player) return;
+    if (!d.champ) {
+      // Vacant title — check if any player fighter is eligible
+      const playerEligible = g.roster?.some((f) =>
+        f.weightClass === wc && !f.injury && rankOf(g, f) != null && rankOf(g, f) <= 2
+      );
+      if (playerEligible) return; // let player get the offer instead
+      // No eligible player — AI resolves vacant title
+      const candidates = d.list?.filter((c) => c.level > 0.7) || [];
+      if (candidates.length < 2) return;
+      const winner = candidates[0];
+      const loser = candidates[1];
+      d.champ = { name: winner.name, player: false, age: winner.age || RI(27, 33) };
+      events.push({
+        title: `👑 New ${wc} Champion!`,
+        body: `${winner.name} defeats ${loser.name} to win the vacant ${wc} title!`,
+      });
+      return;
+    }
     if (!d.list || d.list.length < 1) return;
 
     const contender = d.list[0];
