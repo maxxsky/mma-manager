@@ -75,12 +75,16 @@ export default function App() {
   // Scout action
   const scoutFighter = (cost, level, label, filterArch, filterWC) => {
     const grade = scoutGrade(g.rep);
+    const existingNames = new Set([
+      ...(g.roster || []).map((x) => x.name),
+      ...(g.prospects || []).map((x) => x.fighter?.name),
+    ]);
     let f = assignAgent(genFighter(R(level[0], level[1])));
-    if (filterArch || filterWC) {
-      for (let attempt = 0; attempt < 5; attempt++) {
-        if ((!filterArch || f.archetype === filterArch) && (!filterWC || f.weightClass === filterWC)) break;
-        f = assignAgent(genFighter(R(level[0], level[1])));
-      }
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const matchesFilter = (!filterArch || f.archetype === filterArch) && (!filterWC || f.weightClass === filterWC);
+      const nameOk = !existingNames.has(f.name);
+      if (matchesFilter && nameOk) break;
+      f = assignAgent(genFighter(R(level[0], level[1])));
     }
     dispatch({ type: "SCOUT", cost, fighter: f, report: makeReport(f, grade), grade, method: label });
   };
