@@ -97,6 +97,17 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
               </div>
             );
           })()}
+          {/* Reign history */}
+          {f.reignHistory && f.reignHistory.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: T.gold, marginBottom: 4 }}>Title Reigns</div>
+              {f.reignHistory.map((r, i) => (
+                <div key={i} style={{ fontFamily: T.body, fontSize: 11, color: T.txt2, marginBottom: 2 }}>
+                  👑 {r.weightClass} — sejak minggu {r.wonWeek}
+                </div>
+              ))}
+            </div>
+          )}
           {/* Career story tags */}
           {(() => {
             const tags = getStoryTags(f);
@@ -134,6 +145,16 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
                 <Btn sm ghost style={{ marginTop: 8, width: "100%" }}
                   onClick={() => dispatch({ type: "SIGN_CONTRACT_PRE", mode: "extend", fighterId: f.id, fighter: f })}>
                   Perpanjang Kontrak
+                </Btn>
+              )}
+              {f.titles?.includes("Major World Champion") && g.divisions?.[f.weightClass]?.champ?.fighterId === f.id && (
+                <Btn sm ghost color={T.neg} style={{ marginTop: 8, width: "100%" }}
+                  onClick={() => {
+                    if (window.confirm(`Yakin mau vacate title ${f.weightClass}? ${f.name} akan kehilangan gelar juara.`)) {
+                      dispatch({ type: "VACATE_TITLE", fighterId: f.id });
+                    }
+                  }}>
+                  Vacate Title
                 </Btn>
               )}
             </>

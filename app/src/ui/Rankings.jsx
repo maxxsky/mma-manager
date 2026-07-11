@@ -201,6 +201,7 @@ export default function Rankings({ g, t }) {
       </div>
 
       {/* ── Champion Banner ── */}
+      {champ ? (
       <Panel
         pad={14}
         style={{
@@ -238,6 +239,9 @@ export default function Rankings({ g, t }) {
               <div style={{ fontSize: 10, color: T.txt3, marginTop: 1 }}>
                 {selDiv} Champion
               </div>
+              <div style={{ fontSize: 10, color: T.txt3, marginTop: 2 }}>
+                Juara sejak minggu {champ.wonWeek ?? "?"} · {champ.titleDefenses ?? 0}x defense
+              </div>
             </div>
           </div>
           <Tag color={champ.player ? T.pos : T.txt3} solid>
@@ -245,6 +249,21 @@ export default function Rankings({ g, t }) {
           </Tag>
         </div>
       </Panel>
+      ) : (
+      <Panel pad={14} style={{ marginTop: 12, borderColor: T.warn, background: `${T.warn}0a` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ fontSize: 24 }}>👑</div>
+          <div>
+            <div style={{ fontFamily: T.disp, color: T.warn, fontSize: 16, letterSpacing: 1, textTransform: "uppercase" }}>
+              {selDiv} — VACANT
+            </div>
+            <div style={{ fontSize: 10, color: T.txt3, marginTop: 1 }}>
+              Title is vacant — next title fight will crown a new champion
+            </div>
+          </div>
+        </div>
+      </Panel>
+      )}
 
       {/* ── Title History ── */}
       {g._worldHistory?.titleChanges && (() => {
