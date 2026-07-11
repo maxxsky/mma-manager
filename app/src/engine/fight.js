@@ -23,6 +23,21 @@ import { resolveClinch } from "./fight/resolve-clinch.js";
 import { resolveTakedown } from "./fight/resolve-takedown.js";
 import { resolveGround } from "./fight/resolve-ground.js";
 
+// ── DAMAGE SAFETY CLAMP ──
+// Resolver returns secara struktural harusnya selalu >= 0, tapi ini safety net
+// buat edge case ekstrim (matchup/momentum outlier) — cegah nilai negatif/NaN
+// merembet ke health/state fighter.
+function clampDamage(result) {
+  const safe = (v) => (Number.isFinite(v) && v > 0 ? v : 0);
+  result.dmgA = safe(result.dmgA);
+  result.dmgB = safe(result.dmgB);
+  result.bodyDmgA = safe(result.bodyDmgA);
+  result.bodyDmgB = safe(result.bodyDmgB);
+  result.legDmgA = safe(result.legDmgA);
+  result.legDmgB = safe(result.legDmgB);
+  return result;
+}
+
 // ── POSITION CONSTANTS ──
 const STANDING = { type: "standing", top: null };
 
@@ -92,7 +107,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
       const archMsgs = archetypeCommentary(A, B, exType, matchup);
       archMsgs.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
       const pow = exType === "power" ? CFG.POWER_SHOT_MULT : 1;
-      const result = resolveStriking(exType, A, B, stA, stB, cornerA, agg, phase, momMult, pow, matchup, expMult, ptsA, ptsB, legDmgA, legDmgB, comm, exMin, exSec);
+      const result = clampDamage(resolveStriking(exType, A, B, stA, stB, cornerA, agg, phase, momMult, pow, matchup, expMult, ptsA, ptsB, legDmgA, legDmgB, comm, exMin, exSec));
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
       legDmgA += result.legDmgA; legDmgB += result.legDmgB;
@@ -114,7 +129,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
     } else if (exType === "clinch") {
       const archMsgs2 = archetypeCommentary(A, B, exType, matchup);
       archMsgs2.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
-      const result = resolveClinch(exType, A, B, stA, stB, agg, matchup, comm, exMin, exSec);
+      const result = clampDamage(resolveClinch(exType, A, B, stA, stB, agg, matchup, comm, exMin, exSec));
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
       legDmgA += result.legDmgA; legDmgB += result.legDmgB;
@@ -130,7 +145,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
     } else if (exType === "td" || exType === "tdB") {
       const archMsgs3 = archetypeCommentary(A, B, exType, matchup);
       archMsgs3.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
-      const result = resolveTakedown(exType, A, B, stA, stB, planA, cornerA, matchup, comm, exMin, exSec);
+      const result = clampDamage(resolveTakedown(exType, A, B, stA, stB, planA, cornerA, matchup, comm, exMin, exSec));
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
       legDmgA += result.legDmgA; legDmgB += result.legDmgB;
@@ -144,7 +159,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
     } else {
       const archMsgs4 = archetypeCommentary(A, B, exType, matchup);
       archMsgs4.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
-      const result = resolveGround(exType, A, B, stA, stB, position, matchup, subProgress, bjjGuardProgress, SUB_THRESHOLD, comm, exMin, exSec);
+      const result = clampDamage(resolveGround(exType, A, B, stA, stB, position, matchup, subProgress, bjjGuardProgress, SUB_THRESHOLD, comm, exMin, exSec));
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
       legDmgA += result.legDmgA; legDmgB += result.legDmgB;
