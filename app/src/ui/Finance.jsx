@@ -19,8 +19,9 @@ export default function Finance({ g }) {
     g.sponsors && g.sponsors.length > 0
       ? g.sponsors.reduce((s, sp) => s + (sp.rate || 0), 0)
       : baseSponsor;
+  const merchTotal = Math.round(g.roster.reduce((s, f) => s + f.popularity * 80, 0));
 
-  const totalIncome = sponsorIncome + popTotal + feeTotal;
+  const totalIncome = sponsorIncome + popTotal + feeTotal + merchTotal;
 
   // ── Expense breakdown ─────────────────────────────────────────
   const coachSal = g.coaches.reduce(
@@ -78,6 +79,12 @@ export default function Finance({ g }) {
               ? `${g.sponsors.length} active brand${g.sponsors.length !== 1 ? "s" : ""}`
               : `rep-based (rep ${g.rep})`
           }
+        />
+        <Row
+          label="Merchandise"
+          value={merchTotal}
+          color={T.pos}
+          detail="fighter-branded merch sales"
         />
         <Row
           label="Fighter Popularity"

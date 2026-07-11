@@ -61,7 +61,9 @@ export function tickSettlement(g) {
   const fSponsor = g.roster.reduce((s, f) => s + f.popularity * 150, 0);
   // Champion monthly bonus: $5,000 per Major World Champion
   const championBonus = g.roster.reduce((s, f) => s + (f.titles?.includes("Major World Champion") ? 5000 : 0), 0);
-  g.cash += sponsorAmt + fSponsor + championBonus - sal - maint;
+  // Merchandise revenue: driven by fighter popularity
+  const merchRevenue = Math.round(g.roster.reduce((s, f) => s + f.popularity * 80, 0));
+  g.cash += sponsorAmt + fSponsor + championBonus + merchRevenue - sal - maint;
   // Chemistry shifts monthly: Team Player fighters boost it, Divas drain it,
   // Player's Coach personality gives flat +2 bonus.
   g.chemistry = clamp(
@@ -72,7 +74,7 @@ export function tickSettlement(g) {
     0, 100,
   );
   g.log.unshift(
-    `📊 Settlement bulanan: sponsor +${fmt$(sponsorAmt + fSponsor)}, gaji coach -${fmt$(sal)}, maintenance -${fmt$(maint)}${championBonus > 0 ? `, champion bonus +${fmt$(championBonus)}` : ""}.`,
+    `📊 Settlement bulanan: sponsor +${fmt$(sponsorAmt + fSponsor)}, merchandise +${fmt$(merchRevenue)}, gaji coach -${fmt$(sal)}, maintenance -${fmt$(maint)}${championBonus > 0 ? `, champion bonus +${fmt$(championBonus)}` : ""}.`,
   );
 
   // Fighter equity deduction (fighters with camp equity %)

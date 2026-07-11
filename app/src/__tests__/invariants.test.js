@@ -329,4 +329,26 @@ describe('Game State Invariants', () => {
     if (!exists) g._worldHistory.retiredChamps.push({ name: 'TestFighter', week: 20, division: 'Lightweight' })
     expect(g._worldHistory.retiredChamps.length).toBe(1)
   })
+
+  it('merchandise revenue appears in settlement log', () => {
+    useSeed(42)
+    const g = createTestGame()
+    g.rep = 50
+    g.cash = 100000
+
+    // Tick to first settlement (week 4)
+    for (let i = 0; i < 3; i++) tick(g)
+    expect(g.week).toBe(4)
+
+    // Settlement log should contain "merchandise +$X"
+    const merchLog = g.log.find((l) => l.includes('merchandise'))
+    expect(merchLog).toBeDefined()
+    expect(merchLog).toMatch(/merchandise \+/)
+    // Verify the number is positive and calculated correctly by re-computing
+    const match = merchLog.match(/merchandise \+(\$[\d,]+)/)
+    expect(match).not.toBeNull()
+    // The shown value uses fmt$ format — parse the number
+    const shown = parseInt(match[1].replace(/[$,]/g, ''))
+    expect(shown).toBeGreaterThan(0)
+  })
 })

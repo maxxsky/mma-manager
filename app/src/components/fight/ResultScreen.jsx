@@ -37,12 +37,22 @@ export default function ResultScreen({ fighter, opp, roundLog, result, totalRoun
 
       {/* Purse breakdown */}
       <div style={{ display: "inline-grid", gridTemplateColumns: "auto auto", gap: "6px 24px", margin: "20px 0", padding: "14px 22px", background: T.bg, borderRadius: T.r, textAlign: "left" }}>
-        {[["Show money", fmt$(show)], ["Win bonus", fmt$(winBonus)], ["Camp cut", fmt$(Math.round(((fighter.contract?.managerCut || 0.18) * (show + winBonus))))], ["Fight of the Night", result.won ? "$50K" : "—"]].map(([l, v], i, arr) => (
-          <div key={l} style={{ display: "contents" }}>
-            <span style={{ fontFamily: T.body, fontSize: 12, color: i === arr.length - 1 ? T.txt : T.txt3, fontWeight: i === arr.length - 1 ? 700 : 400 }}>{l}</span>
-            <span style={{ fontFamily: T.mono, fontSize: 13.5, fontWeight: 700, color: i === arr.length - 1 ? T.pos : T.txt2, textAlign: "right" }}>{v}</span>
-          </div>
-        ))}
+        {(() => {
+          const items = [["Show money", fmt$(show)], ["Win bonus", fmt$(winBonus)], ["Camp cut", fmt$(Math.round(((fighter.contract?.managerCut || 0.18) * (show + winBonus))))]];
+          const titleTier = fighter.booked?.titleTier;
+          if (titleTier === "Major" || titleTier === "Premier") {
+            const oppPop = typeof opp?.popularity === "number" ? opp.popularity : (opp?.level ? Math.round(opp.level * 60) : 30);
+            const ppv = Math.round((fighter.popularity + oppPop) * 200 * (titleTier === "Premier" ? 1.5 : 1));
+            items.push(["PPV Revenue", fmt$(ppv)]);
+          }
+          items.push(["Fight of the Night", result.won ? "$50K" : "—"]);
+          return items.map(([l, v], i, arr) => (
+            <div key={l} style={{ display: "contents" }}>
+              <span style={{ fontFamily: T.body, fontSize: 12, color: i === arr.length - 1 ? T.txt : T.txt3, fontWeight: i === arr.length - 1 ? 700 : 400 }}>{l}</span>
+              <span style={{ fontFamily: T.mono, fontSize: 13.5, fontWeight: 700, color: i === arr.length - 1 ? T.pos : T.txt2, textAlign: "right" }}>{v}</span>
+            </div>
+          ));
+        })()}
       </div>
 
       <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>

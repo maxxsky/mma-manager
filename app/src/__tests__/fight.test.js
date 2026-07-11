@@ -488,4 +488,81 @@ describe('Fight Engine', () => {
       expect(campCut).toBe(200)
     })
   })
+
+  describe('PPV revenue', () => {
+    it('Major title fight: g.cash increases by exact PPV formula value', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const f = g.roster[0]
+      f.popularity = 50
+      f.contract = { managerCut: 0.2, fightsLeft: 3 }
+      const startCash = g.cash
+
+      const opp = { name: 'Champ', level: 1.2, popularity: 40, record: { w: 15, l: 0 } }
+      const fighter = { id: f.id, booked: { show: 2000, winBonus: 1000, opponent: opp, titleTier: 'Major', title: true } }
+      commitFightResult(g, fighter, { won: true, how: 'Submission', r: 3 })
+
+      const purse = 2000 + 1000
+      const campCut = Math.round(0.2 * purse)
+      const ppvRevenue = Math.round((50 + 40) * 200 * 1) // Major = ×1
+      expect(g.cash).toBe(startCash + campCut + ppvRevenue)
+      expect(ppvRevenue).toBe(18000)
+    })
+
+    it('Premier title fight: PPV × 1.5 multiplier', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const f = g.roster[0]
+      f.popularity = 60
+      f.contract = { managerCut: 0.2, fightsLeft: 3 }
+      const startCash = g.cash
+
+      const opp = { name: 'SuperChamp', level: 1.5, popularity: 50, record: { w: 20, l: 0 } }
+      const fighter = { id: f.id, booked: { show: 5000, winBonus: 3000, opponent: opp, titleTier: 'Premier', title: true } }
+      commitFightResult(g, fighter, { won: true, how: 'KO/TKO', r: 2 })
+
+      const purse = 5000 + 3000
+      const campCut = Math.round(0.2 * purse)
+      const ppvRevenue = Math.round((60 + 50) * 200 * 1.5) // Premier = ×1.5
+      expect(g.cash).toBe(startCash + campCut + ppvRevenue)
+      expect(ppvRevenue).toBe(33000)
+    })
+
+    it('non-title fight: no PPV revenue, cash only changes by campCut', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const f = g.roster[0]
+      f.popularity = 50
+      f.contract = { managerCut: 0.2, fightsLeft: 3 }
+      const startCash = g.cash
+
+      const opp = { name: 'Rando', level: 0.8 }
+      const fighter = { id: f.id, booked: { show: 1000, winBonus: 500, opponent: opp } } // no titleTier
+      commitFightResult(g, fighter, { won: true, how: 'Decision', r: 3 })
+
+      const campCut = Math.round(0.2 * (1000 + 500))
+      expect(g.cash).toBe(startCash + campCut) // no PPV addition
+    })
+
+    it('PPV uses opponent level as popularity proxy when opp.popularity not set', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const f = g.roster[0]
+      f.popularity = 50
+      f.contract = { managerCut: 0.2, fightsLeft: 3 }
+      const startCash = g.cash
+
+      // Opponent without popularity field — falls back to level * 60
+      const opp = { name: 'NoPop', level: 0.8 }
+      const fighter = { id: f.id, booked: { show: 1000, winBonus: 500, opponent: opp, titleTier: 'Major', title: true } }
+      commitFightResult(g, fighter, { won: true, how: 'Decision', r: 3 })
+
+      const pPop = 50
+      const oppPop = Math.round(0.8 * 60) // = 48
+      const ppvRevenue = Math.round((pPop + oppPop) * 200 * 1)
+      const campCut = Math.round(0.2 * (1000 + 500))
+      expect(g.cash).toBe(startCash + campCut + ppvRevenue)
+      expect(ppvRevenue).toBe(19600)
+    })
+  })
 })

@@ -16,6 +16,14 @@ export function commitFightResult(g, fighter, result) {
   const campCut = Math.round((f.contract?.managerCut || 0.18) * purse);
   g.cash = (g.cash || 0) + campCut;
 
+  // ── PPV revenue (title fights only) ──
+  if (fighter.booked?.titleTier === "Major" || fighter.booked?.titleTier === "Premier") {
+    const opp = fighter.booked?.opponent;
+    const oppPop = typeof opp?.popularity === "number" ? opp.popularity : (opp?.level ? Math.round(opp.level * 60) : 30);
+    const ppvRevenue = Math.round((f.popularity + oppPop) * 200 * (fighter.booked.titleTier === "Premier" ? 1.5 : 1));
+    g.cash = (g.cash || 0) + ppvRevenue;
+  }
+
   f.booked = null;
 
   // ── Promotion tracking ──
