@@ -13,7 +13,7 @@
 | **Audit Date** | July 2026 |
 | **Auditor** | Santiago (Hermes Agent) |
 | **Knowledge Version** | v1.0 (all 8 documents) |
-| **Code Version** | `2bbbe07` (HEAD, master) |
+| **Code Version** | `3f65de9` (HEAD, master) |
 | **Method** | Design Compliance Audit (re-audit, independent of v1 results) |
 
 ---
@@ -49,6 +49,12 @@
 | No event chains | Events | 🔴 P1 | b69f287, e143f65, e4bceaf |
 | No cross-system Training→Events | Events | 🔴 P1 | f0f9497 |
 | No formal event cooldown | Events | 🔴 P1 | d8f6627 |
+| Financial scaling per tier (coach gating) | Economy | 🔴 P2 | beef621 |
+| Timeline persistence for events | Events | 🔴 P2 | d2c2d27 |
+| Prosperity generator (Economy-positive) | Events | 🔴 P3 | 74cf46d |
+| Event frequency sanity test | Events | 🔴 P2 | 05a9388 |
+| Double-fight guard + test | World | 🔴 P3 | a383e22 |
+| Name uniqueness at scouting | Fighter | 🔴 P3 | 3f65de9 |
 | UNDO/REDO test skipped | Testing | — | 23c6391 |
 | Rival lifecycle untested | Testing | — | 543b3fc |
 
@@ -59,20 +65,13 @@
 ### Medium
 | Finding | Domain | Notes |
 |---------|--------|-------|
-| Timeline persistence for events | Events | Events don't consistently record to timeline |
-| Event frequency calibration | Events | No mechanism to prevent spam/ensure pacing |
-| Financial scaling per camp tier | Economy | Different tiers should have different pressure |
-| Phase order not enforced by test | World | State.js phase order could be accidentally changed |
-| Checkpoint backup system | Save | No automatic backup before milestones |
+| Event frequency — precise calibration target needed | Events | Sanity test exists, design target from Brahma missing |
 
 ### Low
 | Finding | Domain | Notes |
 |---------|--------|-------|
-| Type-specific generators incomplete | Events | Some generator categories missing |
-| AI fighter retirement automation | World | Player-choice dependent |
-| No double-fight invariant test | World | Emergent, not tested |
-| Name uniqueness not enforced | Fighter | Extremely low probability |
-| Form validation incomplete | UI | Remaining input fields |
+| Form validation (remaining input fields) | UI | Needs verification — may not be a real gap |
+| Financial scaling per tier (partial) | Economy | Coach gating done, facility cost balancing TBD |
 
 ---
 
