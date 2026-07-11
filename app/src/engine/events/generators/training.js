@@ -5,6 +5,7 @@ import { PROB_TRAINING_CRISIS } from "../config.js";
 export function generateTrainingEvents(ctx) {
   const events = [];
   if (!ctx.isTrainingCrisis || random() >= PROB_TRAINING_CRISIS) return events;
+  if (ctx.checkCooldown("training_crisis")) return events;
 
   events.push({
     title: "⚠️ Overtraining Merajalela",
@@ -14,5 +15,6 @@ export function generateTrainingEvents(ctx) {
       { label: "Push terus — target lebih penting (chemistry -2)", chem: -2 },
     ],
   });
+  ctx.markCooldown("training_crisis");
   return events;
 }

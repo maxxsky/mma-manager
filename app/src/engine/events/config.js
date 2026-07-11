@@ -15,6 +15,7 @@ export const FLAG_DURATIONS = {
 
 // ── Event timing ──
 export const EVENT_INTERVAL = 8; // weeks between event generation cycles
+export const EVENT_COOLDOWN_WEEKS = 16; // min jarak minggu sebelum event tipe sama boleh muncul lagi
 
 // ── Camp state thresholds ──
 export const HIGH_MORALE_MIN = 75;

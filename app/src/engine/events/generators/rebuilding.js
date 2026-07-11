@@ -5,6 +5,7 @@ import { PROB_REBUILD_MENTOR } from "../config.js";
 export function generateRebuildingEvents(ctx) {
   const events = [];
   if (!ctx.isRebuilding || !ctx.anyVeteran || random() >= PROB_REBUILD_MENTOR) return events;
+  if (ctx.checkCooldown("rebuilding")) return events;
 
   const vet = ctx.pickVeteran();
   const rook = ctx.pickRookie(vet?.id);
@@ -17,6 +18,7 @@ export function generateRebuildingEvents(ctx) {
         { label: "Biarkan alami", chem: 2 },
       ],
     });
+    ctx.markCooldown("rebuilding");
   }
   return events;
 }

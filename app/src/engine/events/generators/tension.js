@@ -5,6 +5,7 @@ import { PROB_TENSION } from "../config.js";
 export function generateTensionEvents(ctx) {
   const events = [];
   if (!ctx.isInternalTension || random() >= PROB_TENSION || ctx.rosterSize < 2) return events;
+  if (ctx.checkCooldown("tension")) return events;
 
   const [a, b] = ctx.pickRandomPair();
   if (a && b) {
@@ -16,6 +17,7 @@ export function generateTensionEvents(ctx) {
         { label: "Pisahkan mereka", chem: 1, moraleTo: { id: a.id, amt: -3 } },
       ],
     });
+    ctx.markCooldown("tension");
   }
   return events;
 }

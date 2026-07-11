@@ -5,8 +5,9 @@ import { PROB_TIER_EVENT } from "../config.js";
 export function generateTierEvents(ctx) {
   const events = [];
   const pool = ctx.tierEvents;
-  if (pool.length > 0 && random() < PROB_TIER_EVENT) {
+  if (pool.length > 0 && random() < PROB_TIER_EVENT && !ctx.checkCooldown("tier")) {
     events.push(pick(pool));
+    ctx.markCooldown("tier");
   }
   return events;
 }

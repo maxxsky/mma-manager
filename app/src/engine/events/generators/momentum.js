@@ -5,6 +5,7 @@ import { PROB_MOMENTUM_SPONSOR } from "../config.js";
 export function generateMomentumEvents(ctx) {
   const events = [];
   if (!ctx.isWinningMomentum || random() >= PROB_MOMENTUM_SPONSOR) return events;
+  if (ctx.checkCooldown("momentum")) return events;
 
   events.push({
     title: "Sponsor tertarik",
@@ -14,5 +15,6 @@ export function generateMomentumEvents(ctx) {
       { label: "Fokus ke pertarungan dulu", chem: 1 },
     ],
   });
+  ctx.markCooldown("momentum");
   return events;
 }

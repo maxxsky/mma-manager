@@ -5,6 +5,7 @@ import { PROB_PRESSURE } from "../config.js";
 export function generatePressureEvents(ctx) {
   const events = [];
   if (!ctx.isUnderPressure || random() >= PROB_PRESSURE) return events;
+  if (ctx.checkCooldown("pressure")) return events;
 
   events.push({
     title: "Di bawah tekanan",
@@ -14,5 +15,6 @@ export function generatePressureEvents(ctx) {
       { label: "Jujur soal kondisi", chem: -1, cash: 0 },
     ],
   });
+  ctx.markCooldown("pressure");
   return events;
 }

@@ -10,6 +10,7 @@ import {
   REBUILDING_MAX_FIGHTS, REBUILDING_RATIO, REBUILDING_MIN_ROSTER, REBUILDING_CLEAR,
   PRESSURE_CASH_MAX, PRESSURE_REP_MAX, PRESSURE_MIN_WEEK, PRESSURE_CASH_CLEAR,
   TRAINING_CRISIS_OT_THRESHOLD, TRAINING_CRISIS_RATIO,
+  EVENT_COOLDOWN_WEEKS,
 } from "./config.js";
 
 // ── CAMP STATE ──
@@ -73,6 +74,18 @@ export function hasCampState(g, state) {
   return g?._campState?.[state] === true;
 }
 
+// ── EVENT COOLDOWN ──
+
+export function isOnCooldown(g, key) {
+  const last = g._eventCooldowns?.[key];
+  return last != null && (g.week - last) < EVENT_COOLDOWN_WEEKS;
+}
+
+export function markCooldown(g, key) {
+  if (!g._eventCooldowns) g._eventCooldowns = {};
+  g._eventCooldowns[key] = g.week;
+}
+
 // ── EVENT CONTEXT ──
 
 import { TIER_EVENTS } from "./config.js";
@@ -99,5 +112,7 @@ export function createEventContext(g) {
     coaches: g.coaches || [],
     rosterSize: g.roster?.length || 0,
     week: g.week,
+    checkCooldown: (key) => isOnCooldown(g, key),
+    markCooldown: (key) => markCooldown(g, key),
   };
 }
