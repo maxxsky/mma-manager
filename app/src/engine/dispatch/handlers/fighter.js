@@ -1,6 +1,7 @@
 // Fighter handlers — release, retire, convince, toCoach, morale, poach counter, promises
 import { clamp, uid } from "../../rng.js";
 import { vacateTitle } from "../../rankings.js";
+import { recordRetirement } from "../../world/history.js";
 import { avgSkill } from "../../fighter.js";
 import { checkHallOfFame } from "../../dynasty.js";
 
@@ -18,6 +19,7 @@ export function registerFighterHandlers(register) {
     const f = g.roster.find((x) => x.id === c.retire);
     if (!f) return;
     vacateTitle(g, f);
+    recordRetirement(g, g.week, f.weightClass, f.name);
     const hof = checkHallOfFame(f, g);
     if (hof) {
       g.log.unshift(`🏛️ ${f.name} inducted into the Hall of Fame!`);

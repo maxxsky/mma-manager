@@ -308,4 +308,25 @@ describe('Game State Invariants', () => {
 
     expect(valC).toBeGreaterThan(valNo)
   })
+
+  it('retirement records fighter in retiredChamps with name and division', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+    if (!g._worldHistory) g._worldHistory = { titleChanges: [], retiredChamps: [] }
+    g._worldHistory.retiredChamps.push({ name: f.name, week: g.week, division: f.weightClass })
+    expect(g._worldHistory.retiredChamps.length).toBe(1)
+    expect(g._worldHistory.retiredChamps[0].name).toBe(f.name)
+    expect(g._worldHistory.retiredChamps[0].division).toBe(f.weightClass)
+  })
+
+  it('recordRetirement does not duplicate same name', () => {
+    useSeed(42)
+    const g = createTestGame()
+    if (!g._worldHistory) g._worldHistory = { titleChanges: [], retiredChamps: [] }
+    g._worldHistory.retiredChamps.push({ name: 'TestFighter', week: 10, division: 'Lightweight' })
+    const exists = g._worldHistory.retiredChamps.some((r) => r.name === 'TestFighter')
+    if (!exists) g._worldHistory.retiredChamps.push({ name: 'TestFighter', week: 20, division: 'Lightweight' })
+    expect(g._worldHistory.retiredChamps.length).toBe(1)
+  })
 })

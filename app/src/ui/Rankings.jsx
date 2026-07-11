@@ -285,6 +285,24 @@ export default function Rankings({ g, t }) {
         );
       })()}
 
+      {/* ── Retired Legends ── */}
+      {g._worldHistory?.retiredChamps && (() => {
+        const divRetired = g._worldHistory.retiredChamps.filter((r) => r.division === selDiv).slice(-5).reverse();
+        if (divRetired.length === 0) return null;
+        return (
+          <Panel style={{ marginTop: 12 }}>
+            <Eyebrow>{t("UI.retiredLegends") || "🎗️ Retired Legends"} — {selDiv}</Eyebrow>
+            {divRetired.map((r, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: i < divRetired.length - 1 ? `1px solid ${T.line}22` : "none" }}>
+                <span style={{ fontFamily: T.mono, fontSize: 10, color: T.txt3, minWidth: 32 }}>W{r.week}</span>
+                <span style={{ fontSize: 13 }}>🎗️</span>
+                <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt2 }}>{r.name}</span>
+              </div>
+            ))}
+          </Panel>
+        );
+      })()}
+
       {/* ── Ranking Table ── */}
       <Panel pad={0} style={{ marginTop: 12, overflow: "hidden" }} role="table" aria-label={`${selDiv} ranking table`}>
         {/* Table header */}
