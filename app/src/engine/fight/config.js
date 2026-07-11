@@ -4,6 +4,7 @@
 // Round structure
 export const EXCHANGES_PER_ROUND = { min: 8, max: 12 };
 export const ROUND_LENGTH = { min: 5, sec: 0 }; // 5:00
+export const ROUND_COMMENTARY_SECONDS = 270; // 4.5 menit — buffer sebelum bel di menit ke-5
 
 // Stamina weights
 export const STA_BASE_WEIGHT = 0.45;

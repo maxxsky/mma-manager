@@ -94,8 +94,12 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
   const nEx = RI(CFG.EXCHANGES_PER_ROUND.min, CFG.EXCHANGES_PER_ROUND.max);
   for (let ex = 0; ex < nEx; ex++) {
     if (finish) break;
-    const exMin = Math.floor(ex * 4.5 / nEx);
-    const exSec = Math.floor((ex * 60 / nEx) % 60);
+    // Satu nilai waktu kontinu (bukan 2 skala terpisah yang gak nyambung),
+    // biar progresi antar-exchange rata & gak collision. 270 detik (4.5 menit)
+    // sengaja disisain buffer sebelum bel wasit di menit ke-5.
+    const totalExSec = Math.floor((ex * CFG.ROUND_COMMENTARY_SECONDS) / nEx);
+    const exMin = Math.floor(totalExSec / 60);
+    const exSec = totalExSec % 60;
 
     const exType = pickExchange(position, A, B, planA);
     let exDmgA = 0, exDmgB = 0; // damage dari exchange INI SAJA (bukan kumulatif round)
