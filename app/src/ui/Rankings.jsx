@@ -49,7 +49,7 @@ export default function Rankings({ g, t }) {
       (f) =>
         f.weightClass === selDiv &&
         (f.rankPoints || 0) > 0 &&
-        !(champ.player && champ.fighterId === f.id)
+        !(champ?.player && champ?.fighterId === f.id)
     )
     .map((f) => ({
       name: f.name,
@@ -76,7 +76,7 @@ export default function Rankings({ g, t }) {
     (f) =>
       f.weightClass === selDiv &&
       !(f.rankPoints > 0) &&
-      !(champ.player && champ.fighterId === f.id)
+      !(champ?.player && champ?.fighterId === f.id)
   );
 
   // ── P4P Top 10 (cross-division) ──

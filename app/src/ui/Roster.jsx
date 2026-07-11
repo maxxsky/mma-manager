@@ -37,7 +37,7 @@ export default function Roster({ g, setTab, up, dispatch }) {
         const ac = ARCH_COLOR[f.archetype];
         const r = rankOf(g, f);
         const div = g.divisions && g.divisions[f.weightClass];
-        const isChamp = div && div.champ.player && div.champ.fighterId === f.id;
+        const isChamp = div && div.champ && div.champ.player && div.champ.fighterId === f.id;
         return (
           <div key={f.id} className="row" onClick={() => { setDetailFighter(f); }}
             role="row" aria-label={`${f.name} - ${f.weightClass}`}

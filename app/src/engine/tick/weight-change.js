@@ -15,7 +15,7 @@ export function tickWeightChange(g) {
     const wcIdx = WEIGHTS.findIndex((w) => w.name === f.weightClass);
     const streakW = f.record.w > 0 && f.streakL === 0 ? f.record.w : 0;
     const r = rankOf(g, f);
-    const isChamp = div && div.champ.player && div.champ.fighterId === f.id;
+    const isChamp = div && div.champ && div.champ.player && div.champ.fighterId === f.id;
 
     let direction = null;
     let reason = "";
@@ -49,7 +49,7 @@ export function tickWeightChange(g) {
       chance = 35;
       if (f.ambition === "Legacy") chance = 70;
     }
-    if (!isChamp && r && r <= 3 && div && div.champ.fighterId && wcIdx < WEIGHTS.length - 1 && !direction) {
+    if (!isChamp && r && r <= 3 && div && div.champ && div.champ.fighterId && wcIdx < WEIGHTS.length - 1 && !direction) {
       const champ = g.roster.find((x) => x.id === div.champ.fighterId);
       if (champ && champ.injury && champ.injury.weeks >= 12) {
         direction = "up";

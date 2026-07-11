@@ -9,7 +9,7 @@ export function tickFightOffers(g) {
   g.roster.forEach((f) => {
     // ── Defense escalation (sebelum guard injury/booked — strip tetap jalan walau cedera) ──
     const div = g.divisions[f.weightClass];
-    const isChamp = div && div.champ.player && div.champ.fighterId === f.id;
+    const isChamp = div && div.champ && div.champ.player && div.champ.fighterId === f.id;
     if (isChamp) {
       const lastDef = div.champ.lastDefenseWeek || f.lastFightWeek || 0;
       // Escalation warning: 28 minggu tanpa defense (tidak perlu < 32 — chemistry bisa skip fight-offers)
@@ -212,7 +212,7 @@ export function tickFightOffers(g) {
       else if (f.streakW >= 3) oppIdx = clamp(oppIdx + RI(1, 2), 0, 14);
 
       let opp, oppRank = null, contenderId = null;
-      if (titleTier === "Major") {
+      if (titleTier === "Major" && div && div.champ) {
         const worldYear = Math.floor(g.week / 48);
         const aiScale = worldYear > 5 ? clamp(1.45 + (worldYear - 5) * 0.02, 1.45, 1.7) : 1.45;
         opp = genFighter(aiScale); opp.name = div.champ.name; oppRank = 0;
