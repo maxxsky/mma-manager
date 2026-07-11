@@ -124,6 +124,7 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
             <Meter label="Morale" v={f.morale} color={f.morale > 60 ? T.pos : T.warn} />
             <Meter label="Overtraining" v={f.overtraining} color={f.overtraining > 50 ? T.neg : T.txt3} />
             <Meter label="Popularity" v={f.popularity} color={T.steel} />
+            <Meter label="Loyalty" v={f.loyalty ?? 50} color={f.loyalty >= 60 ? T.pos : T.warn} />
           </div>
           {f.contract && (
             <>

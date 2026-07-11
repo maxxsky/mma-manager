@@ -101,7 +101,7 @@ export function tickRivals(g) {
   if (g.week % 8 === 0 && g.roster.length > 0) {
     const r = pick(g.rivals);
     const available = g.roster.filter(
-      (f) => !f.booked && !f.injury && f.morale < 70 &&
+      (f) => !f.booked && !f.injury && f.morale < 70 && f.loyalty < 60 &&
         f.contract && f.contract.fightsLeft > 0,
     );
     if (available.length > 0 && r.rivalry > 15) {

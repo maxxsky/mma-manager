@@ -406,10 +406,29 @@ describe('Fight Engine', () => {
 
     it('genRivalCamp Elite Stable produces philosophy.id === "elite"', () => {
       const { genRivalCamp } = require('../engine/rivals.js')
-      // Can't control random pick, just test that the field exists
       const camp = genRivalCamp(0)
       expect(camp.philosophy).toBeDefined()
       expect(['elite', 'balanced']).toContain(camp.philosophy.id)
+    })
+  })
+
+  describe('loyalty', () => {
+    it('fighter with loyalty >= 60 is filtered from poach pool', () => {
+      const loyal = { booked: false, injury: false, morale: 50, loyalty: 80, contract: { fightsLeft: 3 } }
+      const disloyal = { booked: false, injury: false, morale: 50, loyalty: 30, contract: { fightsLeft: 3 } }
+      const loyalEligible = !loyal.booked && !loyal.injury && loyal.morale < 70 && loyal.loyalty < 60 && loyal.contract && loyal.contract.fightsLeft > 0
+      const disloyalEligible = !disloyal.booked && !disloyal.injury && disloyal.morale < 70 && disloyal.loyalty < 60 && disloyal.contract && disloyal.contract.fightsLeft > 0
+      expect(loyalEligible).toBe(false)
+      expect(disloyalEligible).toBe(true)
+    })
+
+    it('save migration defaults loyalty to 50', () => {
+      const f = {}
+      f.loyalty = f.loyalty ?? 50
+      expect(f.loyalty).toBe(50)
+      const f2 = { loyalty: 75 }
+      f2.loyalty = f2.loyalty ?? 50
+      expect(f2.loyalty).toBe(75)
     })
   })
 })

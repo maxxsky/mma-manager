@@ -43,7 +43,7 @@ export function genFighter(level, regionName) {
     age: RI(18, 31), region, archetype,
     weightClass: wc.name, natWeight: Math.round(wc.limit * R(1.0, 1.09)),
     attrs, ceilings, traits,
-    morale: RI(55, 80), popularity: RI(0, 25), overtraining: 0,
+    morale: RI(55, 80), popularity: RI(0, 25), loyalty: RI(30, 80), overtraining: 0,
     injury: null,
     training: { type: "conditioning", intensity: "Medium" },
     booked: null,

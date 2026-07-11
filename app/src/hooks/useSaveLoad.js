@@ -60,6 +60,7 @@ export function useSaveLoad(setG) {
             if (!f.rivalries) f.rivalries = {};
             f.giantKills = f.giantKills || 0;
             f.titleDefenses = f.titleDefenses || 0;
+            f.loyalty = f.loyalty ?? 50;
             f.firstFightWeek = f.firstFightWeek || null;
             f.reignHistory = f.reignHistory || [];
             if (f.booked && f.booked.seed == null) f.booked.seed = (Math.random() * 2**31) | 0;
