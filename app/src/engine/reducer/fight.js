@@ -8,7 +8,7 @@ export function reduceFight(g, action) {
   switch (action.type) {
     case "ACCEPT_FIGHT": {
       const nf = g.roster.find((x) => x.id === action.fighterId);
-      if (nf) {
+      if (nf && !nf.booked) {
         nf.booked = {
           opponent: action.opponent, weeksLeft: action.weeks,
           show: action.show, winBonus: action.winBonus,
@@ -24,7 +24,7 @@ export function reduceFight(g, action) {
     }
     case "COUNTER_FIGHT": {
       const nf2 = g.roster.find((x) => x.id === action.fighterId);
-      if (nf2) {
+      if (nf2 && !nf2.booked) {
         nf2.booked = {
           opponent: action.opponent, weeksLeft: action.weeks,
           show: action.boosted, winBonus: action.boostedWin,
