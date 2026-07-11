@@ -3,7 +3,7 @@ import { fmt$ } from "../engine/rng.js";
 import { ARCH_COLOR, TRAINING, INTENSITY } from "../engine/data.js";
 import { avgSkill } from "../engine/fighter.js";
 import { reducer } from "../engine/reducer.js";
-import { getStoryTags } from "../engine/career.js";
+import { getStoryTags, getLifecyclePhase } from "../engine/career.js";
 import { generateFighterNickname } from "../engine/identity.js";
 import { getTrainingCycle, getCoachRecommendation, getDevelopmentPhilosophy, getTrainingIdentity, saveLastTraining } from "../engine/training-philosophy.js";
 import { getCoachArchetypeSynergy, getFightStyleSummary, getArchetypeBehavior } from "../engine/archetype-expression.js";
@@ -88,6 +88,15 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
                 Ambition: <b style={{ color: T.gold }}>{f.ambition}</b></span>
             </div>
           )}
+          {/* Lifecycle phase */}
+          {(() => {
+            const lc = getLifecyclePhase(f);
+            return (
+              <div style={{ marginBottom: 8 }}>
+                <Tag color={T.steel} title={lc.desc}>{lc.label}</Tag>
+              </div>
+            );
+          })()}
           {/* Career story tags */}
           {(() => {
             const tags = getStoryTags(f);

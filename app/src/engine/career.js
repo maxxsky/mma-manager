@@ -5,6 +5,7 @@
 
 import { clamp } from "./rng.js";
 import { queueDelayedEvent } from "./events.js";
+import { AGE_YOUNG, AGE_PEAK_LOW, AGE_VETERAN, AGE_OLD } from "./fight/config.js";
 
 // ── CAREER HISTORY ──
 
@@ -302,4 +303,18 @@ export function updateRivalryResult(winner, loser, g) {
 
   if (loser.rivalries[lKey]) loser.rivalries[lKey].losses++;
   else loser.rivalries[lKey] = { count: 1, wins: 0, losses: 1 };
+}
+
+// ── LIFECYCLE PHASE ──
+
+// Formal lifecycle phase — non-invasive, hanya untuk display/UI.
+// Pakai band usia yang sama dengan CFG.AGE_* di fight/config.js (dipakai buat
+// performance multiplier), jadi phase ini konsisten dengan efek performa nyata.
+export function getLifecyclePhase(f) {
+  const age = f.age || 25;
+  if (age <= AGE_YOUNG) return { phase: "rookie", label: "Rookie", desc: "Baru mulai, potensi belum teruji." };
+  if (age < AGE_PEAK_LOW) return { phase: "rising", label: "Rising", desc: "Berkembang menuju performa puncak." };
+  if (age < AGE_VETERAN) return { phase: "prime", label: "Prime", desc: "Di puncak karir." };
+  if (age < AGE_OLD) return { phase: "veteran", label: "Veteran", desc: "Berpengalaman, mulai menurun perlahan." };
+  return { phase: "declining", label: "Declining", desc: "Fase akhir karir — waktunya terbatas." };
 }
