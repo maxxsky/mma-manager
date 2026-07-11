@@ -144,3 +144,23 @@ describe('Calibration — Upset Rate (Combat)', () => {
     expect(upsetRate).toBeLessThan(0.15)
   })
 })
+
+describe('Calibration — Event Frequency Sanity (seed=42)', () => {
+  it('state-driven events fire at a sane rate (neither silent nor spammy) over 2 years', () => {
+    useSeed(42)
+    const g = createTestGame()
+    let inboxGrowth = 0
+    for (let i = 0; i < 104; i++) {
+      const before = g.inbox.length
+      tick(g)
+      const after = g.inbox.length
+      if (after > before) inboxGrowth += (after - before)
+    }
+    // Ini total SEMUA pesan inbox baru (event generator + milestone + kontrak +
+    // sponsor + dll), bukan murni 9 generator — jadi band-nya sengaja lebar.
+    // Tujuan: nangkep regresi ekstrim (inbox meledak / berhenti total ngasih pesan),
+    // bukan mastiin angka presisi "ideal" (itu keputusan desain terpisah).
+    expect(inboxGrowth).toBeGreaterThan(10)
+    expect(inboxGrowth).toBeLessThan(300)
+  })
+})
