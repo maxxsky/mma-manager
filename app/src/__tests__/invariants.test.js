@@ -281,4 +281,31 @@ describe('Game State Invariants', () => {
     const hasBonusLog = g.log.some((l) => l.includes('champion bonus') && l.includes('10,000'))
     expect(hasBonusLog).toBe(true)
   })
+
+  it('sponsor income multiplied by 1.5 when camp has a Major World Champion', () => {
+    useSeed(42)
+    const g = createTestGame()
+    g.cash = 999999
+    g.sponsors = [{ brand: 'FightFist Gear', terms: 'placement', rate: 200, weeksLeft: 48 }]
+    g.rep = 50
+
+    for (let i = 0; i < 4; i++) tick(g)
+    const logNoChamp = g.log.find((l) => l.includes('Settlement'))
+    const matchNo = logNoChamp?.match(/sponsor \+([$\d,]+)/)
+    const valNo = matchNo ? parseInt(matchNo[1].replace(/[$,]/g,'')) : 0
+
+    useSeed(42)
+    const g2 = createTestGame()
+    g2.cash = 999999
+    g2.sponsors = [{ brand: 'FightFist Gear', terms: 'placement', rate: 200, weeksLeft: 48 }]
+    g2.rep = 50
+    g2.roster[0].titles = ['Major World Champion']
+
+    for (let i = 0; i < 4; i++) tick(g2)
+    const logChamp = g2.log.find((l) => l.includes('Settlement'))
+    const matchC = logChamp?.match(/sponsor \+([$\d,]+)/)
+    const valC = matchC ? parseInt(matchC[1].replace(/[$,]/g,'')) : 0
+
+    expect(valC).toBeGreaterThan(valNo)
+  })
 })

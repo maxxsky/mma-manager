@@ -23,10 +23,12 @@ export function tickSettlement(g) {
   // Multi-sponsor settlement
   if (g.sponsors && g.sponsors.length > 0) {
     sponsorAmt = 0;
+    const hasChampion = g.roster?.some((f) => f.titles?.includes("Major World Champion"));
     g.sponsors.forEach((sp) => {
       const brand = SPONSOR_BRANDS.find((b) => b.name === sp.brand);
       if (!brand) return;
       let rate = sp.rate || brand.baseRate;
+      if (hasChampion) rate = Math.round(rate * 1.5);
       if (sp.terms === "royalty") {
         // royalty: hitung bonus dari kemenangan bulan ini + boost
         const wins = g.roster.filter((f) => f.lastFightWeek && g.week - f.lastFightWeek <= 4 && f.record.w > 0).length;
