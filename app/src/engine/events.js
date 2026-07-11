@@ -13,6 +13,7 @@ import { generateMomentumEvents } from "./events/generators/momentum.js";
 import { generateRebuildingEvents } from "./events/generators/rebuilding.js";
 import { generatePressureEvents } from "./events/generators/pressure.js";
 import { generateTrainingEvents } from "./events/generators/training.js";
+import { addTimelineEvent } from "./narrative/timeline.js";
 import { generateCoachEvents } from "./events/generators/coach.js";
 import { generateFighterEvents } from "./events/generators/fighter.js";
 
@@ -118,6 +119,7 @@ export function processEventSystem(g) {
       title: ev.title, body: ev.body,
       choices: ev.choices || [{ label: "OK", chem: 0 }],
     });
+    addTimelineEvent(g, { type: "event", title: ev.title, detail: ev.body });
   });
 
   return all.length;
