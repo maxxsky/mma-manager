@@ -75,6 +75,24 @@ export function processFightResult(f, g, result) {
       f.milestone10Wins = true;
       recordMilestone(f, week, "streak_10", "10-fight win streak");
       events.push({ type: "milestone", title: `⚡ Dominant`, body: `${f.name} tak terkalahkan dalam 10 pertarungan terakhir!` });
+
+      queueDelayedEvent(g, {
+        title: "🌟 Status Ikon",
+        body: `${f.name} mulai dikenal luas — rekor 10-win streak jadi buah bibir komunitas MMA.`,
+        choices: [
+          { label: "Manfaatkan momentum (rep +8)", rep: 8 },
+          { label: "Tetap rendah hati (chemistry +4)", chem: 4 },
+        ],
+      }, 3);
+
+      queueDelayedEvent(g, {
+        title: "💰 Tawaran Investor",
+        body: `Investor tertarik suntik modal besar ke camp karena reputasi ${f.name}.`,
+        choices: [
+          { label: "Terima modal ($40,000)", cash: 40000 },
+          { label: "Tolak — jaga independensi (chemistry +3)", chem: 3 },
+        ],
+      }, 6);
     }
   }
 
