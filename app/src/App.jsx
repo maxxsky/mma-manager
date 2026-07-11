@@ -36,6 +36,7 @@ import GameOverBanner from "./components/GameOverBanner.jsx";
 import WeeklySummary from "./components/WeeklySummary.jsx";
 import FightCard from "./components/FightCard.jsx";
 import Achievements from "./ui/Achievements.jsx";
+import WorldNews from "./ui/WorldNews.jsx";
 import Dynasty from "./ui/Dynasty.jsx";
 import { rememberTab, getLastTab } from "./ui/ui-utils.js";
 import { saveGame } from "./services/saveService.js";
@@ -89,7 +90,7 @@ export default function App() {
     dispatch({ type: "SCOUT", cost, fighter: f, report: makeReport(f, grade), grade, method: label });
   };
 
-  const tabLabel = { dashboard: t("UI.camp"), roster: t("UI.roster"), rank: t("UI.rank"), scout: t("UI.scout"), inbox: `Inbox${g.inbox?.length ? ` ${g.inbox.length}` : ""}`, finance: "KEUANGAN", mgmt: t("UI.staff"), rivals: t("UI.rival"), achievements: "ACHIEVEMENTS", dynasty: "DYNASTY" }[tab] || "Dashboard";
+  const tabLabel = { dashboard: t("UI.camp"), roster: t("UI.roster"), rank: t("UI.rank"), scout: t("UI.scout"), inbox: `Inbox${g.inbox?.length ? ` ${g.inbox.length}` : ""}`, finance: "KEUANGAN", mgmt: t("UI.staff"), rivals: t("UI.rival"), achievements: "ACHIEVEMENTS", dynasty: "DYNASTY", world: "World" }[tab] || "Dashboard";
 
   const tier = CAMP_TIERS[g.campTier || 0];
   const fightFighter = activeFight ? g.roster?.find((f) => f.id === activeFight) : null;
@@ -150,6 +151,7 @@ export default function App() {
           {tab === "mgmt" && <Facility g={g} dispatch={dispatch} coachCap={tier.coachCap} rosterCap={tier.rosterCap} />}
           {tab === "finance" && <Finance g={g} />}
           {tab === "achievements" && <Achievements g={g} />}
+          {tab === "world" && <WorldNews g={g} />}
           {tab === "dynasty" && <Dynasty g={g} />}
 
           {/* Weekly summary overlay */}

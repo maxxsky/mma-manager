@@ -100,7 +100,7 @@ export function tick(g) {
   // Phase 8: World simulation — returns events, deliver to inbox
   const worldEvents = worldTick(g);
   worldEvents.forEach((ev) => {
-    g.inbox.unshift({ id: uid(), type: "event", title: ev.title, body: ev.body, choices: [{ label: "OK", chem: 0 }] });
+    g.inbox.unshift({ id: uid(), type: "world", severity: ev.severity || "minor", title: ev.title, body: ev.body, choices: [{ label: "OK", chem: 0 }] });
   });
   processEventSystem(g);
   trackCoachCareer(g);

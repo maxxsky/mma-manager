@@ -10,7 +10,8 @@ import { random } from "../engine/rng.js";
 ============================================================================= */
 
 export default function Inbox({ g, dispatch, setTab }) {
-  if (!g.inbox || g.inbox.length === 0) {
+  const displayInbox = (g.inbox || []).filter((m) => m.type !== "world");
+  if (displayInbox.length === 0) {
     return (
       <Panel style={{ textAlign: "center", padding: "40px 20px" }}>
         <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.6 }}>✉</div>
@@ -23,7 +24,7 @@ export default function Inbox({ g, dispatch, setTab }) {
   }
 
   // Sort: urgent first — title defenses > expiring soon > fight offers > events
-  const sorted = [...g.inbox].sort((a, b) => {
+  const sorted = [...displayInbox].sort((a, b) => {
     const urgentA =
       (a.defense ? 3 : 0) +
       (a.expires != null && a.expires <= 2 ? 2 : 0) +

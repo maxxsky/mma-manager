@@ -245,5 +245,16 @@ export function worldTick(g) {
   const healthEvents = maintainDivisions(g);
   events.push(...healthEvents);
 
+  // Assign severity based on content
+  events.forEach((ev) => {
+    if (ev.severity) return; // already set
+    const t = ev.title || "";
+    if (t.includes("New") || t.includes("Champion") || t.includes("retire") || t.includes("Breakthrough")) {
+      ev.severity = "major";
+    } else {
+      ev.severity = "minor";
+    }
+  });
+
   return events;
 }
