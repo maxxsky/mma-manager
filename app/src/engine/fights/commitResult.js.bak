@@ -3,7 +3,6 @@ import { clamp, uid } from "../rng.js";
 import { processFightResult, processRivalry, updateRivalryResult, processTitleChange } from "../career.js";
 import { queueDelayedEvent } from "../events.js";
 import { TITLE_CELEBRATION_DELAY_WEEKS, TITLE_SPONSOR_DELAY_WEEKS } from "../events/config.js";
-import { recordEra } from "../world/history.js";
 
 /** Commit fight result to game state. Called from FightNight done() callback. */
 export function commitFightResult(g, fighter, result) {
@@ -45,22 +44,10 @@ export function commitFightResult(g, fighter, result) {
         if (wasAlreadyChamp) {
           // Defense — update in-place, preserve wonWeek
           div.champ.titleDefenses = (div.champ.titleDefenses || 0) + 1;
-          // ── Era progression: start on 3rd defense, update thereafter ──
-          if (div.champ.titleDefenses === 3 && !div.era) {
-            div.era = { championName: f.name, startedWeek: g.week, defenses: 3 };
-          } else if (div.era) {
-            div.era.defenses = div.champ.titleDefenses;
-          }
           div.champ.lastDefenseWeek = g.week;
           if (!div.champ.promotionId) div.champ.promotionId = fighter.booked?.promotionId || null;
           g.log.unshift(`🛡️ ${f.name} berhasil pertahankan gelar ${f.weightClass}.`);
         } else {
-          // ── Era ends if active (previous champion loses title) ──
-          if (div.era) {
-            g.inbox.unshift({ id: uid(), type: "world", severity: "major", title: `The ${div.era.championName} Era Ends`, body: `${div.era.championName}'s era of dominance in ${f.weightClass} has come to an end after ${div.era.defenses} title defenses.` });
-            recordEra(g, div.era.championName, f.weightClass, div.era.startedWeek, g.week, div.era.defenses);
-            div.era = null;
-          }
           // New reign — create fresh champ object
           div.champ = { name: f.name, player: true, fighterId: f.id, wonWeek: g.week, lastDefenseWeek: g.week, titleDefenses: 0, promotionId: fighter.booked?.promotionId || null };
           if (!f.reignHistory) f.reignHistory = [];

@@ -242,11 +242,6 @@ export default function Rankings({ g, t }) {
               <div style={{ fontSize: 10, color: T.txt3, marginTop: 2 }}>
                 Juara sejak minggu {champ.wonWeek ?? "?"} · {champ.titleDefenses ?? 0}x defense
               </div>
-              {div.era && (
-                <div style={{ fontSize: 10, color: T.gold, marginTop: 3, fontStyle: "italic", fontWeight: 600 }}>
-                  The {div.era.championName} Era — {div.era.defenses} defenses and counting
-                </div>
-              )}
               {champ.promotionId && (() => {
                 const prom = g.promotions?.find((p) => p.id === champ.promotionId);
                 return prom ? (

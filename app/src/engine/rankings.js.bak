@@ -2,7 +2,6 @@ import { R, RI, clamp, pick, uid } from "./rng.js";
 import { WEIGHTS } from "./data.js";
 import { genFighter } from "./fighter.js";
 import { genBio } from "./fighter.js";
-import { recordEra } from "./world/history.js";
 
 // ---------- divisions & rankings ----------
 export function genDivisions() {
@@ -36,12 +35,6 @@ export function rankOf(g, f) {
 export function vacateTitle(g, f) {
   const div = g.divisions && g.divisions[f.weightClass];
   if (div && div.champ && div.champ.player && div.champ.fighterId === f.id) {
-    // ── Era ends if active ──
-    if (div.era) {
-      g.inbox.unshift({ id: uid(), type: "world", severity: "major", title: `The ${div.era.championName} Era Ends`, body: `${div.era.championName}'s era of dominance in ${f.weightClass} has come to an end after ${div.era.defenses} title defenses.` });
-      recordEra(g, div.era.championName, f.weightClass, div.era.startedWeek, g.week, div.era.defenses);
-      div.era = null;
-    }
     div.champ = null;
     g.log.unshift(`👑 Title ${f.weightClass} kosong — akan diperebutkan.`);
   }
