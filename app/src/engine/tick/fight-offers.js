@@ -76,33 +76,6 @@ export function tickFightOffers(g) {
         `🛡️ Mandatory defense untuk ${f.name} tiba — tolak atau biarkan expire = title dicopot.`,
       );
     }
-    // Double Champ attempt: champion can challenge adjacent division champion
-    const wcIdx = WEIGHTS.findIndex((w) => w.name === f.weightClass);
-    if (wcIdx >= 0 && g.week % 12 === 0 && random() < 0.20) {
-      const targets = [];
-      if (wcIdx > 0) targets.push(wcIdx - 1); // weight class below
-      if (wcIdx < WEIGHTS.length - 1) targets.push(wcIdx + 1); // weight class above
-      for (const t of targets) {
-        const tDiv = g.divisions[WEIGHTS[t].name];
-        if (tDiv && tDiv.champ && !tDiv.champ.player && !f.titles.includes("Double Champion")) {
-          const worldYear2 = Math.floor(g.week / 48);
-          const superScale = worldYear2 > 5 ? clamp(1.45 + (worldYear2 - 5) * 0.02, 1.45, 1.7) : 1.45;
-          const superOpp = genFighter(superScale);
-          superOpp.name = tDiv.champ.name; superOpp.archetype = tDiv.champ.archetype;
-          superOpp.weightClass = WEIGHTS[t].name;
-          superOpp.record = { w: RI(15, 22), l: RI(0, 2), ko: 0, sub: 0, dec: 0 };
-          g.inbox.unshift({
-            id: uid(), type: "offer", fighterId: f.id, expires: 4,
-            tier: "Premier", show: RI(250, 500) * 1000, winBonus: RI(250, 500) * 1000,
-            opponent: superOpp, title: true, defense: false, oppRank: 0,
-            titleTier: "Major", titleText: "👑👑 DOUBLE CHAMP ATTEMPT — " + f.weightClass + " vs " + WEIGHTS[t].name,
-            weeks: RI(6, 8), doubleChamp: WEIGHTS[t].name,
-          });
-          g.log.unshift("🌟 DOUBLE CHAMP: " + f.name + " (" + f.weightClass + " champ) challenges " + superOpp.name + " (" + WEIGHTS[t].name + " champ)!");
-          return;
-        }
-      }
-    }
     return;
     }
 

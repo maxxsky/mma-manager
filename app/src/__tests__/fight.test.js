@@ -4,7 +4,9 @@ import { createTestFighter, useSeed, TEST_SEED, createTestGame } from './helpers
 import { simRound, prepFighter, autoGamePlan, runFight } from '../engine/fight.js'
 import { pickExchange } from '../engine/fight/exchanges.js'
 import { commitFightResult } from '../engine/fights/commitResult.js'
+import { processTitleChange } from '../engine/career.js'
 import { mulberry32, setRNG } from '../engine/rng.js'
+import { tick } from '../engine/state.js'
 
 describe('Fight Engine', () => {
   const fighterA = createTestFighter({ name: 'Alpha', id: 'a1' })
@@ -300,6 +302,33 @@ describe('Fight Engine', () => {
       expect(avgCutB).toBeGreaterThan(0)
       // Max cutB across 200 fights should show at least some accumulation
       expect(maxCutB).toBeGreaterThanOrEqual(1)
+    })
+  })
+
+  describe('multi-division champion', () => {
+    it('2 different weight classes across reigns → gets badge', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const f = g.roster[0]
+      f.reignHistory = [
+        { wonWeek: 10, weightClass: 'Lightweight' },
+        { wonWeek: 30, weightClass: 'Welterweight' },
+      ]
+      const events = processTitleChange(f, g, 'won')
+      expect(f.titles).toContain('Multi-Division Champion')
+      expect(events.some((e) => e.title?.includes('Multi-Division'))).toBe(true)
+    })
+
+    it('same weight class across reigns → no badge', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const f = g.roster[0]
+      f.reignHistory = [
+        { wonWeek: 10, weightClass: 'Lightweight' },
+        { wonWeek: 30, weightClass: 'Lightweight' },
+      ]
+      const events = processTitleChange(f, g, 'won')
+      expect(f.titles).not.toContain('Multi-Division Champion')
     })
   })
 })

@@ -155,6 +155,17 @@ export function processTitleChange(f, g, action) {
     events.push({ type: "milestone", title: `👑 Champion`, body: `${f.name} merebut gelar juara pertamanya!` });
   }
 
+  // Multi-division champion (sequential — vacate + move weight class, win again)
+  if (action === "won" && f.reignHistory && f.reignHistory.length >= 2) {
+    const weightClasses = [...new Set(f.reignHistory.map((r) => r.weightClass))];
+    if (weightClasses.length >= 2 && !f.milestoneMultiDiv) {
+      f.milestoneMultiDiv = true;
+      if (!f.titles.includes("Multi-Division Champion")) f.titles.push("Multi-Division Champion");
+      recordMilestone(f, g.week, "multi_div", "Multi-division champion");
+      events.push({ type: "milestone", title: `👑👑 Multi-Division Champion`, body: `${f.name} juara di ${weightClasses.join(" dan ")} — prestasi langka!` });
+    }
+  }
+
   // Title defenses
   if (action === "defense") {
     f.titleDefenses = (f.titleDefenses || 0) + 1;
