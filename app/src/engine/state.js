@@ -16,7 +16,7 @@
 //   tick/rivals.js       — rival camp simulation, poaching
 
 import { uid } from "./rng.js";
-import { BANKRUPT_THRESHOLD, CASH_WARNING_THRESHOLD, CASH_WARNING_RESET_BUFFER } from "./reducer/constants.js";
+import { BANKRUPT_THRESHOLD, BANKRUPTCY_GRACE_WEEKS, CASH_WARNING_THRESHOLD, CASH_WARNING_RESET_BUFFER } from "./reducer/constants.js";
 import { fmt$ } from "./rng.js";
 import { createEconomy, createCamp, createRoster, createCoaches, createWorld } from "./builders.js";
 import { tickTraining } from "./tick/training.js";
@@ -120,5 +120,26 @@ export function tick(g) {
   checkCashWarning(g);
   // Cap log to prevent unbounded memory growth
   if (g.log && g.log.length > 200) g.log = g.log.slice(0, 200);
-  if (g.cash < BANKRUPT_THRESHOLD) g.over = `BANGKRUT — kas di bawah ${fmt$(BANKRUPT_THRESHOLD)}. Camp ditutup.`;
+  if (g.cash < BANKRUPT_THRESHOLD) {
+    if (g.bankruptcyGraceWeeksLeft == null) {
+      g.bankruptcyGraceWeeksLeft = BANKRUPTCY_GRACE_WEEKS;
+      g.inbox.unshift({
+        id: uid(), type: "event",
+        title: "🚨 Camp di Ambang Bangkrut",
+        body: `Kas ${fmt$(g.cash)} — di bawah batas. ${BANKRUPTCY_GRACE_WEEKS} minggu buat benerin sebelum camp resmi tutup.`,
+        choices: [
+          { label: "Potong biaya darurat (jual aset, chemistry -10)", emergencyCostCut: true },
+          { label: "Coba pulihkan sendiri", chem: 0 },
+        ],
+      });
+    } else {
+      g.bankruptcyGraceWeeksLeft--;
+      if (g.bankruptcyGraceWeeksLeft <= 0) {
+        g.over = "BANGKRUT — gagal pulih dalam masa tenggang. Camp ditutup.";
+      }
+    }
+  } else if (g.bankruptcyGraceWeeksLeft != null) {
+    g.bankruptcyGraceWeeksLeft = null;
+    g.log.unshift("✅ Kas pulih di atas ambang bangkrut — camp selamat.");
+  }
 }

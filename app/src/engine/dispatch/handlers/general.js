@@ -14,4 +14,10 @@ export function registerGeneralHandlers(register) {
   register("cash", ({ g, c }) => {
     if (c.cash) g.cash += c.cash;
   });
+
+  register("emergencyCostCut", ({ g }) => {
+    g.cash += 25000;
+    g.chemistry = clamp(g.chemistry - 10, 0, 100);
+    g.log.unshift("💸 Jual aset darurat: +$25,000, chemistry -10.");
+  });
 }

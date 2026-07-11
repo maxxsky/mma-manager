@@ -38,6 +38,7 @@ export const TEAM_BONDING_COOLDOWN = 12; // weeks
 
 // Game state
 export const BANKRUPT_THRESHOLD = -50000;
+export const BANKRUPTCY_GRACE_WEEKS = 4;
 export const CASH_WARNING_THRESHOLD = 15000;
 export const CASH_WARNING_RESET_BUFFER = 5000; // hysteresis, biar gak flapping
 
