@@ -53,20 +53,22 @@ describe('Reducer', () => {
     })
   })
 
-  describe('UNDO/REDO', () => {    it.skip('undo restores previous training type', () => {
-      // TODO: investigate snapshot/undo interaction with seeded state
+  describe('UNDO/REDO', () => {
+    it('undo restores previous training type', () => {
       const g = createTestGame()
-      const f = g.roster[0]
-      const origType = f.training.type
-      
+      const fighterId = g.roster[0].id
+      const origType = g.roster[0].training.type
+
       g._undoStack = []
       g._redoStack = []
-      reducer(g, { type: 'SET_TRAINING', fighterId: f.id, program: 'sparring', intensity: 'Hard' })
-      expect(f.training.type).toBe('sparring')
-      
+      reducer(g, { type: 'SET_TRAINING', fighterId, program: 'sparring', intensity: 'Hard' })
+      expect(g.roster.find((x) => x.id === fighterId).training.type).toBe('sparring')
+
       reducer(g, { type: 'UNDO' })
-      // After undo, training should revert
-      expect(f.training.type).toBe(origType)
+      // UNDO mengganti seluruh isi g lewat Object.assign dari JSON snapshot,
+      // jadi referensi objek di g.roster ikut berubah — selalu re-fetch dari g
+      // setelah UNDO/REDO, jangan pegang referensi fighter dari sebelum aksi ini.
+      expect(g.roster.find((x) => x.id === fighterId).training.type).toBe(origType)
     })
   })
 
