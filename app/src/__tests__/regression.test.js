@@ -78,3 +78,26 @@ describe('Regression — State Tick (seed=42)', () => {
     expect(isFinite(g.cash)).toBe(true)
   })
 })
+
+describe('Calibration — Training Rate (seed=42)', () => {
+  it('conditioning training produces expected attribute gain over 1 month', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+    const start = { strength: f.attrs.strength, cardio: f.attrs.cardio }
+
+    for (let i = 0; i < 4; i++) {
+      f.training = { type: 'conditioning', intensity: 'Medium' }
+      tick(g)
+    }
+
+    const totalGain = (f.attrs.strength - start.strength) + (f.attrs.cardio - start.cardio)
+
+    // Baseline empiris (seed=42): ~4.77 selama 4 minggu. Band lebar (2.0–9.0) buat
+    // nampung variance normal dari sistem lain yang ikut consume RNG stream selama
+    // tick(), tapi tetap nangkep kalau formula training rate berubah signifikan
+    // (misal ada yang gak sengaja ubah R(0.5,1.4) atau lupa apply salah satu multiplier).
+    expect(totalGain).toBeGreaterThan(2.0)
+    expect(totalGain).toBeLessThan(9.0)
+  })
+})
