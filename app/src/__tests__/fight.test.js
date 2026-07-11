@@ -1,8 +1,9 @@
 // Fight Engine Tests — simulation correctness
 import { describe, it, expect } from 'vitest'
-import { createTestFighter, useSeed, TEST_SEED } from './helpers.js'
+import { createTestFighter, useSeed, TEST_SEED, createTestGame } from './helpers.js'
 import { simRound, prepFighter, autoGamePlan, runFight } from '../engine/fight.js'
 import { pickExchange } from '../engine/fight/exchanges.js'
+import { commitFightResult } from '../engine/fights/commitResult.js'
 import { mulberry32, setRNG } from '../engine/rng.js'
 
 describe('Fight Engine', () => {
@@ -206,6 +207,44 @@ describe('Fight Engine', () => {
       const distA = Math.abs(ratioA - 0.5)
       const distB = Math.abs(ratioB - 0.5)
       expect(Math.abs(distA - distB)).toBeLessThan(0.3)
+    })
+  })
+
+  describe('reign tracking', () => {
+    it('first title win creates new reign with titleDefenses=0 and pushes reignHistory', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const f = g.roster[0]
+      f.titles = []
+      g.divisions[f.weightClass].champ = null
+
+      const fighter = { id: f.id, booked: { title: true, opponent: { name: 'Opp' } } }
+      commitFightResult(g, fighter, { won: true, how: 'KO/TKO', r: 2 })
+
+      const champ = g.divisions[f.weightClass].champ
+      expect(champ.fighterId).toBe(f.id)
+      expect(champ.titleDefenses).toBe(0)
+      expect(champ.wonWeek).toBe(g.week)
+      expect(f.reignHistory.length).toBe(1)
+      expect(f.reignHistory[0].weightClass).toBe(f.weightClass)
+    })
+
+    it('same fighter winning again is a defense — titleDefenses+1, wonWeek unchanged', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const f = g.roster[0]
+      const origWeek = 10
+      f.titles = ['Major World Champion']
+      g.divisions[f.weightClass].champ = { name: f.name, player: true, fighterId: f.id, wonWeek: origWeek, lastDefenseWeek: origWeek, titleDefenses: 0 }
+
+      const fighter = { id: f.id, booked: { title: true, opponent: { name: 'Opp' } } }
+      commitFightResult(g, fighter, { won: true, how: 'Decision', r: 5 })
+
+      const champ = g.divisions[f.weightClass].champ
+      expect(champ.titleDefenses).toBe(1)
+      expect(champ.wonWeek).toBe(origWeek) // tidak berubah
+      expect(champ.lastDefenseWeek).toBe(g.week)
+      expect(f.reignHistory).toBeUndefined() // tidak ada reign baru
     })
   })
 })

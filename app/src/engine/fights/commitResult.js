@@ -26,7 +26,20 @@ export function commitFightResult(g, fighter, result) {
 
     if (fighter.booked?.title) {
       if (!f.titles.includes("Major World Champion")) f.titles.push("Major World Champion");
-      if (g.divisions?.[f.weightClass]) g.divisions[f.weightClass].champ = { name: f.name, player: true, fighterId: f.id, wonWeek: g.week, lastDefenseWeek: g.week };
+      const div = g.divisions?.[f.weightClass];
+      if (div) {
+        const wasAlreadyChamp = div.champ?.fighterId === f.id;
+        if (wasAlreadyChamp) {
+          // Defense — update in-place, preserve wonWeek
+          div.champ.titleDefenses = (div.champ.titleDefenses || 0) + 1;
+          div.champ.lastDefenseWeek = g.week;
+        } else {
+          // New reign — create fresh champ object
+          div.champ = { name: f.name, player: true, fighterId: f.id, wonWeek: g.week, lastDefenseWeek: g.week, titleDefenses: 0 };
+          if (!f.reignHistory) f.reignHistory = [];
+          f.reignHistory.push({ wonWeek: g.week, weightClass: f.weightClass });
+        }
+      }
     }
     g.legacy = (g.legacy || 0) + (fighter.booked?.title ? 2000 : 600);
     g.log.unshift(`🏆 ${f.name} menang via ${result.how} R${result.r}!`);

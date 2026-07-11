@@ -59,7 +59,16 @@ export function useSaveLoad(setG) {
             f.giantKills = f.giantKills || 0;
             f.titleDefenses = f.titleDefenses || 0;
             f.firstFightWeek = f.firstFightWeek || null;
+            f.reignHistory = f.reignHistory || [];
             if (f.booked && f.booked.seed == null) f.booked.seed = (Math.random() * 2**31) | 0;
+          });
+          // Division champ field defaults
+          Object.values(s.divisions || {}).forEach((d) => {
+            if (d.champ) {
+              d.champ.titleDefenses = d.champ.titleDefenses || 0;
+              d.champ.wonWeek = d.champ.wonWeek || s.week;
+              d.champ.lastDefenseWeek = d.champ.lastDefenseWeek || d.champ.wonWeek;
+            }
           });
           setG(s);
 
