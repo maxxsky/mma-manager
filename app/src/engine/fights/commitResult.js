@@ -11,6 +11,18 @@ export function commitFightResult(g, fighter, result) {
 
   f.booked = null;
 
+  // ── Promotion tracking ──
+  const promId = fighter.booked?.promotionId;
+  if (promId) {
+    if (!f.promotionFightCounts) f.promotionFightCounts = {};
+    f.promotionFightCounts[promId] = (f.promotionFightCounts[promId] || 0) + 1;
+  }
+  // Decrement exclusivity contract if active
+  if (f.promotionContract && f.promotionContract.fightsLeft > 0) {
+    f.promotionContract.fightsLeft--;
+    if (f.promotionContract.fightsLeft <= 0) f.promotionContract = null;
+  }
+
   if (result.won) {
     f.record.w++; f.streakW = (f.streakW || 0) + 1; f.streakL = 0;
     if (result.how === "KO/TKO" || result.how === "Doctor Stoppage") f.record.ko++;

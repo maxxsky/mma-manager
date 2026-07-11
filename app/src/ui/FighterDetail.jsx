@@ -157,6 +157,17 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
                   Vacate Title
                 </Btn>
               )}
+              {f.promotionContract && f.promotionContract.fightsLeft > 0 && (() => {
+                const prom = g.promotions?.find((p) => p.id === f.promotionContract.promotionId);
+                if (!prom) return null;
+                return (
+                  <div style={{ marginTop: 8, padding: "8px 10px", background: T.bg, borderRadius: T.r, border: `1px solid ${T.steel}44` }}>
+                    <div style={{ fontFamily: T.body, fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: T.steel }}>Exclusive to</div>
+                    <div style={{ fontFamily: T.body, fontSize: 13, fontWeight: 600, color: T.txt }}>{prom.name}</div>
+                    <div style={{ fontFamily: T.mono, fontSize: 11, color: T.txt3 }}>{f.promotionContract.fightsLeft}/{f.promotionContract.fightsTotal} fights remaining</div>
+                  </div>
+                );
+              })()}
             </>
           )}
         </Panel>

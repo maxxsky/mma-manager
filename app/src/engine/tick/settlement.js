@@ -153,6 +153,32 @@ export function tickSettlement(g) {
     });
   });
 
+  // ── Exclusivity contract offers ──
+  g.roster.forEach((f) => {
+    if (f.promotionContract) return;
+    if (!f.promotionFightCounts) return;
+    const eligiblePromo = g.promotions?.find((p) => {
+      const count = f.promotionFightCounts[p.id] || 0;
+      return count >= 2 && (g.promoterRel?.[p.tier] || 0) >= 60;
+    });
+    if (eligiblePromo && !g.inbox.some((m) => m.promotionContractOffer === eligiblePromo.id && m.fighterId === f.id)) {
+      const fights = RI(3, 5);
+      const bonus = 0.15 + RI(0, 10) * 0.01;
+      g.inbox.unshift({
+        id: uid(), type: "offer", fighterId: f.id, expires: 6,
+        promotionContractOffer: eligiblePromo.id,
+        promotionName: eligiblePromo.name,
+        tier: eligiblePromo.tier,
+        title: `📝 Exclusive Contract Offer — ${eligiblePromo.name}`,
+        body: `${eligiblePromo.name} menawarkan kontrak eksklusif ${fights} fight dengan bonus purse ${Math.round(bonus * 100)}% per fight.`,
+        choices: [
+          { label: `Terima (${fights} fights, +${Math.round(bonus * 100)}% purse)`, promotionSign: { promotionId: eligiblePromo.id, fightsTotal: fights, purseBonus: bonus } },
+          { label: "Tolak", chem: 0 },
+        ],
+      });
+    }
+  });
+
   tickRankings(g);
 
   // ---------- monthly ambition + fighter requests ----------

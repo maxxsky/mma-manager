@@ -354,4 +354,22 @@ describe('Fight Engine', () => {
       expect(prom.tier).toBe('Major')
     })
   })
+
+  describe('promotion contract', () => {
+    it('contract decrements and clears at 0', () => {
+      const fighter = { promotionContract: { fightsLeft: 2, fightsTotal: 3 } }
+      // Simulate two fights
+      if (fighter.promotionContract && fighter.promotionContract.fightsLeft > 0) {
+        fighter.promotionContract.fightsLeft--
+      }
+      expect(fighter.promotionContract.fightsLeft).toBe(1)
+      if (fighter.promotionContract && fighter.promotionContract.fightsLeft > 0) {
+        fighter.promotionContract.fightsLeft--
+      }
+      if (fighter.promotionContract && fighter.promotionContract.fightsLeft <= 0) {
+        fighter.promotionContract = null
+      }
+      expect(fighter.promotionContract).toBeNull()
+    })
+  })
 })

@@ -8,6 +8,7 @@ import { registerFighterHandlers } from "./dispatch/handlers/fighter.js";
 import { registerCoachHandlers } from "./dispatch/handlers/coach.js";
 import { registerClassChangeHandlers } from "./dispatch/handlers/class-change.js";
 import { registerSponsorHandlers } from "./dispatch/handlers/sponsor.js";
+import { registerPromotionHandlers } from "./dispatch/handlers/promotion.js";
 import { registerGeneralHandlers } from "./dispatch/handlers/general.js";
 
 // ── Registry ──
@@ -23,6 +24,7 @@ registerFighterHandlers(register);
 registerCoachHandlers(register);
 registerClassChangeHandlers(register);
 registerSponsorHandlers(register);
+registerPromotionHandlers(register);
 registerGeneralHandlers(register);
 
 // ── Fallback: chemistry / gamble ──

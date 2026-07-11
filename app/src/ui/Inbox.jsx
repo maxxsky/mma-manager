@@ -70,6 +70,7 @@ export default function Inbox({ g, dispatch, setTab }) {
                   {m.title && <Tag color={T.gold}>{m.titleTier || t("UI.title")}</Tag>}
                   {m.defense && <Tag color={T.neg}>{t("UI.title") + " Defense"}</Tag>}
                   {m.vacantTitle && <Tag color={T.warn} solid>🏆 Vacant Title Shot</Tag>}
+                  {m.promotionContractOffer && <Tag color={T.steel} solid>📝 EXCLUSIVE DEAL — {m.promotionName || ""}</Tag>}
                   {m.isTitleEliminator && <Tag color={T.warn}>{t("UI.rankings") + " Eliminator"}</Tag>}
                   {m.shortNotice && <Tag color={T.neg}>{t("UI.expiresWeek")}</Tag>}
                   <Tag color={accent}>{m.tier}</Tag>

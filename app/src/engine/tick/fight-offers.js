@@ -7,6 +7,16 @@ import { pickPromotion } from "../data/promotions.js";
 
 // Helper: attach promotion to an offer object based on its tier
 function attachPromotion(offer, tier, g, ctx) {
+  // If fighter has an active exclusivity contract, force that promotion
+  const fighter = ctx?.fighter;
+  if (fighter?.promotionContract?.fightsLeft > 0) {
+    const forced = g.promotions?.find((p) => p.id === fighter.promotionContract.promotionId);
+    if (forced) {
+      offer.promotionId = forced.id;
+      offer.promotionName = forced.name;
+      return;
+    }
+  }
   const prom = pickPromotion(tier, ctx);
   if (prom) {
     offer.promotionId = prom.id;
@@ -269,7 +279,8 @@ export function tickFightOffers(g) {
   // Attach promotion to any offer that doesn't have one yet
   g.inbox.forEach((m) => {
     if (m.type === "offer" && !m.promotionId) {
-      attachPromotion(m, m.tier, g, {});
+      const ctx = { fighter: g.roster?.find((x) => x.id === m.fighterId) };
+      attachPromotion(m, m.tier, g, ctx);
     }
   });
 
