@@ -7,6 +7,7 @@ import { commitFightResult } from '../engine/fights/commitResult.js'
 import { processTitleChange } from '../engine/career.js'
 import { mulberry32, setRNG } from '../engine/rng.js'
 import { tick } from '../engine/state.js'
+import { tickSettlement } from '../engine/tick/settlement.js'
 import { PROMOTIONS, pickPromotion, getPromotionsData } from '../engine/data.js'
 
 describe('Fight Engine', () => {
@@ -563,6 +564,78 @@ describe('Fight Engine', () => {
       const campCut = Math.round(0.2 * (1000 + 500))
       expect(g.cash).toBe(startCash + campCut + ppvRevenue)
       expect(ppvRevenue).toBe(19600)
+    })
+  })
+
+  describe('merchandise revenue — isolated via tickSettlement', () => {
+    it('known popularity: cash increases by exact merch + fSponsor amount, each separately verifiable', () => {
+      useSeed(42)
+      const g = createTestGame()
+      // Strip all variables that muddy cash: no coaches, no sponsors, no titles
+      g.coaches = []
+      g.sponsors = []
+      g.rep = 0
+      g.roster.forEach((f) => { f.titles = []; f.contract = null })
+      // Set minimal facilities so maint = 0
+      g.facilities = { mats: 0, ring: 0, weights: 0, medical: 0 }
+      // Set known popularity values
+      g.roster[0].popularity = 50
+      g.roster[1].popularity = 30
+      g.week = 4 // settlement trigger
+
+      const startCash = 100000
+      g.cash = startCash
+
+      const expectedMerch = Math.round((50 + 30) * 80)
+      const expectedFSponsor = (50 + 30) * 150
+      const expectedTotal = expectedMerch + expectedFSponsor
+
+      tickSettlement(g)
+
+      expect(g.cash).toBe(startCash + expectedTotal)
+      expect(expectedMerch).toBe(6400) // 80 * 80
+      expect(expectedFSponsor).toBe(12000) // 80 * 150
+    })
+
+    it('roster kosong: merchandise = 0, tidak nambah cash dari merch', () => {
+      useSeed(42)
+      const g = createTestGame()
+      g.coaches = []
+      g.sponsors = []
+      g.rep = 0
+      g.roster = [] // empty roster
+      g.facilities = { mats: 0, ring: 0, weights: 0, medical: 0 }
+      g.week = 4
+
+      const startCash = 100000
+      g.cash = startCash
+
+      tickSettlement(g)
+
+      // With empty roster: merch=0, fSponsor=0, championBonus=0, no coaches/sal
+      // sponsorAmt = round(0 * 500) = 0, maint = 0
+      // cash should not change
+      expect(g.cash).toBe(startCash)
+    })
+
+    it('semua popularity 0: merchandise = 0, tidak ada kontribusi dari merch', () => {
+      useSeed(42)
+      const g = createTestGame()
+      g.coaches = []
+      g.sponsors = []
+      g.rep = 0
+      g.roster.forEach((f) => { f.popularity = 0; f.titles = []; f.contract = null })
+      g.facilities = { mats: 0, ring: 0, weights: 0, medical: 0 }
+      g.week = 4
+
+      const startCash = 100000
+      g.cash = startCash
+
+      tickSettlement(g)
+
+      // merch = round(0 * 80) = 0, fSponsor = 0 * 150 = 0
+      // No other components — cash unchanged
+      expect(g.cash).toBe(startCash)
     })
   })
 })
