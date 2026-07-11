@@ -131,8 +131,11 @@ export function defaultContract() {
   };
 }
 
-export function genCoach() {
-  const skill = RI(2, 9);
+export function genCoach(rep) {
+  // Gate skill market sesuai rep camp — camp baru (rep rendah) gak bakal ketemu
+  // coach mahal yang gak sanggup dia bayar. rep=null/undefined = skill penuh (dipakai rival camp & shadow AI).
+  const maxSkill = rep != null ? clamp(3 + Math.floor(rep / 10), 3, 9) : 9;
+  const skill = RI(2, maxSkill);
   return {
     id: uid(), name: "Coach " + pick(COACH_NAMES),
     spec: pick(COACH_SPECS), skill, salary: skill * RI(1600, 2400),

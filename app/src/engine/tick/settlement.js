@@ -113,7 +113,7 @@ export function tickSettlement(g) {
   // Previously listed coaches are lost — hire before month end.
   const marketSize = clamp(2 + Math.floor(g.rep / 15), 2, 7);
   const market = [];
-  for (let i = 0; i < marketSize; i++) market.push(genCoach());
+  for (let i = 0; i < marketSize; i++) market.push(genCoach(g.rep));
   g.coachMarket = market;
 
   // Coach skill growth: +0.5/year for coaches with active fighters

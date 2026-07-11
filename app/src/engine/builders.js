@@ -37,12 +37,12 @@ export function createRoster() {
 }
 
 export function createCoaches() {
-  const freeCoach = genCoach();
+  const freeCoach = genCoach(8); // rep awal = 8 (dari createCamp)
   freeCoach.salary = Math.max(500, freeCoach.salary);
   freeCoach.freeUntil = 4;
   return {
     coaches: [{ ...freeCoach, name: "Coach Basic", skill: 3, spec: "Head" }],
-    coachMarket: [genCoach(), genCoach(), genCoach()],
+    coachMarket: [genCoach(8), genCoach(8), genCoach(8)],
   };
 }
 
