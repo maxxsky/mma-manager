@@ -1,6 +1,8 @@
 // Fight outcome persistence — moved from UI to career layer
 import { clamp, uid } from "../rng.js";
 import { processFightResult, processRivalry, updateRivalryResult, processTitleChange } from "../career.js";
+import { queueDelayedEvent } from "../events.js";
+import { TITLE_CELEBRATION_DELAY_WEEKS, TITLE_SPONSOR_DELAY_WEEKS } from "../events/config.js";
 
 /** Commit fight result to game state. Called from FightNight done() callback. */
 export function commitFightResult(g, fighter, result) {
@@ -34,8 +36,29 @@ export function commitFightResult(g, fighter, result) {
     const rivalryEvents = processRivalry(f, { name: oppName }, g);
     updateRivalryResult(f, { name: oppName, rivalries: {} }, g);
     if (fighter.booked?.title) {
-      const titleEvents = processTitleChange(f, g, f.titleDefenses ? "defense" : "won");
+      const titleAction = f.titleDefenses ? "defense" : "won";
+      const titleEvents = processTitleChange(f, g, titleAction);
       careerEvents.push(...titleEvents);
+
+      if (titleAction === "won") {
+        queueDelayedEvent(g, {
+          title: "🎉 Camp Celebration",
+          body: `Camp merayakan gelar juara ${f.name}. Suasana positif menyelimuti gym.`,
+          choices: [
+            { label: "Pesta besar ($5,000, chemistry +8)", cash: -5000, chem: 8 },
+            { label: "Syukuran sederhana (chemistry +3)", chem: 3 },
+          ],
+        }, TITLE_CELEBRATION_DELAY_WEEKS);
+
+        queueDelayedEvent(g, {
+          title: "📢 Sponsor Tertarik",
+          body: `Gelar juara ${f.name} menarik perhatian brand besar. Mereka ingin diskusi kerja sama.`,
+          choices: [
+            { label: "Buka negosiasi (rep +5)", rep: 5 },
+            { label: "Fokus pertahankan gelar dulu", chem: 1 },
+          ],
+        }, TITLE_SPONSOR_DELAY_WEEKS);
+      }
     }
     [...careerEvents, ...rivalryEvents].forEach((ev) => {
       g.inbox.unshift({ id: uid(), type: "event", title: ev.title, body: ev.body, choices: [{ label: "OK", chem: 0 }] });

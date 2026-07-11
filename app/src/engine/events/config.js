@@ -50,6 +50,10 @@ export const COACH_ULTIMATUM_RAISE = 1.4; // 40% raise
 export const FIGHTER_FRUSTRATION_COST = 3000;
 export const FIGHTER_FRUSTRATION_MORALE = 20;
 
+// ── Title event chain delays ──
+export const TITLE_CELEBRATION_DELAY_WEEKS = 2;
+export const TITLE_SPONSOR_DELAY_WEEKS = 4;
+
 // ── Tier-based event pools ──
 export const TIER_EVENTS = {
   // Local Gym (tier 0) — operational struggles
