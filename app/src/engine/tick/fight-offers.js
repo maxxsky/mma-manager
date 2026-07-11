@@ -253,7 +253,7 @@ export function tickFightOffers(g) {
       g.inbox.unshift({
         id: uid(), type: "offer", fighterId: f.id, expires: shortNotice ? 2 : 3,
         tier, show, winBonus: show, opponent: opp,
-        title: (r != null && r <= 5) && (titleTier === "Major" || titleTier === "Premier"),
+        title: (r != null && r <= 5) && (f.streakW >= 2 || f.streakW == null) && (titleTier === "Major" || titleTier === "Premier"),
         titleTier, oppRank, contenderId,
         titleText, story, shortNotice, isMainEvent, isTitleEliminator,
         weeks: shortNotice ? RI(1, 2) : RI(4, 6),

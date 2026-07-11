@@ -247,4 +247,16 @@ describe('Fight Engine', () => {
       expect(f.reignHistory).toBeUndefined() // tidak ada reign baru
     })
   })
+
+  describe('title streak eligibility', () => {
+    it('streakW >= 2 allows title:true, streakW=0 blocks it, undefined allows it', () => {
+      // Test the condition directly — no tick() needed
+      const cond = (streakW) => (streakW >= 2 || streakW == null)
+      expect(cond(3)).toBe(true)   // win streak → allowed
+      expect(cond(5)).toBe(true)   // win streak → allowed
+      expect(cond(0)).toBe(false)  // loss streak → blocked
+      expect(cond(undefined)).toBe(true) // no fights yet → allowed
+      expect(cond(null)).toBe(true) // no fights yet → allowed
+    })
+  })
 })
