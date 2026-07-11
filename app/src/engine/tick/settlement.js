@@ -5,6 +5,8 @@ import { genCoach, weeklyFee } from "../fighter.js";
 import { rankOf } from "../rankings.js";
 import { tickRankings } from "./rankings.js";
 
+const SPONSOR_RENEWAL_WINDOW = 4; // settlement cycle tersisa sebelum kontrak berakhir, saat tawaran perpanjangan muncul
+
 export function tickSettlement(g) {
   if (!g || !g.roster) return;
   if (g.week % 4 !== 0) return;
@@ -35,6 +37,17 @@ export function tickSettlement(g) {
       // Countdown weeksLeft if set
       if (sp.weeksLeft != null) {
         sp.weeksLeft--;
+        if (sp.weeksLeft === SPONSOR_RENEWAL_WINDOW) {
+          g.inbox.unshift({
+            id: uid(), type: "sponsor",
+            title: `📋 Kontrak ${sp.brand} Segera Berakhir`,
+            body: `Kontrak sponsor dengan ${sp.brand} akan berakhir sebentar lagi. Mereka menawarkan perpanjangan.`,
+            choices: [
+              { label: `Perpanjang (${fmt$(sp.rate)}/bln, sama seperti sekarang)`, sponsorRenew: { brand: sp.brand } },
+              { label: "Biarkan berakhir", chem: 0 },
+            ],
+          });
+        }
         if (sp.weeksLeft <= 0) {
           g.log.unshift(`📢 Kontrak ${sp.brand} berakhir — cari sponsor baru.`);
         }

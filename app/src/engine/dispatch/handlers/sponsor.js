@@ -11,4 +11,12 @@ export function registerSponsorHandlers(register) {
   register("sponsorReject", ({ g }) => {
     g.log.unshift("📢 Sponsor ditolak.");
   });
+
+  register("sponsorRenew", ({ g, c }) => {
+    const sp = g.sponsors?.find((s) => s.brand === c.sponsorRenew.brand);
+    if (sp) {
+      sp.weeksLeft = 48;
+      g.log.unshift(`📋 Kontrak ${sp.brand} diperpanjang.`);
+    }
+  });
 }
