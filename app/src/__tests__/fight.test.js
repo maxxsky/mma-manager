@@ -259,4 +259,47 @@ describe('Fight Engine', () => {
       expect(cond(null)).toBe(true) // no fights yet → allowed
     })
   })
+
+  describe('cut damage', () => {
+    it('simRound with cutA/cutB inputs returns cumulative values >= inputs', () => {
+      useSeed(42)
+      const A = prepFighter(fighterA)
+      const B = prepFighter(fighterB)
+      const result = simRound(1, A, B, 100, 100, 'Balanced', 'neutral', 0, 3, 2)
+      expect(result.cutA).toBeGreaterThanOrEqual(3)
+      expect(result.cutB).toBeGreaterThanOrEqual(2)
+    })
+
+    it('runFight with same seed produces identical results (including doctor stoppage paths)', () => {
+      const A = prepFighter(fighterA)
+      const B = prepFighter(fighterB)
+      const r1 = runFight(A, B, 'Balanced', () => 'go', 77777, 3)
+      const r2 = runFight(A, B, 'Balanced', () => 'go', 77777, 3)
+      expect(r1.winner).toBe(r2.winner)
+      expect(r1.round).toBe(r2.round)
+      // Extract cut values from roundLogs
+      const cutB1 = r1.roundLogs.reduce((s, r) => s + (r.cutB || 0), 0)
+      const cutB2 = r2.roundLogs.reduce((s, r) => s + (r.cutB || 0), 0)
+      expect(cutB1).toBe(cutB2)
+    })
+
+    it('cut damage accumulates plausibly across many fights (doctor stoppage is possible but rare for equal fighters)', () => {
+      let totalCutB = 0, maxCutB = 0, docStops = 0
+      const N = 200
+      for (let s = 0; s < N; s++) {
+        const A = prepFighter(fighterA)
+        const B = prepFighter(fighterB)
+        const r = runFight(A, B, 'Balanced', () => 'go', s * 137 + 7, 3)
+        const fightCutB = r.roundLogs.reduce((sum, rnd) => sum + (rnd.cutB || 0), 0)
+        totalCutB += fightCutB
+        if (fightCutB > maxCutB) maxCutB = fightCutB
+        if (r.how === 'Doctor Stoppage') docStops++
+      }
+      const avgCutB = totalCutB / N
+      // Average cutB should be > 0 (mechanism works)
+      expect(avgCutB).toBeGreaterThan(0)
+      // Max cutB across 200 fights should show at least some accumulation
+      expect(maxCutB).toBeGreaterThanOrEqual(1)
+    })
+  })
 })

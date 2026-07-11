@@ -61,7 +61,7 @@ export function autoGamePlan(fighter, opponent) {
 }
 
 // ── MAIN FIGHT ROUND ──
-export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
+export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA = 0, cutB = 0) {
   const comm = createCommentary();
   let dmgA = 0, dmgB = 0, bodyDmgA = 0, bodyDmgB = 0, legDmgA = 0, legDmgB = 0;
   let ptsA = 0, ptsB = 0, finish = null, knockdown = null;
@@ -213,6 +213,16 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
         }
       }
     }
+
+    // ── CUT CHECK — striking exchanges only ──
+    if (!finish && (exType === "strike" || exType === "power")) {
+      if (exDmgA > CFG.CUT_EXCHANGE_THRESHOLD && random() < CFG.CUT_CHANCE_PER_HIT) {
+        cutA += CFG.CUT_SEVERITY_PER_HIT;
+      }
+      if (exDmgB > CFG.CUT_EXCHANGE_THRESHOLD && random() < CFG.CUT_CHANCE_PER_HIT) {
+        cutB += CFG.CUT_SEVERITY_PER_HIT;
+      }
+    }
   }
 
   // ── ROUND END ──
@@ -255,6 +265,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
     tdA: position.type !== "standing" && position.top === "A" ? 1 : 0,
     tdB: position.type !== "standing" && position.top === "B" ? 1 : 0,
     momentum: mom,
+    cutA, cutB,
     duringRound: rnd,
     winner: finish ? finish.by : (ptsA >= ptsB ? "A" : "B"),
   };
@@ -270,16 +281,18 @@ export function runFight(A, B, plan, cornerPolicy, seed, totalRounds) {
   setRNG(mulberry32(seed));
 
   let staA = 100, staB = 100, mom = 0;
+  let cutA = 0, cutB = 0;
   let totalDmgA = 0, totalDmgB = 0;
   const roundLogs = [];
   let winner = null, how = null, finalRound = totalRounds;
 
   for (let r = 1; r <= totalRounds; r++) {
-    const corner = r === 1 ? "go" : cornerPolicy(null, r, { staA, staB, momentum: mom, totalDmgA, totalDmgB });
-    const res = simRound(r, A, B, staA, staB, plan, corner, mom);
+    const corner = r === 1 ? "go" : cornerPolicy(null, r, { staA, staB, momentum: mom, totalDmgA, totalDmgB, cutA, cutB });
+    const res = simRound(r, A, B, staA, staB, plan, corner, mom, cutA, cutB);
 
     staA = res.staA; staB = res.staB;
     mom = res.momentum;
+    cutA = res.cutA; cutB = res.cutB;
     totalDmgA += res.dmgA;
     totalDmgB += res.dmgB;
 
@@ -292,15 +305,12 @@ export function runFight(A, B, plan, cornerPolicy, seed, totalRounds) {
       break;
     }
 
-    // Doctor stoppage (replikasi FightNight.jsx: cutB >= 6 && random() < 0.3)
-    if (r < totalRounds && random() < 0.3) {
-      const cutB = totalDmgB > 400 ? 8 : totalDmgB > 250 ? 6 : 3;
-      if (cutB >= 6) {
-        winner = "A";
-        how = "Doctor Stoppage";
-        finalRound = r;
-        break;
-      }
+    // Doctor stoppage — real cut value from simRound
+    if (r < totalRounds && cutB >= 6 && random() < 0.3) {
+      winner = "A";
+      how = "Doctor Stoppage";
+      finalRound = r;
+      break;
     }
   }
 

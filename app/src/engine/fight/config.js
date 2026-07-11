@@ -22,12 +22,17 @@ export const CARDIO_DIVISOR_MIN = 30;
 export const CARDIO_DIVISOR_MAX = 95;
 
 // Knockdown
-export const KD_EXCHANGE_THRESHOLD = 6; // per-exchange damage (bukan kumulatif) buat mulai eligible KD
+export const KD_EXCHANGE_THRESHOLD = 6;
 export const KD_CHIN_MULT = 0.8;
 export const KD_STR_MULT = 0.002;
-export const KD_FATIGUE_MULT = 0.004; // bonus kecil dari damage kumulatif round (efek "worn down")
+export const KD_FATIGUE_MULT = 0.004;
 export const KD_CHANCE_MAX = 0.40;
 export const KD_FINISH_CHANCE = 0.25;
+
+// Cut / doctor stoppage
+export const CUT_EXCHANGE_THRESHOLD = 4;  // per-exchange damage minimum untuk eligible kena cut
+export const CUT_CHANCE_PER_HIT = 0.12;   // peluang dasar kena cut per exchange
+export const CUT_SEVERITY_PER_HIT = 1;    // akumulasi cut per hit
 
 // Corner instruction multipliers
 export const CORNER_GO_MULT = 1.25;

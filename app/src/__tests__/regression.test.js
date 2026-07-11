@@ -15,14 +15,11 @@ describe('Regression — Fight Engine (seed=12345)', () => {
     const A = prepFighter(fighterA)
     const B = prepFighter(fighterB)
     const result = simRound(1, A, B, 100, 100, 'Balanced', 'neutral', 0)
-    // Deterministic output — if this fails, KD mechanism may have changed
-    // Note: winner 'B' after KD rebalance (exDmg-based triggers instead of cumulative)
-    expect(result.winner).toBe('B')
+    // Deterministic output — if this fails, cut mechanism may have changed
+    expect(result.winner).toBe('A')
     expect(result.scoreA).toBeGreaterThan(0)
     expect(result.scoreB).toBeGreaterThan(0)
-    expect(result.finish).toBeTruthy() // KD rebalance makes this seed produce a finish
-    expect(result.finish.by).toBe('B')
-    expect(result.finish.how).toBe('KO/TKO')
+    expect(result.finish).toBeNull()
   })
 
   it('produces deterministic damage at seed 12345', () => {
