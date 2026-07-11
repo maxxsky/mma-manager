@@ -1,5 +1,6 @@
 // Promotions database — named entities per tier, replacing anonymous tier labels
 // Shape matches SPONSOR_BRANDS pattern: array of objects, flat, data-only.
+import { random } from "../rng.js";
 
 const PERSONALITIES = {
   talentFocused: { id: "talentFocused", label: "Talent Focused", desc: "Prefers top-15 contenders" },
@@ -47,7 +48,7 @@ export function pickPromotion(tier, fighterContext) {
   });
 
   const total = weights.reduce((s, w) => s + w.weight, 0);
-  let roll = Math.random() * total;
+  let roll = random() * total;
   for (const item of weights) {
     roll -= item.weight;
     if (roll <= 0) return item.prom;

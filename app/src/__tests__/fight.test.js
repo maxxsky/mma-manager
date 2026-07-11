@@ -371,5 +371,14 @@ describe('Fight Engine', () => {
       }
       expect(fighter.promotionContract).toBeNull()
     })
+
+    it('pickPromotion with same seed returns same result', () => {
+      setRNG(mulberry32(42))
+      const r1 = pickPromotion('Major', { r: 3, streakW: 2 })
+      setRNG(mulberry32(42))
+      const r2 = pickPromotion('Major', { r: 3, streakW: 2 })
+      expect(r1.id).toBe(r2.id)
+      expect(r1.name).toBe(r2.name)
+    })
   })
 })
