@@ -3,7 +3,7 @@ import {
   ATTRS, WEIGHTS, ARCHETYPES, REGIONS, TRAITS, TRAIT_KEYS, TRAIT_CONFLICTS,
   AMBITIONS, AMBITION_KEYS, AGENT_TYPES, COACH_SPECS, COACH_NAMES, COACH_PERSONALITIES,
 } from "./data.js";
-import { getRegionFlavor, weightedPick, pickRegion, pickArchetypeForRegion } from "./identity.js";
+import { getRegionFlavor, weightedPick } from "./identity.js";
 
 // ---------- generators ----------
 export function genAttrs(level) {
@@ -13,9 +13,9 @@ export function genAttrs(level) {
 }
 
 export function genFighter(level, regionName) {
-  const region = regionName || pickRegion();
+  const region = regionName || pick(Object.keys(REGIONS));
   const rd = REGIONS[region];
-  const archetype = pickArchetypeForRegion(region);
+  const archetype = random() < 0.55 ? rd.arch : pick(Object.keys(ARCHETYPES));
   const attrs = genAttrs(level);
   Object.entries(ARCHETYPES[archetype]).forEach(([k, m]) => {
     attrs[k] = clamp(Math.round(attrs[k] * m), 15, 95);

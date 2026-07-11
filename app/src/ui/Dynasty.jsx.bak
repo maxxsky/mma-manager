@@ -111,35 +111,6 @@ export default function Dynasty({ g }) {
           ))}
         </Panel>
       )}
-
-      {/* Regional Power Rankings */}
-      {(() => {
-        const rs = g._worldHistory?.regionStats;
-        if (!rs) return null;
-        const ranked = Object.entries(rs)
-          .filter(([, v]) => v.totalFighters > 0)
-          .sort((a, b) => b[1].championsProduced - a[1].championsProduced || b[1].totalFighters - a[1].totalFighters);
-        if (ranked.length === 0) return null;
-        return (
-          <Panel>
-            <Eyebrow color={T.ember}>Regional Power Rankings</Eyebrow>
-            <div style={{ display: "grid", gap: 6 }}>
-              {ranked.map(([region, stats], i) => (
-                <div key={region} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", background: T.bg, borderRadius: T.r }}>
-                  <span style={{ fontFamily: T.disp, fontSize: 14, fontWeight: 700, color: T.txt3, minWidth: 24 }}>#{i + 1}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: T.disp, fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, color: T.txt }}>{region}</div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 700, color: T.gold }}>{stats.championsProduced} 👑</div>
-                    <div style={{ fontFamily: T.mono, fontSize: 10, color: T.txt3 }}>{stats.totalFighters} fighters</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Panel>
-        );
-      })()}
     </div>
   );
 }

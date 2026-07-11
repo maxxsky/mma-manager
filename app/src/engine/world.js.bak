@@ -160,21 +160,6 @@ export function generateWorldEvents(g) {
     });
   }
 
-  // Golden generation — one-time event when a region reaches 3 champions
-  if (g._worldHistory?.regionStats) {
-    Object.entries(g._worldHistory.regionStats).forEach(([region, stats]) => {
-      if (stats.championsProduced >= 3 && !g._worldHistory._goldenGenNotified?.includes(region)) {
-        if (!g._worldHistory._goldenGenNotified) g._worldHistory._goldenGenNotified = [];
-        g._worldHistory._goldenGenNotified.push(region);
-        events.push({
-          title: `🌏 ${region} Golden Generation`,
-          body: `${region} is having a golden generation — ${stats.championsProduced} active champions and ${stats.totalFighters} fighters dominating the world stage.`,
-          severity: "major",
-        });
-      }
-    });
-  }
-
   // Veteran retirements
   if (g.week % TICK_YEARLY === 0 && g._worldHistory) {
     const retiring = [];

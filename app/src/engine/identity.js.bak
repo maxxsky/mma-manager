@@ -3,8 +3,7 @@
 //   Richer identities from existing systems. No new core mechanics.
 // ============================================================
 
-import { clamp, pick, R, RI, random } from "./rng.js";
-import { REGIONS, ARCHETYPES } from "./data/archetypes.js";
+import { clamp, pick, R, RI } from "./rng.js";
 
 // ── REGIONAL FLAVOR ──
 
@@ -75,17 +74,6 @@ export function weightedPick(weights, defaultPool) {
 
 export function getRegionFlavor(regionName) {
   return REGION_FLAVOR[regionName] || null;
-}
-
-/** Pick a random region from REGIONS — shared across fighter factories */
-export function pickRegion() {
-  return pick(Object.keys(REGIONS));
-}
-
-/** Pick archetype with regional bias (~55% region's native arch) */
-export function pickArchetypeForRegion(region) {
-  const rd = REGIONS[region];
-  return random() < 0.55 ? rd.arch : pick(Object.keys(ARCHETYPES));
 }
 
 // ── COACH IDENTITY ──

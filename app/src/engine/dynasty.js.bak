@@ -71,62 +71,6 @@ export function updateDynasty(g) {
 
   // Total fighters ever (cumulative)
   d.totalFightersEver = Math.max(d.totalFightersEver, g.roster?.length || 0);
-
-  // Region stats — count fighters & champions from ALL divisions (player + AI)
-  updateRegionStats(g);
-}
-
-// ── REGIONAL STATS ──
-
-export function updateRegionStats(g) {
-  if (!g._worldHistory) g._worldHistory = { titleChanges: [], retiredChamps: [] };
-  if (!g._worldHistory.regionStats) g._worldHistory.regionStats = {};
-
-  const rs = g._worldHistory.regionStats;
-  const regionKeys = ["Brazil", "Russia", "USA", "Netherlands", "Japan", "Nigeria", "UK", "Indonesia"];
-
-  // Init all regions
-  regionKeys.forEach(r => {
-    if (!rs[r]) rs[r] = { championsProduced: 0, totalFighters: 0 };
-    rs[r].totalFighters = 0;
-    rs[r].championsProduced = 0;
-  });
-
-  // Count AI fighters (d.list) by region
-  Object.values(g.divisions || {}).forEach(d => {
-    (d.list || []).forEach(c => {
-      const r = c.region;
-      if (r && rs[r]) rs[r].totalFighters++;
-    });
-  });
-
-  // Count player fighters by region
-  (g.roster || []).forEach(f => {
-    const r = f.region;
-    if (r && rs[r]) rs[r].totalFighters++;
-  });
-
-  // Count current champions by region
-  Object.entries(g.divisions || {}).forEach(([wc, d]) => {
-    if (!d.champ) return;
-    let fighterRegion = null;
-
-    // Check AI list
-    const aiFighter = (d.list || []).find(c => c.name === d.champ.name);
-    if (aiFighter?.region) fighterRegion = aiFighter.region;
-
-    // Check player roster as fallback
-    if (!fighterRegion) {
-      const playerFighter = (g.roster || []).find(f =>
-        f.name === d.champ.name && f.weightClass === wc
-      );
-      if (playerFighter?.region) fighterRegion = playerFighter.region;
-    }
-
-    if (fighterRegion && rs[fighterRegion]) {
-      rs[fighterRegion].championsProduced++;
-    }
-  });
 }
 
 // ── CAMP IDENTITY ──
