@@ -11,6 +11,11 @@ export function commitFightResult(g, fighter, result) {
   const f = g.roster?.find((x) => x.id === fighter.id);
   if (!f) return;
 
+  // ── Purse payout (show money always, win bonus only on win) ──
+  const purse = (fighter.booked?.show || 0) + (result.won ? (fighter.booked?.winBonus || 0) : 0);
+  const campCut = Math.round((f.contract?.managerCut || 0.18) * purse);
+  g.cash = (g.cash || 0) + campCut;
+
   f.booked = null;
 
   // ── Promotion tracking ──

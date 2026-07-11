@@ -454,4 +454,38 @@ describe('Fight Engine', () => {
       expect(typeof worldMsgs).toBe("object")
     })
   })
+
+  describe('purse payout', () => {
+    it('win: camp receives managerCut × (show + winBonus)', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const f = g.roster[0]
+      f.contract = { managerCut: 0.2, fightsLeft: 3 }
+      const startCash = g.cash
+
+      const fighter = { id: f.id, booked: { show: 1000, winBonus: 500, opponent: { name: 'Opp' } } }
+      commitFightResult(g, fighter, { won: true, how: 'Decision', r: 3 })
+
+      const purse = 1000 + 500 // show + winBonus (won)
+      const campCut = Math.round(0.2 * purse) // = 300
+      expect(g.cash).toBe(startCash + campCut)
+      expect(campCut).toBe(300)
+    })
+
+    it('loss: camp receives managerCut × show only (win bonus not paid)', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const f = g.roster[0]
+      f.contract = { managerCut: 0.2, fightsLeft: 3 }
+      const startCash = g.cash
+
+      const fighter = { id: f.id, booked: { show: 1000, winBonus: 500, opponent: { name: 'Opp' } } }
+      commitFightResult(g, fighter, { won: false, how: 'Decision', r: 3 })
+
+      const purse = 1000 + 0 // show only, win bonus not paid on loss
+      const campCut = Math.round(0.2 * purse) // = 200
+      expect(g.cash).toBe(startCash + campCut)
+      expect(campCut).toBe(200)
+    })
+  })
 })
