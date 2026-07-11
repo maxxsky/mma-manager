@@ -35,6 +35,9 @@ export const PRESSURE_MIN_WEEK = 50;
 export const PRESSURE_CASH_CLEAR = 50000;
 export const TRAINING_CRISIS_OT_THRESHOLD = 70;
 export const TRAINING_CRISIS_RATIO = 0.4;
+export const PROSPERITY_CASH_MIN = 100000;
+export const PROSPERITY_REP_MIN = 40;
+export const PROSPERITY_CASH_CLEAR = 30000;
 
 // ── Event probabilities ──
 export const PROB_TIER_EVENT = 0.3;
@@ -42,6 +45,7 @@ export const PROB_TENSION = 0.4;
 export const PROB_MOMENTUM_SPONSOR = 0.35;
 export const PROB_REBUILD_MENTOR = 0.3;
 export const PROB_PRESSURE = 0.35;
+export const PROB_PROSPERITY = 0.3;
 export const PROB_TRAINING_CRISIS = 0.35;
 
 // ── Delayed consequence thresholds ──

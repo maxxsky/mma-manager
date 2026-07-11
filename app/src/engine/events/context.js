@@ -11,6 +11,7 @@ import {
   PRESSURE_CASH_MAX, PRESSURE_REP_MAX, PRESSURE_MIN_WEEK, PRESSURE_CASH_CLEAR,
   TRAINING_CRISIS_OT_THRESHOLD, TRAINING_CRISIS_RATIO,
   EVENT_COOLDOWN_WEEKS,
+  PROSPERITY_CASH_MIN, PROSPERITY_REP_MIN, PROSPERITY_CASH_CLEAR,
 } from "./config.js";
 
 // ── CAMP STATE ──
@@ -59,6 +60,13 @@ export function computeCampState(g) {
     delete g._campState.under_pressure;
   }
 
+  // Prosperity (kebalikan Under Pressure)
+  if (g.cash >= PROSPERITY_CASH_MIN && g.rep >= PROSPERITY_REP_MIN) {
+    g._campState.prosperity = true;
+  } else if (g.cash < PROSPERITY_CASH_CLEAR) {
+    delete g._campState.prosperity;
+  }
+
   // Training Crisis
   const overtrainedCount = g.roster?.filter((f) => (f.overtraining || 0) >= TRAINING_CRISIS_OT_THRESHOLD).length || 0;
   const injuredCount = g.roster?.filter((f) => f.injury).length || 0;
@@ -102,6 +110,7 @@ export function createEventContext(g) {
     isUnderPressure: hasCampState(g, "under_pressure"),
     isHighMorale: hasCampState(g, "high_morale"),
     isTrainingCrisis: hasCampState(g, "training_crisis"),
+    isProsperous: hasCampState(g, "prosperity"),
 
     // Tier
     tier,

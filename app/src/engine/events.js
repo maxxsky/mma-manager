@@ -13,6 +13,7 @@ import { generateMomentumEvents } from "./events/generators/momentum.js";
 import { generateRebuildingEvents } from "./events/generators/rebuilding.js";
 import { generatePressureEvents } from "./events/generators/pressure.js";
 import { generateTrainingEvents } from "./events/generators/training.js";
+import { generateProsperityEvents } from "./events/generators/prosperity.js";
 import { addTimelineEvent } from "./narrative/timeline.js";
 import { generateCoachEvents } from "./events/generators/coach.js";
 import { generateFighterEvents } from "./events/generators/fighter.js";
@@ -93,6 +94,7 @@ export function enhanceEvents(g) {
   events.push(...generateRebuildingEvents(ctx));
   events.push(...generatePressureEvents(ctx));
   events.push(...generateTrainingEvents(ctx));
+  events.push(...generateProsperityEvents(ctx));
 
   // Delayed consequence checks
   events.push(...generateCoachEvents(g, ctx));
