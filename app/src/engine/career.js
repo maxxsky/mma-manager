@@ -4,6 +4,7 @@
 // ============================================================
 
 import { clamp } from "./rng.js";
+import { queueDelayedEvent } from "./events.js";
 
 // ── CAREER HISTORY ──
 
@@ -51,6 +52,24 @@ export function processFightResult(f, g, result) {
       f.milestone5Wins = true;
       recordMilestone(f, week, "streak_5", "5-fight win streak");
       events.push({ type: "milestone", title: `🔥 Hot Streak`, body: `${f.name} telah memenangkan 5 pertarungan berturut-turut!` });
+
+      queueDelayedEvent(g, {
+        title: "📰 Media Buzz",
+        body: `Media lokal mulai meliput win streak ${f.name}.`,
+        choices: [
+          { label: "Terima wawancara (rep +3)", rep: 3 },
+          { label: "Fokus latihan", chem: 1 },
+        ],
+      }, 2);
+
+      queueDelayedEvent(g, {
+        title: "🥊 Tawaran Big Fight",
+        body: `Promotor besar tawarkan slot main event buat ${f.name} karena momentum ini.`,
+        choices: [
+          { label: "Terima tantangan (rep +5, chemistry -2)", rep: 5, chem: -2 },
+          { label: "Main aman dulu", chem: 2 },
+        ],
+      }, 4);
     }
     if (streakW === 10 && !f.milestone10Wins) {
       f.milestone10Wins = true;
