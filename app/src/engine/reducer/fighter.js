@@ -1,5 +1,5 @@
 // Fighter domain — training, class changes, poaching, prospect dismissal
-import { clamp, R } from "../rng.js";
+import { clamp, R, random, fmt$ } from "../rng.js";
 import { WEIGHTS } from "../data.js";
 import { vacateTitle } from "../rankings.js";
 import {
@@ -64,6 +64,26 @@ export function reduceFighter(g, action) {
     }
     case "DISMISS_PROSPECT": {
       g.prospects = g.prospects.filter((x) => x.id !== action.prospectId);
+      break;
+    }
+    case "POACH_FIGHTER": {
+      const riv = g.rivals?.find((x) => x.id === action.rivalId);
+      if (!riv) break;
+      const tf = riv.fighters?.find((x) => x.id === action.targetId);
+      if (!tf) break;
+      if (random() * 100 < action.successChance) {
+        tf.contract = { managerCut: 0.15, fightsLeft: 3, fightsTotal: 3, durationMo: 18, signedWeek: g.week, renegoFlagged: false };
+        tf.morale = clamp(tf.morale + 15, 0, 100);
+        g.roster.push(tf);
+        riv.fighters = riv.fighters.filter((x) => x.id !== action.targetId);
+        g.cash -= action.cost;
+        riv.rivalry = clamp(riv.rivalry + 20, 0, 100);
+        g.log.unshift(`🦅 POACH SUKSES: ${tf.name} (${tf.archetype}) dari ${riv.name}!`);
+      } else {
+        g.cash -= action.failCost;
+        riv.rivalry = clamp(riv.rivalry + 5, 0, 100);
+        g.log.unshift(`❌ Poach ${tf.name} GAGAL (${fmt$(action.failCost)}) — ${riv.name} sadar.`);
+      }
       break;
     }
   }

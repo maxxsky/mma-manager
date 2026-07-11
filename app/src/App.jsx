@@ -146,7 +146,7 @@ export default function App() {
           {tab === "rank" && <Rankings g={g} t={t} rankDiv={rankDiv} setRankDiv={setRankDiv} />}
           {tab === "scout" && <Scout g={g} dispatch={dispatch} t={t} fmt$={fmt$} scoutFilterArch={scoutFilterArch} setScoutFilterArch={setScoutFilterArch} scoutFilterWC={scoutFilterWC} setScoutFilterWC={setScoutFilterWC} scoutFighter={scoutFighter} tier={tier} />}
           {tab === "inbox" && <Inbox g={g} dispatch={dispatch} setTab={setTab} />}
-          {tab === "rivals" && <RivalsScreen g={g} up={up} />}
+          {tab === "rivals" && <RivalsScreen g={g} dispatch={dispatch} />}
           {tab === "mgmt" && <Facility g={g} dispatch={dispatch} coachCap={tier.coachCap} rosterCap={tier.rosterCap} />}
           {tab === "finance" && <Finance g={g} />}
           {tab === "achievements" && <Achievements g={g} />}

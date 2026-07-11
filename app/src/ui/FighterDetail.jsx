@@ -231,7 +231,7 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
                   const active = f.booked ? k === "fightcamp" : f.training?.type === k;
                   return (
                     <button key={k} className="chip" disabled={!!f.booked}
-                            onClick={() => { saveLastTraining(f, k, f.training?.intensity || "Medium"); up(g2 => reducer(g2, { type: "SET_TRAINING", fighterId: f.id, program: k, intensity: f.training?.intensity || "Medium" })); }}
+                            onClick={() => { saveLastTraining(f, k, f.training?.intensity || "Medium"); dispatch({ type: "SET_TRAINING", fighterId: f.id, program: k, intensity: f.training?.intensity || "Medium" }); }}
                       style={{ fontFamily: T.body, fontSize: 11, fontWeight: 600, padding: "6px 12px",
                         borderRadius: 8, cursor: f.booked ? "default" : "pointer", border: `1px solid ${active ? T.ember : T.line}`,
                         background: active ? `${T.ember}22` : "transparent", color: active ? T.ember : T.txt3,
@@ -250,7 +250,7 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
                   const active = f.training?.intensity === k;
                   return (
                     <button key={k} className="chip" disabled={!!f.booked}
-                      onClick={() => { const type = f.booked ? "fightcamp" : f.training?.type || "striking"; up(g2 => reducer(g2, { type: "SET_TRAINING", fighterId: f.id, program: type, intensity: k })); }}
+                      onClick={() => { const type = f.booked ? "fightcamp" : f.training?.type || "striking"; dispatch({ type: "SET_TRAINING", fighterId: f.id, program: type, intensity: k }); }}
                       style={{ fontFamily: T.body, fontSize: 11, fontWeight: 600, padding: "5px 10px",
                         borderRadius: 6, cursor: f.booked ? "default" : "pointer", border: `1px solid ${active ? T.gold : T.line}`,
                         background: active ? `${T.gold}22` : "transparent", color: active ? T.gold : T.txt3 }}>

@@ -4,14 +4,14 @@ import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
 import { ARCH_COLOR, RIVAL_TRAITS, CAMP_TIERS } from "../engine/data.js";
 import { getCampLifecycleLabel } from "../engine/shadow-ai.js";
 import { avgSkill, tierOf } from "../engine/fighter.js";
-import { random, clamp } from "../engine/rng.js";
+import { clamp } from "../engine/rng.js";
 
 /* =============================================================================
    RIVALS SCREEN — Ironfist Edition
    Rivalry cards: head-to-head, story, top fighters, poach.
 ============================================================================= */
 
-export default function RivalsScreen({ g, up }) {
+export default function RivalsScreen({ g, dispatch }) {
   if (!g.rivals || g.rivals.length === 0) {
     return (
       <Panel style={{ textAlign: "center", padding: "40px 20px" }}>
@@ -316,38 +316,7 @@ function RivalCard({ rc, g, up }) {
                     color={T.ember}
                     disabled={!canAfford || !hasSpace}
                     onClick={() =>
-                      up((n) => {
-                        const riv = n.rivals.find((x) => x.id === rc.id);
-                        if (!riv) return;
-                        const tf = riv.fighters.find((x) => x.id === target.id);
-                        if (!tf) return;
-                        if (random() * 100 < successChance) {
-                          tf.contract = {
-                            managerCut: 0.15,
-                            fightsLeft: 3,
-                            fightsTotal: 3,
-                            durationMo: 18,
-                            signedWeek: n.week,
-                            renegoFlagged: false,
-                          };
-                          tf.morale = clamp(tf.morale + 15, 0, 100);
-                          n.roster.push(tf);
-                          riv.fighters = riv.fighters.filter(
-                            (x) => x.id !== target.id
-                          );
-                          n.cash -= cost;
-                          riv.rivalry = clamp(riv.rivalry + 20, 0, 100);
-                          n.log.unshift(
-                            `🦅 POACH SUKSES: ${target.name} (${target.archetype}) dari ${rc.name}!`
-                          );
-                        } else {
-                          n.cash -= failCost;
-                          riv.rivalry = clamp(riv.rivalry + 5, 0, 100);
-                          n.log.unshift(
-                            `❌ Poach ${target.name} GAGAL (-${fmt$(failCost)}) — ${rc.name} sadar. Rivalry +5.`
-                          );
-                        }
-                      })
+                      dispatch({ type: "POACH_FIGHTER", rivalId: rc.id, targetId: target.id, cost, failCost, successChance })
                     }
                     title={
                       !hasSpace

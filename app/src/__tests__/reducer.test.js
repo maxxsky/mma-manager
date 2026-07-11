@@ -85,4 +85,42 @@ describe('Reducer', () => {
       expect(g.log).toBeDefined()
     })
   })
+
+  describe('POACH_FIGHTER', () => {
+    it('success: fighter moves to roster, cash decreases, rivalry increases', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const rivalId = 'poach-rival-1'
+      const target = { id: 'poach1', name: 'PoachTarget', archetype: 'Boxer', attrs: { striking: 50, wrestling: 50, bjj: 50, cardio: 50, strength: 50, chin: 50, footwork: 50, fightIQ: 50 } }
+      g.rivals.push({ id: rivalId, name: 'TestRival', fighters: [target], rivalry: 30 })
+      const rosterBefore = g.roster.length
+      const cashBefore = g.cash
+
+      reducer(g, { type: 'POACH_FIGHTER', rivalId, targetId: 'poach1', cost: 5000, failCost: 1000, successChance: 100 })
+
+      expect(g.roster.length).toBe(rosterBefore + 1)
+      expect(g.roster.find((x) => x.id === 'poach1')).toBeDefined()
+      expect(g.cash).toBe(cashBefore - 5000)
+      expect(g.rivals.find((x) => x.id === rivalId).rivalry).toBe(50) // 30 + 20
+      expect(g.rivals.find((x) => x.id === rivalId).fighters.length).toBe(0)
+    })
+
+    it('failure: fighter stays with rival, cash decreases less, rivalry increases less', () => {
+      useSeed(42)
+      const g = createTestGame()
+      const rivalId = 'poach-rival-2'
+      const target = { id: 'poach2', name: 'FailTarget', archetype: 'Wrestler', attrs: { striking: 40, wrestling: 70, bjj: 40, cardio: 50, strength: 60, chin: 50, footwork: 40, fightIQ: 50 } }
+      g.rivals.push({ id: rivalId, name: 'TestRival2', fighters: [target], rivalry: 30 })
+      const rosterBefore = g.roster.length
+      const cashBefore = g.cash
+
+      reducer(g, { type: 'POACH_FIGHTER', rivalId, targetId: 'poach2', cost: 5000, failCost: 1000, successChance: 0 })
+
+      expect(g.roster.length).toBe(rosterBefore) // no change
+      expect(g.roster.find((x) => x.id === 'poach2')).toBeUndefined()
+      expect(g.cash).toBe(cashBefore - 1000)
+      expect(g.rivals.find((x) => x.id === rivalId).rivalry).toBe(35) // 30 + 5
+      expect(g.rivals.find((x) => x.id === rivalId).fighters.length).toBe(1) // still there
+    })
+  })
 })
