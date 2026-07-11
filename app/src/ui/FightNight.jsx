@@ -70,6 +70,7 @@ export default function FightNight({ fighter, done }) {
       hpA: Math.max(0, 100 - totalDmgA / 1.5),
       hpB: Math.max(0, 100 - totalDmgB / 1.5),
       totalDmgA, totalDmgB,
+      momentum: res.momentum,
     });
     setTickIdx(0);
     setRnd(rn);
