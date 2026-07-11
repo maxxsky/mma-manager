@@ -102,7 +102,7 @@ export function assignAgent(f) {
 }
 
 export function avgSkill(f) {
-  return ATTRS.reduce((s, k) => s + f.attrs[k], 0) / ATTRS.length;
+  return Math.round(ATTRS.reduce((s, k) => s + f.attrs[k], 0) / ATTRS.length);
 }
 
 export function tierOf(f) {

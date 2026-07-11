@@ -148,8 +148,8 @@ export const Mono = ({ name, color, size = 44, champ }) => {
 
 // OVR badge — synced with fighter avgSkill
 export const OVR = ({ f, size = 40 }) => {
-  const avgSkill = f.attrs ? Math.round(Object.values(f.attrs).reduce((s, v) => s + v, 0) / Object.keys(f.attrs).length) : 0;
-  return <Ovr v={avgSkill} size={size} />;
+  const avg = f.attrs ? Math.round(Object.values(f.attrs).reduce((s, v) => s + v, 0) / Object.keys(f.attrs).length) : 0;
+  return <Ovr v={avg} size={size} />;
 };
 export const Ovr = ({ v, size = 40 }) => (
   <div style={{ width: size, height: size, borderRadius: 8, flexShrink: 0,
