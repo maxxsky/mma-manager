@@ -11,7 +11,7 @@
 //   { type: "halfGuard", top: "A"|"B" } for ground.
 // ============================================================
 
-import { R, RI, clamp, random } from "./rng.js";
+import { R, RI, clamp, random, mulberry32, setRNG } from "./rng.js";
 import { ATTRS } from "./data.js";
 import * as CFG from "./fight/config.js";
 import { matchupMods } from "./fight/matchup.js";
@@ -258,6 +258,59 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
     duringRound: rnd,
     winner: finish ? finish.by : (ptsA >= ptsB ? "A" : "B"),
   };
+}
+
+// ── HEADLESS FULL FIGHT ──
+
+// Pure simulation — no React, no UI. Replaces FightNight.jsx loop for
+// non-interactive contexts (AI vs AI, bulk sim, replay).
+// Set global RNG ke seed yang dikasih, jalanin semua ronde, return hasil.
+// cornerPolicy(roundResult, roundNumber, state) → "go"|"save"|"body"
+export function runFight(A, B, plan, cornerPolicy, seed, totalRounds) {
+  setRNG(mulberry32(seed));
+
+  let staA = 100, staB = 100, mom = 0;
+  let totalDmgA = 0, totalDmgB = 0;
+  const roundLogs = [];
+  let winner = null, how = null, finalRound = totalRounds;
+
+  for (let r = 1; r <= totalRounds; r++) {
+    const corner = r === 1 ? "go" : cornerPolicy(null, r, { staA, staB, momentum: mom, totalDmgA, totalDmgB });
+    const res = simRound(r, A, B, staA, staB, plan, corner, mom);
+
+    staA = res.staA; staB = res.staB;
+    mom = res.momentum;
+    totalDmgA += res.dmgA;
+    totalDmgB += res.dmgB;
+
+    roundLogs.push(res);
+
+    if (res.finish) {
+      winner = res.winner;
+      how = res.finish.how;
+      finalRound = r;
+      break;
+    }
+
+    // Doctor stoppage (replikasi FightNight.jsx: cutB >= 6 && random() < 0.3)
+    if (r < totalRounds && random() < 0.3) {
+      const cutB = totalDmgB > 400 ? 8 : totalDmgB > 250 ? 6 : 3;
+      if (cutB >= 6) {
+        winner = "A";
+        how = "Doctor Stoppage";
+        finalRound = r;
+        break;
+      }
+    }
+  }
+
+  if (!winner) {
+    const last = roundLogs[roundLogs.length - 1];
+    winner = last.winner;
+    how = "Decision";
+  }
+
+  return { winner, how, round: finalRound, totalDmgA, totalDmgB, roundLogs };
 }
 
 // ── PREP FIGHTER ──

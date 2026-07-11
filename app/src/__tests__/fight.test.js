@@ -1,7 +1,7 @@
 // Fight Engine Tests — simulation correctness
 import { describe, it, expect } from 'vitest'
 import { createTestFighter, useSeed, TEST_SEED } from './helpers.js'
-import { simRound, prepFighter, autoGamePlan } from '../engine/fight.js'
+import { simRound, prepFighter, autoGamePlan, runFight } from '../engine/fight.js'
 import { mulberry32, setRNG } from '../engine/rng.js'
 
 describe('Fight Engine', () => {
@@ -131,6 +131,46 @@ describe('Fight Engine', () => {
       const r1 = run()
       const r2 = run()
       expect(r1).toEqual(r2)
+    })
+  })
+
+  describe('runFight (headless)', () => {
+    it('same seed + same inputs = identical result (deep equal)', () => {
+      const A = prepFighter(fighterA)
+      const B = prepFighter(fighterB)
+      const r1 = runFight(A, B, 'Balanced', () => 'go', 99999, 3)
+      const r2 = runFight(A, B, 'Balanced', () => 'go', 99999, 3)
+      expect(r1.winner).toBe(r2.winner)
+      expect(r1.how).toBe(r2.how)
+      expect(r1.round).toBe(r2.round)
+      expect(r1.totalDmgA).toBe(r2.totalDmgA)
+      expect(r1.totalDmgB).toBe(r2.totalDmgB)
+    })
+
+    it('produces valid winner and round between 1 and total', () => {
+      const A = prepFighter(fighterA)
+      const B = prepFighter(fighterB)
+      const result = runFight(A, B, 'Balanced', () => 'go', 42, 3)
+      expect(['A', 'B']).toContain(result.winner)
+      expect(result.round).toBeGreaterThanOrEqual(1)
+      expect(result.round).toBeLessThanOrEqual(3)
+      expect(result.roundLogs.length).toBeGreaterThanOrEqual(1)
+      expect(result.roundLogs.length).toBeLessThanOrEqual(3)
+    })
+
+    it('no crash or NaN across 100 different seeds', () => {
+      for (let s = 0; s < 100; s++) {
+        const A = prepFighter(fighterA)
+        const B = prepFighter(fighterB)
+        const r = runFight(A, B, 'Balanced', () => 'go', s * 137 + 7, 3)
+        expect(['A', 'B']).toContain(r.winner)
+        expect(r.round).toBeGreaterThanOrEqual(1)
+        expect(r.round).toBeLessThanOrEqual(3)
+        expect(isFinite(r.totalDmgA)).toBe(true)
+        expect(isFinite(r.totalDmgB)).toBe(true)
+        expect(r.totalDmgA).toBeGreaterThanOrEqual(0)
+        expect(r.totalDmgB).toBeGreaterThanOrEqual(0)
+      }
     })
   })
 })
