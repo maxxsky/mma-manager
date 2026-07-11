@@ -6,12 +6,21 @@ export function createCommentary() {
   const summaryLog = [];
   const tickLog = [];
 
+  // Format timestamp dengan carry — offset komentar (misal exSec + 12) bisa
+  // dorong detik lewat dari 60, jadi perlu di-normalize ke menit:detik yang valid.
+  const fmtTime = (min, sec) => {
+    const totalSec = min * 60 + sec;
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}:${String(s).padStart(2, "0")}`;
+  };
+
   const both = (min, sec, msg) => {
-    const line = `[${min}:${String(sec).padStart(2, "0")}] ${msg}`;
+    const line = `[${fmtTime(min, sec)}] ${msg}`;
     summaryLog.push(line); tickLog.push(line);
   };
   const tickOnly = (min, sec, msg) =>
-    tickLog.push(`[${min}:${String(sec).padStart(2, "0")}] ${msg}`);
+    tickLog.push(`[${fmtTime(min, sec)}] ${msg}`);
 
   const say = (templates, ...args) => {
     const t = pick(templates);
