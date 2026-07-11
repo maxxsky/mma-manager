@@ -98,6 +98,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
     const exSec = Math.floor((ex * 60 / nEx) % 60);
 
     const exType = pickExchange(position, A, B, planA);
+    let exDmgA = 0, exDmgB = 0; // damage dari exchange INI SAJA (bukan kumulatif round)
 
     const momMult = clamp(1 + (mom > 0 ? mom * CFG.MOMENTUM_DIVISOR_POS : mom * CFG.MOMENTUM_DIVISOR_NEG), CFG.MOMENTUM_MULT_MIN, CFG.MOMENTUM_MULT_MAX);
     const phase = ex < CFG.EARLY_EXCHANGES ? CFG.PHASE_EARLY : ex >= nEx - 2 ? CFG.PHASE_LATE : CFG.PHASE_MID;
@@ -108,6 +109,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
       archMsgs.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
       const pow = exType === "power" ? CFG.POWER_SHOT_MULT : 1;
       const result = clampDamage(resolveStriking(exType, A, B, stA, stB, cornerA, agg, phase, momMult, pow, matchup, expMult, ptsA, ptsB, legDmgA, legDmgB, comm, exMin, exSec));
+      exDmgA = result.dmgA; exDmgB = result.dmgB;
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
       legDmgA += result.legDmgA; legDmgB += result.legDmgB;
@@ -130,6 +132,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
       const archMsgs2 = archetypeCommentary(A, B, exType, matchup);
       archMsgs2.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
       const result = clampDamage(resolveClinch(exType, A, B, stA, stB, agg, matchup, comm, exMin, exSec));
+      exDmgA = result.dmgA; exDmgB = result.dmgB;
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
       legDmgA += result.legDmgA; legDmgB += result.legDmgB;
@@ -146,6 +149,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
       const archMsgs3 = archetypeCommentary(A, B, exType, matchup);
       archMsgs3.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
       const result = clampDamage(resolveTakedown(exType, A, B, stA, stB, planA, cornerA, matchup, comm, exMin, exSec));
+      exDmgA = result.dmgA; exDmgB = result.dmgB;
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
       legDmgA += result.legDmgA; legDmgB += result.legDmgB;
@@ -160,6 +164,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
       const archMsgs4 = archetypeCommentary(A, B, exType, matchup);
       archMsgs4.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
       const result = clampDamage(resolveGround(exType, A, B, stA, stB, position, matchup, subProgress, bjjGuardProgress, SUB_THRESHOLD, comm, exMin, exSec));
+      exDmgA = result.dmgA; exDmgB = result.dmgB;
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
       legDmgA += result.legDmgA; legDmgB += result.legDmgB;
@@ -176,15 +181,17 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0) {
     const isOnGround = position.type !== "standing";
     const aOnTop = isOnGround && position.top === "A";
     const bOnTop = isOnGround && position.top === "B";
-    if (!finish && !knockdown && (dmgA > CFG.KD_DMG_THRESHOLD || dmgB > CFG.KD_DMG_THRESHOLD)) {
-      const kdTarget = dmgA > dmgB ? A : B;
+    if (!finish && !knockdown && (exDmgA > CFG.KD_EXCHANGE_THRESHOLD || exDmgB > CFG.KD_EXCHANGE_THRESHOLD)) {
+      const kdTarget = exDmgA > exDmgB ? A : B;
       const isTargetA = kdTarget === A;
       if ((isTargetA && aOnTop) || (!isTargetA && bOnTop)) {
         // Stunned but controlling — no KD
       } else {
         const chin = effAttr(kdTarget, "chin", isTargetA ? stA : stB);
         const attackerStr = effAttr(isTargetA ? B : A, "strength", isTargetA ? stB : stA) * (1 + (isTargetA ? (matchup.bStrike || 0) : 0));
-        const kdChance = clamp(((isTargetA ? dmgA : dmgB) - 40) / chin * CFG.KD_CHIN_MULT + (attackerStr - 40) * CFG.KD_STR_MULT, 0, CFG.KD_CHANCE_MAX) * (planA === "Finish It" ? 1.5 : 1) * cautMult;
+        const exDmg = isTargetA ? exDmgA : exDmgB;
+        const cumDmg = isTargetA ? dmgA : dmgB;
+        const kdChance = clamp((exDmg - CFG.KD_EXCHANGE_THRESHOLD) / chin * CFG.KD_CHIN_MULT + (attackerStr - 40) * CFG.KD_STR_MULT + cumDmg * CFG.KD_FATIGUE_MULT, 0, CFG.KD_CHANCE_MAX) * (planA === "Finish It" ? 1.5 : 1) * cautMult;
         if (random() < kdChance) {
           knockdown = { fighter: isTargetA ? "A" : "B", name: kdTarget.name, canRecover: true };
           comm.both(exMin + 1, 0, `${kdTarget.name} IS DOWN! He's hurt bad!`);
