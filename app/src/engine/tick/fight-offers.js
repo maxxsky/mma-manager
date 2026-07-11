@@ -3,6 +3,16 @@ import { R, RI, clamp, uid, random } from "../rng.js";
 import { WEIGHTS } from "../data.js";
 import { genFighter, avgSkill } from "../fighter.js";
 import { rankOf, stripTitle } from "../rankings.js";
+import { pickPromotion } from "../data/promotions.js";
+
+// Helper: attach promotion to an offer object based on its tier
+function attachPromotion(offer, tier, g, ctx) {
+  const prom = pickPromotion(tier, ctx);
+  if (prom) {
+    offer.promotionId = prom.id;
+    offer.promotionName = prom.name;
+  }
+}
 
 export function tickFightOffers(g) {
   if (!g || !g.roster) return;
@@ -72,6 +82,7 @@ export function tickFightOffers(g) {
         opponent: opp, title: true, defense: true, oppRank: 1, contenderId: c0.id,
         titleTier: "Major", titleText: "🛡️ MANDATORY TITLE DEFENSE", weeks: RI(4, 6),
       });
+      attachPromotion(g.inbox[0], "Major", g, { r: rankOf(g, f), streakW: f.streakW, streakL: f.streakL });
       g.log.unshift(
         `🛡️ Mandatory defense untuk ${f.name} tiba — tolak atau biarkan expire = title dicopot.`,
       );
@@ -252,6 +263,13 @@ export function tickFightOffers(g) {
         titleText, story, shortNotice, isMainEvent, isTitleEliminator,
         weeks: shortNotice ? RI(1, 2) : RI(4, 6),
       });
+    }
+  });
+
+  // Attach promotion to any offer that doesn't have one yet
+  g.inbox.forEach((m) => {
+    if (m.type === "offer" && !m.promotionId) {
+      attachPromotion(m, m.tier, g, {});
     }
   });
 

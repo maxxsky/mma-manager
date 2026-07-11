@@ -2,6 +2,7 @@
 import { genFighter, assignAgent, genCoach } from "./fighter.js";
 import { genDivisions, initPromoterRel } from "./rankings.js";
 import { genRivalCamp } from "./rivals.js";
+import { getPromotionsData } from "./data/promotions.js";
 
 export function createEconomy() {
   return {
@@ -52,5 +53,6 @@ export function createWorld() {
     prospects: [],
     rivals: [genRivalCamp(0), genRivalCamp(1), genRivalCamp(2)],
     promoterRel: initPromoterRel(),
+    promotions: getPromotionsData(),
   };
 }

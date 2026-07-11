@@ -7,6 +7,7 @@ import { commitFightResult } from '../engine/fights/commitResult.js'
 import { processTitleChange } from '../engine/career.js'
 import { mulberry32, setRNG } from '../engine/rng.js'
 import { tick } from '../engine/state.js'
+import { PROMOTIONS, pickPromotion, getPromotionsData } from '../engine/data.js'
 
 describe('Fight Engine', () => {
   const fighterA = createTestFighter({ name: 'Alpha', id: 'a1' })
@@ -329,6 +330,28 @@ describe('Fight Engine', () => {
       ]
       const events = processTitleChange(f, g, 'won')
       expect(f.titles).not.toContain('Multi-Division Champion')
+    })
+  })
+
+  describe('promotion system', () => {
+    it('PROMOTIONS has 10 entries across 5 tiers', () => {
+      expect(PROMOTIONS.length).toBe(10)
+      const tiers = new Set(PROMOTIONS.map((p) => p.tier))
+      expect(tiers.size).toBe(5)
+      expect(tiers.has('Local')).toBe(true)
+      expect(tiers.has('Premier')).toBe(true)
+    })
+
+    it('getPromotionsData returns all 10 with same ids', () => {
+      const data = getPromotionsData()
+      expect(data.length).toBe(10)
+      expect(data[0].id).toBe(PROMOTIONS[0].id)
+    })
+
+    it('pickPromotion returns a valid promotion for a given tier', () => {
+      const prom = pickPromotion('Major', {})
+      expect(prom).not.toBeNull()
+      expect(prom.tier).toBe('Major')
     })
   })
 })

@@ -242,6 +242,14 @@ export default function Rankings({ g, t }) {
               <div style={{ fontSize: 10, color: T.txt3, marginTop: 2 }}>
                 Juara sejak minggu {champ.wonWeek ?? "?"} · {champ.titleDefenses ?? 0}x defense
               </div>
+              {champ.promotionId && (() => {
+                const prom = g.promotions?.find((p) => p.id === champ.promotionId);
+                return prom ? (
+                  <div style={{ fontSize: 10, color: T.gold, marginTop: 1 }}>
+                    {prom.name}
+                  </div>
+                ) : null;
+              })()}
             </div>
           </div>
           <Tag color={champ.player ? T.pos : T.txt3} solid>

@@ -73,6 +73,7 @@ export default function Inbox({ g, dispatch, setTab }) {
                   {m.isTitleEliminator && <Tag color={T.warn}>{t("UI.rankings") + " Eliminator"}</Tag>}
                   {m.shortNotice && <Tag color={T.neg}>{t("UI.expiresWeek")}</Tag>}
                   <Tag color={accent}>{m.tier}</Tag>
+                  {m.promotionName && <span style={{ fontFamily: T.body, fontSize: 10, color: T.txt3, marginLeft: 4 }}>{m.promotionName}</span>}
                 </div>
                 {m.expires != null && (
                   <span style={{

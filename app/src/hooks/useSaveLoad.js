@@ -5,9 +5,10 @@ import { backupSave } from "../engine/polish.js";
 import { genDivisions, initPromoterRel } from "../engine/rankings.js";
 import { genRivalCamp } from "../engine/rivals.js";
 import { clamp, RI, pick } from "../engine/rng.js";
-import { ATTRS, AMBITION_KEYS } from "../engine/data.js";
+import { ATTRS, AMBITION_KEYS, PROMOTIONS } from "../engine/data.js";
 import { agentFor } from "../engine/fighter.js";
 import { setUID } from "../engine/rng.js";
+import { getPromotionsData } from "../engine/data/promotions.js";
 
 export function useSaveLoad(setG) {
   const [loaded, setLoaded] = useState(false);
@@ -34,6 +35,7 @@ export function useSaveLoad(setG) {
           if (!s.divisions) s.divisions = genDivisions();
           if (!s.rivals) s.rivals = [genRivalCamp(0), genRivalCamp(1), genRivalCamp(2)];
           if (!s.promoterRel) s.promoterRel = initPromoterRel();
+          if (!s.promotions) s.promotions = getPromotionsData();
           if (s.campTier == null) s.campTier = 0;
           if (!s.relationships) s.relationships = {};
           if (s.rep == null || isNaN(s.rep) || s.rep <= 0) s.rep = 8;
