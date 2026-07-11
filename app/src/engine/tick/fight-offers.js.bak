@@ -225,17 +225,6 @@ export function tickFightOffers(g) {
       let oppIdx = r != null ? clamp(r - 2 + RI(-1, 1), 0, 14) : RI(11, 14);
       if (f.streakL >= 2) oppIdx = clamp(oppIdx - RI(2, 4), 0, 14);
       else if (f.streakW >= 3) oppIdx = clamp(oppIdx + RI(1, 2), 0, 14);
-      // Rivalry nudge: if a past opponent (count >= 2) is near oppIdx, nudge toward them
-      if (f.rivalries && div) {
-        for (let i = Math.max(0, oppIdx - 3); i <= Math.min(14, oppIdx + 3); i++) {
-          const c = div.list[i];
-          if (c && f.rivalries[c.name]?.count >= 2) {
-            if (i > oppIdx) oppIdx = clamp(oppIdx + RI(1, 2), 0, 14);
-            else oppIdx = clamp(oppIdx - RI(1, 2), 0, 14);
-            break;
-          }
-        }
-      }
 
       let opp, oppRank = null, contenderId = null;
       if (titleTier === "Major" && div && div.champ) {

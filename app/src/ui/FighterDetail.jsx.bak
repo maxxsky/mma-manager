@@ -180,31 +180,8 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
                   </div>
                 );
               })()}
-            </>          )}
-          {/* ── Rivalries ── */}
-          {f.rivalries && Object.keys(f.rivalries).length > 0 && (() => {
-            const sorted = Object.entries(f.rivalries).sort((a, b) => b[1].count - a[1].count || (b[1].wins + b[1].losses) - (a[1].wins + a[1].losses));
-            const top = sorted[0];
-            return (
-              <div style={{ marginTop: 12 }}>
-                <Eyebrow>Rivalries</Eyebrow>
-                <div style={{ display: "grid", gap: 6 }}>
-                  {sorted.slice(0, 5).map(([name, r]) => {
-                    const isCareerRival = top && name === top[0] && sorted.length > 1 && r.count >= 2;
-                    const intensity = r.count >= 5 ? 3 : r.count >= 3 ? 2 : r.count >= 1 ? 1 : 0;
-                    return (
-                      <div key={name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", background: T.bg, borderRadius: T.r }}>
-                        <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt, flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
-                        <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: r.wins > r.losses ? T.pos : r.losses > r.wins ? T.neg : T.txt2 }}>{r.wins}-{r.losses}</span>
-                        <span style={{ fontFamily: T.mono, fontSize: 11, color: T.txt3 }}>{"🔥".repeat(intensity)}{"💧".repeat(3 - intensity)}</span>
-                        {isCareerRival && <span style={{ fontFamily: T.mono, fontSize: 8, fontWeight: 700, letterSpacing: 0.5, color: T.ember, padding: "1px 5px", borderRadius: T.r, border: `1px solid ${T.ember}44`, background: `${T.ember}10` }}>CAREER RIVAL</span>}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })()}
+            </>
+          )}
         </Panel>
 
         {/* Training assignment */}

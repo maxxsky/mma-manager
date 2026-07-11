@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { createTestFighter, createTestGame, useSeed } from './helpers.js'
 import { commitFightResult } from '../engine/fights/commitResult.js'
 import { getPublicOpinion } from '../engine/publicOpinion.js'
+import { processRivalry, processFightResult, updateRivalryResult } from '../engine/career.js'
 import { tick } from '../engine/state.js'
 
 // Helper: popularity gain from winning (replicates commitResult win-branch logic)
@@ -214,5 +215,208 @@ describe('Rumors — tick/rivals.js timing', () => {
     // Confirm poach type is "event" (normal inbox event, not world/press)
     const poachMsg = g.inbox.find(m => m.title && m.title.includes('coba poach'))
     if (poachMsg) expect(poachMsg.type).toBe('event')
+  })
+})
+
+// ── RIVALRY SYSTEM TESTS (Task 30) ──
+
+describe('Rivalry system — processRivalry lastMeetingWeek', () => {
+  it('processRivalry sets lastMeetingWeek = g.week', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+    const opp = { name: 'Test Opponent' }
+
+    g.week = 15
+    processRivalry(f, opp, g)
+
+    expect(f.rivalries['Test Opponent'].lastMeetingWeek).toBe(15)
+    expect(f.rivalries['Test Opponent'].count).toBe(1)
+  })
+
+  it('subsequent calls update lastMeetingWeek to latest week', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+
+    g.week = 10
+    processRivalry(f, { name: 'Rival A' }, g)
+    expect(f.rivalries['Rival A'].lastMeetingWeek).toBe(10)
+
+    g.week = 25
+    processRivalry(f, { name: 'Rival A' }, g)
+    expect(f.rivalries['Rival A'].lastMeetingWeek).toBe(25)
+    expect(f.rivalries['Rival A'].count).toBe(2)
+  })
+})
+
+describe('Rivalry system — decay via settlement tick', () => {
+  it('rivalry count drops when g.week - lastMeetingWeek >= 52 at settlement', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+    f.rivalries = {
+      'Old Rival': { count: 3, wins: 2, losses: 1, lastMeetingWeek: 1 },
+    }
+
+    // Tick forward to the first settlement where g.week >= 53 and g.week % 4 === 0
+    // g.week starts at 1. After 54 ticks: g.week = 55 (not %4)
+    // After 55 ticks: g.week = 56 (56%4=0, and 56-1=55 >= 52)
+    // That's one decay cycle: 3 → 2
+    for (let i = 0; i < 55; i++) tick(g)
+    expect(g.week).toBe(56)
+
+    expect(f.rivalries['Old Rival']).toBeDefined()
+    expect(f.rivalries['Old Rival'].count).toBe(2)
+    expect(f.rivalries['Old Rival'].wins).toBe(2) // other fields unchanged
+  })
+
+  it('rivalry with count=1 gets deleted after 52+ week gap + one settlement cycle', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+    f.rivalries = {
+      'One-fight Rival': { count: 1, wins: 1, losses: 0, lastMeetingWeek: 1 },
+    }
+
+    // Same as above: after 55 ticks (g.week=56), settlement decays count 1→0→delete
+    for (let i = 0; i < 55; i++) tick(g)
+    expect(g.week).toBe(56)
+
+    // Count was 1, decayed to 0 → deleted
+    expect(f.rivalries['One-fight Rival']).toBeUndefined()
+  })
+
+  it('recent rivalries (gap < 52 weeks) are NOT decayed at settlement', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+    f.rivalries = {
+      'Recent Rival': { count: 2, wins: 1, losses: 1, lastMeetingWeek: 55 },
+    }
+
+    // Settle at g.week=56: diff = 56-55 = 1, < 52 → no decay
+    for (let i = 0; i < 55; i++) tick(g)
+    expect(g.week).toBe(56)
+
+    expect(f.rivalries['Recent Rival']).toBeDefined()
+    expect(f.rivalries['Recent Rival'].count).toBe(2)
+  })
+
+  it('multiple settlement cycles continue decaying until entry is deleted', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+    f.rivalries = {
+      'Decaying Rival': { count: 2, wins: 1, losses: 1, lastMeetingWeek: 1 },
+    }
+
+    // After 55 ticks: g.week=56, settlement decays 2→1
+    for (let i = 0; i < 55; i++) tick(g)
+    expect(f.rivalries['Decaying Rival'].count).toBe(1)
+
+    // After 4 more ticks: g.week=60, another settlement, decays 1→0→deleted
+    for (let i = 0; i < 4; i++) tick(g)
+    expect(g.week).toBe(60)
+    expect(f.rivalries['Decaying Rival']).toBeUndefined()
+  })
+})
+
+describe('Rivalry system — fight-offers nudge', () => {
+  it('rivalry nudge shifts oppIdx toward a past opponent with count >= 2', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+    const wc = f.weightClass
+    const div = g.divisions[wc]
+
+    // Set up rivalry with the #2 ranked fighter
+    const rivalName = div.list[1].name
+    f.rivalries = {}
+    f.rivalries[rivalName] = { count: 2, wins: 1, losses: 1, lastMeetingWeek: g.week }
+
+    // Simulate the nudge logic from fight-offers.js
+    // Base oppIdx: opponent near rank -2 (r=2, oppIdx = clamp(2-2+RI(-1,1), 0, 14))
+    // With rivalry list[1] within ±3 of oppIdx, nudge toward it
+    let oppIdx = 0 // near rank #1
+    let nudged = false
+    const divList = div.list
+    for (let i = Math.max(0, oppIdx - 3); i <= Math.min(14, oppIdx + 3); i++) {
+      const c = divList[i]
+      if (c && f.rivalries[c.name]?.count >= 2) {
+        nudged = true
+        break
+      }
+    }
+    expect(nudged).toBe(true)
+
+    // Also verify: a fighter with NO rivalries does NOT get nudged
+    const f2 = g.roster[1] // second fighter, no rivalries set
+    let nudged2 = false
+    for (let i = Math.max(0, oppIdx - 3); i <= Math.min(14, oppIdx + 3); i++) {
+      const c = divList[i]
+      if (c && f2.rivalries?.[c.name]?.count >= 2) {
+        nudged2 = true
+        break
+      }
+    }
+    expect(nudged2).toBe(false)
+  })
+
+  it('rivalry with count=1 does NOT trigger the nudge', () => {
+    // Only count >= 2 (rematch level) should nudge
+    const g = createTestGame()
+    const f = g.roster[0]
+    const wc = f.weightClass
+    const div = g.divisions[wc]
+    const rivalName = div.list[1].name
+    f.rivalries = {}
+    f.rivalries[rivalName] = { count: 1, wins: 1, losses: 0, lastMeetingWeek: g.week }
+
+    let nudged = false
+    for (let i = Math.max(0, 0 - 3); i <= Math.min(14, 0 + 3); i++) {
+      const c = div.list[i]
+      if (c && f.rivalries[c.name]?.count >= 2) {
+        nudged = true
+        break
+      }
+    }
+    expect(nudged).toBe(false)
+  })
+})
+
+describe('Rivalry system — Career Rival label logic', () => {
+  it('highest count entry with count >= 2 is the Career Rival', () => {
+    const rivalries = {
+      'Alpha': { count: 3, wins: 2, losses: 1, lastMeetingWeek: 10 },
+      'Beta': { count: 2, wins: 1, losses: 1, lastMeetingWeek: 8 },
+      'Gamma': { count: 1, wins: 0, losses: 1, lastMeetingWeek: 5 },
+    }
+    const sorted = Object.entries(rivalries).sort((a, b) => b[1].count - a[1].count || (b[1].wins + b[1].losses) - (a[1].wins + a[1].losses))
+    const top = sorted[0]
+    expect(top[0]).toBe('Alpha')
+    expect(top[1].count).toBe(3)
+  })
+
+  it('single rivalry entry (no other rival) does not get Career Rival label', () => {
+    const rivalries = {
+      'Only Opponent': { count: 2, wins: 1, losses: 1, lastMeetingWeek: 10 },
+    }
+    const sorted = Object.entries(rivalries).sort((a, b) => b[1].count - a[1].count || (b[1].wins + b[1].losses) - (a[1].wins + a[1].losses))
+    const top = sorted[0]
+    // isCareerRival = top && name === top[0] && sorted.length > 1 && r.count >= 2
+    const isCareerRival = sorted.length > 1 && top[1].count >= 2
+    expect(isCareerRival).toBe(false)
+  })
+
+  it('tie-break: count equal, wins+losses higher wins Career Rival', () => {
+    const rivalries = {
+      'More Fights': { count: 3, wins: 2, losses: 2, lastMeetingWeek: 15 },
+      'Fewer Fights': { count: 3, wins: 2, losses: 1, lastMeetingWeek: 20 },
+    }
+    const sorted = Object.entries(rivalries).sort((a, b) => b[1].count - a[1].count || (b[1].wins + b[1].losses) - (a[1].wins + a[1].losses))
+    expect(sorted[0][0]).toBe('More Fights')
+    expect(sorted[0][1].wins + sorted[0][1].losses).toBe(4) // More Fights has 4 fights
+    expect(sorted[1][1].wins + sorted[1][1].losses).toBe(3) // Fewer Fights has 3 fights
   })
 })

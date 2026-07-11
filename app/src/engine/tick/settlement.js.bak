@@ -104,18 +104,6 @@ export function tickSettlement(g) {
     }
   }
 
-  // Rivalry decay: reduce count for rivalries not seen in 52+ weeks
-  g.roster.forEach((f) => {
-    if (!f.rivalries) return;
-    Object.keys(f.rivalries).forEach((key) => {
-      const r = f.rivalries[key];
-      if (g.week - (r.lastMeetingWeek || 0) >= 52) {
-        r.count = Math.max(0, (r.count || 0) - 1);
-        if (r.count <= 0) delete f.rivalries[key];
-      }
-    });
-  });
-
   if (g.investors && g.investors.length > 0) {
     const totalEquity = g.investors.reduce((s, inv) => s + inv.equity, 0);
     const equityCut = Math.round((sponsorAmt + fSponsor) * (totalEquity / 100));

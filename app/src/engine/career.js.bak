@@ -278,7 +278,6 @@ export function processRivalry(fighter, opponent, g) {
   const existing = fighter.rivalries[key] || { count: 0, wins: 0, losses: 0 };
 
   existing.count++;
-  existing.lastMeetingWeek = g.week;
   fighter.rivalries[key] = existing;
 
   // 2nd fight = developing rivalry
