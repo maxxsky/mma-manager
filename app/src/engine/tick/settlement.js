@@ -28,7 +28,7 @@ export function tickSettlement(g) {
       if (sp.terms === "royalty") {
         // royalty: hitung bonus dari kemenangan bulan ini + boost
         const wins = g.roster.filter((f) => f.lastFightWeek && g.week - f.lastFightWeek <= 4 && f.record.w > 0).length;
-        if (brand.boostFame) rate = Math.round(rate * (1 + (g.roster.reduce((s, f) => s + f.popularity, 0) / g.roster.length / 100) * (brand.boostFame - 1)));
+        if (brand.boostFame) rate = Math.round(rate * (1 + (g.roster.reduce((s, f) => s + (f.popularity || 0), 0) / g.roster.length / 100) * (brand.boostFame - 1)));
         if (brand.boostFight) rate = Math.round(rate * (1 + wins * (brand.boostFight - 1)));
       }
       sponsorAmt += rate;

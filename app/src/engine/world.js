@@ -23,6 +23,7 @@ export function ageAIFighters(g) {
   if (g.week % TICK_YEARLY !== 0) return;
 
   Object.values(g.divisions).forEach((d) => {
+    if (!d.list) return;
     d.list.forEach((c) => {
       if (!c.age) c.age = RI(22, 32);
       c.age++;
@@ -170,6 +171,7 @@ export function maintainDivisions(g) {
   const events = [];
 
   Object.entries(g.divisions).forEach(([wc, d]) => {
+    if (!d.list) return;
     // Ensure minimum division size
     while (d.list.length < MIN_DIVISION_SIZE) {
       d.list.push(createAIFighter());

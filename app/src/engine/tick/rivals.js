@@ -6,6 +6,8 @@ import { genFighter, assignAgent, genCoach } from "../fighter.js";
 export function tickRivals(g) {
   if (!g || !g.rivals) return;
   if (!g.rivals) return;
+  if (!g.roster) return;
+  if (!g.coaches) return;
 
   // Rival fight simulation: random matchups between rival camps every 12 weeks
   if (g.week % 12 === 0) {
