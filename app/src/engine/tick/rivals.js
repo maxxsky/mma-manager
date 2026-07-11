@@ -97,6 +97,22 @@ export function tickRivals(g) {
     }
   });
 
+  // rumors — vague poaching buzz, no specific fighter named
+  if (g.week % 8 === 6 && g.roster.length > 0) {
+    const r = pick(g.rivals);
+    const available = g.roster.filter(
+      (f) => !f.booked && !f.injury && f.morale < 70 && f.loyalty < 60 &&
+        f.contract && f.contract.fightsLeft > 0,
+    );
+    if (available.length > 0 && r.rivalry > 15) {
+      g.inbox.unshift({ id: uid(), type: "world", severity: "minor",
+        title: "👂 Rumor Mill",
+        body: `Kabarnya ${r.name} lagi cari peluang di pasar — diam-diam menjajaki opsi. Belum jelas siapa targetnya.`,
+        choices: [{ label: "OK", chem: 0 }],
+      });
+    }
+  }
+
   // poaching
   if (g.week % 8 === 0 && g.roster.length > 0) {
     const r = pick(g.rivals);

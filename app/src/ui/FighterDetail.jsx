@@ -5,6 +5,7 @@ import { avgSkill } from "../engine/fighter.js";
 import { reducer } from "../engine/reducer.js";
 import { getStoryTags, getLifecyclePhase } from "../engine/career.js";
 import { generateFighterNickname } from "../engine/identity.js";
+import { getPublicOpinion } from "../engine/publicOpinion.js";
 import { getTrainingCycle, getCoachRecommendation, getDevelopmentPhilosophy, getTrainingIdentity, saveLastTraining } from "../engine/training-philosophy.js";
 import { getCoachArchetypeSynergy, getFightStyleSummary, getArchetypeBehavior } from "../engine/archetype-expression.js";
 import { T, Panel, Eyebrow, Tag, Btn, Ovr, Mono, AttrTele, Meter, OctaRadar, Icon, ICONS, heat } from "./theme.jsx";
@@ -124,6 +125,16 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
             <Meter label="Morale" v={f.morale} color={f.morale > 60 ? T.pos : T.warn} />
             <Meter label="Overtraining" v={f.overtraining} color={f.overtraining > 50 ? T.neg : T.txt3} />
             <Meter label="Popularity" v={f.popularity} color={T.steel} />
+            {(() => {
+              const po = getPublicOpinion(f);
+              const opinionColor = po.sentiment === "positive" ? T.pos : po.sentiment === "negative" ? T.neg : T.txt2;
+              return (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "2px 8px", background: `${opinionColor}10`, borderRadius: T.r, border: `1px solid ${opinionColor}33` }}>
+                  <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: opinionColor }}>{po.label}</span>
+                  <span style={{ fontFamily: T.body, fontSize: 9, color: T.txt3 }}>{po.description}</span>
+                </div>
+              );
+            })()}
             <Meter label="Loyalty" v={f.loyalty ?? 50} color={f.loyalty >= 60 ? T.pos : T.warn} />
           </div>
           {f.contract && (

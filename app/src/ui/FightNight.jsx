@@ -86,7 +86,9 @@ export default function FightNight({ fighter, done }) {
       return;
     }
     setStage("entrance");
-    setTimeout(() => runRound(1, null, "go"), 2500);
+    const initMomentum = fighter.booked?.pressChoice === "trashTalk" ? 5 : 0;
+    const initState = initMomentum > 0 ? { momentum: initMomentum } : null;
+    setTimeout(() => runRound(1, initState, "go"), 2500);
   };
 
   const nextRound = () => {
@@ -106,7 +108,7 @@ export default function FightNight({ fighter, done }) {
     const won = res.winner === "A";
     const how = res.finish ? res.finish.how : "Decision";
     const r = res.finish ? res.finish.duringRound : totalRounds;
-    setResult({ won, how, r });
+    setResult({ won, how, r, totalDmgA: state?.totalDmgA || 0, totalDmgB: state?.totalDmgB || 0 });
     setStage("result");
   };
 

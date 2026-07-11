@@ -4,6 +4,7 @@ import { processFightResult, processRivalry, updateRivalryResult, processTitleCh
 import { queueDelayedEvent } from "../events.js";
 import { TITLE_CELEBRATION_DELAY_WEEKS, TITLE_SPONSOR_DELAY_WEEKS } from "../events/config.js";
 import { recordEra } from "../world/history.js";
+import { avgSkill } from "../fighter.js";
 
 /** Commit fight result to game state. Called from FightNight done() callback. */
 export function commitFightResult(g, fighter, result) {
@@ -107,6 +108,44 @@ export function commitFightResult(g, fighter, result) {
     if (fighter.booked?.oppRank != null && fighter.booked.oppRank <= 5) {
       f.giantKills = (f.giantKills || 0) + 1;
     }
+
+    // ── Trash talk resolution ──
+    if (fighter.booked?.pressChoice === "trashTalk") {
+      f.popularity = clamp((f.popularity || 0) + 5, 0, 100);
+      g.log.unshift("💬 " + f.name + " trash talk berhasil! Popularity +5.");
+    }
+
+    // ── Fan reactions ──
+    const opp = fighter.booked?.opponent;
+    const totalDmg = (result.totalDmgA || 0) + (result.totalDmgB || 0);
+    if (opp) {
+      // Upset: player fighter has significantly lower skill but still won
+      const fSkill = avgSkill(f);
+      const oppSkill = opp.attrs ? avgSkill(opp) : (opp.level || 0.5) * 60;
+      if (fSkill < oppSkill - 20) {
+        g.inbox.unshift({ id: uid(), type: "world", severity: "minor",
+          title: "😲 Upset! " + f.name + " beats " + opp.name,
+          body: `The fans are shocked — ${f.name} (${fSkill}) dominated the higher-rated ${opp.name} (${Math.round(oppSkill)}). What a performance!`,
+          choices: [{ label: "OK", chem: 0 }],
+        });
+      }
+      // KO brutal: finish by KO/TKO with significant damage
+      if (result.how === "KO/TKO" && (result.totalDmgA || 0) > 40) {
+        g.inbox.unshift({ id: uid(), type: "world", severity: "minor",
+          title: "💥 " + f.name + " delivers brutal KO",
+          body: `The crowd erupts as ${f.name} lands a devastating knockout at R${result.r}. This will be on highlight reels for weeks.`,
+          choices: [{ label: "OK", chem: 0 }],
+        });
+      }
+      // Boring decision: went the distance with low total damage
+      if (result.how === "Decision" && totalDmg < 40) {
+        g.inbox.unshift({ id: uid(), type: "world", severity: "minor",
+          title: "😴 " + f.name + " wins boring decision",
+          body: `Fans boo as ${f.name} takes a lackluster decision. Minimal action, maximum disappointment.`,
+          choices: [{ label: "OK", chem: 0 }],
+        });
+      }
+    }
   } else {
     f.record.l++; f.streakL = (f.streakL || 0) + 1; f.streakW = 0;
     const moraleLoss = f.traits?.includes("Iron Will") ? -4 : -14;
@@ -121,5 +160,11 @@ export function commitFightResult(g, fighter, result) {
     careerEvents.forEach((ev) => {
       g.inbox.unshift({ id: uid(), type: "event", title: ev.title, body: ev.body, choices: [{ label: "OK", chem: 0 }] });
     });
+
+    // ── Trash talk backfires on loss ──
+    if (fighter.booked?.pressChoice === "trashTalk") {
+      f.popularity = clamp((f.popularity || 0) - 5, 0, 100);
+      g.log.unshift("💬 " + f.name + " trash talk backfires! Popularity -5.");
+    }
   }
 }
