@@ -250,7 +250,8 @@ export default function Rankings({ g, t }) {
               {champ.promotionId && (() => {
                 const prom = g.promotions?.find((p) => p.id === champ.promotionId);
                 return prom ? (
-                  <div style={{ fontSize: 10, color: T.gold, marginTop: 1 }}>
+                  <div style={{ fontSize: 10, color: T.gold, marginTop: 1, display: "flex", alignItems: "center", gap: 4 }}>
+                    {prom.color && <span style={{ width: 6, height: 6, borderRadius: "50%", background: prom.color, display: "inline-block" }} />}
                     {prom.name}
                   </div>
                 ) : null;

@@ -10,6 +10,12 @@ export const ARCH_COLOR = {
   Boxer: "#e14b44", "Muay Thai": "#e88a3a", Wrestler: "#3f8fd4",
   "BJJ Specialist": "#9a6ae0", "All-Rounder": "#57b56b",
 };
+// Region accent colors — used for Mono monogram dot
+export const REGION_COLOR = {
+  Brazil: "#4ecdc4", Russia: "#e74c3c", USA: "#3498db",
+  Netherlands: "#f39c12", Japan: "#e91e63", Nigeria: "#2ecc71",
+  UK: "#9b59b6", Indonesia: "#f1c40f",
+};
 export const REGIONS = {
   Brazil: { arch: "BJJ Specialist", first: ["Carlos","Thiago","Rafael","Gilberto","Marcio","Renan","Fabio","Lucas","Pedro","Andre","Diego","Bruno"], last: ["Silva","Oliveira","Souza","Costa","Barbosa","Lima","Ferreira","Pereira","Almeida","Santos","Carvalho","Nascimento"] },
   Russia: { arch: "Wrestler", first: ["Dmitri","Islam","Magomed","Sergei","Anatoly","Zaur","Alexei","Viktor","Nikolai","Artem","Yuri","Ruslan"], last: ["Volkov","Petrov","Nurmagov","Ivanov","Gadzhiev","Orlov","Fedorov","Morozov","Sokolov","Kovalev","Kozlov","Medvedev"] },

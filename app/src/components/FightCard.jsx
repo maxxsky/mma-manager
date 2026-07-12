@@ -49,7 +49,7 @@ export default function FightCard({ fighter, g, onProceed }) {
             {/* Fighters */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", padding: "20px 20px 8px", gap: 16 }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-                <Mono name={f.name} color={ca} size={58} champ={f.titles?.length > 0} />
+                <Mono name={f.name} color={ca} size={58} region={f.region} titleTier={f.titles?.length > 0 ? (f.titles?.includes("Major World Champion") ? "Major" : "National") : null} />
                 <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 19, textTransform: "uppercase", color: T.txt, marginTop: 8 }}>{f.name}</div>
                 <div style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>{f.record?.w ?? 0}-{f.record?.l ?? 0}</div>
                 <Tag color={ca}>{f.archetype}</Tag>

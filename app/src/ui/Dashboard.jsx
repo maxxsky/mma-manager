@@ -207,7 +207,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
               return (
                 <div key={f.id} className="row" onClick={() => setActiveFight(f.id)} style={{ display: "grid", gridTemplateColumns: "minmax(180px,1.2fr) minmax(160px,1fr) 1fr 90px 130px 60px 30px", alignItems: "center", padding: "0 18px", height: 52, cursor: "pointer", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <Mono name={f.name} color={ac} size={32} champ={isChamp(f)} />
+                    <Mono name={f.name} color={ac} size={32} region={f.region} titleTier={isChamp(f) ? (f.titles?.includes("Major World Champion") ? "Major" : "National") : null} />
                     <div>
                       <div style={{ fontFamily: T.body, fontSize: 13.5, fontWeight: 600, color: T.txt }}>{f.name}</div>
                       <div style={{ fontFamily: T.body, fontSize: 10.5, color: T.txt3 }}>{f.weightClass}</div>

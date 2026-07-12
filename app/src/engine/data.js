@@ -3,7 +3,7 @@
 
 export { ATTRS, ATTR_LABEL } from "./data/attributes.js";
 export { WEIGHTS } from "./data/weights.js";
-export { ARCHETYPES, ARCH_COLOR, REGIONS } from "./data/archetypes.js";
+export { ARCHETYPES, ARCH_COLOR, REGIONS, REGION_COLOR } from "./data/archetypes.js";
 export { TRAITS, TRAIT_KEYS, TRAIT_CONFLICTS, AMBITIONS, AMBITION_KEYS } from "./data/traits.js";
 export { GAME_PLANS, TRAINING, INTENSITY } from "./data/training.js";
 export { COACH_SPECS, COACH_NAMES, COACH_PERSONALITIES } from "./data/coaches.js";

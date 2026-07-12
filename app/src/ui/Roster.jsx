@@ -46,7 +46,7 @@ export default function Roster({ g, setTab, up, dispatch }) {
               alignItems: "center", padding: "0 16px", height: 52, cursor: "pointer",
               borderBottom: `1px solid ${T.line}` }}>
             <div role="cell" style={{ display: "flex", alignItems: "center", gap: 11 }}>
-              <Mono name={f.name} color={ac} size={34} champ={isChamp || f.titles?.length > 0} />
+              <Mono name={f.name} color={ac} size={34} region={f.region} titleTier={isChamp || f.titles?.length > 0 ? (f.titles?.includes("Major World Champion") ? "Major" : "National") : null} />
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontFamily: T.body, fontSize: 14, fontWeight: 600, color: T.txt,
                   display: "flex", alignItems: "center", gap: 6 }}>

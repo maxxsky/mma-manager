@@ -26,7 +26,7 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
         {/* identity header spans full width */}
         <Panel style={{ gridColumn: "span 2" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-            <Mono name={f.name} color={ac} size={64} champ={f.titles?.length > 0} />
+            <Mono name={f.name} color={ac} size={64} region={f.region} titleTier={f.titles?.length > 0 ? (f.titles?.includes("Major World Champion") ? "Major" : "National") : null} />
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 34, letterSpacing: .5,
                 textTransform: "uppercase", color: T.txt, lineHeight: 1 }}>{f.name}</div>

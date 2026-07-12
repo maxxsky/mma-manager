@@ -1,5 +1,6 @@
 import React from "react";
 import { clamp } from "../engine/rng.js";
+import { REGION_COLOR } from "../engine/data/archetypes.js";
 
 /* =============================================================================
    IRONFIST DESIGN SYSTEM — theme.jsx
@@ -131,8 +132,16 @@ export const Btn = ({ children, color = T.ember, onClick, ghost, sm, style, disa
 );
 
 // initials monogram — per-fighter identity, archetype-colored, no image asset
-export const Mono = ({ name, color, size = 44, champ }) => {
+export const Mono = ({ name, color, size = 44, champ, region, titleTier }) => {
   const init = name.split(" ").map((w) => w[0]).slice(0, 2).join("");
+  const rc = region ? REGION_COLOR[region] : null;
+  // Crown color by title tier (Feature 4)
+  const crownColor = titleTier === "Premier" ? T.gold
+    : titleTier === "Major" ? "#f0b840"
+    : titleTier === "National" ? "#d4a030"
+    : titleTier === "Regional" ? "#b88728"
+    : titleTier === "Local" ? "#8a6f2e"
+    : champ ? T.gold : null;
   return (
     <div style={{ position: "relative", width: size, height: size, flexShrink: 0, borderRadius: 8,
       background: `linear-gradient(150deg, ${color}, ${color}88)`, display: "flex",
@@ -140,8 +149,11 @@ export const Mono = ({ name, color, size = 44, champ }) => {
       boxShadow: `0 2px 10px ${color}33` }}>
       <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: size * 0.42, color: "#0b0e13",
         letterSpacing: .5 }}>{init}</span>
-      {champ && <div style={{ position: "absolute", top: -6, right: -6, fontSize: 13 }}>
-        <span style={{ color: T.gold }}>♛</span></div>}
+      {rc && <div style={{ position: "absolute", bottom: -2, right: -2, width: 8, height: 8,
+        borderRadius: "50%", background: rc, border: `2px solid ${T.surface}`,
+        boxShadow: `0 0 4px ${rc}88` }} />}
+      {crownColor && <div style={{ position: "absolute", top: -6, right: -6, fontSize: 13 }}>
+        <span style={{ color: crownColor, filter: titleTier ? `drop-shadow(0 0 4px ${crownColor}88)` : "none" }}>♛</span></div>}
     </div>
   );
 };

@@ -75,7 +75,7 @@ export default function Inbox({ g, dispatch, setTab }) {
                   {m.isTitleEliminator && <Tag color={T.warn}>{t("UI.rankings") + " Eliminator"}</Tag>}
                   {m.shortNotice && <Tag color={T.neg}>{t("UI.expiresWeek")}</Tag>}
                   <Tag color={accent}>{m.tier}</Tag>
-                  {m.promotionName && <span style={{ fontFamily: T.body, fontSize: 10, color: T.txt3, marginLeft: 4 }}>{m.promotionName}</span>}
+                  {m.promotionName && (() => { const prom = g.promotions?.find(p => p.name === m.promotionName); return <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: T.body, fontSize: 10, color: T.txt3, marginLeft: 4 }}>{prom?.color && <span style={{ width: 6, height: 6, borderRadius: "50%", background: prom.color, display: "inline-block" }} />}{m.promotionName}</span>; })()}
                 </div>
                 {m.expires != null && (
                   <span style={{

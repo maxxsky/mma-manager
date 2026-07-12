@@ -2,7 +2,7 @@ import { fmt$ } from "../engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn, Meter, Mono, heat } from "./theme.jsx";
 import { t } from "../i18n/index.js";
-import { CAMP_TIERS } from "../engine/data.js";
+import { CAMP_TIERS, COACH_PERSONALITIES } from "../engine/data.js";
 
 export default function Facility({ g, dispatch, coachCap, rosterCap }) {
   const facLabels = { mats: "Mats", ring: "Ring", weights: "Weights", medical: "Medical" };
@@ -19,7 +19,7 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
         {g.coaches.map((c, i, arr) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 18px",
             borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none" }}>
-            <Mono name={c.name} color={T.steel} size={32} />
+            <Mono name={c.name} color={COACH_PERSONALITIES[c.personality]?.color || T.steel} size={32} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: T.body, fontSize: 13.5, fontWeight: 600, color: T.txt,
                 display: "flex", alignItems: "center", gap: 7 }}>

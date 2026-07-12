@@ -11,24 +11,24 @@ const PERSONALITIES = {
 
 export const PROMOTIONS = [
   // Local
-  { id: "ironclad-fight-nights",  name: "Ironclad Fight Nights",  tier: "Local",    personality: PERSONALITIES.grassroots,    founded: 2018, prestige: 85 },
-  { id: "steel-city-combat",      name: "Steel City Combat",      tier: "Local",    personality: PERSONALITIES.oldSchool,     founded: 2016, prestige: 90 },
+  { id: "ironclad-fight-nights",  name: "Ironclad Fight Nights",  tier: "Local",    color: "#8a6f2e", personality: PERSONALITIES.grassroots,    founded: 2018, prestige: 85 },
+  { id: "steel-city-combat",      name: "Steel City Combat",      tier: "Local",    color: "#7a6240", personality: PERSONALITIES.oldSchool,     founded: 2016, prestige: 90 },
 
   // Regional
-  { id: "frontier-mma",           name: "Frontier MMA",           tier: "Regional", personality: PERSONALITIES.grassroots,    founded: 2014, prestige: 150 },
-  { id: "bastion-fa",             name: "Bastion Fighting Alliance", tier: "Regional", personality: PERSONALITIES.talentFocused, founded: 2012, prestige: 180 },
+  { id: "frontier-mma",           name: "Frontier MMA",           tier: "Regional", color: "#b88728", personality: PERSONALITIES.grassroots,    founded: 2014, prestige: 150 },
+  { id: "bastion-fa",             name: "Bastion Fighting Alliance", tier: "Regional", color: "#a07830", personality: PERSONALITIES.talentFocused, founded: 2012, prestige: 180 },
 
   // National
-  { id: "vanguard-championship",  name: "Vanguard Championship",  tier: "National", personality: PERSONALITIES.oldSchool,     founded: 2010, prestige: 300 },
-  { id: "continental-combat",     name: "Continental Combat League", tier: "National", personality: PERSONALITIES.talentFocused, founded: 2009, prestige: 320 },
+  { id: "vanguard-championship",  name: "Vanguard Championship",  tier: "National", color: "#d4a030", personality: PERSONALITIES.oldSchool,     founded: 2010, prestige: 300 },
+  { id: "continental-combat",     name: "Continental Combat League", tier: "National", color: "#c09038", personality: PERSONALITIES.talentFocused, founded: 2009, prestige: 320 },
 
   // Major
-  { id: "titan-fighting-series",  name: "Titan Fighting Series",  tier: "Major",    personality: PERSONALITIES.highRoller,    founded: 2006, prestige: 500 },
-  { id: "apex-combat-league",     name: "Apex Combat League",     tier: "Major",    personality: PERSONALITIES.talentFocused, founded: 2007, prestige: 480 },
+  { id: "titan-fighting-series",  name: "Titan Fighting Series",  tier: "Major",    color: "#f0b840", personality: PERSONALITIES.highRoller,    founded: 2006, prestige: 500 },
+  { id: "apex-combat-league",     name: "Apex Combat League",     tier: "Major",    color: "#e0a840", personality: PERSONALITIES.talentFocused, founded: 2007, prestige: 480 },
 
   // Premier
-  { id: "zenith-championship",    name: "Zenith Championship",    tier: "Premier",  personality: PERSONALITIES.highRoller,    founded: 2000, prestige: 850 },
-  { id: "crown-mma",              name: "Crown MMA",              tier: "Premier",  personality: PERSONALITIES.talentFocused, founded: 2002, prestige: 820 },
+  { id: "zenith-championship",    name: "Zenith Championship",    tier: "Premier",  color: "#ffd15c", personality: PERSONALITIES.highRoller,    founded: 2000, prestige: 850 },
+  { id: "crown-mma",              name: "Crown MMA",              tier: "Premier",  color: "#e8c050", personality: PERSONALITIES.talentFocused, founded: 2002, prestige: 820 },
 ];
 
 export function pickPromotion(tier, fighterContext) {
