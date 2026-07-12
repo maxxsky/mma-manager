@@ -127,6 +127,22 @@ export function tickSettlement(g) {
     }
   }
 
+  // Auto-expiry: remove informational messages (event/world/milestone) older than 8 weeks
+  // with only a single "OK" choice (no consequences), but keep actionable messages intact.
+  if (g.inbox) {
+    g.inbox = g.inbox.filter((m) => {
+      if (!m.createdWeek) return true; // legacy, no timestamp
+      if (g.week - m.createdWeek < 8) return true; // not old enough
+      if (m.type !== "event" && m.type !== "world" && m.type !== "milestone") return true;
+      // Keep if it has actionable choices (more than 1, or non-OK choices)
+      if (!m.choices || m.choices.length !== 1) return true;
+      if (m.choices[0].label !== "OK") return true;
+      // Has side effects (rep/cash/chem changes) — keep
+      if (m.choices[0].rep || m.choices[0].cash || m.choices[0].chem) return true;
+      return false; // remove
+    });
+  }
+
   // Coach market refresh: regenerated from scratch every month.
   // Previously listed coaches are lost — hire before month end.
   const marketSize = clamp(2 + Math.floor(g.rep / 15), 2, 7);

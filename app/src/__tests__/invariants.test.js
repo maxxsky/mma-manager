@@ -4,6 +4,7 @@ import { createTestGame, useSeed, assertInvariants } from './helpers.js'
 import { tick } from '../engine/state.js'
 import { uid, resetUID, setUID } from '../engine/rng.js'
 import { stripTitle } from '../engine/rankings.js'
+import { tickSettlement } from '../engine/tick/settlement.js'
 
 describe('Game State Invariants', () => {
   it('newGame produces valid state', () => {
@@ -350,5 +351,42 @@ describe('Game State Invariants', () => {
     // The shown value uses fmt$ format — parse the number
     const shown = parseInt(match[1].replace(/[$,]/g, ''))
     expect(shown).toBeGreaterThan(0)
+  })
+
+  it('auto-expiry: info messages (event/world) with 1 OK choice older than 8w are removed at settlement', () => {
+    useSeed(42)
+    const g = createTestGame()
+    g.inbox = [
+      { id: 1, type: 'world', title: 'Old news', body: 'Stale', choices: [{ label: 'OK', chem: 0 }], createdWeek: 1 },
+      { id: 2, type: 'event', title: 'Old event', body: 'Aged', choices: [{ label: 'OK', chem: 0 }], createdWeek: 2 },
+      { id: 3, type: 'world', title: 'Recent', body: 'Fresh', choices: [{ label: 'OK', chem: 0 }], createdWeek: 99 }, // gap = 1, < 8
+    ]
+    g.week = 100 // current week, 99+ gap for 1, 98+ gap for 2
+
+    // Call settlement directly
+    tickSettlement(g)
+
+    // Old messages (1, 2) removed, recent (3) kept
+    expect(g.inbox.find(m => m.id === 1)).toBeUndefined()
+    expect(g.inbox.find(m => m.id === 2)).toBeUndefined()
+    expect(g.inbox.find(m => m.id === 3)).toBeDefined()
+  })
+
+  it('auto-expiry: actionable messages with multiple choices are NOT removed regardless of age', () => {
+    useSeed(42)
+    const g = createTestGame()
+    g.inbox = [
+      { id: 10, type: 'offer', title: 'Old offer', body: 'Still waiting', choices: [{ label: 'Accept' }, { label: 'Reject' }], createdWeek: 1 },
+      { id: 11, type: 'injury', title: 'Old injury', body: 'Choose', choices: [{ label: 'Physio' }, { label: 'Push' }], createdWeek: 1 },
+      { id: 12, type: 'event', title: 'Has cash effect', body: 'Pay up', choices: [{ label: 'OK', cash: -5000 }], createdWeek: 1 },
+    ]
+    g.week = 100
+
+    tickSettlement(g)
+
+    // All kept — offers have 2 choices, injury has 2 choices, event has cash side-effect
+    expect(g.inbox.find(m => m.id === 10)).toBeDefined()
+    expect(g.inbox.find(m => m.id === 11)).toBeDefined()
+    expect(g.inbox.find(m => m.id === 12)).toBeDefined()
   })
 })
