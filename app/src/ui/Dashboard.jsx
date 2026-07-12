@@ -173,20 +173,27 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
       {/* FTUE Objectives */}
       {(() => {
         const objectives = getObjectives(g);
+        const allObjectives = 7; // OBJECTIVES.length in onboarding.js
+        const completedCount = allObjectives - objectives.length;
         if (objectives.length === 0) return null;
         return (
           <Panel pad={0} style={{ borderColor: T.gold, border: `1px solid ${T.gold}44`, background: `${T.gold}08` }}>
-            <div style={{ padding: "18px 20px 6px" }}>
-              <Eyebrow color={T.gold}>📋 Getting Started</Eyebrow>
+            <div style={{ padding: "14px 20px 4px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                <Eyebrow color={T.gold}>📋 Getting Started</Eyebrow>
+                <span style={{ fontFamily: T.mono, fontSize: 10, color: T.gold, opacity: 0.7 }}>{completedCount} / {allObjectives} Completed</span>
+              </div>
             </div>
-            <div style={{ padding: "18px 20px" }}>
-              {objectives.slice(0, 3).map((o, i) => (
-                <div key={o.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", fontFamily: T.body, fontSize: 13, color: T.txt2 }}>
-                  <span style={{ width: 20, height: 20, borderRadius: 10, background: `${T.gold}22`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.mono, fontSize: 11, color: T.gold, flexShrink: 0 }}>{i + 1}</span>
-                  <span>{o.label}</span>
-                  <span style={{ marginLeft: "auto", fontSize: 10, color: T.txt3 }}>{o.hint}</span>
+            <div style={{ padding: "10px 20px 14px" }}>
+              {objectives.slice(0, 4).map((o, i) => {
+                const isFirst = i === 0;
+                return (
+                <div key={o.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", fontFamily: T.body, fontSize: 13, color: T.txt2, lineHeight: 1.3 }}>
+                  <span style={{ width: 18, height: 18, borderRadius: 9, background: isFirst ? `${T.gold}33` : `${T.gold}18`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.mono, fontSize: 10, color: isFirst ? T.gold : `${T.gold}aa`, flexShrink: 0 }}>{i + 1}</span>
+                  <span style={{ color: isFirst ? T.txt : T.txt2, fontWeight: isFirst ? 600 : 400 }}>{o.label}</span>
+                  <span style={{ marginLeft: "auto", fontSize: 9, color: T.txt3, opacity: 0.5, whiteSpace: "nowrap" }}>{o.hint}</span>
                 </div>
-              ))}
+              )})}
             </div>
            </Panel>
         );
