@@ -53,6 +53,7 @@ export default function App() {
   const [scoutFilterArch, setScoutFilterArch] = useState(null);
   const [scoutFilterWC, setScoutFilterWC] = useState(null);
   const [showFightCard, setShowFightCard] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Save/load hook
   const [g, setG] = useState(() => newGame());
@@ -121,7 +122,8 @@ export default function App() {
       )}
 
       {/* Sidebar */}
-      <Sidebar view={tab} setView={setTab} onAdvance={advance} inboxCount={g.inbox?.length || 0} />
+      <Sidebar view={tab} setView={(t) => { setTab(t); setMobileMenuOpen(false); }} onAdvance={advance} inboxCount={g.inbox?.length || 0}
+        mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
       {/* Main area */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, minHeight: "100vh" }}>
@@ -137,6 +139,7 @@ export default function App() {
           onNewGame={() => startNew(newGame())}
           dispatch={dispatch}
           version="v1.0.0-ea"
+          onToggleMenu={() => setMobileMenuOpen(p => !p)}
         />
 
         <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>

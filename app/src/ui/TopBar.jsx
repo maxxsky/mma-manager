@@ -10,7 +10,7 @@ const Chip = ({ label, val, color }) => (
 );
 
 export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
-  saveSlot, onSaveSlotChange, slotInfo, lang, onLangChange, onNewGame, version, extraRight, dispatch }) {
+  saveSlot, onSaveSlotChange, slotInfo, lang, onLangChange, onNewGame, version, extraRight, dispatch, onToggleMenu }) {
   const year = Math.floor((week || 1) / 48) + 1;
   const month = Math.floor(((week || 1) % 48) / 4) + 1;
   const wk = ((week || 1) % 4) + 1;
@@ -23,6 +23,14 @@ export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
       borderBottom: `1px solid ${T.line}`, background: `${T.bg}cc`,
       backdropFilter: "blur(6px)", position: "sticky", top: 0, zIndex: 5,
       flexShrink: 0 }}>
+      {/* Hamburger — mobile only */}
+      {onToggleMenu && (
+        <button onClick={onToggleMenu} aria-label="Open menu"
+          className="mobile-hamburger"
+          style={{ display: "none", background: "none", border: "none", color: T.txt3, cursor: "pointer", padding: "4px 8px 4px 0", fontSize: 22, lineHeight: 1 }}>
+          ☰
+        </button>
+      )}
       <div>
         <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 22,
           letterSpacing: .5, textTransform: "uppercase", color: T.txt,

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { T, Icon, ICONS, Btn } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 
@@ -17,14 +17,11 @@ const NAV = [
   ["world", "World", ICONS.cal],
 ];
 
-export default function Sidebar({ view, setView, onAdvance, inboxCount }) {
-  // Map some view states to nav keys
+function SidebarContent({ view, setView, onAdvance, inboxCount }) {
   const map = { fighter: "roster", card: "inbox", fightnight: "roster" };
   const active = map[view] || view;
   return (
-    <aside style={{ width: 220, flexShrink: 0, background: T.surface,
-      borderRight: `1px solid ${T.line}`, display: "flex", flexDirection: "column",
-      height: "100vh", position: "sticky", top: 0, overflowY: "auto" }}>
+    <>
       {/* Brand */}
       <div style={{ padding: "20px 18px 16px", borderBottom: `1px solid ${T.line}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -77,6 +74,48 @@ export default function Sidebar({ view, setView, onAdvance, inboxCount }) {
           <Icon d={ICONS.chevR} size={16} /> {t("UI.advanceWeek")}
         </Btn>
       </div>
-    </aside>
+    </>
+  );
+}
+
+export default function Sidebar({ view, setView, onAdvance, inboxCount, mobileMenuOpen, setMobileMenuOpen }) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // Desktop: normal sidebar
+  if (!isMobile) {
+    return (
+      <aside style={{ width: 220, flexShrink: 0, background: T.surface,
+        borderRight: `1px solid ${T.line}`, display: "flex", flexDirection: "column",
+        height: "100vh", position: "sticky", top: 0, overflowY: "auto" }}>
+        <SidebarContent view={view} setView={setView} onAdvance={onAdvance} inboxCount={inboxCount} />
+      </aside>
+    );
+  }
+
+  // Mobile: overlay drawer
+  return (
+    <>
+      {/* Backdrop */}
+      {mobileMenuOpen && (
+        <div onClick={() => setMobileMenuOpen(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 50 }} />
+      )}
+      {/* Drawer */}
+      <aside style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 260, zIndex: 51,
+        background: T.surface, display: "flex", flexDirection: "column", overflowY: "auto",
+        transform: mobileMenuOpen ? "translateX(0)" : "translateX(-100%)",
+        transition: "transform 200ms ease", boxShadow: mobileMenuOpen ? `4px 0 24px rgba(0,0,0,.4)` : "none" }}>
+        <SidebarContent view={view} setView={setView} onAdvance={onAdvance} inboxCount={inboxCount} />
+      </aside>
+      {/* Show hamburger on mobile via CSS class (toggle button in TopBar) */}
+      <style>{`@media(max-width:767px){.mobile-hamburger{display:inline-flex!important}}`}</style>
+    </>
   );
 }
