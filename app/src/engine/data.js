@@ -9,7 +9,7 @@ export { GAME_PLANS, TRAINING, INTENSITY } from "./data/training.js";
 export { COACH_SPECS, COACH_NAMES, COACH_PERSONALITIES } from "./data/coaches.js";
 export { AGENT_TYPES } from "./data/agents.js";
 export { RIVAL_NAMES, RIVAL_TRAITS, PROMO_TIERS } from "./data/rivals.js";
-export { CAMP_TIERS, FAC_LABEL, SPARRING_MATCH } from "./data/camp.js";
+export { CAMP_TIERS, FAC_LABEL, SPARRING_MATCH, MEMBER_FEE } from "./data/camp.js";
 export { SPONSOR_BRANDS, SPONSOR_TERMS } from "./data/sponsors.js";
 export { PROMOTIONS, pickPromotion, getPromotionsData } from "./data/promotions.js";
 // ACHIEVEMENTS is defined here to avoid circular imports with achievements.js

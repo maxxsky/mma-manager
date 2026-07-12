@@ -5,6 +5,7 @@ export const CAMP_TIERS = [
   { name: "Elite MMA Factory", rep: 55, cost: 120000, rosterCap: 10, coachCap: 4, facMax: [5,5,5,4], trainBonus: 0.15, desc: "Factory kelas dunia. Scout otomatis per bulan." },
   { name: "World-Class Institute", rep: 75, cost: 250000, rosterCap: 14, coachCap: 5, facMax: [6,6,6,5], trainBonus: 0.22, desc: "MMA Institute — puncak industri. Full facility unlock." },
 ];
+export const MEMBER_FEE = [110, 130, 150, 175, 200];
 export const FAC_LABEL = {
   mats: "Training Mats", ring: "Boxing Ring", weights: "Weight Room", medical: "Medical Room",
 };

@@ -1,9 +1,10 @@
 import { fmt$ } from "../engine/rng.js";
 import React from "react";
-import { T, Panel, Eyebrow, Tag } from "./theme.jsx";
+import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 import { weeklyFee } from "../engine/fighter.js";
 import { TRAINING } from "../engine/data.js";
+import { computeMonthlyIncome, computeMonthlyExpense } from "../engine/economy.js";
 
 /* =============================================================================
    FINANCE — Ironfist Edition
@@ -11,32 +12,16 @@ import { TRAINING } from "../engine/data.js";
 ============================================================================= */
 
 export default function Finance({ g }) {
-  // ── Income breakdown ──────────────────────────────────────────
-  const feeTotal = g.roster.reduce((s, f) => s + weeklyFee(f) * 4, 0);
-  const popTotal = g.roster.reduce((s, f) => s + f.popularity * 150, 0);
-  const baseSponsor = Math.round(g.rep * 500);
-  const sponsorIncome =
-    g.sponsors && g.sponsors.length > 0
-      ? g.sponsors.reduce((s, sp) => s + (sp.rate || 0), 0)
-      : baseSponsor;
-  const merchTotal = Math.round(g.roster.reduce((s, f) => s + f.popularity * 80, 0));
+  // ── Income breakdown (shared functions = settlement reality) ──
+  const { sponsorAmt: sponsorIncome, fSponsor: popTotal, membershipRevenue,
+    merchRevenue: merchTotal, championBonus } = computeMonthlyIncome(g);
+  const { coachSal, maint, training, opCost, fighterSupport } = computeMonthlyExpense(g);
+  const feeTotal = g.roster.reduce((s, f) => s + weeklyFee(f) * 4, 0); // aspirational only
 
-  const totalIncome = sponsorIncome + popTotal + feeTotal + merchTotal;
+  const totalIncome = sponsorIncome + popTotal + feeTotal + merchTotal + membershipRevenue;
 
   // ── Expense breakdown ─────────────────────────────────────────
-  const coachSal = g.coaches.reduce(
-    (s, c) => s + (!c.freeUntil || g.week > c.freeUntil ? c.salary : 0),
-    0
-  );
-  const facVal = Object.values(g.facilities).reduce((s, l) => s + l * 30000, 0);
-  const maint = Math.round(facVal * 0.05);
-  const trainingCost = g.roster.reduce(
-    (s, f) =>
-      s + (f.injury ? 0 : TRAINING[f.booked ? "fightcamp" : f.training.type].cost * 4),
-    0
-  );
-
-  const totalExpense = coachSal + maint + trainingCost;
+  const totalExpense = coachSal + maint + training + opCost + fighterSupport;
   const netMonthly = totalIncome - totalExpense;
 
   // ── Mini components (inline — not exported) ──
@@ -87,6 +72,12 @@ export default function Finance({ g }) {
           detail="fighter-branded merch sales"
         />
         <Row
+          label="Membership"
+          value={membershipRevenue}
+          color={T.pos}
+          detail="gym member fees"
+        />
+        <Row
           label="Fighter Popularity"
           value={popTotal}
           color={T.pos}
@@ -114,13 +105,25 @@ export default function Finance({ g }) {
           label="Facility Maintenance"
           value={maint}
           color={T.neg}
-          detail={`assets valued at ${fmt$(facVal)}`}
+          detail="monthly facility upkeep"
         />
         <Row
           label="Training Costs"
-          value={trainingCost}
+          value={training}
           color={T.neg}
           detail={`${g.roster.filter((f) => !f.injury).length} active fighter${g.roster.filter((f) => !f.injury).length !== 1 ? "s" : ""}`}
+        />
+        <Row
+          label="Biaya Operasional"
+          value={opCost}
+          color={T.neg}
+          detail={`${computeMonthlyExpense(g).members || 0} members`}
+        />
+        <Row
+          label="Dukungan Fighter"
+          value={fighterSupport}
+          color={T.neg}
+          detail={`${g.roster.length} fighter${g.roster.length !== 1 ? "s" : ""}`}
         />
         <TotalRow label={t("UI.expense") + " Total"} value={totalExpense} color={T.neg} />
 

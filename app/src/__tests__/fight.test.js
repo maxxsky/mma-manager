@@ -8,6 +8,7 @@ import { processTitleChange } from '../engine/career.js'
 import { mulberry32, setRNG } from '../engine/rng.js'
 import { tick } from '../engine/state.js'
 import { tickSettlement } from '../engine/tick/settlement.js'
+import { computeMonthlyIncome, computeMonthlyExpense } from '../engine/economy.js'
 import { PROMOTIONS, pickPromotion, getPromotionsData } from '../engine/data.js'
 
 describe('Fight Engine', () => {
@@ -568,57 +569,53 @@ describe('Fight Engine', () => {
   })
 
   describe('merchandise revenue — isolated via tickSettlement', () => {
-    it('known popularity: cash increases by exact merch + fSponsor amount, each separately verifiable', () => {
+    it('known popularity: cash delta matches computeMonthlyIncome + computeMonthlyExpense', () => {
       useSeed(42)
       const g = createTestGame()
-      // Strip all variables that muddy cash: no coaches, no sponsors, no titles
       g.coaches = []
       g.sponsors = []
       g.rep = 0
       g.roster.forEach((f) => { f.titles = []; f.contract = null })
-      // Set minimal facilities so maint = 0
       g.facilities = { mats: 0, ring: 0, weights: 0, medical: 0 }
-      // Set known popularity values
       g.roster[0].popularity = 50
       g.roster[1].popularity = 30
-      g.week = 4 // settlement trigger
+      g.week = 4
 
       const startCash = 100000
       g.cash = startCash
 
-      const expectedMerch = Math.round((50 + 30) * 80)
-      const expectedFSponsor = (50 + 30) * 150
-      const expectedTotal = expectedMerch + expectedFSponsor
+      const { total: expectedIncome } = computeMonthlyIncome(g)
+      const { total: expectedExpense } = computeMonthlyExpense(g)
 
       tickSettlement(g)
 
-      expect(g.cash).toBe(startCash + expectedTotal)
-      expect(expectedMerch).toBe(6400) // 80 * 80
-      expect(expectedFSponsor).toBe(12000) // 80 * 150
+      expect(g.cash).toBe(startCash + expectedIncome - expectedExpense)
     })
 
-    it('roster kosong: merchandise = 0, tidak nambah cash dari merch', () => {
+    it('roster kosong: hanya membership revenue yang masuk', () => {
       useSeed(42)
       const g = createTestGame()
       g.coaches = []
       g.sponsors = []
       g.rep = 0
-      g.roster = [] // empty roster
+      g.roster = []
       g.facilities = { mats: 0, ring: 0, weights: 0, medical: 0 }
       g.week = 4
 
       const startCash = 100000
       g.cash = startCash
 
+      const { total: expectedIncome } = computeMonthlyIncome(g)
+      const { total: expectedExpense } = computeMonthlyExpense(g)
+
       tickSettlement(g)
 
-      // With empty roster: merch=0, fSponsor=0, championBonus=0, no coaches/sal
-      // sponsorAmt = round(0 * 500) = 0, maint = 0
-      // cash should not change
-      expect(g.cash).toBe(startCash)
+      // With empty roster: only membership income (no sponsors, no fighters)
+      // Membership still has opCost (members × 30) even without fighters
+      expect(g.cash).toBe(startCash + expectedIncome - expectedExpense)
     })
 
-    it('semua popularity 0: merchandise = 0, tidak ada kontribusi dari merch', () => {
+    it('semua popularity 0: membership masih jalan, merch/fSponsor = 0', () => {
       useSeed(42)
       const g = createTestGame()
       g.coaches = []
@@ -631,11 +628,12 @@ describe('Fight Engine', () => {
       const startCash = 100000
       g.cash = startCash
 
+      const { total: expectedIncome } = computeMonthlyIncome(g)
+      const { total: expectedExpense } = computeMonthlyExpense(g)
+
       tickSettlement(g)
 
-      // merch = round(0 * 80) = 0, fSponsor = 0 * 150 = 0
-      // No other components — cash unchanged
-      expect(g.cash).toBe(startCash)
+      expect(g.cash).toBe(startCash + expectedIncome - expectedExpense)
     })
   })
 })

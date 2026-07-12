@@ -4,8 +4,8 @@ import { SPONSOR_BRANDS } from "../data.js";
 import { genCoach, weeklyFee } from "../fighter.js";
 import { rankOf } from "../rankings.js";
 import { tickRankings } from "./rankings.js";
+import { computeMonthlyIncome, computeMonthlyExpense, FACILITY_MAINT_RATE } from "../economy.js";
 import { pushInboxEvent } from "../events.js";
-import { computeMonthlyIncome, FACILITY_MAINT_RATE } from "../economy.js";
 
 const SPONSOR_RENEWAL_WINDOW = 4; // settlement cycle tersisa sebelum kontrak berakhir, saat tawaran perpanjangan muncul
 
@@ -14,16 +14,9 @@ export function tickSettlement(g) {
   if (g.week % 4 !== 0) return;
 
   // ---------- monthly settlement ----------
-  let sal = 0;
-  g.coaches.forEach((c) => {
-    if (!c.freeUntil || g.week > c.freeUntil) sal += c.salary;
-  });
-  const facVal = Object.values(g.facilities).reduce((s, l) => s + l * 30000, 0);
-  const maint = Math.round(facVal * FACILITY_MAINT_RATE);
-
-  // Monthly income from shared function (identical to finance.js preview)
-  const { sponsorAmt, fSponsor, championBonus, merchRevenue } = computeMonthlyIncome(g);
-  g.cash += sponsorAmt + fSponsor + championBonus + merchRevenue - sal - maint;
+  const { sponsorAmt, fSponsor, championBonus, merchRevenue, membershipRevenue } = computeMonthlyIncome(g);
+  const { coachSal, maint, training, opCost, fighterSupport, total: monthlyExpense } = computeMonthlyExpense(g);
+  g.cash += sponsorAmt + fSponsor + championBonus + merchRevenue + membershipRevenue - monthlyExpense;
 
   // Sponsor lifecycle: weeksLeft countdown, renewal window, expiry cleanup
   if (g.sponsors && g.sponsors.length > 0) {
@@ -58,7 +51,7 @@ export function tickSettlement(g) {
     0, 100,
   );
   g.log.unshift(
-    `📊 Settlement bulanan: sponsor +${fmt$(sponsorAmt + fSponsor)}, merchandise +${fmt$(merchRevenue)}, gaji coach -${fmt$(sal)}, maintenance -${fmt$(maint)}${championBonus > 0 ? `, champion bonus +${fmt$(championBonus)}` : ""}.`,
+    `📊 Settlement bulanan: sponsor +${fmt$(sponsorAmt + fSponsor)}, merchandise +${fmt$(merchRevenue)}, membership +${fmt$(membershipRevenue)}, gaji coach -${fmt$(coachSal)}, maintenance -${fmt$(maint)}, biaya operasional -${fmt$(opCost + fighterSupport)}${championBonus > 0 ? `, champion bonus +${fmt$(championBonus)}` : ""}.`,
   );
 
   // Fighter equity deduction (fighters with camp equity %)
