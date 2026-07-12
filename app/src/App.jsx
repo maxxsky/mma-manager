@@ -143,6 +143,8 @@ export default function App() {
         />
 
         <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
+          <style>{`@keyframes tabIn{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}`}</style>
+          <div key={tab} style={{ animation: "tabIn .18s ease both" }}>
           {/* Win condition */}
           <WinConditionBanner legacy={g.legacy} />
           {g.over && <GameOverBanner message={g.over} onRestart={() => startNew(newGame())} />}
@@ -162,6 +164,7 @@ export default function App() {
 
           {/* Weekly summary overlay */}
           <WeeklySummary summary={weeklySummary} onClose={() => setWeeklySummary(null)} t={t} />
+          </div> {/* end tab transition wrapper */}
         </div>
       </div>
 

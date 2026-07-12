@@ -1,13 +1,40 @@
-import React from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { T, Icon, ICONS } from "./theme.jsx";
 
-const Chip = ({ label, val, color }) => (
-  <div style={{ textAlign: "right" }}>
-    <div style={{ fontFamily: T.body, fontSize: 9, fontWeight: 600, letterSpacing: 1.2,
-      textTransform: "uppercase", color: T.txt3 }}>{label}</div>
-    <div style={{ fontFamily: T.mono, fontSize: 15, fontWeight: 700, color, lineHeight: 1.1 }}>{val}</div>
-  </div>
-);
+const Chip = ({ label, val, color, flashOnChange }) => {
+  const prevRef = useRef(val);
+  const [flash, setFlash] = useState(null);
+
+  useEffect(() => {
+    if (!flashOnChange) { prevRef.current = val; return; }
+    if (prevRef.current !== val) {
+      setFlash(val > prevRef.current ? "up" : "down");
+      const t = setTimeout(() => setFlash(null), 600);
+      prevRef.current = val;
+      return () => clearTimeout(t);
+    }
+    prevRef.current = val;
+  }, [val, flashOnChange]);
+
+  const flashColor = flash === "up" ? "#2ecc71" : flash === "down" ? "#e74c3c" : null;
+
+  return (
+    <div style={{ textAlign: "right" }}>
+      <div style={{ fontFamily: T.body, fontSize: 9, fontWeight: 600, letterSpacing: 1.2,
+        textTransform: "uppercase", color: T.txt3 }}>{label}</div>
+      <div key={flash ? `${val}-${flash}` : val}
+        style={{ fontFamily: T.mono, fontSize: 15, fontWeight: 700, color: flashColor || color,
+          lineHeight: 1.1, transition: "color .4s, text-shadow .4s",
+          textShadow: flashColor ? `0 0 10px ${flashColor}66` : "none" }}>
+        {val}
+      </div>
+      {flash && <style>{flash === "up"
+        ? `@keyframes cashFlash{0%{background:rgba(46,204,113,.15)}100%{background:transparent}}`
+        : `@keyframes cashFlash{0%{background:rgba(231,76,60,.15)}100%{background:transparent}}`
+      }</style>}
+    </div>
+  );
+};
 
 export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
   saveSlot, onSaveSlotChange, slotInfo, lang, onLangChange, onNewGame, version, extraRight, dispatch, onToggleMenu }) {
@@ -47,7 +74,7 @@ export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
           </span>
         </div>
         <div style={{ width: 1, height: 26, background: T.line }} />
-        <Chip label="Bank" val={cashVal} color={T.txt} />
+        <Chip label="Bank" val={cashVal} color={T.txt} flashOnChange={true} />
         <Chip label="Rep" val={rep != null ? rep : "—"} color={T.gold} />
         <Chip label="Chem" val={chem != null ? chem : "—"} color={chem >= 60 ? T.pos : T.warn} />
         <Chip label="Legacy" val={legacyVal} color={T.steel} />
