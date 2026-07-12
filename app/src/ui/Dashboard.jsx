@@ -135,15 +135,39 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
     <div style={{ display: "grid", gap: 16 }}>
       {/* KPI STRIP — 4 cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-        {kpis.map(([l, v, c, d, to]) => (
-          <Panel key={l} pad={0}>
-            <button className="row" onClick={() => setTab(to)} aria-label={`${l} - ${v}`} style={{ display: "block", width: "100%", textAlign: "left", padding: 18, border: "none", background: "transparent", cursor: "pointer", borderRadius: T.r2 }}>
-              <div style={{ fontFamily: T.body, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.txt3, marginBottom: 8 }}>{l}</div>
-              <div style={{ fontFamily: T.mono, fontSize: 30, fontWeight: 800, color: c, lineHeight: 1 }}>{v}</div>
+        {kpis.map(([l, v, c, d, to], idx) => {
+          const isHero = idx === 0;
+          // Format fight matchup for hero card
+          const fighterName = nextFight?.name;
+          const oppName = nextFight?.booked?.opponent?.name;
+          const showMatchup = isHero && nextFight && fighterName && oppName;
+          return (
+          <Panel key={l} pad={0} style={isHero ? { borderColor: c, boxShadow: `0 0 0 1px ${c}22, 0 4px 20px rgba(0,0,0,.3)`, background: `linear-gradient(160deg, ${T.surface} 0%, ${T.raised} 100%)` } : {}}>
+            <button className="row" onClick={() => setTab(to)} aria-label={`${l} - ${v}`} style={{ display: "block", width: "100%", textAlign: "left", padding: isHero ? 24 : 18, border: "none", background: "transparent", cursor: "pointer", borderRadius: T.r2 }}>
+              <div style={{ fontFamily: T.body, fontSize: 11, fontWeight: 700, letterSpacing: isHero ? 2 : 1.5, textTransform: "uppercase", color: T.txt3, opacity: isHero ? 0.6 : 1, marginBottom: isHero ? 12 : 8 }}>{l}</div>
+              <div style={{ fontFamily: T.mono, fontSize: isHero ? 40 : 30, fontWeight: 800, color: c, lineHeight: 1 }}>{v}</div>
+              {showMatchup ? (
+                <div style={{ fontFamily: T.body, fontSize: 13, fontWeight: 600, color: T.txt2, lineHeight: 1.5, marginTop: 12 }}>
+                  <span style={{ color: T.txt }}>{fighterName}</span>
+                  <span style={{ display: "block", color: T.txt3, fontSize: 11, fontWeight: 500, margin: "2px 0" }}>vs</span>
+                  <span style={{ color: T.txt }}>{oppName}</span>
+                </div>
+              ) : (
               <div style={{ fontFamily: T.body, fontSize: 11, lineHeight: 1.4, opacity: 0.8, color: T.txt3, marginTop: 8 }}>{d}</div>
+              )}
+              {isHero && nextFight && (
+                <div style={{ marginTop: 16, textAlign: "right" }}>
+                  <span style={{ fontFamily: T.body, fontSize: 11.5, fontWeight: 600, color: c, cursor: "pointer", borderBottom: `1px solid transparent` }}
+                    onMouseEnter={e => e.target.style.borderBottomColor = c}
+                    onMouseLeave={e => e.target.style.borderBottomColor = "transparent"}>
+                    View Fight →
+                  </span>
+                </div>
+              )}
             </button>
           </Panel>
-        ))}
+          );
+        })}
       </div>
 
       {/* FTUE Objectives */}
