@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { useSeed, createTestGame } from './helpers.js'
 import { monthlyIn, monthlyBurn } from '../engine/finance.js'
-import { computeMonthlyIncome, FACILITY_MAINT_RATE } from '../engine/economy.js'
+import { computeMonthlyIncome, computeMembership, FACILITY_MAINT_RATE } from '../engine/economy.js'
 import { tickSettlement } from '../engine/tick/settlement.js'
 import { genFighter } from '../engine/fighter.js'
 
@@ -156,13 +156,85 @@ describe('F6 — sponsor cap rep×500 fallback', () => {
 
   it('real sponsors bypass the cap entirely', () => {
     const g = {
-      rep: 50, // would be capped at 30 without real sponsors
+      rep: 50,
       sponsors: [{ brand: 'FightFist Gear', rate: 30000, terms: 'placement' }],
       roster: [], coaches: [], facilities: { mats: 1, ring: 0, weights: 0, medical: 0 },
     }
     const { sponsorAmt } = computeMonthlyIncome(g)
-    // Real sponsor rate used, not capped fallback
     expect(sponsorAmt).toBeGreaterThan(15000)
     expect(sponsorAmt).toBe(30000)
+  })
+})
+
+describe('F8.1 — era multiplier in computeMembership', () => {
+  it('champion with active era → multiplier 1.5', () => {
+    const g = {
+      rep: 30, campTier: 0, roster: [{ name: 'Eko Kusuma', titles: ['Major World Champion'] }],
+      facilities: { mats: 2, ring: 1, weights: 1, medical: 1 },
+      divisions: {
+        Lightweight: { champ: { name: 'Eko Kusuma' }, era: { championName: 'Eko Kusuma', defenses: 3 } },
+      },
+      coaches: [], sponsors: [],
+    }
+    const result = computeMembership(g)
+    // With era active: demand = 130 * (1 + 30/45) * 1.5 = 130 * 1.667 * 1.5 = 325
+    expect(result.demand).toBe(325)
+  })
+
+  it('champion without era → multiplier 1.3', () => {
+    const g = {
+      rep: 30, campTier: 0, roster: [{ name: 'Eko Kusuma', titles: ['Major World Champion'] }],
+      facilities: { mats: 2, ring: 1, weights: 1, medical: 1 },
+      divisions: {
+        Lightweight: { champ: { name: 'Eko Kusuma' } },
+      },
+      coaches: [], sponsors: [],
+    }
+    const result = computeMembership(g)
+    // No era: 130 * 1.667 * 1.3 = 281.8 → 282
+    expect(result.demand).toBe(282)
+  })
+
+  it('no champion → multiplier 1', () => {
+    const g = {
+      rep: 30, campTier: 0, roster: [{ name: 'Eko Kusuma', titles: [] }],
+      facilities: { mats: 2, ring: 1, weights: 1, medical: 1 },
+      divisions: {}, coaches: [], sponsors: [],
+    }
+    const result = computeMembership(g)
+    // No champion: 130 * 1.667 * 1 = 217
+    expect(result.demand).toBe(217)
+  })
+})
+
+describe('F8.3 — public opinion merchandise modifier', () => {
+  it('positive sentiment = ×1.2 merchandise contribution', () => {
+    const g = {
+      rep: 0, roster: [{ popularity: 60, streakW: 3, streakL: 0 }], // high pop + positive streak = Fan Favorite → positive
+      coaches: [], sponsors: [], facilities: { mats: 1, ring: 0, weights: 0, medical: 0 },
+    }
+    const { merchRevenue } = computeMonthlyIncome(g)
+    // 60 * 80 * 1.2 = 5760
+    expect(merchRevenue).toBe(5760)
+  })
+
+  it('negative sentiment = ×0.8 merchandise contribution', () => {
+    const g = {
+      rep: 0, roster: [{ popularity: 70, streakW: 0, streakL: 3 }], // high pop + negative streak = Over the Hill
+      coaches: [], sponsors: [], facilities: { mats: 1, ring: 0, weights: 0, medical: 0 },
+    }
+    const { merchRevenue } = computeMonthlyIncome(g)
+    // 70 * 80 * 0.8 = 4480
+    expect(merchRevenue).toBe(4480)
+  })
+
+  it('neutral sentiment = ×1.0 merchandise contribution (baseline)', () => {
+    const g = {
+      rep: 0, roster: [{ popularity: 50, streakW: 0, streakL: 0 }], // neutral = Solid Pro
+      coaches: [], sponsors: [], facilities: { mats: 1, ring: 0, weights: 0, medical: 0 },
+    }
+    const { merchRevenue } = computeMonthlyIncome(g)
+    // 50 * 80 * 1.0 = 4000
+    expect(merchRevenue).toBe(4000)
   })
 })

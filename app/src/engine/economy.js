@@ -1,5 +1,6 @@
 import { clamp } from "./rng.js";
 import { CAMP_TIERS, MEMBER_FEE, SPONSOR_BRANDS, TRAINING } from "./data.js";
+import { getPublicOpinion } from "./publicOpinion.js";
 
 export function coachBonus(g, gains) {
   let b = 1;
@@ -57,7 +58,11 @@ export function computeMonthlyIncome(g) {
   }
   const fSponsor = g.roster.reduce((s, f) => s + f.popularity * 150, 0);
   const championBonus = g.roster.reduce((s, f) => s + (f.titles?.includes("Major World Champion") ? 5000 : 0), 0);
-  const merchRevenue = Math.round(g.roster.reduce((s, f) => s + f.popularity * 80, 0));
+  const merchRevenue = Math.round(g.roster.reduce((s, f) => {
+    const opinion = getPublicOpinion(f);
+    const merchMult = opinion.sentiment === "positive" ? 1.2 : opinion.sentiment === "negative" ? 0.8 : 1.0;
+    return s + f.popularity * 80 * merchMult;
+  }, 0));
   const { revenue: membershipRevenue } = computeMembership(g);
   return { sponsorAmt, fSponsor, championBonus, merchRevenue, membershipRevenue,
     total: sponsorAmt + fSponsor + championBonus + merchRevenue + membershipRevenue };
@@ -70,7 +75,19 @@ export function computeMonthlyIncome(g) {
 export function computeMembership(g) {
   const campTier = g.campTier || 0;
   const hasChampion = g.roster?.some((f) => f.titles?.includes("Major World Champion"));
-  const demand = Math.round(130 * (1 + (g.rep || 0) / 45) * (hasChampion ? 1.3 : 1));
+  // Check if any roster fighter has an active era (dominant champion)
+  let eraMultiplier = 1;
+  if (hasChampion) {
+    eraMultiplier = 1.3;
+    if (g.divisions) {
+      Object.values(g.divisions).forEach(div => {
+        if (div.era && g.roster?.some(f => f.name === div.era.championName)) {
+          eraMultiplier = 1.5;
+        }
+      });
+    }
+  }
+  const demand = Math.round(130 * (1 + (g.rep || 0) / 45) * eraMultiplier);
   const mats = g.facilities?.mats || 1;
   const otherFacLevels = (g.facilities?.ring || 0) + (g.facilities?.weights || 0) + (g.facilities?.medical || 0);
   const capacity = Math.round(mats * 90 * (1 + otherFacLevels * 0.06));

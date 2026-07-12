@@ -253,6 +253,14 @@ export function tickFightOffers(g) {
       opp.weightClass = f.weightClass;
       if (!opp.record.w) opp.record = { w: RI(2, 14), l: RI(0, 5), ko: 0, sub: 0, dec: 0 };
 
+      // Grudge match hype bonus: rivalries boost purse
+      let isGrudgeMatch = false;
+      if (f.rivalries?.[opp.name]?.count >= 2) {
+        isGrudgeMatch = true;
+        const hypeBonus = 1.25; // +25% purse
+        show = Math.round(show * hypeBonus);
+      }
+
       // Matchup storytelling
       const archA = f.archetype;
       const archB = opp.archetype;
@@ -281,7 +289,7 @@ export function tickFightOffers(g) {
         tier, show, winBonus: show, opponent: opp,
         title: (r != null && r <= 5) && (f.streakW >= 2 || f.streakW == null) && (titleTier === "Major" || titleTier === "Premier"),
         titleTier, oppRank, contenderId,
-        titleText, story, shortNotice, isMainEvent, isTitleEliminator,
+        titleText, story, shortNotice, isMainEvent, isTitleEliminator, isGrudgeMatch,
         weeks: shortNotice ? RI(1, 2) : RI(4, 6),
       });
     }
