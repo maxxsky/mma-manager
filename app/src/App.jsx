@@ -112,9 +112,12 @@ export default function App() {
 
       {/* Week flash */}
       {weekFlash > 0 && (
-        <div key={weekFlash} style={{ position: "fixed", top: "40%", left: "50%", zIndex: 40, pointerEvents: "none", fontFamily: DISPLAY, fontSize: 40, letterSpacing: 6, color: "#ffd15c", textShadow: "0 0 30px rgba(255,209,92,.6)", animation: "weekpop 1.1s ease both", textTransform: "uppercase" }}>
-          Week {g.week}
-        </div>
+        <>
+          <style>{`@keyframes weekpop{0%{opacity:0;transform:scale(0.5)}17%{opacity:1;transform:scale(1)}55%{opacity:1}100%{opacity:0}}`}</style>
+          <div key={weekFlash} style={{ position: "fixed", top: "40%", left: "50%", zIndex: 40, pointerEvents: "none", fontFamily: DISPLAY, fontSize: 40, letterSpacing: 6, color: "#ffd15c", textShadow: "0 0 30px rgba(255,209,92,.6)", animation: "weekpop 1.1s ease both", textTransform: "uppercase" }}>
+            Week {g.week}
+          </div>
+        </>
       )}
 
       {/* Sidebar */}
