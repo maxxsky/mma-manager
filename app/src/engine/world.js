@@ -62,8 +62,11 @@ export function simulateAITitleDefenses(g) {
       // No eligible player — AI resolves vacant title
       const candidates = d.list?.filter((c) => c.level > 0.7) || [];
       if (candidates.length < 2) return;
-      const winner = candidates[0];
-      const loser = candidates[1];
+      // Deduplicate by name to prevent same-name matchup
+      const uniqueCandidates = candidates.filter((c, i, a) => a.findIndex(x => x.name === c.name) === i);
+      if (uniqueCandidates.length < 2) return;
+      const winner = uniqueCandidates[0];
+      const loser = uniqueCandidates[1];
       d.champ = { name: winner.name, player: false, age: winner.age || RI(27, 33) };
       events.push({
         title: `👑 New ${wc} Champion!`,
@@ -73,8 +76,10 @@ export function simulateAITitleDefenses(g) {
     }
     if (!d.list || d.list.length < 1) return;
 
-    const contender = d.list[0];
     const champ = d.champ;
+    // Ensure contender is not the champion themselves
+    const contender = d.list.find(c => c.name !== champ.name) || d.list[0];
+    if (!contender || contender.name === champ.name) return;
 
     const champSkill = (champ.level || 1.2) * (1 - (champ.age > CHAMP_AGE_DECLINE ? 0.1 : 0));
     const contSkill = (contender.level || 0.9) * (1 + (contender.points > 90 ? 0.1 : 0));
