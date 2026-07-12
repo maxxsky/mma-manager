@@ -33,13 +33,13 @@ export default function RivalsScreen({ g, dispatch }) {
       </div>
 
       {g.rivals.map((rc) => (
-        <RivalCard key={rc.id} rc={rc} g={g} up={up} />
+        <RivalCard key={rc.id} rc={rc} g={g} dispatch={dispatch} />
       ))}
     </div>
   );
 }
 
-function RivalCard({ rc, g, up }) {
+function RivalCard({ rc, g, dispatch }) {
   const traitData = RIVAL_TRAITS[rc.trait] || {};
   const rivalryLevel =
     rc.rivalry > 60 ? "hostile" : rc.rivalry > 30 ? "heated" : rc.rivalry > 10 ? "cool" : "cold";
