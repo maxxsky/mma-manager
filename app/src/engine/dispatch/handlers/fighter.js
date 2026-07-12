@@ -4,6 +4,7 @@ import { vacateTitle } from "../../rankings.js";
 import { recordRetirement } from "../../world/history.js";
 import { avgSkill } from "../../fighter.js";
 import { checkHallOfFame } from "../../dynasty.js";
+import { pushInboxEvent } from "../../events.js";
 
 export function registerFighterHandlers(register) {
   register("release", ({ g, c }) => {
@@ -23,7 +24,7 @@ export function registerFighterHandlers(register) {
     const hof = checkHallOfFame(f, g);
     if (hof) {
       g.log.unshift(`🏛️ ${f.name} inducted into the Hall of Fame!`);
-      g.inbox.unshift({ id: uid(), type: "event", title: `🏛️ Hall of Fame`, body: `${f.name} has been inducted into the Hall of Fame! Record: ${hof.record}. ${hof.highlights.join(" · ")}`, choices: [{ label: "Legendary", chem: 3 }] });
+      pushInboxEvent(g, { type: "event", title: `🏛️ Hall of Fame`, body: `${f.name} has been inducted into the Hall of Fame! Record: ${hof.record}. ${hof.highlights.join(" · ")}`, choices: [{ label: "Legendary", chem: 3 }] });
     }
     g.roster = g.roster.filter((x) => x.id !== c.retire);
     g.rep = clamp(g.rep + 3, 0, 100);

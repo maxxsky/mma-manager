@@ -4,6 +4,7 @@ import { SPONSOR_BRANDS } from "../data.js";
 import { genCoach, weeklyFee } from "../fighter.js";
 import { rankOf } from "../rankings.js";
 import { tickRankings } from "./rankings.js";
+import { pushInboxEvent } from "../events.js";
 
 const SPONSOR_RENEWAL_WINDOW = 4; // settlement cycle tersisa sebelum kontrak berakhir, saat tawaran perpanjangan muncul
 
@@ -221,14 +222,14 @@ export function tickSettlement(g) {
       } else if (f.record.w >= 4) {
         f.morale = clamp(f.morale - 3, 0, 100);
         if (!g.inbox.some((m) => m.beltChaserMsg === f.id)) {
-          g.inbox.unshift({ id: uid(), type: "event", beltChaserMsg: f.id, title: `${f.name} frustrasi`, body: `${f.name} sudah ${f.record.w} menang tapi belum dapat kesempatan title — morale turun.`, choices: [{ label: "Janji cari title shot", chem: 0 }] });
+          pushInboxEvent(g, { type: "event", beltChaserMsg: f.id, title: `${f.name} frustrasi`, body: `${f.name} sudah ${f.record.w} menang tapi belum dapat kesempatan title — morale turun.`, choices: [{ label: "Janji cari title shot", chem: 0 }] });
         }
       }
     }
     if (f.ambition === "Star Power" && f.popularity < 30) {
       f.morale = clamp(f.morale - 2, 0, 100);
       if (!g.inbox.some((m) => m.starPowerMsg === f.id)) {
-        g.inbox.unshift({ id: uid(), type: "event", starPowerMsg: f.id, title: `${f.name} kurang sorotan`, body: `${f.name} ingin jadi bintang tapi popularitas masih ${Math.round(f.popularity)}.`, choices: [{ label: "Cari exposure", chem: 0 }] });
+        pushInboxEvent(g, { type: "event", starPowerMsg: f.id, title: `${f.name} kurang sorotan`, body: `${f.name} ingin jadi bintang tapi popularitas masih ${Math.round(f.popularity)}.`, choices: [{ label: "Cari exposure", chem: 0 }] });
       }
     }
 

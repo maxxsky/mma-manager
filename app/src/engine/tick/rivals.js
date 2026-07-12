@@ -2,6 +2,7 @@
 import { R, RI, clamp, pick, fmt$, uid, random } from "../rng.js";
 import { ATTRS } from "../data.js";
 import { genFighter, assignAgent, genCoach } from "../fighter.js";
+import { pushInboxEvent } from "../events.js";
 
 export function tickRivals(g) {
   if (!g || !g.rivals) return;
@@ -72,12 +73,12 @@ export function tickRivals(g) {
     // Milestone: rival enters championship contention
     if (rc.rep >= 70 && !rc._milestoneChampNotified) {
       rc._milestoneChampNotified = true;
-      g.inbox.unshift({ id: uid(), type: "event", title: `⭐ ${rc.name} — Championship Contender`, body: `${rc.name} has reached ${Math.round(rc.rep)} reputation. They are now a legitimate championship-level camp. Watch your back.`, choices: [{ label: "Noted", chem: 0 }] });
+      pushInboxEvent(g, { type: "event", title: `⭐ ${rc.name} — Championship Contender`, body: `${rc.name} has reached ${Math.round(rc.rep)} reputation. They are now a legitimate championship-level camp. Watch your back.`, choices: [{ label: "Noted", chem: 0 }] });
     }
     // Milestone: rival produces top-tier rep
     if (rc.rep >= 85 && !rc._milestoneEliteNotified) {
       rc._milestoneEliteNotified = true;
-      g.inbox.unshift({ id: uid(), type: "event", title: `👑 ${rc.name} — Elite Camp`, body: `${rc.name} has reached elite status at ${Math.round(rc.rep)} reputation. They are now one of the top camps in the world.`, choices: [{ label: "Impressive", chem: 0 }] });
+      pushInboxEvent(g, { type: "event", title: `👑 ${rc.name} — Elite Camp`, body: `${rc.name} has reached elite status at ${Math.round(rc.rep)} reputation. They are now one of the top camps in the world.`, choices: [{ label: "Impressive", chem: 0 }] });
     }
     // Grudge match: high rivalry triggers challenge fights
     if (rc.rivalry > 50 && g.week % 24 === 0 && random() < 0.25 && g.roster.length > 0 && rc.fighters.length > 0) {

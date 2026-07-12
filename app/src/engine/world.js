@@ -78,8 +78,8 @@ export function simulateAITitleDefenses(g) {
 
     const champ = d.champ;
     // Ensure contender is not the champion themselves
-    const contender = d.list.find(c => c.name !== champ.name) || d.list[0];
-    if (!contender || contender.name === champ.name) return;
+    const contender = d.list.find(c => c.name !== champ.name);
+    if (!contender) return;
 
     const champSkill = (champ.level || 1.2) * (1 - (champ.age > CHAMP_AGE_DECLINE ? 0.1 : 0));
     const contSkill = (contender.level || 0.9) * (1 + (contender.points > 90 ? 0.1 : 0));

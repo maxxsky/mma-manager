@@ -5,6 +5,7 @@
 // ============================================================
 
 import { uid } from "./rng.js";
+import { pushInboxEvent } from "./events.js";
 import { createNarrativeContext } from "./narrative/context.js";
 import { generateChampionshipStory } from "./narrative/generators/champion.js";
 import { generateRetirementStory } from "./narrative/generators/retirement.js";
@@ -51,11 +52,7 @@ export function narrativeTick(g) {
   events.forEach(ev => {
     if (!g.inbox) g.inbox = [];
     if (g.inbox.some(m => m.title === ev.title && m.body === ev.body)) return;
-    g.inbox.unshift({
-      id: uid(), type: "event",
-      title: ev.title, body: ev.body,
-      choices: [{ label: "OK", chem: 0 }],
-    });
+    pushInboxEvent(g, { type: "event", title: ev.title, body: ev.body, choices: [{ label: "OK", chem: 0 }] });
   });
 
   return events.length;

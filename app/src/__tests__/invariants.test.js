@@ -389,4 +389,17 @@ describe('Game State Invariants', () => {
     expect(g.inbox.find(m => m.id === 11)).toBeDefined()
     expect(g.inbox.find(m => m.id === 12)).toBeDefined()
   })
+
+  it('auto-expiry: event-type messages (same path as milestones) older than 8w are removed at settlement', () => {
+    useSeed(42)
+    const g = createTestGame()
+    g.inbox = [
+      { id: 20, type: 'event', title: '🏆 First Win', body: 'Old milestone', choices: [{ label: 'OK', chem: 0 }], createdWeek: 2 },
+    ]
+    g.week = 100
+
+    tickSettlement(g)
+
+    expect(g.inbox.find(m => m.id === 20)).toBeUndefined()
+  })
 })

@@ -27,7 +27,7 @@ import { tickYearly } from "./tick/yearly.js";
 import { tickWeightChange } from "./tick/weight-change.js";
 import { tickRivals } from "./tick/rivals.js";
 import { worldTick } from "./world.js";
-import { processEventSystem } from "./events.js";
+import { processEventSystem, pushInboxEvent } from "./events.js";
 import { trackCoachCareer, trackSponsorRelations } from "./identity.js";
 import { tickAllShadowCamps } from "./shadow-ai.js";
 import { narrativeTick } from "./narrative-presentation.js";
@@ -112,7 +112,7 @@ export function tick(g) {
   // Onboarding tip
   const tip = getTip(g);
   if (tip) {
-    g.inbox.unshift({ id: uid(), type: "event", title: tip.title, body: tip.body, choices: [{ label: "Got it", chem: 0 }] });
+      pushInboxEvent(g, { type: "event", title: tip.title, body: tip.body, choices: [{ label: "Got it", chem: 0 }] });
   }
   trackSponsorRelations(g);
 

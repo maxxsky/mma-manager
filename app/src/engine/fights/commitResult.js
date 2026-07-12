@@ -1,7 +1,7 @@
 // Fight outcome persistence — moved from UI to career layer
 import { clamp, uid } from "../rng.js";
 import { processFightResult, processRivalry, updateRivalryResult, processTitleChange } from "../career.js";
-import { queueDelayedEvent } from "../events.js";
+import { queueDelayedEvent, pushInboxEvent } from "../events.js";
 import { TITLE_CELEBRATION_DELAY_WEEKS, TITLE_SPONSOR_DELAY_WEEKS } from "../events/config.js";
 import { recordEra } from "../world/history.js";
 import { avgSkill } from "../fighter.js";
@@ -115,7 +115,7 @@ export function commitFightResult(g, fighter, result) {
       }
     }
     [...careerEvents, ...rivalryEvents].forEach((ev) => {
-      g.inbox.unshift({ id: uid(), type: "event", title: ev.title, body: ev.body, choices: [{ label: "OK", chem: 0 }] });
+      pushInboxEvent(g, { type: "event", title: ev.title, body: ev.body, choices: [{ label: "OK", chem: 0 }] });
     });
 
     if (fighter.booked?.oppRank != null && fighter.booked.oppRank <= 5) {
@@ -171,7 +171,7 @@ export function commitFightResult(g, fighter, result) {
     const careerEvents = processFightResult(f, g, { won: false, how: result.how });
     updateRivalryResult({ name: oppName, rivalries: {} }, f, g);
     careerEvents.forEach((ev) => {
-      g.inbox.unshift({ id: uid(), type: "event", title: ev.title, body: ev.body, choices: [{ label: "OK", chem: 0 }] });
+      pushInboxEvent(g, { type: "event", title: ev.title, body: ev.body, choices: [{ label: "OK", chem: 0 }] });
     });
 
     // ── Trash talk backfires on loss ──

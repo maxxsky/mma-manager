@@ -64,6 +64,14 @@ export function queueDelayedEvent(g, event, triggerWeek) {
   g._delayedEvents.push({ ...event, triggerWeek: g.week + triggerWeek });
 }
 
+/** Push a type:"event" or "milestone" item to inbox with auto-generated id and createdWeek.
+ *  Use this instead of raw g.inbox.unshift for any informational message
+ *  so the auto-expiry system in tickSettlement can clean it up. */
+export function pushInboxEvent(g, overrides) {
+  if (!g.inbox) g.inbox = [];
+  g.inbox.unshift({ id: uid(), ...overrides, createdWeek: g.week });
+}
+
 export function processDelayedEvents(g) {
   if (!g._delayedEvents) return [];
   const events = [];
@@ -116,11 +124,7 @@ export function processEventSystem(g) {
 
   all.forEach((ev) => {
     if (!g.inbox) g.inbox = [];
-    g.inbox.unshift({
-      id: uid(), type: "event",
-      title: ev.title, body: ev.body,
-      choices: ev.choices || [{ label: "OK", chem: 0 }],
-    });
+    pushInboxEvent(g, { type: "event", title: ev.title, body: ev.body, choices: ev.choices || [{ label: "OK", chem: 0 }] });
     addTimelineEvent(g, { type: "event", title: ev.title, detail: ev.body });
   });
 
