@@ -133,3 +133,36 @@ describe('F3 — exponential asking curve', () => {
     }
   })
 })
+
+describe('F6 — sponsor cap rep×500 fallback', () => {
+  it('g.rep=50 with no sponsors: sponsorAmt capped at $15,000 (rep 30 max)', () => {
+    const g = { rep: 50, sponsors: [], roster: [], coaches: [], facilities: { mats: 1, ring: 0, weights: 0, medical: 0 } }
+    const { sponsorAmt } = computeMonthlyIncome(g)
+    expect(sponsorAmt).toBe(Math.round(30 * 500)) // 15,000
+    expect(sponsorAmt).toBe(15000)
+  })
+
+  it('g.rep=20 with no sponsors: sponsorAmt = 20 × 500 = 10,000 (below cap)', () => {
+    const g = { rep: 20, sponsors: [], roster: [], coaches: [], facilities: { mats: 1, ring: 0, weights: 0, medical: 0 } }
+    const { sponsorAmt } = computeMonthlyIncome(g)
+    expect(sponsorAmt).toBe(10000)
+  })
+
+  it('g.rep=30 with no sponsors: sponsorAmt = 30 × 500 = 15,000 (exactly at cap)', () => {
+    const g = { rep: 30, sponsors: [], roster: [], coaches: [], facilities: { mats: 1, ring: 0, weights: 0, medical: 0 } }
+    const { sponsorAmt } = computeMonthlyIncome(g)
+    expect(sponsorAmt).toBe(15000)
+  })
+
+  it('real sponsors bypass the cap entirely', () => {
+    const g = {
+      rep: 50, // would be capped at 30 without real sponsors
+      sponsors: [{ brand: 'FightFist Gear', rate: 30000, terms: 'placement' }],
+      roster: [], coaches: [], facilities: { mats: 1, ring: 0, weights: 0, medical: 0 },
+    }
+    const { sponsorAmt } = computeMonthlyIncome(g)
+    // Real sponsor rate used, not capped fallback
+    expect(sponsorAmt).toBeGreaterThan(15000)
+    expect(sponsorAmt).toBe(30000)
+  })
+})

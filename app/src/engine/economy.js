@@ -38,7 +38,7 @@ export const FACILITY_MAINT_RATE = 0.012;
  */
 export function computeMonthlyIncome(g) {
   // Sponsor income — mirrors tickSettlement exactly
-  let sponsorAmt = Math.round(g.rep * 500);
+  let sponsorAmt = Math.round(Math.min(g.rep, 30) * 500);
   if (g.sponsors && g.sponsors.length > 0) {
     sponsorAmt = 0;
     const hasChampion = g.roster?.some((f) => f.titles?.includes("Major World Champion"));
