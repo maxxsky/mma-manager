@@ -152,8 +152,10 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
         if (objectives.length === 0) return null;
         return (
           <Panel pad={0} style={{ borderColor: T.gold, border: `1px solid ${T.gold}44`, background: `${T.gold}08` }}>
-            <div style={{ padding: "12px 18px" }}>
+            <div style={{ padding: "18px 20px 6px" }}>
               <Eyebrow color={T.gold}>📋 Getting Started</Eyebrow>
+            </div>
+            <div style={{ padding: "18px 20px" }}>
               {objectives.slice(0, 3).map((o, i) => (
                 <div key={o.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", fontFamily: T.body, fontSize: 13, color: T.txt2 }}>
                   <span style={{ width: 20, height: 20, borderRadius: 10, background: `${T.gold}22`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.mono, fontSize: 11, color: T.gold, flexShrink: 0 }}>{i + 1}</span>
@@ -161,7 +163,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
                   <span style={{ marginLeft: "auto", fontSize: 10, color: T.txt3 }}>{o.hint}</span>
                 </div>
               ))}
-             </div>
+            </div>
            </Panel>
         );
       })()}
@@ -169,10 +171,10 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
       <Panel pad={0}>
         <div style={{ padding: "18px 20px 6px" }}><Eyebrow color={T.ember}>{t("UI.priorities")}</Eyebrow></div>
         {topPriorities.length === 0 && (
-          <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, padding: "11px 18px" }}>{t("UI.allClearHint")}</div>
+          <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, padding: "18px 20px" }}>{t("UI.allClearHint")}</div>
         )}
         {topPriorities.map(([txt, to, c], i, arr) => (
-          <button key={i} className="row" onClick={() => setTab(to)} aria-label={`Priority ${i+1}: ${txt}`} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", padding: "11px 18px", border: "none", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none", background: "transparent", cursor: "pointer" }}>
+          <button key={i} className="row" onClick={() => setTab(to)} aria-label={`Priority ${i+1}: ${txt}`} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", padding: "12px 20px", border: "none", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none", background: "transparent", cursor: "pointer" }}>
             <span style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 700, color: c, width: 18 }}>{i + 1}</span>
             <span style={{ width: 6, height: 6, borderRadius: 3, background: c, flexShrink: 0 }} />
             <span style={{ fontFamily: T.body, fontSize: 14, fontWeight: 500, lineHeight: 1.5, color: T.txt, flex: 1 }}>{txt}</span>
@@ -185,7 +187,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
       <Panel pad={0} style={{ overflow: "hidden" }}>
         <div style={{ padding: "18px 20px 6px" }}><Eyebrow>{t("UI.upcomingFights")}</Eyebrow></div>
         {fights.length === 0 && (
-          <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, padding: "11px 18px" }}>
+          <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, padding: "18px 20px" }}>
             {t("UI.noFightsHint")}
           </div>
         )}
@@ -230,10 +232,10 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
       <Panel pad={0}>
         <div style={{ padding: "18px 20px 6px" }}><Eyebrow>{t("UI.campFeed")}</Eyebrow></div>
         {dedupedFeed.length === 0 && (
-          <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, padding: "9px 18px" }}>{t("UI.noEventsHint")}</div>
+          <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, padding: "18px 20px" }}>{t("UI.noEventsHint")}</div>
         )}
         {dedupedFeed.map(([wk, who, txt, c], i, arr) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 18px", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none" }}>
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 20px", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none" }}>
             <span style={{ fontFamily: T.mono, fontSize: 10.5, color: T.txt3, width: 32, flexShrink: 0 }}>W{String(wk).padStart(2, "0")}</span>
             <span style={{ width: 6, height: 6, borderRadius: 3, background: c, flexShrink: 0 }} />
             <span style={{ fontFamily: T.body, fontSize: 13, color: T.txt2 }}><b style={{ color: T.txt }}>{who}</b> — {txt}</span>
@@ -241,12 +243,14 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
         ))}
       </Panel>
       {dispatch && (
-        <Panel style={{ marginTop: 12 }}>
-          <Eyebrow>Quick Actions</Eyebrow>
+        <Panel style={{ marginTop: 16 }}>
+          <div style={{ padding: "0 0 6px" }}>
+            <Eyebrow>Quick Actions</Eyebrow>
+          </div>
           <Btn onClick={() => dispatch({ type: "TEAM_BONDING" })} style={{ width: "100%" }}>
             🤝 Team Bonding ($2K) — Chemistry +8
           </Btn>
-          <div style={{ fontFamily: T.body, fontSize: 10, color: T.txt3, marginTop: 4, textAlign: "center" }}>
+          <div style={{ fontFamily: T.body, fontSize: 10, color: T.txt3, marginTop: 8, textAlign: "center" }}>
             Cooldown: 12 weeks · Current chemistry: {Math.round(g.chemistry)}
           </div>
         </Panel>
