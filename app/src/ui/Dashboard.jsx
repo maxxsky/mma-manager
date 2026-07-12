@@ -204,14 +204,44 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
         {topPriorities.length === 0 && (
           <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, padding: "18px 20px" }}>{t("UI.allClearHint")}</div>
         )}
-        {topPriorities.map(([txt, to, c], i, arr) => (
-          <button key={i} className="row" onClick={() => setTab(to)} aria-label={`Priority ${i+1}: ${txt}`} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", padding: "12px 20px", border: "none", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none", background: "transparent", cursor: "pointer" }}>
-            <span style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 700, color: c, width: 18 }}>{i + 1}</span>
-            <span style={{ width: 6, height: 6, borderRadius: 3, background: c, flexShrink: 0 }} />
-            <span style={{ fontFamily: T.body, fontSize: 14, fontWeight: 500, lineHeight: 1.5, color: T.txt, flex: 1 }}>{txt}</span>
-            <span style={{ color: T.txt3, display: "flex" }}><Icon d={ICONS.chevR} size={14} /></span>
+        {topPriorities.map(([txt, to, c], i, arr) => {
+          // Parse priority text into structured parts
+          const nameMatch = txt.match(/^(?:Set game plan|Fight offer) for (.+?)(?: —| expires)/);
+          const nameMatch2 = txt.match(/^(Low morale: )(.+?) \(/);
+          const nameMatch3 = txt.match(/^(.+?)(?: (?:overtraining|injured|has \d fight))/);
+          const dashSplit = txt.split(' — ');
+          const prefix = dashSplit.length > 1 ? dashSplit[0] : '';
+          const status = dashSplit.length > 1 ? dashSplit[1] : txt;
+          let action = '';
+          let fighterName = '';
+          if (nameMatch) {
+            action = txt.startsWith('Set game plan') ? 'Game Plan' : 'Fight Offer';
+            fighterName = nameMatch[1];
+          } else if (nameMatch2) {
+            action = 'Low Morale';
+            fighterName = nameMatch2[2];
+          } else if (nameMatch3) {
+            if (txt.includes('overtraining')) action = 'Overtraining';
+            else if (txt.includes('injured')) action = 'Injury';
+            else if (txt.includes('contract')) action = 'Contract';
+            else action = 'Action Needed';
+            fighterName = nameMatch3[1];
+          } else {
+            action = 'Action Needed';
+            fighterName = '';
+          }
+          return (
+          <button key={i} className="row" onClick={() => setTab(to)} aria-label={`Priority ${i+1}: ${txt}`} style={{ display: "flex", alignItems: "center", gap: 16, width: "100%", textAlign: "left", padding: "14px 20px", border: "none", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}44` : "none", background: "transparent", cursor: "pointer", minHeight: 68 }}>
+            <span style={{ fontFamily: T.mono, fontSize: 15, fontWeight: 700, color: c, width: 22, flexShrink: 0, lineHeight: 1 }}>{i + 1}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: T.body, fontSize: 14, fontWeight: 700, color: c, marginBottom: 2 }}>{action}</div>
+              {fighterName && <div style={{ fontFamily: T.body, fontSize: 13, fontWeight: 600, color: T.txt, marginBottom: 1 }}>{fighterName}</div>}
+              <div style={{ fontFamily: T.body, fontSize: 11, fontWeight: 400, color: T.txt3, opacity: 0.75, lineHeight: 1.3 }}>{status}</div>
+            </div>
+            <span style={{ color: `${c}99`, flexShrink: 0 }}><Icon d={ICONS.chevR} size={16} /></span>
           </button>
-        ))}
+          );
+        })}
       </Panel>
 
       {/* UPCOMING FIGHTS TABLE */}
