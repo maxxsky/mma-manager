@@ -137,10 +137,10 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
         {kpis.map(([l, v, c, d, to]) => (
           <Panel key={l} pad={0}>
-            <button className="row" onClick={() => setTab(to)} aria-label={`${l} - ${v}`} style={{ display: "block", width: "100%", textAlign: "left", padding: 14, border: "none", background: "transparent", cursor: "pointer", borderRadius: T.r2 }}>
-              <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 600, letterSpacing: 1.2, textTransform: "uppercase", color: T.txt3, marginBottom: 4 }}>{l}</div>
-              <div style={{ fontFamily: T.mono, fontSize: 24, fontWeight: 700, color: c, lineHeight: 1 }}>{v}</div>
-              <div style={{ fontFamily: T.body, fontSize: 10.5, color: T.txt3, marginTop: 5 }}>{d}</div>
+            <button className="row" onClick={() => setTab(to)} aria-label={`${l} - ${v}`} style={{ display: "block", width: "100%", textAlign: "left", padding: 18, border: "none", background: "transparent", cursor: "pointer", borderRadius: T.r2 }}>
+              <div style={{ fontFamily: T.body, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.txt3, marginBottom: 8 }}>{l}</div>
+              <div style={{ fontFamily: T.mono, fontSize: 30, fontWeight: 800, color: c, lineHeight: 1 }}>{v}</div>
+              <div style={{ fontFamily: T.body, fontSize: 11, lineHeight: 1.4, opacity: 0.8, color: T.txt3, marginTop: 8 }}>{d}</div>
             </button>
           </Panel>
         ))}
@@ -167,15 +167,15 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
       })()}
       {/* PRIORITIES THIS WEEK */}
       <Panel pad={0}>
-        <div style={{ padding: "14px 18px 2px" }}><Eyebrow color={T.ember}>{t("UI.priorities")}</Eyebrow></div>
+        <div style={{ padding: "18px 20px 6px" }}><Eyebrow color={T.ember}>{t("UI.priorities")}</Eyebrow></div>
         {topPriorities.length === 0 && (
           <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, padding: "11px 18px" }}>{t("UI.allClearHint")}</div>
         )}
         {topPriorities.map(([txt, to, c], i, arr) => (
           <button key={i} className="row" onClick={() => setTab(to)} aria-label={`Priority ${i+1}: ${txt}`} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", padding: "11px 18px", border: "none", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none", background: "transparent", cursor: "pointer" }}>
-            <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: c, width: 18 }}>{i + 1}</span>
+            <span style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 700, color: c, width: 18 }}>{i + 1}</span>
             <span style={{ width: 6, height: 6, borderRadius: 3, background: c, flexShrink: 0 }} />
-            <span style={{ fontFamily: T.body, fontSize: 13, color: T.txt, flex: 1 }}>{txt}</span>
+            <span style={{ fontFamily: T.body, fontSize: 14, fontWeight: 500, lineHeight: 1.5, color: T.txt, flex: 1 }}>{txt}</span>
             <span style={{ color: T.txt3, display: "flex" }}><Icon d={ICONS.chevR} size={14} /></span>
           </button>
         ))}
@@ -183,7 +183,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
 
       {/* UPCOMING FIGHTS TABLE */}
       <Panel pad={0} style={{ overflow: "hidden" }}>
-        <div style={{ padding: "14px 18px 2px" }}><Eyebrow>{t("UI.upcomingFights")}</Eyebrow></div>
+        <div style={{ padding: "18px 20px 6px" }}><Eyebrow>{t("UI.upcomingFights")}</Eyebrow></div>
         {fights.length === 0 && (
           <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, padding: "11px 18px" }}>
             {t("UI.noFightsHint")}
@@ -193,7 +193,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
           <>
             <div style={{ display: "grid", gridTemplateColumns: "minmax(180px,1.2fr) minmax(160px,1fr) 1fr 90px 130px 60px 30px", alignItems: "center", padding: "0 18px", height: 32, background: T.raised, borderTop: `1px solid ${T.line}`, borderBottom: `1px solid ${T.line}` }}>
               {[t("UI.fighter"), t("UI.opponent"), t("UI.event"), t("UI.tier"), t("UI.purse"), t("UI.weeksIn"), ""].map((col, i) => (
-                <span key={i} style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: T.txt3, textAlign: i === 4 || i === 5 ? "right" : "left" }}>{col}</span>
+                <span key={i} style={{ fontFamily: T.body, fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: T.txt3, textAlign: i === 4 || i === 5 ? "right" : "left" }}>{col}</span>
               ))}
             </div>
             {fights.map((f, i, arr) => {
@@ -209,15 +209,15 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <Mono name={f.name} color={ac} size={32} region={f.region} titleTier={isChamp(f) ? (f.titles?.includes("Major World Champion") ? "Major" : "National") : null} />
                     <div>
-                      <div style={{ fontFamily: T.body, fontSize: 13.5, fontWeight: 600, color: T.txt }}>{f.name}</div>
-                      <div style={{ fontFamily: T.body, fontSize: 10.5, color: T.txt3 }}>{f.weightClass}</div>
+                      <div style={{ fontFamily: T.body, fontSize: 15, fontWeight: 700, color: T.txt }}>{f.name}</div>
+                      <div style={{ fontFamily: T.body, fontSize: 11.5, color: T.txt3 }}>{f.weightClass}</div>
                     </div>
                   </div>
                   <span style={{ fontFamily: T.body, fontSize: 13, color: T.txt2 }}>{oppName}{oppRank ? " " : ""}<span style={{ fontFamily: T.mono, fontSize: 11, color: T.gold }}>{oppRank}</span></span>
                   <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt3 }}>{event}</span>
                   <span>{bk.title ? <Tag color={T.gold} solid>{t("UI.title")}</Tag> : <Tag color={T.steel}>{bk.tier}</Tag>}</span>
                   <span style={{ fontFamily: T.mono, fontSize: 12.5, color: T.txt2, textAlign: "right" }}>{purseStr}</span>
-                  <span style={{ fontFamily: T.mono, fontSize: 15, fontWeight: 700, color: T.ember, textAlign: "right" }}>{weeks}w</span>
+                  <span style={{ fontFamily: T.mono, fontSize: 17, fontWeight: 800, color: T.ember, textAlign: "right" }}>{weeks}w</span>
                   <span style={{ color: T.txt3, display: "flex", justifyContent: "flex-end" }}><Icon d={ICONS.chevR} size={14} /></span>
                 </div>
               );
@@ -228,12 +228,12 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
 
       {/* CAMP FEED */}
       <Panel pad={0}>
-        <div style={{ padding: "14px 18px 2px" }}><Eyebrow>{t("UI.campFeed")}</Eyebrow></div>
+        <div style={{ padding: "18px 20px 6px" }}><Eyebrow>{t("UI.campFeed")}</Eyebrow></div>
         {dedupedFeed.length === 0 && (
           <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, padding: "9px 18px" }}>{t("UI.noEventsHint")}</div>
         )}
         {dedupedFeed.map(([wk, who, txt, c], i, arr) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 18px", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none" }}>
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 18px", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none" }}>
             <span style={{ fontFamily: T.mono, fontSize: 10.5, color: T.txt3, width: 32, flexShrink: 0 }}>W{String(wk).padStart(2, "0")}</span>
             <span style={{ width: 6, height: 6, borderRadius: 3, background: c, flexShrink: 0 }} />
             <span style={{ fontFamily: T.body, fontSize: 13, color: T.txt2 }}><b style={{ color: T.txt }}>{who}</b> — {txt}</span>
