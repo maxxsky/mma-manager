@@ -238,4 +238,23 @@ describe('Reducer', () => {
       expect(g.cash).toBe(cashBefore) // no change
     })
   })
+
+  describe('flashDirection — Chip comparison logic', () => {
+    function fd(prev, current) {
+      if (prev === current) return null;
+      return current > prev ? 'up' : 'down';
+    }
+
+    it('cash turun dari 100000 ke 99000 → direction "down" (merah)', () => {
+      expect(fd(100000, 99000)).toBe('down')
+    })
+
+    it('cash naik dari 100000 ke 101000 → direction "up" (hijau)', () => {
+      expect(fd(100000, 101000)).toBe('up')
+    })
+
+    it('cash tidak berubah → null (tidak flash)', () => {
+      expect(fd(100000, 100000)).toBeNull()
+    })
+  })
 })

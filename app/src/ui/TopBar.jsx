@@ -1,20 +1,26 @@
 import React, { useRef, useEffect, useState } from "react";
 import { T, Icon, ICONS } from "./theme.jsx";
 
-const Chip = ({ label, val, color, flashOnChange }) => {
-  const prevRef = useRef(val);
+/** Determine flash direction from raw numeric comparison */
+export function flashDirection(prev, current) {
+  if (prev === current) return null;
+  return current > prev ? "up" : "down";
+}
+
+const Chip = ({ label, val, color, flashOnChange, rawValue }) => {
+  const prevRef = useRef(rawValue);
   const [flash, setFlash] = useState(null);
 
   useEffect(() => {
-    if (!flashOnChange) { prevRef.current = val; return; }
-    if (prevRef.current !== val) {
-      setFlash(val > prevRef.current ? "up" : "down");
+    if (!flashOnChange) { prevRef.current = rawValue; return; }
+    if (prevRef.current !== rawValue) {
+      setFlash(flashDirection(prevRef.current, rawValue));
       const t = setTimeout(() => setFlash(null), 600);
-      prevRef.current = val;
+      prevRef.current = rawValue;
       return () => clearTimeout(t);
     }
-    prevRef.current = val;
-  }, [val, flashOnChange]);
+    prevRef.current = rawValue;
+  }, [rawValue, flashOnChange]);
 
   const flashColor = flash === "up" ? "#2ecc71" : flash === "down" ? "#e74c3c" : null;
 
@@ -22,10 +28,11 @@ const Chip = ({ label, val, color, flashOnChange }) => {
     <div style={{ textAlign: "right" }}>
       <div style={{ fontFamily: T.body, fontSize: 9, fontWeight: 600, letterSpacing: 1.2,
         textTransform: "uppercase", color: T.txt3 }}>{label}</div>
-      <div key={flash ? `${val}-${flash}` : val}
+      <div key={flash ? `${rawValue}-${flash}` : rawValue}
         style={{ fontFamily: T.mono, fontSize: 15, fontWeight: 700, color: flashColor || color,
           lineHeight: 1.1, transition: "color .4s, text-shadow .4s",
-          textShadow: flashColor ? `0 0 10px ${flashColor}66` : "none" }}>
+          textShadow: flashColor ? `0 0 10px ${flashColor}66` : "none",
+          animation: flash ? "cashFlash .6s ease" : "none" }}>
         {val}
       </div>
       {flash && <style>{flash === "up"
@@ -74,7 +81,7 @@ export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
           </span>
         </div>
         <div style={{ width: 1, height: 26, background: T.line }} />
-        <Chip label="Bank" val={cashVal} color={T.txt} flashOnChange={true} />
+        <Chip label="Bank" val={cashVal} color={T.txt} flashOnChange={true} rawValue={cash} />
         <Chip label="Rep" val={rep != null ? rep : "—"} color={T.gold} />
         <Chip label="Chem" val={chem != null ? chem : "—"} color={chem >= 60 ? T.pos : T.warn} />
         <Chip label="Legacy" val={legacyVal} color={T.steel} />
