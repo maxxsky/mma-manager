@@ -5,6 +5,7 @@ import { genCoach, weeklyFee } from "../fighter.js";
 import { rankOf } from "../rankings.js";
 import { tickRankings } from "./rankings.js";
 import { pushInboxEvent } from "../events.js";
+import { computeMonthlyIncome, FACILITY_MAINT_RATE } from "../economy.js";
 
 const SPONSOR_RENEWAL_WINDOW = 4; // settlement cycle tersisa sebelum kontrak berakhir, saat tawaran perpanjangan muncul
 
@@ -18,26 +19,15 @@ export function tickSettlement(g) {
     if (!c.freeUntil || g.week > c.freeUntil) sal += c.salary;
   });
   const facVal = Object.values(g.facilities).reduce((s, l) => s + l * 30000, 0);
-  const maint = Math.round(facVal * 0.05);
-  let sponsorAmt = Math.round(g.rep * 500); // base sponsor
+  const maint = Math.round(facVal * FACILITY_MAINT_RATE);
 
-  // Multi-sponsor settlement
+  // Monthly income from shared function (identical to finance.js preview)
+  const { sponsorAmt, fSponsor, championBonus, merchRevenue } = computeMonthlyIncome(g);
+  g.cash += sponsorAmt + fSponsor + championBonus + merchRevenue - sal - maint;
+
+  // Sponsor lifecycle: weeksLeft countdown, renewal window, expiry cleanup
   if (g.sponsors && g.sponsors.length > 0) {
-    sponsorAmt = 0;
-    const hasChampion = g.roster?.some((f) => f.titles?.includes("Major World Champion"));
     g.sponsors.forEach((sp) => {
-      const brand = SPONSOR_BRANDS.find((b) => b.name === sp.brand);
-      if (!brand) return;
-      let rate = sp.rate || brand.baseRate;
-      if (hasChampion) rate = Math.round(rate * 1.5);
-      if (sp.terms === "royalty") {
-        // royalty: hitung bonus dari kemenangan bulan ini + boost
-        const wins = g.roster.filter((f) => f.lastFightWeek && g.week - f.lastFightWeek <= 4 && f.record.w > 0).length;
-        if (brand.boostFame) rate = Math.round(rate * (1 + (g.roster.reduce((s, f) => s + (f.popularity || 0), 0) / g.roster.length / 100) * (brand.boostFame - 1)));
-        if (brand.boostFight) rate = Math.round(rate * (1 + wins * (brand.boostFight - 1)));
-      }
-      sponsorAmt += rate;
-      // Countdown weeksLeft if set
       if (sp.weeksLeft != null) {
         sp.weeksLeft--;
         if (sp.weeksLeft === SPONSOR_RENEWAL_WINDOW) {
@@ -58,13 +48,6 @@ export function tickSettlement(g) {
     });
     g.sponsors = g.sponsors.filter((sp) => sp.weeksLeft == null || sp.weeksLeft > 0);
   }
-
-  const fSponsor = g.roster.reduce((s, f) => s + f.popularity * 150, 0);
-  // Champion monthly bonus: $5,000 per Major World Champion
-  const championBonus = g.roster.reduce((s, f) => s + (f.titles?.includes("Major World Champion") ? 5000 : 0), 0);
-  // Merchandise revenue: driven by fighter popularity
-  const merchRevenue = Math.round(g.roster.reduce((s, f) => s + f.popularity * 80, 0));
-  g.cash += sponsorAmt + fSponsor + championBonus + merchRevenue - sal - maint;
   // Chemistry shifts monthly: Team Player fighters boost it, Divas drain it,
   // Player's Coach personality gives flat +2 bonus.
   g.chemistry = clamp(

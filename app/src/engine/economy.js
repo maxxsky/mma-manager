@@ -1,5 +1,5 @@
 import { clamp } from "./rng.js";
-import { CAMP_TIERS } from "./data.js";
+import { CAMP_TIERS, SPONSOR_BRANDS } from "./data.js";
 
 export function coachBonus(g, gains) {
   let b = 1;
@@ -26,6 +26,39 @@ export function facBonus(g, gains) {
   if (gains.includes("strength") || gains.includes("cardio")) b += Math.min(g.facilities.weights - 1, 3) * 0.06 + Math.max(0, g.facilities.weights - 4) * 0.03;
   b += tier.trainBonus;
   return b;
+}
+
+// Shared facility maintenance rate — single source of truth
+export const FACILITY_MAINT_RATE = 0.012;
+
+/**
+ * Compute monthly income exactly as tickSettlement pays it.
+ * Used by both settlement.js (execution) and finance.js (preview)
+ * to guarantee they can never diverge.
+ */
+export function computeMonthlyIncome(g) {
+  // Sponsor income — mirrors tickSettlement exactly
+  let sponsorAmt = Math.round(g.rep * 500);
+  if (g.sponsors && g.sponsors.length > 0) {
+    sponsorAmt = 0;
+    const hasChampion = g.roster?.some((f) => f.titles?.includes("Major World Champion"));
+    g.sponsors.forEach((sp) => {
+      const brand = SPONSOR_BRANDS.find((b) => b.name === sp.brand);
+      if (!brand) return;
+      let rate = sp.rate || brand.baseRate;
+      if (hasChampion) rate = Math.round(rate * 1.5);
+      if (sp.terms === "royalty") {
+        const wins = g.roster.filter((f) => f.lastFightWeek && g.week - f.lastFightWeek <= 4 && f.record.w > 0).length;
+        if (brand.boostFame) rate = Math.round(rate * (1 + (g.roster.reduce((s, f) => s + (f.popularity || 0), 0) / g.roster.length / 100) * (brand.boostFame - 1)));
+        if (brand.boostFight) rate = Math.round(rate * (1 + wins * (brand.boostFight - 1)));
+      }
+      sponsorAmt += rate;
+    });
+  }
+  const fSponsor = g.roster.reduce((s, f) => s + f.popularity * 150, 0);
+  const championBonus = g.roster.reduce((s, f) => s + (f.titles?.includes("Major World Champion") ? 5000 : 0), 0);
+  const merchRevenue = Math.round(g.roster.reduce((s, f) => s + f.popularity * 80, 0));
+  return { sponsorAmt, fSponsor, championBonus, merchRevenue, total: sponsorAmt + fSponsor + championBonus + merchRevenue };
 }
 
 // Shared facility upgrade cost — used by both UI and reducer

@@ -3,10 +3,11 @@ import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn, Meter, Mono, heat } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 import { CAMP_TIERS, COACH_PERSONALITIES } from "../engine/data.js";
+import { FACILITY_MAINT_RATE } from "../engine/economy.js";
 
 export default function Facility({ g, dispatch, coachCap, rosterCap }) {
   const facLabels = { mats: "Mats", ring: "Ring", weights: "Weights", medical: "Medical" };
-  const facCost = (lvl) => Math.round(lvl * 30000 * 0.05);
+  const facCost = (lvl) => Math.round(lvl * 30000 * FACILITY_MAINT_RATE);
   const tier = CAMP_TIERS[g.campTier || 0] || CAMP_TIERS[0];
 
   return (

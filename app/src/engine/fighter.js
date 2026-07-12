@@ -55,7 +55,7 @@ export function genFighter(level, regionName) {
     fightHistory: [],
     trainingHistory: [], // last 8 weeks of {week, attrsSnapshot} for progress graph
     agent: "none", contract: null,
-    asking: Math.round(level * 8000 + R(500, 3000)),
+    asking: Math.round(Math.pow(level, 2.9) * 150 + R(200, 1500)),
     weightClassDelta: 0,
     // Reach in cm — scaled by weight class (heavier ≈ taller ≈ longer reach)
     reach: wc.limit >= 205 ? RI(190, 210) : wc.limit >= 170 ? RI(180, 198) : wc.limit >= 145 ? RI(170, 190) : RI(160, 180),
