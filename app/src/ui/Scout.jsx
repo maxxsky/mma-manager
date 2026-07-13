@@ -43,6 +43,14 @@ export default function Scout({
 
   const isRosterFull = g.roster.length >= rosterCap;
 
+  // ── Diamond eligibility ──
+  const facLevels = g.facilities ? Object.values(g.facilities) : [];
+  const avgFacLevel = facLevels.length > 0 ? facLevels.reduce((s, v) => s + v, 0) / facLevels.length : 0;
+  const diamondEligible = g.rep >= 20 && avgFacLevel >= 2;
+  const diamondBlockReason = !diamondEligible
+    ? `Fighter established belum melirik camp-mu — butuh reputasi (≥20) & fasilitas rata-rata ≥2. (Saat ini: rep ${g.rep}, fasilitas ${avgFacLevel.toFixed(1)})`
+    : null;
+
   // ── scout methods ──
   const amateurMethods = [
     {
@@ -69,7 +77,7 @@ export default function Scout({
     label: "Diamond in the Rough",
     cost: 10000 + Math.floor(g.rep * 150),
     level: [1.0, 1.45],
-    desc: "Rekrut fighter established dari luar negeri. Hasil terjamin.",
+    desc: "Fighter established kadang mempertimbangkan pindah camp — tapi cuma kalau reputasi & fasilitasmu meyakinkan.",
   };
 
   return (
@@ -381,7 +389,7 @@ export default function Scout({
           <Btn
             sm
             wide
-            disabled={g.cash < diamondMethod.cost || isRosterFull}
+            disabled={!diamondEligible || g.cash < diamondMethod.cost || isRosterFull}
             color={T.steel}
             onClick={() =>
               scoutFighter(
@@ -393,12 +401,26 @@ export default function Scout({
               )
             }
           >
-            {g.cash < diamondMethod.cost
+            {!diamondEligible
+              ? "🔒 Belum tersedia"
+              : g.cash < diamondMethod.cost
               ? t("UI.notEnoughCash")
               : isRosterFull
               ? t("UI.rosterFull")
               : t("UI.sendScout")}
           </Btn>
+          {diamondBlockReason && (
+            <div
+              style={{
+                fontSize: 10,
+                color: T.warn,
+                lineHeight: 1.4,
+                marginTop: 2,
+              }}
+            >
+              {diamondBlockReason}
+            </div>
+          )}
         </div>
 
         {isRosterFull && (
@@ -528,6 +550,25 @@ export default function Scout({
                     via {p.method}
                   </span>
                 </div>
+                {p.transferReason && (
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "3px 10px",
+                      borderRadius: T.r,
+                      background: `${T.steel}15`,
+                      border: `1px solid ${T.steel}44`,
+                      marginBottom: 10,
+                      fontSize: 10,
+                      color: T.txt3,
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    💬 {p.transferReason}
+                  </div>
+                )}
 
                 {/* ── Attribute estimates grid ── */}
                 <div

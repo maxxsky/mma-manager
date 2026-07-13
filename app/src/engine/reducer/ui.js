@@ -11,6 +11,7 @@ export function reduceUI(g, action) {
       g.prospects.unshift({
         id: uid(), fighter: action.fighter, report: action.report,
         grade: action.grade, method: action.method, scoutedWeek: g.week,
+        transferReason: action.transferReason,
       });
       if (g.prospects.length > MAX_PROSPECTS) {
         const dropped = g.prospects[g.prospects.length - 1];

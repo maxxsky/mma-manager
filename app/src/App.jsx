@@ -16,6 +16,7 @@ import { genFighter, assignAgent, scoutGrade, makeReport } from "./engine/fighte
 import { newGame } from "./engine/state.js";
 import { checkAchievements } from "./engine/achievements.js";
 import { CAMP_TIERS } from "./engine/data.js";
+import { generateTransferReason } from "./engine/narrative/generators/transfer.js";
 
 // UI
 import { GlobalStyle, C, DISPLAY } from "./ui/theme.jsx";
@@ -88,7 +89,7 @@ export default function App() {
       if (matchesFilter && nameOk) break;
       f = assignAgent(genFighter(R(level[0], level[1])));
     }
-    dispatch({ type: "SCOUT", cost, fighter: f, report: makeReport(f, grade), grade, method: label });
+    dispatch({ type: "SCOUT", cost, fighter: f, report: makeReport(f, grade), grade, method: label, transferReason: label === "Diamond in the Rough" ? generateTransferReason(f) : undefined });
   };
 
   const tabLabel = { dashboard: t("UI.camp"), roster: t("UI.roster"), rank: t("UI.rank"), scout: t("UI.scout"), inbox: `Inbox${g.inbox?.length ? ` ${g.inbox.length}` : ""}`, finance: "KEUANGAN", mgmt: t("UI.staff"), rivals: t("UI.rival"), achievements: "ACHIEVEMENTS", dynasty: "DYNASTY", world: "World" }[tab] || "Dashboard";
