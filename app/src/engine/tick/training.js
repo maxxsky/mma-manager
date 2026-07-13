@@ -4,6 +4,7 @@ import { ATTRS, ATTR_LABEL, TRAINING, INTENSITY, CAMP_TIERS, SPARRING_MATCH } fr
 import { coachBonus, facBonus } from "../economy.js";
 import { calcMentorBonus } from "../career.js";
 import { getRel } from "../relationships.js";
+import { pushInboxEvent } from "../events.js";
 
 function calcSparringMult(f, g) {
   if (!g.roster || g.roster.length <= 1) return 1;
@@ -95,6 +96,24 @@ export function tickTraining(g) {
       // Training feedback: log meaningful growth
       if (totalGain > 0.5 && bestAttr) {
         g.log.unshift(`🥊 ${f.name} +${totalGain.toFixed(1)} attr (best: ${bestAttr} +${bestGain.toFixed(1)}) — ${t.label}`);
+      }
+
+      // ── Breakthrough check — potential reveals itself through training ──
+      if (
+        (f.potentialTier === "special" || f.potentialTier === "generational") &&
+        !f._breakthroughNotified
+      ) {
+        const avgCurr = ATTRS.reduce((s, k) => s + f.attrs[k], 0) / ATTRS.length;
+        const avgCeil = ATTRS.reduce((s, k) => s + f.ceilings[k], 0) / ATTRS.length;
+        if (avgCeil > 0 && avgCurr / avgCeil >= 0.6) {
+          f._breakthroughNotified = true;
+          pushInboxEvent(g, {
+            type: "event",
+            title: `⭐ ${f.name} — Mulai Menunjukkan Sesuatu yang Istimewa`,
+            body: `Progress training ${f.name} jauh melebihi ekspektasi awal. Pelatihmu yakin ini bukan fighter biasa — ada potensi yang belum sepenuhnya terealisasi. Terus garap dia dengan benar.`,
+            choices: [{ label: "OK", chem: 2 }],
+          });
+        }
       }
 
       // Overtraining
