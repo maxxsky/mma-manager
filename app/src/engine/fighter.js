@@ -2,6 +2,7 @@ import { R, RI, clamp, pick, random, uid } from "./rng.js";
 import {
   ATTRS, WEIGHTS, ARCHETYPES, REGIONS, TRAITS, TRAIT_KEYS, TRAIT_CONFLICTS,
   AMBITIONS, AMBITION_KEYS, AGENT_TYPES, COACH_SPECS, COACH_NAMES, COACH_PERSONALITIES,
+  POTENTIAL_TIERS,
 } from "./data.js";
 import { getRegionFlavor, weightedPick, pickRegion, pickArchetypeForRegion } from "./identity.js";
 
@@ -20,8 +21,12 @@ export function genFighter(level, regionName) {
   Object.entries(ARCHETYPES[archetype]).forEach(([k, m]) => {
     attrs[k] = clamp(Math.round(attrs[k] * m), 15, 95);
   });
+  // Roll potential tier once for this fighter
+  const totalWeight = POTENTIAL_TIERS.reduce((s, t) => s + t.weight, 0);
+  let roll = random() * totalWeight;
+  const tier = POTENTIAL_TIERS.find(t => { roll -= t.weight; return roll <= 0; }) || POTENTIAL_TIERS[POTENTIAL_TIERS.length - 1];
   const ceilings = {};
-  ATTRS.forEach((k) => (ceilings[k] = clamp(attrs[k] + RI(8, 30), attrs[k], 99)));
+  ATTRS.forEach((k) => (ceilings[k] = clamp(attrs[k] + RI(tier.bonus[0], tier.bonus[1]), attrs[k], 99)));
   const wc = pick(WEIGHTS);
   const traits = [];
   const flavor = getRegionFlavor(region);
@@ -42,7 +47,7 @@ export function genFighter(level, regionName) {
     name: pick(rd.first) + " " + pick(rd.last),
     age: RI(18, 31), region, archetype,
     weightClass: wc.name, natWeight: Math.round(wc.limit * R(1.0, 1.09)),
-    attrs, ceilings, traits,
+    attrs, ceilings, potentialTier: tier.id, traits,
     morale: RI(55, 80), popularity: RI(0, 25), loyalty: RI(30, 80), overtraining: 0,
     injury: null,
     training: { type: "conditioning", intensity: "Medium" },

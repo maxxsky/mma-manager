@@ -16,6 +16,14 @@ export const REGION_COLOR = {
   Netherlands: "#f39c12", Japan: "#e91e63", Nigeria: "#2ecc71",
   UK: "#9b59b6", Indonesia: "#f1c40f",
 };
+// Potential tiers — ceiling bonus range per fighter, rolled once per genFighter()
+export const POTENTIAL_TIERS = [
+  { id: "common",       weight: 70, bonus: [5, 15] },
+  { id: "promising",    weight: 22, bonus: [15, 30] },
+  { id: "special",      weight: 7,  bonus: [30, 45] },
+  { id: "generational", weight: 1,  bonus: [45, 60] },
+];
+
 export const REGIONS = {
   Brazil: { arch: "BJJ Specialist", first: ["Carlos","Thiago","Rafael","Gilberto","Marcio","Renan","Fabio","Lucas","Pedro","Andre","Diego","Bruno"], last: ["Silva","Oliveira","Souza","Costa","Barbosa","Lima","Ferreira","Pereira","Almeida","Santos","Carvalho","Nascimento"] },
   Russia: { arch: "Wrestler", first: ["Dmitri","Islam","Magomed","Sergei","Anatoly","Zaur","Alexei","Viktor","Nikolai","Artem","Yuri","Ruslan"], last: ["Volkov","Petrov","Nurmagov","Ivanov","Gadzhiev","Orlov","Fedorov","Morozov","Sokolov","Kovalev","Kozlov","Medvedev"] },
