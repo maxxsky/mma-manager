@@ -44,6 +44,7 @@ export function newGame() {
     ...createCoaches(),
     ...createWorld(),
     legacy: 0, over: null, won: false,
+    talentPool: [],
   };
 }
 

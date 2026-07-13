@@ -6,6 +6,7 @@ import { rankOf } from "../rankings.js";
 import { tickRankings } from "./rankings.js";
 import { computeMonthlyIncome, computeMonthlyExpense, FACILITY_MAINT_RATE } from "../economy.js";
 import { pushInboxEvent } from "../events.js";
+import { rollAddTalent, rollDiscoverTalent, pushTalentDiscoveryEvent } from "../talentPool.js";
 
 const SPONSOR_RENEWAL_WINDOW = 4; // settlement cycle tersisa sebelum kontrak berakhir, saat tawaran perpanjangan muncul
 
@@ -274,4 +275,13 @@ export function tickSettlement(g) {
       });
     }
   });
+
+  // ── Hidden talent pool — generate from membership, discover by coach ──
+  if (!g.talentPool) g.talentPool = [];
+  rollAddTalent(g);
+  const discovered = rollDiscoverTalent(g);
+  if (discovered) {
+    pushTalentDiscoveryEvent(g, discovered);
+    g.log.unshift(`🏋️ ${discovered.name} ditemukan coach di kelas reguler.`);
+  }
 }

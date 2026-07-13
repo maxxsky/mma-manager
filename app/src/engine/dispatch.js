@@ -10,6 +10,7 @@ import { registerClassChangeHandlers } from "./dispatch/handlers/class-change.js
 import { registerSponsorHandlers } from "./dispatch/handlers/sponsor.js";
 import { registerPromotionHandlers } from "./dispatch/handlers/promotion.js";
 import { registerGeneralHandlers } from "./dispatch/handlers/general.js";
+import { registerTalentHandlers } from "./dispatch/handlers/talent.js";
 
 // ── Registry ──
 
@@ -26,6 +27,7 @@ registerClassChangeHandlers(register);
 registerSponsorHandlers(register);
 registerPromotionHandlers(register);
 registerGeneralHandlers(register);
+registerTalentHandlers(register);
 
 // ── Fallback: chemistry / gamble ──
 
