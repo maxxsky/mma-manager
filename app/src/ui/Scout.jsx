@@ -44,36 +44,33 @@ export default function Scout({
   const isRosterFull = g.roster.length >= rosterCap;
 
   // ── scout methods ──
-  const scoutMethods = [
+  const amateurMethods = [
     {
       label: "Local Amateur Circuit",
-      cost: 50,
-      level: [0.35, 0.6],
-      gradeHint: "D–C+",
-      desc: "Grassroots events, unknown prospects. Cheap but low ceiling.",
+      cost: 75,
+      level: [0.30, 0.45],
+      desc: "Sirkuit amatir lokal — jangkauan sempit, cocok cari bakat kampung.",
     },
     {
       label: "Regional Tryouts",
-      cost: 500,
-      level: [0.5, 0.9],
-      gradeHint: "C–B+",
-      desc: "Open tryouts across regional gyms. Solid depth.",
+      cost: 400,
+      level: [0.35, 0.55],
+      desc: "Tryout lintas daerah — jangkauan lebih luas, tetap di level amatir.",
     },
     {
       label: "National Scouting Trip",
-      cost: 2000,
-      level: [0.8, 1.2],
-      gradeHint: "B–A",
-      desc: "National-level talent pools. Reliable quality.",
-    },
-    {
-      label: "Diamond in the Rough",
-      cost: 10000 + Math.floor(g.rep * 150),
-      level: [1.0, 1.45],
-      gradeHint: "A–S",
-      desc: "Deep international search. Can uncover elite talent.",
+      cost: 1200,
+      level: [0.40, 0.60],
+      desc: "Pencarian nasional — jangkauan terluas untuk level amatir.",
     },
   ];
+
+  const diamondMethod = {
+    label: "Diamond in the Rough",
+    cost: 10000 + Math.floor(g.rep * 150),
+    level: [1.0, 1.45],
+    desc: "Rekrut fighter established dari luar negeri. Hasil terjamin.",
+  };
 
   return (
     <>
@@ -232,7 +229,7 @@ export default function Scout({
             gap: 10,
           }}
         >
-          {scoutMethods.map((m) => {
+          {amateurMethods.map((m) => {
             const canAfford = g.cash >= m.cost;
             const canScout = canAfford && !isRosterFull;
             return (
@@ -300,7 +297,6 @@ export default function Scout({
                   >
                     {fmt$(m.cost)}
                   </span>
-                  <Tag color={T.steel}>{m.gradeHint}</Tag>
                 </div>
 
                 <Btn
@@ -327,6 +323,82 @@ export default function Scout({
               </div>
             );
           })}
+        </div>
+
+        {/* ── Diamond in the Rough — separate section ── */}
+        <div
+          style={{
+            marginTop: 20,
+            padding: 14,
+            background: `linear-gradient(135deg, ${T.raised}, ${T.steel}15)`,
+            border: `1.5px solid ${T.steel}`,
+            borderRadius: T.r2,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: T.disp,
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: 0.8,
+              textTransform: "uppercase",
+              color: T.txt,
+            }}
+          >
+            💎 {diamondMethod.label}
+          </div>
+          <div
+            style={{
+              fontSize: 10,
+              color: T.txt3,
+              lineHeight: 1.5,
+            }}
+          >
+            {diamondMethod.desc}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "center",
+              fontSize: 11,
+              color: T.txt3,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: T.mono,
+                fontWeight: 700,
+                color: g.cash >= diamondMethod.cost ? T.gold : T.neg,
+              }}
+            >
+              {fmt$(diamondMethod.cost)}
+            </span>
+          </div>
+          <Btn
+            sm
+            wide
+            disabled={g.cash < diamondMethod.cost || isRosterFull}
+            color={T.steel}
+            onClick={() =>
+              scoutFighter(
+                diamondMethod.cost,
+                diamondMethod.level,
+                diamondMethod.label,
+                scoutFilterArch,
+                scoutFilterWC
+              )
+            }
+          >
+            {g.cash < diamondMethod.cost
+              ? t("UI.notEnoughCash")
+              : isRosterFull
+              ? t("UI.rosterFull")
+              : t("UI.sendScout")}
+          </Btn>
         </div>
 
         {isRosterFull && (
