@@ -270,7 +270,7 @@ export default function Finance({ g }) {
             />
             <SplitBar
               label="Training"
-              value={trainingCost}
+              value={training}
               total={totalExpense}
               color={T.ember}
             />
