@@ -3,7 +3,7 @@
  */
 import { R, RI, clamp, pick, random, setRNG, resetRNG, mulberry32 } from "./rng.js";
 import { ATTRS, ARCHETYPES } from "./data.js";
-import { simRound, prepFighter } from "./fight.js";
+import { simRound, prepFighter, runFight } from "./fight.js";
 
 const archs = Object.keys(ARCHETYPES);
 const N = 5000;
@@ -24,31 +24,27 @@ function runMatchup(archA, archB, seedOffset) {
   let r1A = 0, r1B = 0, r2A = 0, r2B = 0, r3A = 0, r3B = 0;
 
   for (let f = 0; f < N; f++) {
-    setRNG(mulberry32(f * 7919 + seedOffset));
     const A = genF(archA), B = genF(archB);
     const bA = prepFighter(A), bB = prepFighter(B);
-    let stA = 100, stB = 100, scores = [], finish = null, fr = 0;
 
-    for (let r = 1; r <= 3; r++) {
-      const res = simRound(r, bA, bB, stA, stB, "Balanced", "plan", false, 0);
-      stA = res.staA; stB = res.staB;
-      scores.push({ a: res.scoreA, b: res.scoreB });
-      if (res.finish) { finish = res.finish; fr = r; break; }
-    }
+    const result = runFight(bA, bB, "Balanced", () => "go", f * 7919 + seedOffset, 3);
 
-    if (finish) {
-      const isA = finish.by === "A";
-      if (isA) { aW++; if (finish.how === "KO/TKO") koA++; else subA++; }
-      else { bW++; if (finish.how === "KO/TKO") koB++; else subB++; }
-      if (fr === 1) { if (isA) r1A++; else r1B++; }
-      else if (fr === 2) { if (isA) r2A++; else r2B++; }
-      else { if (isA) r3A++; else r3B++; }
-    } else {
-      const wa = scores.filter(s => s.a > s.b).length;
-      const wb = scores.filter(s => s.b > s.a).length;
-      if (wa > wb) { aW++; decA++; }
-      else if (wb > wa) { bW++; decB++; }
-      else draw++;
+    if (result.winner === "A") {
+      aW++;
+      if (result.how === "KO/TKO" || result.how === "Doctor Stoppage") koA++;
+      else if (result.how === "Submission") subA++;
+      else decA++;
+      if (result.round === 1) r1A++;
+      else if (result.round === 2) r2A++;
+      else r3A++;
+    } else if (result.winner === "B") {
+      bW++;
+      if (result.how === "KO/TKO" || result.how === "Doctor Stoppage") koB++;
+      else if (result.how === "Submission") subB++;
+      else decB++;
+      if (result.round === 1) r1B++;
+      else if (result.round === 2) r2B++;
+      else r3B++;
     }
   }
   resetRNG();
