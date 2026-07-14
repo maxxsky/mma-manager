@@ -46,7 +46,7 @@ export const CUT_PROTECT_MULT = 0.5;
 
 // Submissions
 export const SUB_THRESHOLD_BASE = 50;
-export const SUB_THRESHOLD_BJJ = 65;
+export const SUB_THRESHOLD_BJJ = 72;
 export const SUB_ADV_MIN = -10;
 export const SUB_ADV_MAX = 45;
 export const SUB_DEFENSE_EASE_CHANCE = 0.15;

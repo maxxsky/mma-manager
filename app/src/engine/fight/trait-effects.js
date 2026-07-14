@@ -41,7 +41,7 @@ export function warriorBonus(f, ownPts, oppPts) {
 
 /** Muay Thai: clinch damage bonus (1.4x) */
 export function muayThaiMult(f) {
-  return f.archetype === "Muay Thai" ? 1.4 : 1;
+  return f.archetype === "Muay Thai" ? 1.30 : 1;
 }
 
 /** Muay Thai: clinch damage scaling */
