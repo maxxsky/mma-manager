@@ -70,8 +70,9 @@ export const RECRUIT_COST_MIN = 2000;
 export const RECRUIT_COST_MAX = 8000;
 
 // Reputation
-export const REP_QUALITY_WEIGHT = 0.7;
-export const REP_MOMENTUM_WEIGHT = 0.3;
+export const REP_QUALITY_WEIGHT = 0.40;
+export const REP_MOMENTUM_WEIGHT = 0.25;
+export const REP_RANKING_WEIGHT = 0.35;
 export const REP_DRIFT_RATE = 0.05;
 
 // Momentum

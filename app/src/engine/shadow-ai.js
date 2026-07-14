@@ -21,7 +21,7 @@ import {
   ELITE_TARGET_SIZE, DEFAULT_TARGET_MIN, DEFAULT_TARGET_MAX, ROSTER_OVERFLOW_PAD, ACQUIRE_MIN_BUDGET,
   RECRUIT_QUALITY_DIVISOR, ELITE_LEVEL_MIN, ELITE_LEVEL_MAX, ROOKIE_LEVEL_MIN, ROOKIE_LEVEL_MAX,
   RECRUIT_AGE_MIN, RECRUIT_AGE_MAX, RECRUIT_COST_MIN, RECRUIT_COST_MAX,
-  REP_QUALITY_WEIGHT, REP_MOMENTUM_WEIGHT, REP_DRIFT_RATE,
+  REP_QUALITY_WEIGHT, REP_MOMENTUM_WEIGHT, REP_RANKING_WEIGHT, REP_DRIFT_RATE,
   MOMENTUM_QUALITY_OFFSET, MOMENTUM_QUALITY_MULT, MOMENTUM_JITTER_MIN, MOMENTUM_JITTER_MAX, MOMENTUM_MIN, MOMENTUM_MAX,
   HOF_MIN_WINS,
   RETIRE_AGE_CHECK, RETIRE_AGE_FORCE,
@@ -36,7 +36,7 @@ export function initShadowCamp(camp) {
 
 // ── QUARTERLY MANAGEMENT CYCLE ──
 
-export function shadowCampTick(camp, week) {
+export function shadowCampTick(camp, week, g) {
   if (!camp._shadow) initShadowCamp(camp);
   if (week - camp._shadow.lastUpdateWeek < SHADOW_TICK_INTERVAL) return;
   camp._shadow.lastUpdateWeek = week;
@@ -47,7 +47,7 @@ export function shadowCampTick(camp, week) {
   developFighters(camp);
   acquireProspects(camp, week);
   developCoaches(camp);
-  updateReputation(camp);
+  updateReputation(camp, g);
   manageRoster(camp, week);
   updateMomentum(camp);
   updateHistory(camp);
@@ -133,12 +133,45 @@ function developCoaches(camp) {
   ), 1, COACH_SKILL_MAX);
 }
 
+/**
+ * Calculate ranking performance for a camp: average rank-based score
+ * of all fighters in g.divisions with this camp's campId.
+ * Returns 0-100 (100 = champion or rank 1, 0 = rank 15 or no fighters).
+ */
+function calculateRankingPerformance(camp, g) {
+  if (!g?.divisions) return 0;
+
+  let totalScore = 0;
+  let count = 0;
+
+  Object.entries(g.divisions).forEach(([wc, div]) => {
+    div.list.forEach((fighter, idx) => {
+      if (fighter.campId === camp.id) {
+        const rank = idx + 1; // 1-15
+        // Linear: rank 1 ≈ 100, rank 15 ≈ 0
+        let score = Math.max(0, 100 - (rank - 1) * (100 / 14));
+        // Champion bonus: treat as rank 0 (above scale)
+        if (div.champ?.campId === camp.id && div.champ.name === fighter.name) {
+          score = 100;
+        }
+        totalScore += score;
+        count++;
+      }
+    });
+  });
+
+  return count > 0 ? Math.round(totalScore / count) : 0;
+}
+
 // ── REPUTATION ──
 
-function updateReputation(camp) {
+export function updateReputation(camp, g) {
   const s = camp._shadow;
   const quality = calculateRosterQuality(camp);
-  const target = quality * REP_QUALITY_WEIGHT + s.organizationalMomentum * REP_MOMENTUM_WEIGHT;
+  const rankingPerformance = calculateRankingPerformance(camp, g);
+  const target = quality * REP_QUALITY_WEIGHT
+    + s.organizationalMomentum * REP_MOMENTUM_WEIGHT
+    + rankingPerformance * REP_RANKING_WEIGHT;
   camp.rep = clamp(camp.rep + (target - camp.rep) * REP_DRIFT_RATE, 2, 100);
   s.peakReputation = Math.max(s.peakReputation, camp.rep);
 }
@@ -229,6 +262,6 @@ export function getCampSummary(camp) {
 
 export function tickAllShadowCamps(g) {
   g.rivals?.forEach(camp => {
-    shadowCampTick(camp, g.week);
+    shadowCampTick(camp, g.week, g);
   });
 }

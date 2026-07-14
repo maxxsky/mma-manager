@@ -9,6 +9,9 @@ import { maintainDivisions, simulateAITitleDefenses } from '../engine/world.js'
 import { commitFightResult } from '../engine/fights/commitResult.js'
 import { TICK_YEARLY, TICK_TITLE_DEFENSE } from '../engine/world/config.js'
 import { createEventContext } from '../engine/events/context.js'
+import { calculateRosterQuality } from '../engine/shadow-ai/state.js'
+import { updateReputation, tickAllShadowCamps } from '../engine/shadow-ai.js'
+import { SHADOW_TICK_INTERVAL, REP_QUALITY_WEIGHT, REP_MOMENTUM_WEIGHT, REP_RANKING_WEIGHT } from '../engine/shadow-ai/config.js'
 
 describe('Camp marking — genDivisions', () => {
   it('marks exactly 2-4 fighters per division with campId', () => {
@@ -379,6 +382,150 @@ describe('Task 55 — pickRandomPair in createEventContext', () => {
     // Make sure we have 2+ fighters
     expect(g.roster.length).toBeGreaterThanOrEqual(2)
 
+    for (let i = 0; i < 200; i++) {
+      expect(() => tick(g)).not.toThrow()
+    }
+  })
+})
+
+describe('Task 56 — Ranking performance in rep formula (R4)', () => {
+  it('camp with fighters in ranking gets positive rankingPerformance', () => {
+    useSeed(42)
+    const camp = genRivalCamp(0)
+    const g = createTestGame()
+
+    // Mark a fighter in each division with this campId
+    const firstCampId = camp.id
+    Object.values(g.divisions).forEach((div) => {
+      div.list[0].campId = firstCampId
+      div.list[0].campName = camp.name
+    })
+
+    // Called internally, but we can test via updateReputation which calls calculateRankingPerformance
+    // Instead, directly test through shadow camp tick
+    camp._shadow = { organizationalMomentum: 0, peakReputation: 0 }
+    camp.fighters = [genRivalCamp(1).fighters[0]] // just needs fighters for quality calc
+
+    updateReputation(camp, g)
+    // Rep should have moved due to ranking component
+    expect(camp.rep).toBeGreaterThan(0)
+  })
+
+  it('camp with champion has higher rep than camp with only ranked fighters', () => {
+    useSeed(42)
+    const champCamp = genRivalCamp(0)
+    const rankedCamp = genRivalCamp(1)
+    const g = createTestGame()
+
+    // champCamp: top fighter is champion in Lightweight
+    const lw = g.divisions['Lightweight']
+    lw.list[0].campId = champCamp.id
+    lw.list[0].campName = champCamp.name
+    lw.champ = { name: lw.list[0].name, player: false, campId: champCamp.id, campName: champCamp.name }
+
+    // rankedCamp: #2 fighter has campId but is not champ
+    lw.list[1].campId = rankedCamp.id
+    lw.list[1].campName = rankedCamp.name
+
+    // Both camps get identical shadow state (same quality, same momentum)
+    const makeCamp = (c) => ({
+      ...c,
+      _shadow: { organizationalMomentum: 0, peakReputation: 0 },
+      fighters: [genRivalCamp(2).fighters[0], genRivalCamp(3).fighters[0]],
+    })
+    const cc = makeCamp(champCamp)
+    const rc = makeCamp(rankedCamp)
+
+    updateReputation(cc, g)
+    updateReputation(rc, g)
+
+    // Champ camp should have higher rep due to ranking bonus
+    expect(cc.rep).toBeGreaterThan(rc.rep)
+  })
+
+  it('camp without ranking fighters has rankingPerformance=0, no NaN', () => {
+    useSeed(42)
+    const camp = genRivalCamp(0)
+    const g = createTestGame()
+
+    // No campId matches — ensure no fighter in divisions has this campId
+    Object.values(g.divisions).forEach((div) => {
+      div.list.forEach((f) => { delete f.campId; delete f.campName })
+    })
+
+    camp._shadow = { organizationalMomentum: 0, peakReputation: 0 }
+    camp.fighters = [genRivalCamp(1).fighters[0]]
+
+    updateReputation(camp, g)
+
+    // Rep should be finite and positive (quality-based only)
+    expect(isNaN(camp.rep)).toBe(false)
+    expect(camp.rep).toBeGreaterThanOrEqual(0)
+  })
+
+  it('rep does not jump wildly when ranking position fluctuates', () => {
+    useSeed(42)
+
+    // Create a single camp with a fighter in the rankings
+    const camp = genRivalCamp(0)
+    const g = createTestGame()
+
+    // Put the camp's fighter at rank 1
+    const div = g.divisions['Lightweight']
+    div.list[0].campId = camp.id
+    div.list[0].campName = camp.name
+
+    // Initialize shadow state
+    camp._shadow = { organizationalMomentum: 0, peakReputation: 0 }
+    camp.fighters = [genRivalCamp(1).fighters[0]]
+
+    // Record rep over multiple cycles: fighter goes rank 1 → rank 15 → rank 1
+    const reps = []
+    for (let cycle = 0; cycle < 10; cycle++) {
+      // Alternate fighter's rank position
+      if (cycle % 2 === 0) {
+        // Top rank
+        const top = div.list.splice(div.list.indexOf(div.list.find(f => f.campId === camp.id)), 1)[0]
+        div.list.unshift(top)
+      } else {
+        // Bottom rank
+        const fighter = div.list.find(f => f.campId === camp.id)
+        if (fighter) {
+          const idx = div.list.indexOf(fighter)
+          const removed = div.list.splice(idx, 1)[0]
+          div.list.push(removed)
+        }
+      }
+
+      updateReputation(camp, g)
+      reps.push(camp.rep)
+    }
+
+    // Max difference between consecutive ticks should be small due to REP_DRIFT_RATE
+    for (let i = 1; i < reps.length; i++) {
+      const diff = Math.abs(reps[i] - reps[i - 1])
+      expect(diff, `Jump at step ${i}: ${reps[i-1]} → ${reps[i]}`).toBeLessThan(6)
+    }
+
+    // Overall movement should be bounded (not exploding or crashing to zero)
+    expect(reps[reps.length - 1]).toBeGreaterThan(0)
+    expect(reps[reps.length - 1]).toBeLessThan(100)
+  })
+
+  it('tickAllShadowCamps does not crash with ranked fighters', () => {
+    useSeed(42)
+    const g = createTestGame()
+
+    // Ensure at least one rival has fighters in ranking
+    const camp = g.rivals[0]
+    Object.values(g.divisions).forEach((div) => {
+      if (div.list.length > 0) {
+        div.list[0].campId = camp.id
+        div.list[0].campName = camp.name
+      }
+    })
+
+    // Run multiple ticks with shadow camp updates
     for (let i = 0; i < 200; i++) {
       expect(() => tick(g)).not.toThrow()
     }
