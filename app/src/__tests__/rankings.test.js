@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { createTestGame, useSeed, clearSeed } from './helpers.js'
 import { genDivisions } from '../engine/rankings.js'
 import { genRivalCamp } from '../engine/rivals.js'
-import { mulberry32, setRNG, random, RI } from '../engine/rng.js'
+import { mulberry32, setRNG, random, RI, resetRNG } from '../engine/rng.js'
 import { tick } from '../engine/state.js'
 import { maintainDivisions, simulateAITitleDefenses } from '../engine/world.js'
 import { commitFightResult } from '../engine/fights/commitResult.js'
@@ -178,11 +178,10 @@ describe('Task 54 — Title campId sync (R1)', () => {
     contender.level = 1.5
     contender.points = 110
 
-    const origRandom = random
     setRNG(() => 0)
     g.week = TICK_TITLE_DEFENSE
     const events = simulateAITitleDefenses(g)
-    setRNG(origRandom)
+    resetRNG()
 
     expect(div.champ.name).toBe(contender.name)
     expect(div.champ.campId).toBe(camp.id)
@@ -200,11 +199,10 @@ describe('Task 54 — Title campId sync (R1)', () => {
     topFighter.campName = camp.name
     div.champ = null
 
-    const origRandom = random
     setRNG(() => 0)
     g.week = TICK_TITLE_DEFENSE
     simulateAITitleDefenses(g)
-    setRNG(origRandom)
+    resetRNG()
 
     expect(div.champ).toBeDefined()
     expect(div.champ.name).toBe(topFighter.name)
@@ -558,10 +556,9 @@ describe('Task 57 — Camp rivalry grudge match (R5)', () => {
 
     // Directly call tickFightOffers with controlled RNG to guarantee offer
     g.inbox = []
-    const saved = random
     setRNG(() => 0.3) // below 0.35 threshold, ensures offerChance passes
     tickFightOffers(g)
-    setRNG(saved)
+    resetRNG()
 
     const offer = g.inbox.find((m) => m.type === 'offer' && m.fighterId === f.id)
     expect(offer).toBeDefined()
@@ -592,10 +589,9 @@ describe('Task 57 — Camp rivalry grudge match (R5)', () => {
     }
 
     g.inbox = []
-    const saved = random
     setRNG(() => 0.3)
     tickFightOffers(g)
-    setRNG(saved)
+    resetRNG()
 
     const offer = g.inbox.find((m) => m.type === 'offer' && m.fighterId === f.id)
     expect(offer).toBeDefined()
@@ -633,10 +629,9 @@ describe('Task 57 — Camp rivalry grudge match (R5)', () => {
     targetOpp.campName = camp.name
 
     g.inbox = []
-    const saved = random
     setRNG(() => 0.3)
     tickFightOffers(g)
-    setRNG(saved)
+    resetRNG()
 
     const offer = g.inbox.find((m) => m.type === 'offer' && m.fighterId === f.id)
     expect(offer).toBeDefined()
