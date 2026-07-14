@@ -93,16 +93,28 @@ for (const [key, m] of Object.entries(dirResults)) {
   console.log(`${a.padEnd(6)} vs ${b.padEnd(12)} | ${aP.padStart(5)}% | ${String(m.koA).padStart(4)} | ${String(m.subA).padStart(5)} | ${String(m.decA).padStart(5)} | ${String(m.r1A).padStart(2)}/${String(m.r2A).padStart(2)}/${String(m.r3A).padStart(2)} | ${bP.padStart(5)}% | ${String(m.koB).padStart(4)} | ${String(m.subB).padStart(5)} | ${String(m.decB).padStart(5)} | ${String(m.r1B).padStart(2)}/${String(m.r2B).padStart(2)}/${String(m.r3B).padStart(2)} | ${m.draw}`);
 }
 
-// Overall
-console.log("\n=== OVERALL ===");
+// Overall — bidirectional: count wins as A + wins as B per archetype
+console.log("\n=== OVERALL ===\n");
 const stats = {};
 for (const a of archs) stats[a] = { w: 0, t: 0 };
-for (const [key, m] of Object.entries(dirResults)) {
-  const [a, b] = key.split(" vs ");
-  stats[a].w += m.aW; stats[a].t += N;
+// Use unique pairs (10), count both directions
+for (let i = 0; i < archs.length; i++) {
+  for (let j = i + 1; j < archs.length; j++) {
+    const a = archs[i], b = archs[j];
+    const fwd = dirResults[a + " vs " + b];
+    const rev = dirResults[b + " vs " + a];
+    // a wins: as A (fwd.aW) + as B (rev.bW)
+    stats[a].w += fwd.aW + rev.bW; stats[a].t += N * 2;
+    // b wins: as A (rev.aW) + as B (fwd.bW)
+    stats[b].w += rev.aW + fwd.bW; stats[b].t += N * 2;
+  }
 }
+let totalPct = 0;
 for (const a of archs) {
-  console.log(`${a.padEnd(16)} | ${(stats[a].w / stats[a].t * 100).toFixed(1)}%`);
+  const pct = stats[a].w / stats[a].t * 100;
+  totalPct += pct;
+  console.log(`${a.padEnd(16)} | ${pct.toFixed(1)}%`);
 }
+console.log(`\nTotal all archetypes: ${totalPct.toFixed(1)}% (target: 250.0%)`);
 
 console.log(`\nRan in ${((Date.now()-start)/1000).toFixed(1)}s`);
