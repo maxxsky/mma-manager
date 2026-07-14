@@ -205,12 +205,11 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
         const cumDmg = isTargetA ? dmgA : dmgB;
         const kdChance = clamp((exDmg - CFG.KD_EXCHANGE_THRESHOLD) / chin * CFG.KD_CHIN_MULT + (attackerStr - 40) * CFG.KD_STR_MULT + cumDmg * CFG.KD_FATIGUE_MULT, 0, CFG.KD_CHANCE_MAX) * (planA === "Finish It" ? 1.5 : 1) * (cornerA === "empty_tank" ? 1.5 : 1) * cautMult;
         if (random() < kdChance) {
-          knockdown = { fighter: isTargetA ? "A" : "B", name: kdTarget.name, canRecover: true };
+          knockdown = { fighter: isTargetA ? "A" : "B", name: kdTarget.name };
           comm.both(exMin + 1, 0, `${kdTarget.name} IS DOWN! He's hurt bad!`);
           comm.tickOnly(exMin + 1, 2, `The referee is watching closely...`);
           mom += isTargetA ? -25 : 25;
           if (random() < CFG.KD_FINISH_CHANCE) {
-            knockdown.canRecover = false;
             finish = { by: isTargetA ? "B" : "A", how: "KO/TKO" };
             comm.both(exMin + 1, 5, `KO!! ${isTargetA ? B.name : A.name} with the walk-off!`);
           }
