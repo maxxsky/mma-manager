@@ -41,6 +41,8 @@ export default function Rankings({ g, t }) {
       ovr: Math.round(c.level * 60),
       streak: null,
       change: null,
+      campId: c.campId,
+      campName: c.campName,
     }));
 
   // Player fighters with rank points (not the champion)
@@ -500,6 +502,11 @@ export default function Rankings({ g, t }) {
                   {f.name}
                   {f.player ? " ★" : ""}
                 </span>
+                {f.campId && f.campName && (
+                  <Tag color={T.steel} style={{ fontSize: 9, marginLeft: 4 }}>
+                    {f.campName}
+                  </Tag>
+                )}
                 {f.titles?.length > 0 && (
                   <span style={{ fontSize: 11 }}>👑</span>
                 )}

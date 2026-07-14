@@ -48,10 +48,11 @@ export function createCoaches() {
 }
 
 export function createWorld() {
+  const rivals = [genRivalCamp(0), genRivalCamp(1), genRivalCamp(2)];
   return {
-    divisions: genDivisions(),
+    divisions: genDivisions(rivals),
     prospects: [],
-    rivals: [genRivalCamp(0), genRivalCamp(1), genRivalCamp(2)],
+    rivals,
     promoterRel: initPromoterRel(),
     promotions: getPromotionsData(),
   };

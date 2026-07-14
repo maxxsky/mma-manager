@@ -4,10 +4,11 @@
 //   Returns events array; caller delivers to inbox.
 // ============================================================
 
-import { R, RI, clamp, random } from "./rng.js";
+import { R, RI, clamp, random, pick } from "./rng.js";
 import { createAIFighter, createVeteranFighter } from "./world/ai-fighter.js";
 import { recordTitleChange, recordRetirement } from "./world/history.js";
 import { rankOf } from "./rankings.js";
+import { RIVAL_TRAITS } from "./data.js";
 import {
   TICK_YEARLY, TICK_TITLE_DEFENSE, TICK_MONTHLY, TICK_QUARTERLY,
   MIN_DIVISION_SIZE, MAX_FIGHTER_AGE, RETIREMENT_AGE, RETIREMENT_CHANCE,
@@ -17,6 +18,51 @@ import {
   CHAMP_AGE_DECLINE, PEAK_AGE, DECLINE_AGE,
   SKILL_MIN, SKILL_MAX, POINTS_MIN, POINTS_MAX,
 } from "./world/config.js";
+
+// ── Archetype → RIVAL_TRAITS spec mapping (shared with rankings.js) ──
+const ARCH_TO_SPEC = {
+  "Boxer": "striking",
+  "Muay Thai": "striking",
+  "Wrestler": "wrestling",
+  "BJJ Specialist": "bjj",
+  "All-Rounder": null,
+};
+
+/**
+ * Weighted random pick — higher weight = higher probability.
+ */
+function weightedPick(items, weights) {
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = random() * total;
+  for (let i = 0; i < items.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return items[i];
+  }
+  return items[items.length - 1];
+}
+
+/**
+ * ~20% chance to assign a rival camp to a fighter.
+ * Uses same weighted pattern as genDivisions (rankings.js).
+ */
+function maybeAssignCamp(g, fighter) {
+  if (!g.rivals || g.rivals.length === 0) return;
+  // ~20% chance — consistent with 2-4 per 15 fighter ratio
+  if (random() > 0.2) return;
+
+  const rivals = g.rivals;
+  const weights = rivals.map((rc) => {
+    const spec = RIVAL_TRAITS[rc.trait]?.spec;
+    let w = rc.rep;
+    const fighterSpec = ARCH_TO_SPEC[fighter.archetype];
+    if (spec && fighterSpec === spec) w *= 1.5;
+    return Math.max(1, Math.round(w));
+  });
+
+  const camp = weightedPick(rivals, weights);
+  fighter.campId = camp.id;
+  fighter.campName = camp.name;
+}
 
 // ── AI CAREER PROGRESSION ──
 
@@ -213,7 +259,9 @@ export function maintainDivisions(g) {
     if (!d.list) return;
     // Ensure minimum division size
     while (d.list.length < MIN_DIVISION_SIZE) {
-      d.list.push(createAIFighter());
+      const f = createAIFighter();
+      maybeAssignCamp(g, f);
+      d.list.push(f);
     }
 
     // Retire old veterans

@@ -114,11 +114,11 @@ export const Eyebrow = ({ children, color = T.txt3 }) => (
     textTransform: "uppercase", color, marginBottom: 12 }}>{children}</div>
 );
 
-export const Tag = ({ children, color = T.txt2, solid, title }) => (
+export const Tag = ({ children, color = T.txt2, solid, title, style }) => (
   <span title={title} style={{ display: "inline-flex", alignItems: "center", fontFamily: T.body, fontSize: 11,
     fontWeight: 600, letterSpacing: .5, padding: "2px 8px", borderRadius: 4, marginRight: 6,
     color: solid ? T.bg : color, background: solid ? color : `${color}1f`,
-    border: `1px solid ${color}${solid ? "" : "44"}` }}>{children}</span>
+    border: `1px solid ${color}${solid ? "" : "44"}`, ...style }}>{children}</span>
 );
 
 export const Btn = ({ children, color = T.ember, onClick, ghost, sm, style, disabled, wide }) => (
