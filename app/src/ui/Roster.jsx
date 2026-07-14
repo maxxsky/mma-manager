@@ -6,7 +6,7 @@ import { T, Panel, Tag, Ovr, Mono, heat, Btn } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 import FighterDetail from "./FighterDetail.jsx";
 
-export default function Roster({ g, setTab, up, dispatch }) {
+export default function Roster({ g, setTab, dispatch }) {
   const [detailFighter, setDetailFighter] = useState(null);
 
   if (detailFighter) {
