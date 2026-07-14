@@ -268,7 +268,7 @@ const ID = {
   "UI.weeksIn": "Dalam",
   "UI.championship": "Kejuaraan",
   "UI.fightNight": "Malam Tarung",
-  "UI.title": "Title",
+  "UI.title": "Gelar",
   "UI.noFightsHint": "Belum ada jadwal. Cek Kotak Masuk untuk tawaran tarung.",
   "UI.noEventsHint": "Belum ada kejadian. Majukan minggu untuk memulai.",
   "UI.allClearHint": "Aman semua — tidak ada yang perlu perhatian.",
