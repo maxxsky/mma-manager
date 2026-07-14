@@ -1,7 +1,7 @@
 // Event context — precomputed camp state + lightweight context for event generators.
 // computeCampState() and hasCampState() live here so generators don't need raw game state.
 
-import { clamp } from "../rng.js";
+import { clamp, pick } from "../rng.js";
 import { CAMP_TIERS } from "../data.js";
 import {
   HIGH_MORALE_MIN, HIGH_MORALE_CHEM_MIN,
@@ -123,5 +123,13 @@ export function createEventContext(g) {
     week: g.week,
     checkCooldown: (key) => isOnCooldown(g, key),
     markCooldown: (key) => markCooldown(g, key),
+    pickRandomPair: () => {
+      const roster = g.roster;
+      if (!roster || roster.length < 2) return [null, null];
+      const a = pick(roster);
+      let b = pick(roster);
+      while (b === a && roster.length > 1) b = pick(roster);
+      return [a, b];
+    },
   };
 }

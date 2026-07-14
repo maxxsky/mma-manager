@@ -8,6 +8,7 @@ import { tick } from '../engine/state.js'
 import { maintainDivisions, simulateAITitleDefenses } from '../engine/world.js'
 import { commitFightResult } from '../engine/fights/commitResult.js'
 import { TICK_YEARLY, TICK_TITLE_DEFENSE } from '../engine/world/config.js'
+import { createEventContext } from '../engine/events/context.js'
 
 describe('Camp marking — genDivisions', () => {
   it('marks exactly 2-4 fighters per division with campId', () => {
@@ -346,5 +347,40 @@ describe('Task 54 — Championship Contender event (R2)', () => {
     )
     expect(repEvent).toBeDefined()
     expect(repEvent.title).toContain(camp.name)
+  })
+})
+
+describe('Task 55 — pickRandomPair in createEventContext', () => {
+  it('returns 2 different fighters from roster of 2+', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const ctx = createEventContext(g)
+    expect(ctx.rosterSize).toBeGreaterThanOrEqual(2)
+
+    for (let i = 0; i < 20; i++) {
+      const [a, b] = ctx.pickRandomPair()
+      expect(a).not.toBeNull()
+      expect(b).not.toBeNull()
+      expect(a.id).not.toBe(b.id) // never same fighter double
+    }
+  })
+
+  it('returns [null, null] for 0-roster game', () => {
+    const g = { roster: [], week: 1 }
+    const ctx = createEventContext(g)
+    expect(ctx.pickRandomPair()).toEqual([null, null])
+  })
+
+  it('tension event does not crash over 200 weeks with roster 2+', () => {
+    useSeed(42)
+    const g = createTestGame()
+    // Ensure tension triggers by lowering chemistry
+    g.chemistry = 20
+    // Make sure we have 2+ fighters
+    expect(g.roster.length).toBeGreaterThanOrEqual(2)
+
+    for (let i = 0; i < 200; i++) {
+      expect(() => tick(g)).not.toThrow()
+    }
   })
 })
