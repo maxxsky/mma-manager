@@ -57,7 +57,7 @@ export default function FightNight({ fighter, done }) {
 
   // Run round
   const runRound = (rn, st0, corner) => {
-    const cA = corner === "go" ? "go" : corner === "save" ? "save" : corner === "body" ? "body" : "go";
+    const cA = corner;
     const res = simRound(rn, A, B, st0?.staA ?? 100, st0?.staB ?? 100, plan || "Keep It Standing", cA, st0?.momentum ?? 0, st0?.cutA ?? 0, st0?.cutB ?? 0);
     setRoundLog(res);
     const prevDmgA = st0?.totalDmgA || 0;
