@@ -1,10 +1,18 @@
-// Entrance — fighter walkout
+// Entrance — fighter walkout (fade-in, auto-transition)
 import { Panel, Eyebrow, Mono } from "../../ui/theme.jsx";
 import { T } from "../../ui/theme.jsx";
 
+const styleId = "entrance-fade";
+if (!document.getElementById(styleId)) {
+  const s = document.createElement("style");
+  s.id = styleId;
+  s.textContent = `@keyframes entranceFade { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }`;
+  document.head.appendChild(s);
+}
+
 export default function Entrance({ fighter, opp, ca, cb }) {
   return (
-    <Panel style={{ textAlign: "center", padding: 30 }}>
+    <Panel style={{ textAlign: "center", padding: 30, animation: "entranceFade .4s ease-out" }}>
       <div style={{ fontSize: 48, marginBottom: 4 }}>🚶</div>
       <Eyebrow color={T.gold}>Fighter Entrance</Eyebrow>
       <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 14 }}>

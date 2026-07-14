@@ -191,4 +191,17 @@ export function commitFightResult(g, fighter, result) {
       g.log.unshift("💬 " + f.name + " trash talk backfires! Popularity -5.");
     }
   }
+
+  // ── Staredown attitude effects ──
+  if (result.attitude === "Respectful") {
+    f.popularity = clamp((f.popularity || 0) + 2, 0, 100);
+  } else if (result.attitude === "Professional" && result.won) {
+    g.rep = clamp((g.rep || 0) + 2, 2, 100);
+  } else if (result.attitude === "Trash talk") {
+    f.popularity = clamp((f.popularity || 0) + 5, 0, 100);
+    if (!result.won) {
+      f.morale = clamp((f.morale || 0) - 8, 0, 100);
+      g.rep = clamp((g.rep || 0) - 5, 2, 100);
+    }
+  }
 }

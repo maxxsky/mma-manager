@@ -1,5 +1,5 @@
 // WeighIn — weigh-in, tale of the tape, game plan selection
-import { Panel, Eyebrow, Tag, Btn, CompareBar } from "../../ui/theme.jsx";
+import { Panel, Eyebrow, Tag, Btn } from "../../ui/theme.jsx";
 import { T, ARCH_COLOR } from "../../ui/theme.jsx";
 import { GAME_PLANS } from "../../engine/data.js";
 
@@ -28,16 +28,6 @@ export default function WeighIn({ fighter, opp, cutInfo, cutPct, missedWeight, w
             </div>
           </div>
         )}
-      </Panel>
-
-      {/* Tale of the Tape */}
-      <Panel>
-        <div style={{ textAlign: "center", fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: T.txt3, marginBottom: 12 }}>Tale of the Tape</div>
-        <CompareBar label="Age" a={fighter.age ?? 0} b={opp.age || 28} ca={ca} cb={cb} />
-        <div style={{ height: 1, background: T.line, margin: "8px 0" }} />
-        {[["Striking","striking"],["Wrestling","wrestling"],["BJJ","bjj"],["Footwork","footwork"],["Strength","strength"],["Cardio","cardio"],["Chin","chin"],["Fight IQ","fightIQ"]].map(([lb,k]) => (
-          <CompareBar key={k} label={lb} a={Math.round(fighter.attrs[k])} b={Math.round(opp.attrs?.[k] || 50)} ca={ca} cb={cb} />
-        ))}
       </Panel>
 
       {/* Game Plan */}

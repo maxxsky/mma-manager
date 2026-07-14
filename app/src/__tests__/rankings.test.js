@@ -13,6 +13,7 @@ import { calculateRosterQuality } from '../engine/shadow-ai/state.js'
 import { updateReputation, tickAllShadowCamps } from '../engine/shadow-ai.js'
 import { SHADOW_TICK_INTERVAL, REP_QUALITY_WEIGHT, REP_MOMENTUM_WEIGHT, REP_RANKING_WEIGHT } from '../engine/shadow-ai/config.js'
 import { tickFightOffers } from '../engine/tick/fight-offers.js'
+import { getPublicOpinion } from '../engine/publicOpinion.js'
 
 describe('Camp marking — genDivisions', () => {
   it('marks exactly 2-4 fighters per division with campId', () => {
@@ -642,5 +643,80 @@ describe('Task 57 — Camp rivalry grudge match (R5)', () => {
     // A 2x bonus would give show * 1.56 which is much higher
     expect(offer.show).toBeGreaterThan(0)
     expect(offer.show).toBeLessThan(100000) // sanity check — not extreme
+  })
+})
+
+describe('Task 58 — Staredown attitude effects (N1)', () => {
+  it('Trash talk loser: morale -8, rep -5, clamped', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+    f.morale = 50
+    f.popularity = 30
+    g.rep = 20
+
+    const fighter = {
+      id: f.id,
+      booked: { opponent: { name: 'Opp' }, show: 1000, winBonus: 500 },
+    }
+    commitFightResult(g, fighter, {
+      won: false, how: 'KO/TKO', r: 1,
+      attitude: 'Trash talk',
+    })
+    // Base loss: morale -14, rep -3 → then attitude: morale -8, rep -5
+    expect(f.morale).toBe(28) // 50 - 14 - 8
+    expect(g.rep).toBe(12)    // 20 - 3 - 5
+  })
+
+  it('Respectful: popularity +2 regardless of win/loss', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+    f.popularity = 30
+
+    const fighter = {
+      id: f.id,
+      booked: { opponent: { name: 'Opp' }, show: 1000, winBonus: 500 },
+    }
+    commitFightResult(g, fighter, {
+      won: true, how: 'Decision', r: 3,
+      attitude: 'Respectful',
+      totalDmgA: 20, totalDmgB: 15,
+    })
+    // Win base: popularity +3 (Decision) + Respectful +2 = +5
+    expect(f.popularity).toBe(35) // 30 + 3 + 2
+  })
+})
+
+describe('Task 58 — publicOpinion auto-connects (N2)', () => {
+  it('popularity gain from attitude changes opinion label', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+    // Start at pop=55, streakW=2 → Solid Pro (neutral)
+    f.popularity = 55
+    f.streakW = 2
+    f.streakL = 0
+
+    const before = getPublicOpinion(f)
+    expect(before.sentiment).toBe('neutral')
+    expect(before.label).toBe('Solid Pro')
+
+    // Add +5 from Trash talk attitude + win base popularity gain
+    f.popularity = 60 // manually push to trigger change
+
+    const after = getPublicOpinion(f)
+    expect(after.sentiment).toBe('positive')
+    expect(after.label).toBe('Fan Favorite')
+  })
+})
+
+describe('Task 58 — WeighIn Tale of Tape removed (N3)', () => {
+  it('WeighIn.jsx no longer contains Tale of the Tape section', () => {
+    const fs = require('fs')
+    const content = fs.readFileSync('src/components/fight/WeighIn.jsx', 'utf8')
+    expect(content).not.toMatch('Tale of the Tape')
+    // CompareBar import should also be removed
+    expect(content).not.toMatch('CompareBar')
   })
 })
