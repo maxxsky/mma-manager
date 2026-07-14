@@ -1,12 +1,13 @@
 // Rankings tests — campId marking in divisions
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { createTestGame, useSeed, clearSeed } from './helpers.js'
 import { genDivisions } from '../engine/rankings.js'
 import { genRivalCamp } from '../engine/rivals.js'
-import { mulberry32, setRNG } from '../engine/rng.js'
+import { mulberry32, setRNG, random, RI } from '../engine/rng.js'
 import { tick } from '../engine/state.js'
-import { maintainDivisions } from '../engine/world.js'
-import { TICK_YEARLY } from '../engine/world/config.js'
+import { maintainDivisions, simulateAITitleDefenses } from '../engine/world.js'
+import { commitFightResult } from '../engine/fights/commitResult.js'
+import { TICK_YEARLY, TICK_TITLE_DEFENSE } from '../engine/world/config.js'
 
 describe('Camp marking — genDivisions', () => {
   it('marks exactly 2-4 fighters per division with campId', () => {
@@ -154,5 +155,196 @@ describe('Camp marking — maintainDivisions', () => {
     // Some replacements should be marked (not zero), but NOT all
     expect(newMarked.length).toBeGreaterThan(0)
     expect(newMarked.length).toBeLessThan(newFighters.length)
+  })
+})
+
+describe('Task 54 — Title campId sync (R1)', () => {
+  it('AI title change propagates campId to div.champ', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const div = g.divisions['Lightweight']
+
+    const camp = g.rivals[0]
+    const contender = div.list[1]
+    contender.campId = camp.id
+    contender.campName = camp.name
+
+    div.champ = { name: div.champ.name, player: false, age: 35, level: 0.5 }
+    contender.level = 1.5
+    contender.points = 110
+
+    const origRandom = random
+    setRNG(() => 0)
+    g.week = TICK_TITLE_DEFENSE
+    const events = simulateAITitleDefenses(g)
+    setRNG(origRandom)
+
+    expect(div.champ.name).toBe(contender.name)
+    expect(div.champ.campId).toBe(camp.id)
+    expect(div.champ.campName).toBe(camp.name)
+  })
+
+  it('AI vacant title champ carries campId from winner', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const div = g.divisions['Lightweight']
+
+    const camp = g.rivals[0]
+    const topFighter = div.list[0]
+    topFighter.campId = camp.id
+    topFighter.campName = camp.name
+    div.champ = null
+
+    const origRandom = random
+    setRNG(() => 0)
+    g.week = TICK_TITLE_DEFENSE
+    simulateAITitleDefenses(g)
+    setRNG(origRandom)
+
+    expect(div.champ).toBeDefined()
+    expect(div.champ.name).toBe(topFighter.name)
+    expect(div.champ.campId).toBe(camp.id)
+    expect(div.champ.campName).toBe(camp.name)
+  })
+
+  it('maintainDivisions champ promotion carries campId', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const div = g.divisions['Lightweight']
+
+    const camp = g.rivals[0]
+    div.list[0].campId = camp.id
+    div.list[0].campName = camp.name
+    div.champ = null
+
+    g.week = TICK_YEARLY
+    maintainDivisions(g)
+
+    expect(div.champ).toBeDefined()
+    expect(div.champ.name).toBe(div.list[0].name)
+    expect(div.champ.campId).toBe(camp.id)
+    expect(div.champ.campName).toBe(camp.name)
+  })
+})
+
+describe('Task 54 — Player title win + rivalry nudge (R1+R3)', () => {
+  it('player title win leaves div.champ.campId null, no errors', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+    f.weightClass = 'Lightweight'
+    f.rankPoints = 95
+    const div = g.divisions['Lightweight']
+    div.champ = { name: 'Old Champ', player: false, age: 30 }
+
+    // Separate fighter object (same id) — needed because commitFightResult
+    // reads booked from the external fighter param, not from the roster entry
+    const fighter = {
+      id: f.id,
+      booked: {
+        opponent: { name: 'AI Opponent', level: 0.9 },
+        title: true, show: 10000, winBonus: 5000,
+        promotionId: 'test-promo',
+      },
+    }
+    commitFightResult(g, fighter, {
+      won: true, how: 'KO/TKO', r: 2,
+      totalDmgA: 50, totalDmgB: 20,
+    })
+
+    expect(div.champ.name).toBe(f.name)
+    expect(div.champ.player).toBe(true)
+    expect(div.champ).toHaveProperty('campId', null)
+    expect(div.champ).toHaveProperty('campName', null)
+  })
+
+  it('winning against camp-affiliated fighter nudges rivalry', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const camp = g.rivals[0]
+    const initialRivalry = camp.rivalry
+
+    const f = g.roster[0]
+    const fighter = {
+      id: f.id,
+      booked: {
+        opponent: { name: 'Camp Fighter', campId: camp.id, campName: camp.name, level: 0.8 },
+        show: 5000, winBonus: 2500,
+        opponentLevel: 0.8,
+      },
+    }
+    commitFightResult(g, fighter, {
+      won: true, how: 'Decision', r: 3,
+      totalDmgA: 30, totalDmgB: 25,
+    })
+    expect(camp.rivalry).toBeGreaterThan(initialRivalry)
+  })
+
+  it('opponent without campId does not affect rivalry', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const initial = g.rivals.map((r) => r.rivalry)
+
+    const f = g.roster[0]
+    const fighter = {
+      id: f.id,
+      booked: {
+        opponent: { name: 'Independent Fighter', level: 0.7 },
+        show: 5000, winBonus: 2500,
+      },
+    }
+    commitFightResult(g, fighter, {
+      won: true, how: 'KO/TKO', r: 1,
+      totalDmgA: 60, totalDmgB: 10,
+    })
+    g.rivals.forEach((r, i) => {
+      expect(r.rivalry).toBe(initial[i])
+    })
+  })
+})
+
+describe('Task 54 — Championship Contender event (R2)', () => {
+  it('rival with divisional champion triggers Championship Contender event', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const camp = g.rivals[0]
+
+    const div = g.divisions['Lightweight']
+    div.champ.campId = camp.id
+    div.champ.campName = camp.name
+    delete camp._milestoneTitleNotified
+
+    g.week = 1
+    tick(g)
+
+    const champEvent = g.inbox.find((m) =>
+      m.title?.includes('Championship Contender')
+    )
+    expect(champEvent).toBeDefined()
+    expect(champEvent.title).toContain(camp.name)
+    expect(champEvent.title).toContain('Championship Contender')
+    expect(champEvent.body).toContain('Lightweight')
+  })
+
+  it('rep-based Established Camp event still fires separately', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const camp = g.rivals[1]
+    camp.rep = 75
+    delete camp._milestoneChampNotified
+
+    Object.values(g.divisions).forEach((d) => {
+      if (d.champ) { d.champ.campId = 'other'; d.champ.campName = 'Other' }
+    })
+    camp._milestoneTitleNotified = true
+
+    g.week = 1
+    tick(g)
+
+    const repEvent = g.inbox.find((m) =>
+      m.title?.includes('Established Camp')
+    )
+    expect(repEvent).toBeDefined()
+    expect(repEvent.title).toContain(camp.name)
   })
 })

@@ -70,10 +70,20 @@ export function tickRivals(g) {
     }
     // Rival activity visible in log
     if (rc.rep > g.rep + 10 && g.week % 12 === 0) g.log.unshift(`📈 ${rc.name} rep ${Math.round(rc.rep)} — melewati camp kita!`);
-    // Milestone: rival enters championship contention
+    // Milestone: rival reaches 70 rep (reputation milestone, not title-based)
     if (rc.rep >= 70 && !rc._milestoneChampNotified) {
       rc._milestoneChampNotified = true;
-      pushInboxEvent(g, { type: "event", title: `⭐ ${rc.name} — Championship Contender`, body: `${rc.name} has reached ${Math.round(rc.rep)} reputation. They are now a legitimate championship-level camp. Watch your back.`, choices: [{ label: "Noted", chem: 0 }] });
+      pushInboxEvent(g, { type: "event", title: `📈 ${rc.name} — Established Camp`, body: `${rc.name} has reached ${Math.round(rc.rep)} reputation. They are now a legitimate championship-level camp. Watch your back.`, choices: [{ label: "Noted", chem: 0 }] });
+    }
+    // Real title check: does this rival hold a division champion?
+    if (!rc._milestoneTitleNotified) {
+      const champEntry = Object.entries(g.divisions).find(([wc, d]) =>
+        d.champ && d.champ.campId === rc.id
+      );
+      if (champEntry) {
+        rc._milestoneTitleNotified = true;
+        pushInboxEvent(g, { type: "event", title: `🏆 ${rc.name} — Championship Contender`, body: `${rc.name} sekarang punya juara di kelas ${champEntry[0]}! Ini bukan sekadar reputasi — mereka benar-benar pegang gelar.`, choices: [{ label: "Noted", chem: 0 }] });
+      }
     }
     // Milestone: rival produces top-tier rep
     if (rc.rep >= 85 && !rc._milestoneEliteNotified) {

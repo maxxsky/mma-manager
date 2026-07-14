@@ -113,7 +113,7 @@ export function simulateAITitleDefenses(g) {
       if (uniqueCandidates.length < 2) return;
       const winner = uniqueCandidates[0];
       const loser = uniqueCandidates[1];
-      d.champ = { name: winner.name, player: false, age: winner.age || RI(27, 33) };
+      d.champ = { name: winner.name, player: false, age: winner.age || RI(27, 33), campId: winner.campId || null, campName: winner.campName || null };
       events.push({
         title: `👑 New ${wc} Champion!`,
         body: `${winner.name} defeats ${loser.name} to win the vacant ${wc} title!`,
@@ -134,7 +134,7 @@ export function simulateAITitleDefenses(g) {
 
     if (random() < changeChance) {
       const oldChamp = champ.name;
-      d.champ = { name: contender.name, player: false, age: contender.age || RI(27, 33) };
+      d.champ = { name: contender.name, player: false, age: contender.age || RI(27, 33), campId: contender.campId || null, campName: contender.campName || null };
       recordTitleChange(g, g.week, wc, contender.name, oldChamp);
 
       events.push({
@@ -285,7 +285,7 @@ export function maintainDivisions(g) {
     if (!d.champ || (!d.champ.player && !d.list.some((c) => c.name === d.champ.name))) {
       if (d.list.length > 0) {
         const newChamp = d.list[0];
-        d.champ = { name: newChamp.name, player: false, age: newChamp.age || 30 };
+        d.champ = { name: newChamp.name, player: false, age: newChamp.age || 30, campId: newChamp.campId || null, campName: newChamp.campName || null };
         events.push({
           title: `👑 New ${wc} Champion`,
           body: `${newChamp.name} is the new ${wc} champion after the title was vacated.`,

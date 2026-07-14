@@ -1,5 +1,5 @@
 // Fight outcome persistence — moved from UI to career layer
-import { clamp, uid } from "../rng.js";
+import { clamp, RI, uid } from "../rng.js";
 import { processFightResult, processRivalry, updateRivalryResult, processTitleChange } from "../career.js";
 import { queueDelayedEvent, pushInboxEvent } from "../events.js";
 import { TITLE_CELEBRATION_DELAY_WEEKS, TITLE_SPONSOR_DELAY_WEEKS } from "../events/config.js";
@@ -76,7 +76,7 @@ export function commitFightResult(g, fighter, result) {
             div.era = null;
           }
           // New reign — create fresh champ object
-          div.champ = { name: f.name, player: true, fighterId: f.id, wonWeek: g.week, lastDefenseWeek: g.week, titleDefenses: 0, promotionId: fighter.booked?.promotionId || null };
+          div.champ = { name: f.name, player: true, fighterId: f.id, wonWeek: g.week, lastDefenseWeek: g.week, titleDefenses: 0, promotionId: fighter.booked?.promotionId || null, campId: null, campName: null };
           if (!f.reignHistory) f.reignHistory = [];
           f.reignHistory.push({ wonWeek: g.week, weightClass: f.weightClass });
         }
@@ -126,6 +126,17 @@ export function commitFightResult(g, fighter, result) {
     if (fighter.booked?.pressChoice === "trashTalk") {
       f.popularity = clamp((f.popularity || 0) + 5, 0, 100);
       g.log.unshift("💬 " + f.name + " trash talk berhasil! Popularity +5.");
+    }
+
+    // ── Rivalry nudge: beating a camp-affiliated fighter ──
+    const oppData = fighter.booked?.opponent;
+    if (oppData?.campId && g.rivals) {
+      const camp = g.rivals.find((r) => r.id === oppData.campId);
+      if (camp) {
+        const nudge = RI(3, 6);
+        camp.rivalry = clamp((camp.rivalry || 0) + nudge, 0, 100);
+        g.log.unshift(`⚔️ ${f.name} mengalahkan fighter ${camp.name} — rivalry +${nudge}.`);
+      }
     }
 
     // ── Fan reactions ──

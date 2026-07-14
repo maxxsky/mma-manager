@@ -86,6 +86,8 @@ export function tickFightOffers(g) {
       const opp = genFighter(clamp((c0.level || 1.3) + 0.05, 0.8, 1.5));
       opp.name = c0.name; opp.archetype = c0.archetype; opp.weightClass = f.weightClass;
       opp.record = { w: RI(10, 18), l: RI(0, 3), ko: 0, sub: 0, dec: 0 };
+      opp.campId = c0.campId || null;
+      opp.campName = c0.campName || null;
       g.inbox.unshift({
         id: uid(), type: "offer", fighterId: f.id, expires: 3,
         tier: "Major", show: RI(100, 220) * 1000, winBonus: RI(100, 220) * 1000,
@@ -120,7 +122,7 @@ export function tickFightOffers(g) {
             g.inbox.unshift({
               id: uid(), type: "offer", fighterId: interimChamp.id, expires: 4,
               tier: "Major", show: RI(150, 350) * 1000, winBonus: RI(150, 350) * 1000,
-              opponent: { name: currentChamp.name, archetype: currentChamp.archetype, record: currentChamp.record, weightClass: interimChamp.weightClass },
+              opponent: { name: currentChamp.name, archetype: currentChamp.archetype, record: currentChamp.record, weightClass: interimChamp.weightClass, campId: currentChamp.campId || null, campName: currentChamp.campName || null },
               title: true, defense: false, oppRank: 0, contenderId: null,
               titleTier: "Major", titleText: "🤝 INTERIM TITLE UNIFICATION", weeks: RI(4, 6),
               unificationFor: interimChamp.id,
