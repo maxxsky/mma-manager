@@ -68,7 +68,11 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
   let landA = 0, landB = 0;
   let position = STANDING;
   let mom = momentum || 0;
-  const agg = cornerA === "go" ? CFG.CORNER_GO_MULT : cornerA === "save" ? CFG.CORNER_SAVE_MULT : 1;
+  const agg = cornerA === "go" || cornerA === "target_cut" ? CFG.CORNER_GO_MULT
+    : cornerA === "save" || cornerA === "stop_bleed" ? CFG.CORNER_SAVE_MULT
+    : cornerA === "empty_tank" ? CFG.CORNER_EMPTY_TANK_MULT
+    : cornerA === "clinch" ? 1.0
+    : 1;
   const expMult = explosiveMult(A, rnd);
   const cautMult = cautiousMult(A);
   const matchup = matchupMods(A, B);
@@ -90,6 +94,10 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
   if (cornerA === "go") comm.tickOnly(0, 30, `Corner urges ${A.name} to push the pace — aggression boosted.`);
   else if (cornerA === "save") comm.tickOnly(0, 30, `Corner tells ${A.name} to save energy — defense up, output down.`);
   else if (cornerA === "body") comm.tickOnly(0, 30, `Corner: "Work the body, ${A.name}! It'll pay off late."`);
+  else if (cornerA === "target_cut") comm.tickOnly(0, 30, `Corner: "Target that cut, ${A.name}! Make it worse!"`);
+  else if (cornerA === "stop_bleed") comm.tickOnly(0, 30, `Corner tells ${A.name} to protect the cut — defense first.`);
+  else if (cornerA === "clinch") comm.tickOnly(0, 30, `Corner: "Clinch and recover, ${A.name}! Take a round off to breathe."`);
+  else if (cornerA === "empty_tank") comm.tickOnly(0, 30, `Corner: "Empty the tank, ${A.name}! Leave it all in there!"`);
 
   const nEx = RI(CFG.EXCHANGES_PER_ROUND.min, CFG.EXCHANGES_PER_ROUND.max);
   for (let ex = 0; ex < nEx; ex++) {
@@ -195,7 +203,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
         const attackerStr = effAttr(isTargetA ? B : A, "strength", isTargetA ? stB : stA) * (1 + (isTargetA ? (matchup.bStrike || 0) : 0));
         const exDmg = isTargetA ? exDmgA : exDmgB;
         const cumDmg = isTargetA ? dmgA : dmgB;
-        const kdChance = clamp((exDmg - CFG.KD_EXCHANGE_THRESHOLD) / chin * CFG.KD_CHIN_MULT + (attackerStr - 40) * CFG.KD_STR_MULT + cumDmg * CFG.KD_FATIGUE_MULT, 0, CFG.KD_CHANCE_MAX) * (planA === "Finish It" ? 1.5 : 1) * cautMult;
+        const kdChance = clamp((exDmg - CFG.KD_EXCHANGE_THRESHOLD) / chin * CFG.KD_CHIN_MULT + (attackerStr - 40) * CFG.KD_STR_MULT + cumDmg * CFG.KD_FATIGUE_MULT, 0, CFG.KD_CHANCE_MAX) * (planA === "Finish It" ? 1.5 : 1) * (cornerA === "empty_tank" ? 1.5 : 1) * cautMult;
         if (random() < kdChance) {
           knockdown = { fighter: isTargetA ? "A" : "B", name: kdTarget.name, canRecover: true };
           comm.both(exMin + 1, 0, `${kdTarget.name} IS DOWN! He's hurt bad!`);
@@ -216,12 +224,10 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
 
     // ── CUT CHECK — striking exchanges only ──
     if (!finish && (exType === "strike" || exType === "power")) {
-      if (exDmgA > CFG.CUT_EXCHANGE_THRESHOLD && random() < CFG.CUT_CHANCE_PER_HIT) {
-        cutA += CFG.CUT_SEVERITY_PER_HIT;
-      }
-      if (exDmgB > CFG.CUT_EXCHANGE_THRESHOLD && random() < CFG.CUT_CHANCE_PER_HIT) {
-        cutB += CFG.CUT_SEVERITY_PER_HIT;
-      }
+      const cutChanceB = cornerA === "target_cut" ? CFG.CUT_CHANCE_PER_HIT * CFG.CUT_TARGET_MULT : CFG.CUT_CHANCE_PER_HIT;
+      const cutChanceA = cornerA === "stop_bleed" ? CFG.CUT_CHANCE_PER_HIT * CFG.CUT_PROTECT_MULT : CFG.CUT_CHANCE_PER_HIT;
+      if (exDmgB > CFG.CUT_EXCHANGE_THRESHOLD && random() < cutChanceB) cutB += CFG.CUT_SEVERITY_PER_HIT;
+      if (exDmgA > CFG.CUT_EXCHANGE_THRESHOLD && random() < cutChanceA) cutA += CFG.CUT_SEVERITY_PER_HIT;
     }
   }
 
@@ -250,8 +256,11 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
   const legModB = clamp(1 - (legDmgB || 0) * CFG.LEG_DMG_MULTIPLIER, CFG.LEG_MOD_MIN, 1);
 
   const drainA = R(CFG.STA_DRAIN_MIN, CFG.STA_DRAIN_MAX) * agg * (planA === "Finish It" ? 1.3 : 1) * (planA === "Survive & Outpoint" ? 0.75 : 1) *
-    (cornerA === "save" ? CFG.CORNER_SAVE_DRAIN : 1) * (55 / clamp(A.attrs.cardio * legModA, CFG.CARDIO_DIVISOR_MIN, CFG.CARDIO_DIVISOR_MAX)) * bodyMultA;
+    (cornerA === "save" || cornerA === "stop_bleed" ? CFG.CORNER_SAVE_DRAIN : cornerA === "clinch" ? CFG.CORNER_CLINCH_DRAIN : 1) * (55 / clamp(A.attrs.cardio * legModA, CFG.CARDIO_DIVISOR_MIN, CFG.CARDIO_DIVISOR_MAX)) * bodyMultA;
   const drainB = R(CFG.STA_DRAIN_MIN, CFG.STA_DRAIN_MAX) * (55 / clamp(B.attrs.cardio * legModB, CFG.CARDIO_DIVISOR_MIN, CFG.CARDIO_DIVISOR_MAX)) * bodyMultB;
+
+  // Clinch penalty: sacrifice round points for stamina recovery
+  if (cornerA === "clinch") ptsA = Math.max(0, ptsA - 2);
 
   mom = clamp(Math.round(mom * CFG.MOMENTUM_DECAY), CFG.MOMENTUM_MIN, CFG.MOMENTUM_MAX);
 

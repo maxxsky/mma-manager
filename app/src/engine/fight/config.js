@@ -39,6 +39,10 @@ export const CORNER_GO_MULT = 1.25;
 export const CORNER_SAVE_MULT = 0.80;
 export const CORNER_SAVE_DRAIN = 0.70;
 export const CORNER_BODY_MULT = 0.7;
+export const CORNER_EMPTY_TANK_MULT = 1.50;
+export const CORNER_CLINCH_DRAIN = 0.50;
+export const CUT_TARGET_MULT = 1.5;
+export const CUT_PROTECT_MULT = 0.5;
 
 // Submissions
 export const SUB_THRESHOLD_BASE = 50;

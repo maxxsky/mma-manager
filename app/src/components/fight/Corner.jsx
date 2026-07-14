@@ -1,6 +1,51 @@
-// Corner — between rounds strategy
+// Corner — between rounds strategy with contextual options
 import { Panel, Eyebrow, Btn } from "../../ui/theme.jsx";
 import { T } from "../../ui/theme.jsx";
+
+// Baseline options (always available)
+const BASELINE = [
+  { k: "go",        title: "Finish him",          sub: "Push the pace",            trade: "+aggression · +finish rate · -stamina" },
+  { k: "body",      title: "Work the body",        sub: "Body accumulation",        trade: "+late payoff · -instant impact" },
+  { k: "save",      title: "Save your gas",        sub: "Stamina recovery",         trade: "+defense · +stamina · -output" },
+];
+
+// Contextual options (conditional)
+export function getContextual(state, rnd, totalRounds) {
+  const out = [];
+  if (state?.cutB >= 4) out.push({ k: "target_cut",  title: "Target the cut",      sub: "Exploit opponent's cut",    trade: "+cut chance · +damage to area" });
+  if (state?.cutA >= 4) out.push({ k: "stop_bleed",  title: "Stop the bleeding",    sub: "Protect own cut",           trade: "+defense · +stamina (like save)" });
+  if (state?.staA < 40) out.push({ k: "clinch",      title: "Clinch and recover",   sub: "Stall for stamina",         trade: "+stamina recovery · -round points" });
+  if (rnd === totalRounds - 1) out.push({ k: "empty_tank", title: "Empty the tank", sub: "Leave it all in there",     trade: "+aggression · +KO chance · +stamina drain" });
+  return out;
+}
+
+// Build final option list (max 4, narrative-aware)
+export function buildOptions(state, rnd, totalRounds) {
+  const contextual = getContextual(state, rnd, totalRounds);
+  const hasEmptyTank = contextual.some(o => o.k === "empty_tank");
+  const hasTargetCut = contextual.some(o => o.k === "target_cut");
+  const hasStopBleed = contextual.some(o => o.k === "stop_bleed");
+
+  // Start with baseline, filter narrative contradictions
+  let opts = [...BASELINE];
+  if (hasEmptyTank) {
+    // Empty the tank vs Save your gas — contradictory
+    opts = opts.filter(o => o.k !== "save");
+  }
+
+  // Add contextual
+  opts.push(...contextual);
+
+  // Enforce max 4 — drop body if target_cut is already covering offensive
+  if (opts.length > 4 && hasTargetCut) {
+    opts = opts.filter(o => o.k !== "body");
+  }
+
+  // Still over 4? Remove from end (contextual beyond 4th)
+  while (opts.length > 4) opts.pop();
+
+  return opts;
+}
 
 export default function Corner({ rnd, totalRounds, timer, state, runRound, processResult }) {
   if (rnd >= totalRounds) {
@@ -15,6 +60,8 @@ export default function Corner({ rnd, totalRounds, timer, state, runRound, proce
     );
   }
 
+  const options = buildOptions(state, rnd, totalRounds);
+
   return (
     <Panel style={{ border: `1px solid ${T.gold}44` }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -25,12 +72,10 @@ export default function Corner({ rnd, totalRounds, timer, state, runRound, proce
         <span style={{ fontFamily: T.body, fontSize: 12.5, fontStyle: "italic", color: T.txt2 }}>
           Coach: "Pick your strategy for round {rnd + 1} — he's {state?.hpB < 50 ? "hurting" : "still dangerous"}."</span>
       </div>
-      {[["go", "Keep pushing — finish him", "+aggression +finish rate", "↑ KO chance · ↓ stamina"],
-        ["body", "Work the body", "+body damage accumulation", "↑ late-round payoff · ↓ instant points"],
-        ["save", "Save your gas", "+stamina recovery", "↑ defense · ↓ output"]].map(([k, fx, trade]) => (
+      {options.map(({ k, title, sub, trade }) => (
         <button key={k} className="chip" onClick={() => runRound(rnd + 1, state, k)} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", padding: "10px 14px", borderRadius: T.r, cursor: "pointer", marginBottom: 6, border: `1px solid ${T.line}`, background: "transparent" }}>
-          <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 14.5, letterSpacing: .4, textTransform: "uppercase", color: T.txt, width: 180 }}>{k === "go" ? "Finish him" : k === "body" ? "Work the body" : "Save your gas"}</span>
-          <span style={{ fontFamily: T.body, fontSize: 11.5, color: T.txt2, flex: 1 }}>{fx}</span>
+          <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 14.5, letterSpacing: .4, textTransform: "uppercase", color: T.txt, width: 180 }}>{title}</span>
+          <span style={{ fontFamily: T.body, fontSize: 11.5, color: T.txt2, flex: 1 }}>{sub}</span>
           <span style={{ fontFamily: T.body, fontSize: 10.5, color: T.txt3 }}>{trade}</span>
         </button>
       ))}

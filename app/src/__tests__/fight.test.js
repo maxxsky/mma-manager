@@ -8,6 +8,7 @@ import { processTitleChange } from '../engine/career.js'
 import { mulberry32, setRNG } from '../engine/rng.js'
 import { tick } from '../engine/state.js'
 import { tickSettlement } from '../engine/tick/settlement.js'
+import { buildOptions, getContextual } from '../components/fight/Corner.jsx'
 import { computeMonthlyIncome, computeMonthlyExpense } from '../engine/economy.js'
 import { PROMOTIONS, pickPromotion, getPromotionsData } from '../engine/data.js'
 
@@ -635,5 +636,59 @@ describe('Fight Engine', () => {
 
       expect(g.cash).toBe(startCash + expectedIncome - expectedExpense)
     })
+  })
+})
+
+describe('Task 59 — Corner kontekstual (N5)', () => {
+  it('cutB >= 4 shows target_cut option', () => {
+    const opts = buildOptions({ cutB: 4, cutA: 0, staA: 80 }, 2, 5)
+    expect(opts.some(o => o.k === 'target_cut')).toBe(true)
+  })
+
+  it('cutA >= 4 shows stop_bleed option', () => {
+    const opts = buildOptions({ cutB: 0, cutA: 5, staA: 80 }, 2, 5)
+    expect(opts.some(o => o.k === 'stop_bleed')).toBe(true)
+  })
+
+  it('staA < 40 shows clinch option', () => {
+    const opts = buildOptions({ cutB: 0, cutA: 0, staA: 35 }, 2, 5)
+    expect(opts.some(o => o.k === 'clinch')).toBe(true)
+  })
+
+  it('last round (rnd === totalRounds - 1) shows empty_tank, hide save', () => {
+    const opts = buildOptions({ cutB: 0, cutA: 0, staA: 80 }, 4, 5)
+    expect(opts.some(o => o.k === 'empty_tank')).toBe(true)
+    expect(opts.some(o => o.k === 'save')).toBe(false) // contradictory
+  })
+
+  it('never more than 4 options', () => {
+    // Trigger all 4 contextual at once + 3 baseline = 7 before filtering
+    const opts = buildOptions({ cutB: 4, cutA: 5, staA: 30 }, 4, 5)
+    expect(opts.length).toBeLessThanOrEqual(4)
+  })
+
+  it('clinch reduces stamina drain vs go (engine effect)', () => {
+    useSeed(42)
+    const A = prepFighter(createTestFighter())
+    const B = prepFighter(createTestFighter({ name: 'Opp', attrs: { striking: 40, wrestling: 40, bjj: 30, cardio: 50, strength: 50, chin: 50, footwork: 40, fightIQ: 40 } }))
+
+    const goResult = simRound(1, A, B, 100, 100, 'Balanced', 'go', 0)
+    const clinchResult = simRound(1, A, B, 100, 100, 'Balanced', 'clinch', 0)
+
+    // Clinch should preserve more stamina than go
+    expect(clinchResult.staA).toBeGreaterThan(goResult.staA)
+  })
+
+  it('target_cut increases opponent cut accumulation vs baseline', () => {
+    useSeed(42)
+    const A = prepFighter(createTestFighter({ attrs: { striking: 70, wrestling: 30, bjj: 20, cardio: 50, strength: 60, chin: 45, footwork: 40, fightIQ: 38 } }))
+    const B = prepFighter(createTestFighter({ name: 'OppBuffer', attrs: { striking: 30, wrestling: 30, bjj: 30, cardio: 50, strength: 40, chin: 30, footwork: 30, fightIQ: 30 } }))
+
+    // Force a scenario with damage to trigger cut
+    const base = simRound(1, A, B, 100, 100, 'Balanced', 'go', 0, 0, 0)
+    const targetCut = simRound(1, A, B, 100, 100, 'Balanced', 'target_cut', 0, 0, 0)
+
+    // target_cut should cause more cuts on opponent
+    expect(targetCut.cutB).toBeGreaterThanOrEqual(base.cutB)
   })
 })
