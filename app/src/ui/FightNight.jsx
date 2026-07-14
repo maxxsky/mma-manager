@@ -96,7 +96,7 @@ export default function FightNight({ fighter, done }) {
     const nr = rnd + 1;
     if (docCheck) { setDocCheck(false); setStage("result"); return; }
     if (nr > totalRounds) { processResult(); return; }
-    if (cutB >= 6 && nr <= totalRounds && !docCheck && random() < 0.3) {
+    if ((cutA >= 6 || cutB >= 6) && nr <= totalRounds && !docCheck && random() < 0.3) {
       setDocCheck(true); setStage("corner"); setTimer(60); return;
     }
     runRound(nr, state, "go");
@@ -183,7 +183,7 @@ export default function FightNight({ fighter, done }) {
         {stage === "entrance" && <Entrance fighter={fighter} opp={opp} ca={ca} cb={cb} />}
         {stage === "round" && roundLog && <RoundView rnd={rnd} roundLog={roundLog} viewMode={viewMode} tickIdx={tickIdx} displayLog={displayLog} onEndRound={() => { setStage("corner"); setTimer(60); }} onSeeFinish={() => { setStage(roundLog.finish.how === "KO" || roundLog.finish.how === "TKO" ? "knockdown" : "result"); if (roundLog.finish.how !== "KO" && roundLog.finish.how !== "TKO") processResult(); }} hasFinish={!!roundLog.finish} />}
         {stage === "corner" && !docCheck && <Corner rnd={rnd} totalRounds={totalRounds} timer={timer} state={state} runRound={runRound} processResult={processResult} />}
-        {stage === "corner" && docCheck && <DoctorCheck fighter={fighter} opp={opp} cutA={cutA} cutB={cutB} onContinue={() => { setDocCheck(false); setStage("corner"); }} onRetire={() => { setResult({ won: false, how: "Doctor Stoppage", r: rnd }); setStage("result"); }} />}
+        {stage === "corner" && docCheck && <DoctorCheck fighter={fighter} opp={opp} cutA={cutA} cutB={cutB} onContinue={() => { setDocCheck(false); setStage("corner"); }} onRetire={() => { const isPlayerCut = cutA >= 6; setResult({ won: !isPlayerCut, how: "Doctor Stoppage", r: rnd }); setStage("result"); }} />}
         {stage === "knockdown" && <Knockdown roundLog={roundLog} rnd={rnd} onSeeResult={() => { processResult(); }} />}
         {stage === "result" && result && <ResultScreen fighter={fighter} opp={opp} roundLog={roundLog} result={result} totalRounds={totalRounds} onCommit={commitResult} />}
       </div>

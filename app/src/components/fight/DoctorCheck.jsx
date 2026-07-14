@@ -25,7 +25,7 @@ export default function DoctorCheck({ fighter, opp, cutA, cutB, onContinue, onRe
       <div style={{ fontFamily: T.body, fontSize: 12.5, color: T.txt2, marginBottom: 14 }}>The cut needs attention. Continue or retire?</div>
       <div style={{ display: "flex", gap: 8 }}>
         <Btn color={T.pos} onClick={onContinue}>Continue fight</Btn>
-        <Btn ghost color={T.neg} sm onClick={onRetire}>Retire (TKO loss)</Btn>
+        <Btn ghost color={T.neg} sm onClick={onRetire}>{cutA >= 6 ? "Retire (TKO loss)" : "Stop the fight (TKO win)"}</Btn>
       </div>
     </Panel>
   );

@@ -314,9 +314,15 @@ export function runFight(A, B, plan, cornerPolicy, seed, totalRounds) {
       break;
     }
 
-    // Doctor stoppage — real cut value from simRound
-    if (r < totalRounds && cutB >= 6 && random() < 0.3) {
-      winner = "A";
+    // Doctor stoppage — check both fighters' cuts
+    if (r < totalRounds && (cutA >= 6 || cutB >= 6) && random() < 0.3) {
+      if (cutA >= 6) {
+        // Player's own cut is the problem → player loses
+        winner = "B";
+      } else {
+        // Opponent's cut is the problem → player wins
+        winner = "A";
+      }
       how = "Doctor Stoppage";
       finalRound = r;
       break;
