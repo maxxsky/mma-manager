@@ -40,7 +40,11 @@ export function loadGame(slot) {
 export function saveGame(slot, state) {
   try {
     localStorage.setItem(saveKey(slot), JSON.stringify(state));
-  } catch { /* quota exceeded or disabled */ }
+    return true;
+  } catch (e) {
+    console.error("Save failed:", e);
+    return false;
+  }
 }
 
 export function deleteGame(slot) {

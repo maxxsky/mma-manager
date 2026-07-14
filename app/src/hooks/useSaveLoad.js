@@ -90,7 +90,7 @@ export function useSaveLoad(setG) {
             if (maxId > 0) setUID(maxId + 1);
           })(s);
         }
-      } catch (e) { /* belum ada save */ }
+      } catch (e) { console.warn("Load failed:", e); }
       setLoaded(true);
       backupSave(saveSlot);
       refreshSlotInfo();
