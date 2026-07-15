@@ -321,6 +321,7 @@ export default function Rankings({ g, t }) {
 
       {/* ── Ranking Table ── */}
       <Panel pad={0} style={{ marginTop: 12, overflow: "hidden" }} role="table" aria-label={`${selDiv} ranking table`}>
+        <div style={{ overflowX: "auto" }}>
         {/* Table header */}
         <div
           role="row"
@@ -598,6 +599,7 @@ export default function Rankings({ g, t }) {
             </div>
           </div>
         ))}
+      </div>
       </Panel>
 
       {/* ── Outside Top 15 (player only) ── */}

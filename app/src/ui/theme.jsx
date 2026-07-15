@@ -12,7 +12,7 @@ import { REGION_COLOR } from "../engine/data/archetypes.js";
 export const T = {
   bg: "#0e1116", surface: "#161b23", raised: "#1e2530", raisedHi: "#252d3a",
   line: "#2a323f", line2: "#384556",
-  txt: "#eef2f7", txt2: "#9aa7b8", txt3: "#64717f",
+  txt: "#eef2f7", txt2: "#9aa7b8", txt3: "#7d8a99",
   ember: "#f5623c", steel: "#3ea6ff", gold: "#ffd15c",
   pos: "#35c98a", warn: "#f5b942", neg: "#ef4d5a",
   disp: "'Barlow Condensed','Arial Narrow',sans-serif",
@@ -59,7 +59,6 @@ export function heat(v) {
 /* ---- GLOBAL CSS ------------------------------------------------------------ */
 export const GlobalStyle = () => (
   <style>{`
-@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 * { box-sizing: border-box; }
 body { margin: 0; background: ${T.bg}; color: ${T.txt}; font-family: ${T.body}; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }

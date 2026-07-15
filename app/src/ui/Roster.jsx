@@ -24,7 +24,8 @@ export default function Roster({ g, setTab, dispatch }) {
 
   return (
     <Panel pad={0} style={{ overflow: "hidden" }} role="table" aria-label="Fighter roster table">
-      <div role="row" style={{ display: "grid",
+      <div style={{ overflowX: "auto" }}>
+        <div role="row" style={{ display: "grid",
         gridTemplateColumns: "minmax(200px,1.4fr) 46px repeat(8, 40px) 90px 70px",
         alignItems: "center", padding: "0 16px", height: 40, background: T.raised,
         borderBottom: `1px solid ${T.line}` }}>
@@ -87,6 +88,7 @@ export default function Roster({ g, setTab, dispatch }) {
           </div>
         );
       })}
+      </div>
     </Panel>
   );
 }
