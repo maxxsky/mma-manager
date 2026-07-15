@@ -60,7 +60,7 @@ export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
 
   return (
     <header aria-label="Main header" style={{ height: 60, display: "flex", alignItems: "center",
-      justifyContent: "space-between", padding: "0 24px",
+      justifyContent: "space-between", padding: isMobile ? "0 12px" : "0 24px",
       borderBottom: `1px solid ${T.line}`, background: `${T.bg}cc`,
       backdropFilter: "blur(6px)", position: "sticky", top: 0, zIndex: 5,
       flexShrink: 0 }}>
@@ -79,7 +79,7 @@ export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
         {crumb && <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>{crumb}</div>}
         {version && <div style={{ fontFamily: T.mono, fontSize: 9, color: T.txt3, marginTop: 2, letterSpacing: 1 }}>{version}</div>}
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 10 : 22 }}>
         {/* Date — Year · Month · Week */}
         {!isMobile && <div style={{ display: "flex", alignItems: "center", gap: 6, color: T.txt3 }}>
           <Icon d={ICONS.cal} size={15} />
@@ -89,7 +89,7 @@ export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
         </div>}
         {!isMobile && <div style={{ width: 1, height: 26, background: T.line }} />}
         <Chip label="Bank" val={cashVal} color={T.txt} flashOnChange={true} rawValue={cash} />
-        <Chip label="Rep" val={rep != null ? rep : "—"} color={T.gold} />
+        {!isMobile && <Chip label="Rep" val={rep != null ? rep : "—"} color={T.gold} />}
         {!isMobile && <Chip label="Chem" val={chem != null ? chem : "—"} color={chem >= 60 ? T.pos : T.warn} />}
         {!isMobile && <Chip label="Legacy" val={legacyVal} color={T.steel} />}
         {/* Utility row — save slot, lang, extras (kept compact) */}
