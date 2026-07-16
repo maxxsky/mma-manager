@@ -10,7 +10,7 @@ import { simRound } from "../engine/fight.js";
 import { commitFightResult } from "../engine/fights/commitResult.js";
 import { useFightSeed } from "../hooks/useFightSeed.js";
 import { useFightPrep } from "../hooks/useFightPrep.js";
-import { T, C, GlobalStyle } from "./theme.jsx";
+import { T, GlobalStyle } from "./theme.jsx";
 
 import Staredown from "../components/fight/Staredown.jsx";
 import WeighIn from "../components/fight/WeighIn.jsx";
@@ -154,7 +154,7 @@ export default function FightNight({ fighter, done }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 60, overflowY: "auto",
-      background: `radial-gradient(ellipse 90% 55% at 50% -5%, ${T.raised} 0%, ${C.bg} 60%)` }}>
+      background: `radial-gradient(ellipse 90% 55% at 50% -5%, ${T.raised} 0%, ${T.bg} 60%)` }}>
       <GlobalStyle />
       <div style={{ maxWidth: 860, margin: "0 auto", padding: 14, position: "relative" }}>
 

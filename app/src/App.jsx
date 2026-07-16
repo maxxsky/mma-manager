@@ -20,7 +20,7 @@ import { ACHIEVEMENTS } from "./engine/data.js";
 import { generateTransferReason } from "./engine/narrative/generators/transfer.js";
 
 // UI
-import { GlobalStyle, C, DISPLAY } from "./ui/theme.jsx";
+import { GlobalStyle, T } from "./ui/theme.jsx";
 import ToastContainer from "./ui/Toast.jsx";
 import FightNight from "./ui/FightNight.jsx";
 import NegotiateModal from "./ui/NegotiateModal.jsx";
@@ -107,9 +107,9 @@ export default function App() {
   // ── LOADING ──
   if (!loaded) {
     return (
-      <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <GlobalStyle />
-        <div style={{ fontFamily: DISPLAY, color: C.gold, letterSpacing: 4, fontSize: 18, animation: "goldglow 1.5s infinite" }}>LOADING CAMP…</div>
+        <div style={{ fontFamily: T.disp, color: T.gold, letterSpacing: 4, fontSize: 18, animation: "goldglow 1.5s infinite" }}>LOADING CAMP…</div>
       </div>
     );
   }
@@ -123,7 +123,7 @@ export default function App() {
       {weekFlash > 0 && (
         <>
           <style>{`@keyframes weekpop{0%{opacity:0;transform:scale(0.5)}17%{opacity:1;transform:scale(1)}55%{opacity:1}100%{opacity:0}}`}</style>
-          <div key={weekFlash} style={{ position: "fixed", top: "40%", left: "50%", zIndex: 40, pointerEvents: "none", fontFamily: DISPLAY, fontSize: 40, letterSpacing: 6, color: "#ffd15c", textShadow: "0 0 30px rgba(255,209,92,.6)", animation: "weekpop 1.1s ease both", textTransform: "uppercase" }}>
+          <div key={weekFlash} style={{ position: "fixed", top: "40%", left: "50%", zIndex: 40, pointerEvents: "none", fontFamily: T.disp, fontSize: 40, letterSpacing: 6, color: "#ffd15c", textShadow: "0 0 30px rgba(255,209,92,.6)", animation: "weekpop 1.1s ease both", textTransform: "uppercase" }}>
             Week {g.week}
           </div>
         </>

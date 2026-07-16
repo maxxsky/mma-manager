@@ -21,23 +21,6 @@ export const T = {
   r: 6, r2: 10,
 };
 
-// ---- Backward-compat alias (existing code references C.gold etc) ----
-export const C = {
-  get gold() { return T.gold; },
-  get goldDim() { return "#8a6f2e"; },
-  get red() { return T.neg; },
-  get blue() { return T.steel; },
-  get green() { return T.pos; },
-  get bg() { return T.bg; },
-  get spot() { return T.raised; },
-  get panel() { return T.surface; },
-  get panel2() { return T.raised; },
-  get line() { return T.line; },
-  get chalk() { return T.txt; },
-  get dim() { return T.txt3; },
-};
-export const DISPLAY = T.disp;
-
 // ---- Archetype colors ----
 export const ARCH_COLOR = {
   Boxer: "#ef5b52",

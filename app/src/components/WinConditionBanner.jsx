@@ -1,6 +1,6 @@
 // Win condition banner — legacy tier display
 import { Card, cut } from "../ui/theme.jsx";
-import { DISPLAY, C } from "../ui/theme.jsx";
+import { T } from "../ui/theme.jsx";
 
 const TIERS = [
   { k: "Bronze", i: "🥉", min: 5000 },
@@ -26,8 +26,8 @@ export default function WinConditionBanner({ legacy }) {
   return (
     <Card accent={wc.color} style={{ textAlign: "center" }}>
       <div style={{ fontSize: 28 }}>{wc.icon}</div>
-      <div style={{ fontFamily: DISPLAY, color: wc.color, fontSize: 18, letterSpacing: 2, textTransform: "uppercase", animation: "goldglow 2s infinite" }}>{wc.label}</div>
-      <div style={{ color: C.dim, fontSize: 12, marginTop: 3 }}>{wc.tier} — Legacy {legacy.toLocaleString()} pts · Tier {TIERS.length} tiers</div>
+      <div style={{ fontFamily: T.disp, color: wc.color, fontSize: 18, letterSpacing: 2, textTransform: "uppercase", animation: "goldglow 2s infinite" }}>{wc.label}</div>
+      <div style={{ color: T.txt3, fontSize: 12, marginTop: 3 }}>{wc.tier} — Legacy {legacy.toLocaleString()} pts · Tier {TIERS.length} tiers</div>
       <div style={{ display: "flex", gap: 4, justifyContent: "center", marginTop: 6 }}>
         {TIERS.map((t) => (
           <div key={t.k} style={{ fontSize: 12, opacity: legacy >= t.min ? 1 : 0.2 }}>{t.i}</div>
