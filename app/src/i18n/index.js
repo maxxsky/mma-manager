@@ -398,6 +398,16 @@ const EN = {
   "RNK.vacant": "{0} — VACANT",
   "RNK.vacantDesc": "Title is vacant — next title fight will crown a new champion",
   "UI.retiredLegends": "🎗️ Retired Legends",
+  // ---- PROMOTERS ----
+  "PROMO.header": "Promoter Relations",
+  "PROMO.intro": "Your relationship with each tier determines fight opportunities and purse multipliers.",
+  "PROMO.tierRel": "Tier Relations",
+  "PROMO.promoters": "Promoters",
+  "PROMO.effect.t85": "1.4× purse · Title eliminator chance",
+  "PROMO.effect.t70": "1.2× purse · Main event chance",
+  "PROMO.declining": "↘ Declining — no recent fights at this tier",
+  "PROMO.exclusive": "Exclusive: {0}",
+  "PROMO.noPromo": "No promoters available yet.",
   // ---- LANGUAGE ----
   "LANG.en": "English", "LANG.id": "Bahasa Indonesia",
 };
@@ -770,6 +780,16 @@ const ID = {
   "RNK.vacant": "{0} — KOSONG",
   "RNK.vacantDesc": "Gelar kosong — pertarungan gelar berikutnya akan menentukan juara baru",
   "UI.retiredLegends": "🎗️ Legenda Pensiun",
+  // ---- PROMOTERS ----
+  "PROMO.header": "Relasi Promotor",
+  "PROMO.intro": "Hubungan dengan setiap tier menentukan peluang bertarung dan pengali purse.",
+  "PROMO.tierRel": "Relasi Tier",
+  "PROMO.promoters": "Promotor",
+  "PROMO.effect.t85": "1.4× purse · Peluang title eliminator",
+  "PROMO.effect.t70": "1.2× purse · Peluang main event",
+  "PROMO.declining": "↘ Menurun — tidak ada pertarungan baru di tier ini",
+  "PROMO.exclusive": "Eksklusif: {0}",
+  "PROMO.noPromo": "Belum ada promotor tersedia.",
   // ---- LANGUAGE ----
   "LANG.en": "English", "LANG.id": "Bahasa Indonesia",
 };
