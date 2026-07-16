@@ -16,10 +16,12 @@ import { genFighter, assignAgent, scoutGrade, makeReport } from "./engine/fighte
 import { newGame } from "./engine/state.js";
 import { checkAchievements } from "./engine/achievements.js";
 import { CAMP_TIERS } from "./engine/data.js";
+import { ACHIEVEMENTS } from "./engine/data.js";
 import { generateTransferReason } from "./engine/narrative/generators/transfer.js";
 
 // UI
 import { GlobalStyle, C, DISPLAY } from "./ui/theme.jsx";
+import ToastContainer from "./ui/Toast.jsx";
 import FightNight from "./ui/FightNight.jsx";
 import NegotiateModal from "./ui/NegotiateModal.jsx";
 import Sidebar from "./ui/Sidebar.jsx";
@@ -55,6 +57,7 @@ export default function App() {
   const [scoutFilterWC, setScoutFilterWC] = useState(null);
   const [showFightCard, setShowFightCard] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [toasts, setToasts] = useState([]);
 
   // Save/load hook
   const [g, setG] = useState(() => newGame());
@@ -73,7 +76,11 @@ export default function App() {
     advance,
     dispatch,
     disabled: g.over || !!activeFight || !!nego || !!weeklySummary,
+
   });
+
+  // Toast dismiss
+  const dismissToast = (id) => setToasts((prev) => prev.filter((t) => t.id !== id));
 
   // Scout action
   const scoutFighter = (cost, level, label, filterArch, filterWC) => {
@@ -121,6 +128,9 @@ export default function App() {
           </div>
         </>
       )}
+
+      {/* Toast notifications */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
       {/* Sidebar */}
       <Sidebar view={tab} setView={(t) => { setTab(t); setMobileMenuOpen(false); }} onAdvance={advance} inboxCount={g.inbox?.length || 0}
@@ -185,7 +195,23 @@ export default function App() {
 
       {fightFighter?.booked && !showFightCard && (
         <FightNight key={fightFighter.id} fighter={fightFighter} done={(fx, fightCtx) => {
-          setG((old) => { const n = structuredClone(old); fx(n); if (fightCtx) checkAchievements(n, fightCtx); saveGame(saveSlot, n); return n; });
+          setG((old) => {
+            const n = structuredClone(old);
+            fx(n);
+            let newly = [];
+            if (fightCtx) {
+              newly = checkAchievements(n, fightCtx);
+              if (newly.length > 0) {
+                const newToasts = newly.map((id) => {
+                  const a = ACHIEVEMENTS.find((x) => x.id === id);
+                  return a ? { id: a.id + "_" + Date.now(), icon: a.icon, title: a.title, desc: a.desc } : null;
+                }).filter(Boolean);
+                setToasts((prev) => [...prev, ...newToasts]);
+              }
+            }
+            saveGame(saveSlot, n);
+            return n;
+          });
           setActiveFight(null);
           setShowFightCard(false);
         }} />
