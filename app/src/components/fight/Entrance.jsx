@@ -18,7 +18,7 @@ export default function Entrance({ fighter, opp, ca, cb }) {
       <Eyebrow color={T.gold}>{t("ENTR.header")}</Eyebrow>
       <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 14 }}>
         <div style={{ textAlign: "center" }}>
-          <Mono name={fighter.name} color={ca} size={56} region={fighter.region} titleTier={fighter.titles?.length > 0 ? (fighter.titles?.includes("Major World Champion") ? t("ENTR.majorLabel") : t("ENTR.nationalLabel")) : null} />
+          <Mono name={fighter.name} color={ca} size={56} region={fighter.region} titleTier={fighter.titles?.length > 0 ? (fighter.titles?.includes("Major World Champion") ? "Major" : "National") : null} />
           <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 16, textTransform: "uppercase", color: T.txt, marginTop: 6 }}>{fighter.name}</div>
           <div style={{ color: T.txt3, fontSize: 10, marginTop: 1 }}>{fighter.weightClass}</div>
         </div>

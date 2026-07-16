@@ -248,8 +248,6 @@ const EN = {
   "SCORE.td": "TD",
   // ---- ENTRANCE ----
   "ENTR.header": "Fighter Entrance",
-  "ENTR.majorLabel": "Major",
-  "ENTR.nationalLabel": "National",
   // ---- LANGUAGE ----
   "LANG.en": "English", "LANG.id": "Bahasa Indonesia",
 };
@@ -472,8 +470,6 @@ const ID = {
   "SCORE.td": "TD",
   // ---- ENTRANCE ----
   "ENTR.header": "Pintu Masuk Petarung",
-  "ENTR.majorLabel": "Utama",
-  "ENTR.nationalLabel": "Nasional",
   // ---- LANGUAGE ----
   "LANG.en": "English", "LANG.id": "Bahasa Indonesia",
 };
