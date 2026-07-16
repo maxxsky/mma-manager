@@ -344,7 +344,6 @@ const EN = {
   "FIGHTER.intensity": "Intensity",
   "FIGHTER.fightHistory": "Fight history",
   "FIGHTER.method": "Method",
-  "FIGHTER.perf": "Perf",
   "FIGHTER.progress": "Progress ({0} weeks)",
   "FIGHTER.plateau": "Plateau",
   // ---- NEGOTIATE ----
@@ -727,7 +726,6 @@ const ID = {
   "FIGHTER.intensity": "Intensitas",
   "FIGHTER.fightHistory": "Riwayat tarung",
   "FIGHTER.method": "Metode",
-  "FIGHTER.perf": "Perf",
   "FIGHTER.progress": "Progres ({0} minggu)",
   "FIGHTER.plateau": "Plateau",
   // ---- NEGOTIATE ----

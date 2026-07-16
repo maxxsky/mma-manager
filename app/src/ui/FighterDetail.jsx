@@ -318,7 +318,7 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
             <Eyebrow>{t("FIGHTER.fightHistory")}</Eyebrow>
             <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 90px 70px 90px 60px",
               padding: "0 4px 6px", borderBottom: `1px solid ${T.line}` }}>
-              {["", t("UI.opponent"), t("FIGHTER.method"), t("SCORE.round"), t("UI.tier"), t("FIGHTER.perf")].map((c, i) => (
+              {["", t("UI.opponent"), t("FIGHTER.method"), t("SCORE.round"), t("UI.tier"), t("UI.week")].map((c, i) => (
                 <span key={i} style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1,
                   textTransform: "uppercase", color: T.txt3 }}>{c}</span>
               ))}
