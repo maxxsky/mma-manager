@@ -1,5 +1,5 @@
 import { fmt$ } from "../engine/rng.js";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { WEIGHTS, ARCH_COLOR as DATA_ARCH_COLOR } from "../engine/data.js";
 import { avgSkill, tierOf } from "../engine/fighter.js";
 import { T, Panel, Eyebrow, Tag, Btn, Ovr, heat, ARCH_COLOR, Mono } from "./theme.jsx";
@@ -12,6 +12,13 @@ export default function Rankings({ g, t }) {
   const playerDivs = g.roster.map((f) => f.weightClass);
   const defaultDiv = playerDivs.find((wc) => wc) || "Lightweight";
   const [selDiv, setSelDiv] = useState(defaultDiv);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const div = g.divisions?.[selDiv];
   if (!div) {
@@ -320,6 +327,66 @@ export default function Rankings({ g, t }) {
       })()}
 
       {/* ── Ranking Table ── */}
+      {isMobile ? (
+        <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
+          {top15.length === 0 && (
+            <div style={{ padding: 20, textAlign: "center", color: T.txt3, fontSize: 12 }}>
+              No ranked fighters in this division.
+            </div>
+          )}
+          {top15.map((f, i) => (
+            <div key={f.player ? `p-${f.fighterId || i}` : `ai-${i}`}
+              style={{
+                background: f.player ? `${T.gold}0d` : T.raised,
+                borderRadius: T.r, padding: "10px 12px",
+                border: `1px solid ${T.line}`,
+                borderLeft: f.player ? `3px solid ${T.gold}` : `1px solid ${T.line}`,
+              }}>
+              {/* Top row: rank + name + OVR */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <span style={{ fontFamily: T.disp, fontSize: 16, fontWeight: 700, color: f.player ? T.gold : T.txt3, minWidth: 28 }}>
+                  #{i + 1}
+                </span>
+                <span style={{
+                  fontFamily: T.disp, fontSize: 14, fontWeight: f.player ? 700 : 500,
+                  letterSpacing: .6, textTransform: "uppercase", color: f.player ? T.gold : T.txt,
+                  flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }}>
+                  {f.name}{f.player ? " ★" : ""}
+                </span>
+                {f.titles?.length > 0 && <span style={{ fontSize: 13 }}>👑</span>}
+                <span style={{ fontFamily: T.mono, fontSize: 16, fontWeight: 700, color: heat(f.ovr), flexShrink: 0 }}>
+                  {f.ovr}
+                </span>
+              </div>
+              {/* Archetype */}
+              <div style={{ fontSize: 10.5, color: T.txt3, marginBottom: 6 }}>
+                {f.campId && f.campName && <Tag color={T.steel} style={{ fontSize: 9, marginRight: 6 }}>{f.campName}</Tag>}
+                {f.archetype}
+              </div>
+              {/* Stats chips */}
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: `${T.txt2}22`, color: T.txt2 }}>
+                  REC {f.record?.w ?? "?"}-{f.record?.l ?? "?"}
+                </span>
+                {streakBadge(f) && (
+                  <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4 }}>
+                    {streakBadge(f)}
+                  </span>
+                )}
+                {changeBadge(f.change) && (
+                  <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4 }}>
+                    {changeBadge(f.change)}
+                  </span>
+                )}
+                <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: `${T.txt2}22`, color: T.txt2 }}>
+                  PTS {f.points}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
       <Panel pad={0} style={{ marginTop: 12, overflow: "hidden" }} role="table" aria-label={`${selDiv} ranking table`}>
         <div style={{ overflowX: "auto" }}>
         {/* Table header */}
@@ -601,6 +668,7 @@ export default function Rankings({ g, t }) {
         ))}
       </div>
       </Panel>
+      )}
 
       {/* ── Outside Top 15 (player only) ── */}
       {outsideTop15.length > 0 && (
