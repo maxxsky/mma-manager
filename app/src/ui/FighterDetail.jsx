@@ -11,7 +11,7 @@ import { getCoachArchetypeSynergy, getFightStyleSummary, getArchetypeBehavior } 
 import { T, Panel, Eyebrow, Tag, Btn, Ovr, Mono, AttrTele, Meter, OctaRadar, Icon, ICONS, heat } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 
-export default function FighterDetail({ f, g, onBack, up, dispatch }) {
+export default function FighterDetail({ f, g, onBack, dispatch }) {
   const ac = ARCH_COLOR[f.archetype];
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 

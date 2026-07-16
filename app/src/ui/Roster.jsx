@@ -21,7 +21,7 @@ export default function Roster({ g, setTab, dispatch }) {
     return f ? (
       <div>
         <Btn sm ghost onClick={() => setDetailFighter(null)} style={{ marginBottom: 14 }}>← {t("UI.back")}</Btn>
-        <FighterDetail f={f} g={g} up={up} dispatch={dispatch} />
+        <FighterDetail f={f} g={g} dispatch={dispatch} />
       </div>
     ) : null;
   }
