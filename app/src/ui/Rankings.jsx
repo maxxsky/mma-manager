@@ -242,11 +242,11 @@ export default function Rankings({ g, t }) {
                 {selDiv} Champion
               </div>
               <div style={{ fontSize: 10, color: T.txt3, marginTop: 2 }}>
-                Juara sejak minggu {champ.wonWeek ?? "?"} · {champ.titleDefenses ?? 0}x defense
+                {t("RNK.champSince").replace("{0}", champ.wonWeek ?? "?").replace("{1}", champ.titleDefenses ?? 0)}
               </div>
               {div.era && (
                 <div style={{ fontSize: 10, color: T.gold, marginTop: 3, fontStyle: "italic", fontWeight: 600 }}>
-                  The {div.era.championName} Era — {div.era.defenses} defenses and counting
+                  {t("RNK.era").replace("{0}", div.era.championName).replace("{1}", div.era.defenses)}
                 </div>
               )}
               {champ.promotionId && (() => {
@@ -271,10 +271,10 @@ export default function Rankings({ g, t }) {
           <div style={{ fontSize: 24 }}>👑</div>
           <div>
             <div style={{ fontFamily: T.disp, color: T.warn, fontSize: 16, letterSpacing: 1, textTransform: "uppercase" }}>
-              {selDiv} — VACANT
+              {t("RNK.vacant").replace("{0}", selDiv)}
             </div>
             <div style={{ fontSize: 10, color: T.txt3, marginTop: 1 }}>
-              Title is vacant — next title fight will crown a new champion
+              {t("RNK.vacantDesc")}
             </div>
           </div>
         </div>

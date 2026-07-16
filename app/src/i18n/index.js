@@ -392,6 +392,11 @@ const EN = {
   "NEGO.form.submitExtend": "Offer",
   "NEGO.form.submitSign": "Submit Contract",
   "NEGO.form.cancel": "Cancel",
+  // ---- RANKINGS ----
+  "RNK.champSince": "Champion since week {0} · {1}x defense",
+  "RNK.era": "The {0} Era — {1} defenses and counting",
+  "RNK.vacant": "{0} — VACANT",
+  "RNK.vacantDesc": "Title is vacant — next title fight will crown a new champion",
   // ---- LANGUAGE ----
   "LANG.en": "English", "LANG.id": "Bahasa Indonesia",
 };
@@ -758,6 +763,11 @@ const ID = {
   "NEGO.form.submitExtend": "Tawarkan",
   "NEGO.form.submitSign": "Ajukan Kontrak",
   "NEGO.form.cancel": "Batal",
+  // ---- RANKINGS ----
+  "RNK.champSince": "Juara sejak minggu {0} · {1}x pertahanan",
+  "RNK.era": "Era {0} — {1} pertahanan dan terus bertambah",
+  "RNK.vacant": "{0} — KOSONG",
+  "RNK.vacantDesc": "Gelar kosong — pertarungan gelar berikutnya akan menentukan juara baru",
   // ---- LANGUAGE ----
   "LANG.en": "English", "LANG.id": "Bahasa Indonesia",
 };
