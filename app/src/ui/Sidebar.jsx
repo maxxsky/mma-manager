@@ -10,11 +10,12 @@ const NAV = [
   ["scout", "UI.scout", ICONS.scout],
   ["inbox", "UI.inbox", ICONS.inbox],
   ["finance", "UI.finance", ICONS.money],
+  ["promoters", "UI.promoters", ICONS.promoter],
   ["mgmt", "UI.facility", ICONS.facility],
   ["rivals", "UI.rivals", ICONS.rivals],
   ["achievements", "UI.achievements", ICONS.trophy],
   ["dynasty", "UI.dynasty", ICONS.crown],
-  ["world", "World", ICONS.cal],
+  ["world", "UI.world", ICONS.cal],
 ];
 
 function SidebarContent({ view, setView, onAdvance, inboxCount }) {
