@@ -131,6 +131,9 @@ const EN = {
   "UI.noEventsHint": "No events yet. Advance a week to start the journey.",
   "UI.allClearHint": "All clear — nothing needs attention right now.",
   "UI.expiresWeek": "expires this week",
+  "UI.world": "World",
+  "UI.undo": "↩ Undo",
+  "UI.newGame": "+New",
   // ---- Tier Descriptions ----
   "TIER.desc0": "Small local gym. Limited upgrades.",
   "TIER.desc1": "Well-known regional camp. More capacity & coaches.",
@@ -364,6 +367,9 @@ const ID = {
   "UI.noEventsHint": "Belum ada kejadian. Majukan minggu untuk memulai.",
   "UI.allClearHint": "Aman semua — tidak ada yang perlu perhatian.",
   "UI.expiresWeek": "kadaluarsa minggu ini",
+  "UI.world": "Dunia",
+  "UI.undo": "↩ Urungkan",
+  "UI.newGame": "+Baru",
   // ---- Tier Descriptions ----
   "TIER.desc0": "Gym kecil lingkungan. Upgrade terbatas.",
   "TIER.desc1": "Camp terkenal secara regional. Kapasitas & pelatih naik.",

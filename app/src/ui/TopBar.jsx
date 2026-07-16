@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { T, Icon, ICONS } from "./theme.jsx";
+import { t } from "../i18n/index.js";
 
 /** Determine flash direction from raw numeric comparison */
 export function flashDirection(prev, current) {
@@ -75,7 +76,7 @@ export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
       <div>
         <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 22,
           letterSpacing: .5, textTransform: "uppercase", color: T.txt,
-          lineHeight: 1 }}>{title || "Dashboard"}</div>
+          lineHeight: 1 }}>{title || t("UI.camp")}</div>
         {crumb && <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>{crumb}</div>}
         {version && <div style={{ fontFamily: T.mono, fontSize: 9, color: T.txt3, marginTop: 2, letterSpacing: 1 }}>{version}</div>}
       </div>
@@ -122,7 +123,7 @@ export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
                   style={{ fontFamily: T.mono, fontSize: 10, background: "transparent",
                     border: `1px solid ${T.line}`, borderRadius: T.r, color: T.txt3,
                     padding: "3px 8px", cursor: "pointer" }}>
-                  ↩ Undo
+                  {t("UI.undo")}
                 </button>
               )}
             {onNewGame && (
@@ -130,7 +131,7 @@ export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
                   style={{ fontFamily: T.mono, fontSize: 10, background: "transparent",
                     border: `1px solid ${T.neg}44`, borderRadius: T.r, color: T.neg,
                     padding: "3px 6px", cursor: "pointer" }}>
-                  +New
+                  {t("UI.newGame")}
                 </button>
               )}
               {extraRight}

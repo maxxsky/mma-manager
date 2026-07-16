@@ -92,7 +92,7 @@ export default function App() {
     dispatch({ type: "SCOUT", cost, fighter: f, report: makeReport(f, grade), grade, method: label, transferReason: label === "Diamond in the Rough" ? generateTransferReason(f) : undefined });
   };
 
-  const tabLabel = { dashboard: t("UI.camp"), roster: t("UI.roster"), rank: t("UI.rank"), scout: t("UI.scout"), inbox: `Inbox${g.inbox?.length ? ` ${g.inbox.length}` : ""}`, finance: "KEUANGAN", mgmt: t("UI.staff"), rivals: t("UI.rival"), achievements: "ACHIEVEMENTS", dynasty: "DYNASTY", world: "World" }[tab] || "Dashboard";
+  const tabLabel = { dashboard: t("UI.camp"), roster: t("UI.roster"), rank: t("UI.rank"), scout: t("UI.scout"), inbox: `${t("UI.inbox")}${g.inbox?.length ? ` ${g.inbox.length}` : ""}`, finance: t("UI.finance"), mgmt: t("UI.staff"), rivals: t("UI.rival"), achievements: t("UI.achievements"), dynasty: t("UI.dynasty"), world: t("UI.world") }[tab] || t("UI.camp");
 
   const tier = CAMP_TIERS[g.campTier || 0];
   const fightFighter = activeFight ? g.roster?.find((f) => f.id === activeFight) : null;
