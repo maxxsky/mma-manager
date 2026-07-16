@@ -307,7 +307,7 @@ export default function Rankings({ g, t }) {
         if (divRetired.length === 0) return null;
         return (
           <Panel style={{ marginTop: 12 }}>
-            <Eyebrow>{t("UI.retiredLegends") || "🎗️ Retired Legends"} — {selDiv}</Eyebrow>
+            <Eyebrow>{t("UI.retiredLegends")} — {selDiv}</Eyebrow>
             {divRetired.map((r, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: i < divRetired.length - 1 ? `1px solid ${T.line}22` : "none" }}>
                 <span style={{ fontFamily: T.mono, fontSize: 10, color: T.txt3, minWidth: 32 }}>W{r.week}</span>

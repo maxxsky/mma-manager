@@ -397,6 +397,7 @@ const EN = {
   "RNK.era": "The {0} Era — {1} defenses and counting",
   "RNK.vacant": "{0} — VACANT",
   "RNK.vacantDesc": "Title is vacant — next title fight will crown a new champion",
+  "UI.retiredLegends": "🎗️ Retired Legends",
   // ---- LANGUAGE ----
   "LANG.en": "English", "LANG.id": "Bahasa Indonesia",
 };
@@ -768,6 +769,7 @@ const ID = {
   "RNK.era": "Era {0} — {1} pertahanan dan terus bertambah",
   "RNK.vacant": "{0} — KOSONG",
   "RNK.vacantDesc": "Gelar kosong — pertarungan gelar berikutnya akan menentukan juara baru",
+  "UI.retiredLegends": "🎗️ Legenda Pensiun",
   // ---- LANGUAGE ----
   "LANG.en": "English", "LANG.id": "Bahasa Indonesia",
 };
