@@ -248,6 +248,11 @@ const EN = {
   "SCORE.td": "TD",
   // ---- ENTRANCE ----
   "ENTR.header": "Fighter Entrance",
+  // ---- KNOCKDOWN ----
+  "KO.overText": "It's over!",
+  "KO.finishAt": "{0} at round {1}!",
+  "KO.goesDown": "{0} goes down!",
+  "KO.seeResult": "See the result",
   // ---- LANGUAGE ----
   "LANG.en": "English", "LANG.id": "Bahasa Indonesia",
 };
@@ -470,6 +475,11 @@ const ID = {
   "SCORE.td": "TD",
   // ---- ENTRANCE ----
   "ENTR.header": "Pintu Masuk Petarung",
+  // ---- KNOCKDOWN ----
+  "KO.overText": "Sudah berakhir!",
+  "KO.finishAt": "{0} pada ronde {1}!",
+  "KO.goesDown": "{0} jatuh!",
+  "KO.seeResult": "Lihat hasil",
   // ---- LANGUAGE ----
   "LANG.en": "English", "LANG.id": "Bahasa Indonesia",
 };
