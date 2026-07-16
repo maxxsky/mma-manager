@@ -9,6 +9,7 @@ import { ATTRS, AMBITION_KEYS, PROMOTIONS } from "../engine/data.js";
 import { agentFor } from "../engine/fighter.js";
 import { setUID } from "../engine/rng.js";
 import { getPromotionsData } from "../engine/data/promotions.js";
+import { getTrainingCycle } from "../engine/training-philosophy.js";
 
 export function useSaveLoad(setG) {
   const [loaded, setLoaded] = useState(false);
@@ -65,6 +66,7 @@ export function useSaveLoad(setG) {
             f.firstFightWeek = f.firstFightWeek || null;
             f.reignHistory = f.reignHistory || [];
             if (f.booked && f.booked.seed == null) f.booked.seed = (Math.random() * 2**31) | 0;
+            if (f.lastReviewedPhase === undefined) f.lastReviewedPhase = getTrainingCycle(f).phase;
           });
           // Division champ field defaults
           Object.values(s.divisions || {}).forEach((d) => {

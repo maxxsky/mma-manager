@@ -1,12 +1,13 @@
 // Settlement domain — monthly finances, coach growth, sponsor offers, fighter requests
 import { RI, clamp, fmt$, uid, random } from "../rng.js";
-import { SPONSOR_BRANDS } from "../data.js";
+import { SPONSOR_BRANDS, TRAINING } from "../data.js";
 import { genCoach, weeklyFee } from "../fighter.js";
 import { rankOf } from "../rankings.js";
 import { tickRankings } from "./rankings.js";
 import { computeMonthlyIncome, computeMonthlyExpense, FACILITY_MAINT_RATE } from "../economy.js";
 import { pushInboxEvent } from "../events.js";
 import { rollAddTalent, rollDiscoverTalent, pushTalentDiscoveryEvent } from "../talentPool.js";
+import { getTrainingCycle, getDevelopmentPhilosophy } from "../training-philosophy.js";
 
 const SPONSOR_RENEWAL_WINDOW = 4; // settlement cycle tersisa sebelum kontrak berakhir, saat tawaran perpanjangan muncul
 
@@ -274,7 +275,33 @@ export function tickSettlement(g) {
         ],
       });
     }
-  });
+
+    // ── Training Review — nudge saat fase training berubah ke sesuatu actionable ──
+    if (!f.injury && !(f.booked && f.booked.weeksLeft <= 2)) {
+      const cycle = getTrainingCycle(f);
+      const actionablePhases = ["warning", "recovery", "refinement", "maintenance", "veteran"];
+      if (actionablePhases.includes(cycle.phase) && f.lastReviewedPhase !== cycle.phase) {
+        f.lastReviewedPhase = cycle.phase;
+        const philosophies = getDevelopmentPhilosophy(f);
+        const rec = (cycle.phase === "warning" || cycle.phase === "recovery")
+          ? "recovery"
+          : philosophies[0]?.rec;
+        const reason = philosophies[0]?.desc || cycle.desc;
+        const choices = [];
+        if (rec && rec !== f.training?.type) {
+          const recLabel = TRAINING[rec]?.label || rec;
+          choices.push({ label: `Ganti ke ${recLabel}`, applyTrainingRec: { fighterId: f.id, program: rec } });
+        }
+        choices.push({ label: "Pertahankan training sekarang", chem: 0 });
+        g.inbox.unshift({
+          id: uid(), type: "event",
+          title: `${cycle.icon} ${f.name}: ${cycle.label}`,
+          body: reason,
+          choices,
+        });
+      }
+    }
+  }); // closes g.roster.forEach
 
   // ── Hidden talent pool — generate from membership, discover by coach ──
   if (!g.talentPool) g.talentPool = [];

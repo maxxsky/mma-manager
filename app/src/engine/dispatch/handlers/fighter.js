@@ -108,4 +108,11 @@ export function registerFighterHandlers(register) {
     const f = g.roster.find((x) => x.id === c.upgradePromise?.fighterId);
     if (f) f.morale = clamp(f.morale + 4, 0, 100);
   });
+
+  register("applyTrainingRec", ({ g, c }) => {
+    const f = g.roster.find((x) => x.id === c.applyTrainingRec.fighterId);
+    if (!f) return;
+    f.training = { type: c.applyTrainingRec.program, intensity: f.training?.intensity || "Medium" };
+    g.log.unshift(`🎯 ${f.name} beralih ke training ${c.applyTrainingRec.program}.`);
+  });
 }
