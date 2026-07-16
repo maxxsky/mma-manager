@@ -16,9 +16,10 @@ export default function Finance({ g }) {
   const { sponsorAmt: sponsorIncome, fSponsor: popTotal, membershipRevenue,
     merchRevenue: merchTotal, championBonus } = computeMonthlyIncome(g);
   const { coachSal, maint, training, opCost, fighterSupport } = computeMonthlyExpense(g);
-  const feeTotal = g.roster.reduce((s, f) => s + weeklyFee(f) * 4, 0); // aspirational only
-
-  const totalIncome = sponsorIncome + popTotal + feeTotal + merchTotal + membershipRevenue;
+  // NOTE: weeklyFee()/feeTotal sengaja gak dipake di totalIncome — belum di-wire
+  // ke tickSettlement, jadi kalau ditampilin bikin Net/Month overstate.
+  // Lihat commit e1b6569 (debug panel) buat bukti gap-nya di save nyata.
+  const totalIncome = sponsorIncome + popTotal + merchTotal + membershipRevenue;
 
   // ── Expense breakdown ─────────────────────────────────────────
   const totalExpense = coachSal + maint + training + opCost + fighterSupport;
@@ -82,12 +83,6 @@ export default function Finance({ g }) {
           value={popTotal}
           color={T.pos}
           detail={`${g.roster.length} fighter${g.roster.length !== 1 ? "s" : ""}`}
-        />
-        <Row
-          label="Training Fees"
-          value={feeTotal}
-          color={T.pos}
-          detail="weekly fighter contributions"
         />
         <TotalRow label={t("UI.income") + " Total"} value={totalIncome} color={T.pos} />
 
@@ -239,12 +234,6 @@ export default function Finance({ g }) {
               total={totalIncome}
               color={T.pos}
             />
-            <SplitBar
-              label="Training Fees"
-              value={feeTotal}
-              total={totalIncome}
-              color={T.gold}
-            />
           </div>
         ) : (
           <div style={{ color: T.txt3, fontSize: 12 }}>{t("UI.noEventsHint")}</div>
@@ -379,9 +368,9 @@ function EconomyDebugPanel({ g }) {
   const expReal = computeMonthlyExpense(g);
   const netReal = incReal.total - expReal.total;
 
-  // Bandingin ke totalIncome versi lama (yang termasuk feeTotal palsu)
+  // Bandingin ke totalIncome versi lama (dulu termasuk feeTotal — sekarang fix)
   const feeTotal = g.roster.reduce((s, f) => s + weeklyFee(f) * 4, 0);
-  const displayedTotalIncome = incReal.sponsorAmt + incReal.fSponsor + feeTotal + incReal.merchRevenue + incReal.membershipRevenue;
+  const displayedTotalIncome = incReal.sponsorAmt + incReal.fSponsor + incReal.merchRevenue + incReal.membershipRevenue;
   const phantomGap = displayedTotalIncome - incReal.total;
 
   // Sponsor cliff check — hitung ulang tanpa sponsor, bandingin
