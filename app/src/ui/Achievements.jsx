@@ -1,5 +1,6 @@
 import React from "react";
 import { T, Panel, Eyebrow, Tag } from "./theme.jsx";
+import { t } from "../i18n/index.js";
 import { ACHIEVEMENTS } from "../engine/data.js";
 
 export default function Achievements({ g }) {
@@ -8,9 +9,9 @@ export default function Achievements({ g }) {
   return (
     <div style={{ display: "grid", gap: 12 }}>
       <Panel>
-        <Eyebrow color={T.gold}>Achievements</Eyebrow>
+        <Eyebrow color={T.gold}>{t("ACHV.header")}</Eyebrow>
         <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, marginBottom: 14 }}>
-          {unlocked.length} / {ACHIEVEMENTS.length} unlocked
+          {t("ACHV.progress").replace("{0}", unlocked.length).replace("{1}", ACHIEVEMENTS.length)}
         </div>
         <div style={{ display: "grid", gap: 8 }}>
           {ACHIEVEMENTS.map((a) => {

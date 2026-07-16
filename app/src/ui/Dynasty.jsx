@@ -1,5 +1,6 @@
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
+import { t } from "../i18n/index.js";
 import { fmt$ } from "../engine/rng.js";
 import { getCampDynasty, getCampIdentity, getWorldRecords, getGenerationalLinks } from "../engine/dynasty.js";
 
@@ -14,12 +15,12 @@ export default function Dynasty({ g }) {
     <div style={{ display: "grid", gap: 16 }}>
       {/* Camp Identity */}
       <Panel>
-        <Eyebrow color={T.gold}>Camp Identity</Eyebrow>
+        <Eyebrow color={T.gold}>{t("DYN.identity")}</Eyebrow>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
           {identity.length > 0 ? identity.map(id => (
             <Tag key={id.id} color={T.gold} solid>{id.label}</Tag>
           )) : (
-            <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt3 }}>Your camp's identity will emerge through results and achievements.</span>
+            <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt3 }}>{t("DYN.identityPlaceholder")}</span>
           )}
         </div>
         {identity.length > 0 && (
@@ -33,20 +34,20 @@ export default function Dynasty({ g }) {
 
       {/* Camp Dynasty Stats */}
       <Panel>
-        <Eyebrow color={T.gold}>Dynasty · Founded Week {dyn.foundedWeek}</Eyebrow>
+        <Eyebrow color={T.gold}>{t("DYN.founded").replace("{0}", dyn.foundedWeek)}</Eyebrow>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 16px" }}>
           {[
-            ["Fighters Developed", dyn.totalFightersEver],
-            ["Champions Produced", dyn.championsProduced],
-            ["World Champions", dyn.worldChampionsProduced],
-            ["Title Defenses", dyn.totalTitleDefenses],
-            ["Total Wins", dyn.totalWins],
-            ["Total Losses", dyn.totalLosses],
-            ["Total KOs", dyn.totalKOs],
-            ["Total Submissions", dyn.totalSubs],
-            ["Peak Reputation", dyn.peakRep],
-            ["Peak Legacy", fmt$(dyn.peakLegacy)],
-            ["Hall of Famers", dyn.hallOfFamers?.length || 0],
+            [t("DYN.stat.fightersDev"), dyn.totalFightersEver],
+            [t("DYN.stat.champsProd"), dyn.championsProduced],
+            [t("DYN.stat.worldChamps"), dyn.worldChampionsProduced],
+            [t("DYN.stat.titleDef"), dyn.totalTitleDefenses],
+            [t("DYN.stat.totalWins"), dyn.totalWins],
+            [t("DYN.stat.totalLosses"), dyn.totalLosses],
+            [t("DYN.stat.totalKOs"), dyn.totalKOs],
+            [t("DYN.stat.totalSubs"), dyn.totalSubs],
+            [t("DYN.stat.peakRep"), dyn.peakRep],
+            [t("DYN.stat.peakLegacy"), fmt$(dyn.peakLegacy)],
+            [t("DYN.stat.hallOfFamers"), dyn.hallOfFamers?.length || 0],
           ].map(([label, value]) => (
             <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.line}33` }}>
               <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt3 }}>{label}</span>
@@ -58,7 +59,7 @@ export default function Dynasty({ g }) {
 
       {/* World Records */}
       <Panel>
-        <Eyebrow color={T.ember}>World Records</Eyebrow>
+        <Eyebrow color={T.ember}>{t("DYN.worldRecords")}</Eyebrow>
         <div style={{ display: "grid", gap: 8 }}>
           {records.map(r => (
             <div key={r.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "8px 10px", background: T.bg, borderRadius: T.r }}>
@@ -74,10 +75,10 @@ export default function Dynasty({ g }) {
 
       {/* Hall of Fame */}
       <Panel>
-        <Eyebrow color={T.gold}>🏛️ Hall of Fame · {hof.length} Inductees</Eyebrow>
+        <Eyebrow color={T.gold}>{t("DYN.hallOfFame").replace("{0}", hof.length)}</Eyebrow>
         {hof.length === 0 ? (
           <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, textAlign: "center", padding: 20 }}>
-            No fighters have been inducted yet. Legends are forged through extraordinary careers.
+            {t("DYN.hofEmpty")}
           </div>
         ) : (
           <div style={{ display: "grid", gap: 8 }}>
@@ -86,7 +87,7 @@ export default function Dynasty({ g }) {
                 <span style={{ fontSize: 24 }}>🏆</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontFamily: T.disp, fontSize: 16, fontWeight: 700, color: T.gold, textTransform: "uppercase", letterSpacing: 1 }}>{h.name}</div>
-                  <div style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>{h.record} · {h.defenses} title defenses</div>
+                  <div style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>{h.record} · {t("DYN.titleDefenses").replace("{0}", h.defenses)}</div>
                   {h.highlights.length > 0 && (
                     <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
                       {h.highlights.map(hl => <Tag key={hl} color={T.ember}>{hl}</Tag>)}
@@ -103,7 +104,7 @@ export default function Dynasty({ g }) {
       {/* Generational Links */}
       {links.length > 0 && (
         <Panel>
-          <Eyebrow color={T.steel}>Generational Legacy</Eyebrow>
+          <Eyebrow color={T.steel}>{t("DYN.generationalLegacy")}</Eyebrow>
           {links.map((l, i) => (
             <div key={i} style={{ fontFamily: T.body, fontSize: 13, color: T.txt2, padding: "6px 0", fontStyle: "italic", borderBottom: i < links.length - 1 ? `1px solid ${T.line}33` : "none" }}>
               {l.text}
@@ -122,7 +123,7 @@ export default function Dynasty({ g }) {
         if (ranked.length === 0) return null;
         return (
           <Panel>
-            <Eyebrow color={T.ember}>Regional Power Rankings</Eyebrow>
+            <Eyebrow color={T.ember}>{t("DYN.regionalPower")}</Eyebrow>
             <div style={{ display: "grid", gap: 6 }}>
               {ranked.map(([region, stats], i) => (
                 <div key={region} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", background: T.bg, borderRadius: T.r }}>
@@ -132,7 +133,7 @@ export default function Dynasty({ g }) {
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <div style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 700, color: T.gold }}>{stats.championsProduced} 👑</div>
-                    <div style={{ fontFamily: T.mono, fontSize: 10, color: T.txt3 }}>{stats.totalFighters} fighters</div>
+                    <div style={{ fontFamily: T.mono, fontSize: 10, color: T.txt3 }}>{t("DYN.fighters").replace("{0}", stats.totalFighters)}</div>
                   </div>
                 </div>
               ))}

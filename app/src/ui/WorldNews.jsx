@@ -1,6 +1,7 @@
 // World News — tab dedicated to simulation world events (title changes, streaks, retirements)
 import React from "react";
 import { T, Panel, Eyebrow } from "./theme.jsx";
+import { t } from "../i18n/index.js";
 
 export default function WorldNews({ g }) {
   const worldEvents = g.inbox?.filter((m) => m.type === "world") || [];
@@ -8,9 +9,9 @@ export default function WorldNews({ g }) {
     return (
       <Panel style={{ textAlign: "center", padding: "40px 20px" }}>
         <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.6 }}>🌍</div>
-        <Eyebrow>World News</Eyebrow>
+        <Eyebrow>{t("WN.header")}</Eyebrow>
         <div style={{ fontSize: 13, color: T.txt3 }}>
-          No world events yet. Advance the week to see simulation news.
+          {t("WN.empty")}
         </div>
       </Panel>
     );
@@ -21,7 +22,7 @@ export default function WorldNews({ g }) {
 
   return (
     <div>
-      <Eyebrow color={T.gold}>🌍 World News</Eyebrow>
+      <Eyebrow color={T.gold}>🌍 {t("WN.header")}</Eyebrow>
       <div style={{ display: "grid", gap: 8 }}>
         {sorted.map((m, i) => {
           const isMajor = m.severity === "major";
