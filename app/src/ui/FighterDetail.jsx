@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { fmt$ } from "../engine/rng.js";
 import { ARCH_COLOR, TRAINING, INTENSITY, TRAITS } from "../engine/data.js";
 import { avgSkill } from "../engine/fighter.js";
@@ -13,6 +13,13 @@ import { t } from "../i18n/index.js";
 
 export default function FighterDetail({ f, g, onBack, up, dispatch }) {
   const ac = ARCH_COLOR[f.archetype];
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
   const groups = [
     ["ATTR.striking", [["striking", "ATTR.striking"], ["footwork", "ATTR.footwork"]]],
     ["FIGHTER.groupGrappling", [["wrestling", "ATTR.wrestling"], ["bjj", "ATTR.bjj"]]],
@@ -316,6 +323,32 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
         {f.fightHistory?.length > 0 && (
           <Panel style={{ gridColumn: "span 2" }}>
             <Eyebrow>{t("FIGHTER.fightHistory")}</Eyebrow>
+            {isMobile ? (
+              <div style={{ display: "grid", gap: 2 }}>
+                {[...f.fightHistory].reverse().slice(0, 10).map((h, i) => (
+                  <div key={i} style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    padding: "6px 4px", borderBottom: `1px solid ${T.line}22`,
+                  }}>
+                    <span style={{
+                      fontFamily: T.disp, fontWeight: 700, fontSize: 13,
+                      color: h.result === "W" ? T.pos : T.neg, minWidth: 16,
+                    }}>
+                      {h.result === "W" ? "W" : "L"}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {h.opponent} · {h.method} R{h.round}
+                      </div>
+                      <div style={{ fontFamily: T.body, fontSize: 10, color: T.txt3, marginTop: 1 }}>
+                        {h.tier} · {t("UI.week")} {h.week}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+            <>
             <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 90px 70px 90px 60px",
               padding: "0 4px 6px", borderBottom: `1px solid ${T.line}` }}>
               {["", t("UI.opponent"), t("FIGHTER.method"), t("SCORE.round"), t("UI.tier"), t("UI.week")].map((c, i) => (
@@ -336,6 +369,8 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
                 <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: T.pos }}>{h.week}</span>
               </div>
             ))}
+            </>
+            )}
           </Panel>
         )}
 
