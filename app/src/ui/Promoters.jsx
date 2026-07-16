@@ -9,10 +9,10 @@ export default function Promoters({ g }) {
   const promos = g.promotions || [];
 
   // Check if any fighter fought at a given tier in the last 12 weeks
+  // Mirrors settlement.js decay logic: g.log contains tier references
   const hasRecentActivity = (tier) => {
-    const cutoff = g.week - 12;
     return g.roster?.some((f) =>
-      f.fightHistory?.some((h) => h.tier === tier && (h.week || 0) >= cutoff)
+      f.lastFightWeek && g.week - f.lastFightWeek <= 12 && g.log?.some((l) => l.includes(tier))
     ) ?? false;
   };
 
