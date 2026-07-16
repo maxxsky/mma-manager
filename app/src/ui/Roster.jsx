@@ -30,7 +30,6 @@ export default function Roster({ g, setTab, dispatch }) {
   const keys = ["striking", "wrestling", "bjj", "footwork", "strength", "cardio", "chin", "fightIQ"];
 
   return isMobile ? (
-    {/* ── Mobile: stacked cards ── */}
     <div style={{ display: "grid", gap: 10 }}>
       {g.roster.map((f) => {
         const ac = ARCH_COLOR[f.archetype];
@@ -103,7 +102,6 @@ export default function Roster({ g, setTab, dispatch }) {
       })}
     </div>
   ) : (
-    {/* ── Desktop: table ── */}
     <Panel pad={0} style={{ overflow: "hidden" }} role="table" aria-label="Fighter roster table">
       <div style={{ overflowX: "auto" }}>
         <div role="row" style={{ display: "grid",
