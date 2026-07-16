@@ -9,19 +9,20 @@ import { getPublicOpinion } from "../engine/publicOpinion.js";
 import { getTrainingCycle, getCoachRecommendation, getDevelopmentPhilosophy, getTrainingIdentity, saveLastTraining } from "../engine/training-philosophy.js";
 import { getCoachArchetypeSynergy, getFightStyleSummary, getArchetypeBehavior } from "../engine/archetype-expression.js";
 import { T, Panel, Eyebrow, Tag, Btn, Ovr, Mono, AttrTele, Meter, OctaRadar, Icon, ICONS, heat } from "./theme.jsx";
+import { t } from "../i18n/index.js";
 
 export default function FighterDetail({ f, g, onBack, up, dispatch }) {
   const ac = ARCH_COLOR[f.archetype];
   const groups = [
-    ["Striking", [["striking", "Striking"], ["footwork", "Footwork"]]],
-    ["Grappling", [["wrestling", "Wrestling"], ["bjj", "BJJ"]]],
-    ["Physical", [["strength", "Strength"], ["cardio", "Cardio"]]],
-    ["Durability & Mind", [["chin", "Chin"], ["fightIQ", "Fight IQ"]]],
+    ["ATTR.striking", [["striking", "ATTR.striking"], ["footwork", "ATTR.footwork"]]],
+    ["FIGHTER.groupGrappling", [["wrestling", "ATTR.wrestling"], ["bjj", "ATTR.bjj"]]],
+    ["FIGHTER.groupPhysical", [["strength", "ATTR.strength"], ["cardio", "ATTR.cardio"]]],
+    ["FIGHTER.groupDurability", [["chin", "ATTR.chin"], ["fightIQ", "ATTR.fightIQ"]]],
   ];
 
   return (
     <div>
-      {onBack && <Btn sm ghost onClick={onBack} style={{ marginBottom: 14 }}>← Back to Roster</Btn>}
+      {onBack && <Btn sm ghost onClick={onBack} style={{ marginBottom: 14 }}>{t("FIGHTER.backRoster")}</Btn>}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 16 }}>
         {/* identity header spans full width */}
         <Panel style={{ gridColumn: "span 2" }}>
@@ -53,14 +54,14 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
         <Panel>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 210px", gap: 24, alignItems: "start" }}>
             <div>
-              <Eyebrow>Attributes · value / ceiling</Eyebrow>
+              <Eyebrow>{t("FIGHTER.attrsHeader")}</Eyebrow>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 22px" }}>
                 {groups.map(([gn, rows]) => (
                   <div key={gn} style={{ marginBottom: 10 }}>
                     <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1.2,
                       textTransform: "uppercase", color: ac, marginBottom: 6,
-                      paddingBottom: 4, borderBottom: `1px solid ${T.line}` }}>{gn}</div>
-                    {rows.map(([k, lb]) => <AttrTele key={k} label={lb} v={Math.round(f.attrs[k])} ceil={f.ceilings[k]} />)}
+                      paddingBottom: 4, borderBottom: `1px solid ${T.line}` }}>{t(gn)}</div>
+                    {rows.map(([k, lb]) => <AttrTele key={k} label={t(lb)} v={Math.round(f.attrs[k])} ceil={f.ceilings[k]} />)}
                   </div>
                 ))}
               </div>
@@ -68,14 +69,14 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 8 }}>
               <OctaRadar attrs={f.attrs} color={ac} />
               <div style={{ fontFamily: T.body, fontSize: 10, color: T.txt3, letterSpacing: 1,
-                textTransform: "uppercase", marginTop: 4 }}>Fight profile</div>
+                textTransform: "uppercase", marginTop: 4 }}>{t("FIGHTER.fightProfile")}</div>
             </div>
           </div>
         </Panel>
 
         {/* right: traits / ambition / contract / condition */}
         <Panel>
-          <Eyebrow>Profile</Eyebrow>
+          <Eyebrow>{t("FIGHTER.profile")}</Eyebrow>
           <div style={{ marginBottom: 14 }}>
             {f.traits?.map((t) => (
               <Tag key={t} color={t.includes("Glass") || t.includes("Chinny") ? T.neg : T.ember} title={TRAITS[t] || ""}>{t}</Tag>
@@ -86,7 +87,7 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
               background: T.bg, borderRadius: T.r, marginBottom: 16 }}>
               <span style={{ color: T.gold, display: "flex" }}><Icon d={ICONS.rank} size={15} /></span>
               <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt2 }}>
-                Ambition: <b style={{ color: T.gold }}>{f.ambition}</b></span>
+                {t("FIGHTER.ambition")} <b style={{ color: T.gold }}>{f.ambition}</b></span>
             </div>
           )}
           {/* Lifecycle phase */}
@@ -101,10 +102,10 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
           {/* Reign history */}
           {f.reignHistory && f.reignHistory.length > 0 && (
             <div style={{ marginBottom: 12 }}>
-              <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: T.gold, marginBottom: 4 }}>Title Reigns</div>
+              <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: T.gold, marginBottom: 4 }}>{t("FIGHTER.titleReigns")}</div>
               {f.reignHistory.map((r, i) => (
                 <div key={i} style={{ fontFamily: T.body, fontSize: 11, color: T.txt2, marginBottom: 2 }}>
-                  👑 {r.weightClass} — sejak minggu {r.wonWeek}
+                  {t("FIGHTER.reignLine").replace("{0}", r.weightClass).replace("{1}", r.wonWeek)}
                 </div>
               ))}
             </div>
@@ -139,34 +140,34 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
           </div>
           {f.contract && (
             <>
-              <Eyebrow>Contract</Eyebrow>
+              <Eyebrow>{t("FIGHTER.contract")}</Eyebrow>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                {[[`Manager cut`, Math.round(f.contract.managerCut * 100) + "%"],
-                  [`Fights left`, `${f.contract.fightsLeft}/${f.contract.fightsTotal}`],
-                  [`Duration`, f.contract.durationMo + " mo"],
-                  [`Agent`, f.agent || "None"]].map(([l, v]) => (
+                {[[t("FIGHTER.managerCut"), Math.round(f.contract.managerCut * 100) + "%"],
+                  [t("FIGHTER.fightsLeft"), `${f.contract.fightsLeft}/${f.contract.fightsTotal}`],
+                  [t("FIGHTER.duration"), f.contract.durationMo + " mo"],
+                  [t("FIGHTER.agent"), f.agent || t("FIGHTER.agentNone")]].map(([l, v], i) => (
                   <div key={l} style={{ background: T.bg, borderRadius: T.r, padding: "8px 10px" }}>
                     <div style={{ fontFamily: T.body, fontSize: 9, letterSpacing: 1, textTransform: "uppercase",
                       color: T.txt3 }}>{l}</div>
                     <div style={{ fontFamily: T.mono, fontSize: 14, fontWeight: 700,
-                      color: l === "Fights left" && f.contract.fightsLeft <= 1 ? T.neg : T.txt }}>{v}</div>
+                      color: i === 1 && f.contract.fightsLeft <= 1 ? T.neg : T.txt }}>{v}</div>
                   </div>
                 ))}
               </div>
               {dispatch && (
                 <Btn sm ghost style={{ marginTop: 8, width: "100%" }}
                   onClick={() => dispatch({ type: "SIGN_CONTRACT_PRE", mode: "extend", fighterId: f.id, fighter: f })}>
-                  Perpanjang Kontrak
+                  {t("FIGHTER.extendContract")}
                 </Btn>
               )}
               {f.titles?.includes("Major World Champion") && g.divisions?.[f.weightClass]?.champ?.fighterId === f.id && (
                 <Btn sm ghost color={T.neg} style={{ marginTop: 8, width: "100%" }}
                   onClick={() => {
-                    if (window.confirm(`Yakin mau vacate title ${f.weightClass}? ${f.name} akan kehilangan gelar juara.`)) {
+                    if (window.confirm(t("FIGHTER.vacateConfirm").replace("{0}", f.weightClass).replace("{1}", f.name))) {
                       dispatch({ type: "VACATE_TITLE", fighterId: f.id });
                     }
                   }}>
-                  Vacate Title
+                  {t("FIGHTER.vacateTitle")}
                 </Btn>
               )}
               {f.promotionContract && f.promotionContract.fightsLeft > 0 && (() => {
@@ -174,9 +175,9 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
                 if (!prom) return null;
                 return (
                   <div style={{ marginTop: 8, padding: "8px 10px", background: T.bg, borderRadius: T.r, border: `1px solid ${T.steel}44` }}>
-                    <div style={{ fontFamily: T.body, fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: T.steel }}>Exclusive to</div>
+                    <div style={{ fontFamily: T.body, fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: T.steel }}>{t("FIGHTER.exclusiveTo")}</div>
                     <div style={{ fontFamily: T.body, fontSize: 13, fontWeight: 600, color: T.txt }}>{prom.name}</div>
-                    <div style={{ fontFamily: T.mono, fontSize: 11, color: T.txt3 }}>{f.promotionContract.fightsLeft}/{f.promotionContract.fightsTotal} fights remaining</div>
+                    <div style={{ fontFamily: T.mono, fontSize: 11, color: T.txt3 }}>{t("FIGHTER.fightsRemaining").replace("{0}", f.promotionContract.fightsLeft).replace("{1}", f.promotionContract.fightsTotal)}</div>
                   </div>
                 );
               })()}
@@ -187,7 +188,7 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
             const top = sorted[0];
             return (
               <div style={{ marginTop: 12 }}>
-                <Eyebrow>Rivalries</Eyebrow>
+                <Eyebrow>{t("FIGHTER.rivalries")}</Eyebrow>
                 <div style={{ display: "grid", gap: 6 }}>
                   {sorted.slice(0, 5).map(([name, r]) => {
                     const isCareerRival = top && name === top[0] && sorted.length > 1 && r.count >= 2;
@@ -197,7 +198,7 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
                         <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt, flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
                         <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: r.wins > r.losses ? T.pos : r.losses > r.wins ? T.neg : T.txt2 }}>{r.wins}-{r.losses}</span>
                         <span style={{ fontFamily: T.mono, fontSize: 11, color: T.txt3 }}>{"🔥".repeat(intensity)}{"💧".repeat(3 - intensity)}</span>
-                        {isCareerRival && <span style={{ fontFamily: T.mono, fontSize: 8, fontWeight: 700, letterSpacing: 0.5, color: T.ember, padding: "1px 5px", borderRadius: T.r, border: `1px solid ${T.ember}44`, background: `${T.ember}10` }}>CAREER RIVAL</span>}
+                        {isCareerRival && <span style={{ fontFamily: T.mono, fontSize: 8, fontWeight: 700, letterSpacing: 0.5, color: T.ember, padding: "1px 5px", borderRadius: T.r, border: `1px solid ${T.ember}44`, background: `${T.ember}10` }}>{t("FIGHTER.careerRival")}</span>}
                       </div>
                     );
                   })}
@@ -209,7 +210,7 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
 
         {/* Training assignment */}
         <Panel style={{ gridColumn: "span 2" }}>
-          <Eyebrow color={T.ember}>Training</Eyebrow>
+          <Eyebrow color={T.ember}>{t("FIGHTER.training")}</Eyebrow>
             {/* Training Cycle */}
             {(() => {
               const cycle = getTrainingCycle(f);
@@ -240,8 +241,8 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
               return (
                 <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
                   <Tag color={ac} solid>{style.style}</Tag>
-                  {style.isFinisher && <Tag color={T.ember}>Finisher</Tag>}
-                  {style.isGrinder && <Tag color={T.steel}>Decision Machine</Tag>}
+                  {style.isFinisher && <Tag color={T.ember}>{t("FIGHTER.finisher")}</Tag>}
+                  {style.isGrinder && <Tag color={T.steel}>{t("FIGHTER.decisionMachine")}</Tag>}
                 </div>
               );
             })()}
@@ -271,7 +272,7 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
           <div style={{ display: "flex", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 300 }}>
               <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1,
-                textTransform: "uppercase", color: T.txt3, marginBottom: 8 }}>Program</div>
+                textTransform: "uppercase", color: T.txt3, marginBottom: 8 }}>{t("FIGHTER.program")}</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {Object.entries(TRAINING).map(([k, v]) => {
                   const active = f.booked ? k === "fightcamp" : f.training?.type === k;
@@ -290,7 +291,7 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
             </div>
             <div style={{ minWidth: 140 }}>
               <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1,
-                textTransform: "uppercase", color: T.txt3, marginBottom: 8 }}>Intensity</div>
+                textTransform: "uppercase", color: T.txt3, marginBottom: 8 }}>{t("FIGHTER.intensity")}</div>
               <div style={{ display: "flex", gap: 4 }}>
                 {Object.entries(INTENSITY).map(([k, v]) => {
                   const active = f.training?.intensity === k;
@@ -312,10 +313,10 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
         {/* fight history table full width */}
         {f.fightHistory?.length > 0 && (
           <Panel style={{ gridColumn: "span 2" }}>
-            <Eyebrow>Fight history</Eyebrow>
+            <Eyebrow>{t("FIGHTER.fightHistory")}</Eyebrow>
             <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 90px 70px 90px 60px",
               padding: "0 4px 6px", borderBottom: `1px solid ${T.line}` }}>
-              {["", "Opponent", "Method", "Round", "Tier", "Perf"].map((c, i) => (
+              {["", t("UI.opponent"), t("FIGHTER.method"), t("SCORE.round"), t("UI.tier"), t("FIGHTER.perf")].map((c, i) => (
                 <span key={i} style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1,
                   textTransform: "uppercase", color: T.txt3 }}>{c}</span>
               ))}
@@ -347,10 +348,10 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
             if (Math.abs(d) > 0.5) deltas.push({ key: k, delta: d, now: Math.round(f.attrs[k] || 0), ceil: f.ceilings?.[k] || 99 });
           }
           if (deltas.length === 0) return null;
-          const labels = { striking: "Striking", wrestling: "Wrestling", bjj: "BJJ", footwork: "Footwork", strength: "Strength", cardio: "Cardio", chin: "Chin", fightIQ: "Fight IQ" };
+          const labels = { striking: t("ATTR.striking"), wrestling: t("ATTR.wrestling"), bjj: t("ATTR.bjj"), footwork: t("ATTR.footwork"), strength: t("ATTR.strength"), cardio: t("ATTR.cardio"), chin: t("ATTR.chin"), fightIQ: t("ATTR.fightIQ") };
           return (
             <Panel style={{ gridColumn: "span 2" }}>
-              <Eyebrow color={T.pos}>Progress ({weeks} weeks)</Eyebrow>
+              <Eyebrow color={T.pos}>{t("FIGHTER.progress").replace("{0}", weeks)}</Eyebrow>
               <div style={{ display: "grid", gap: 6 }}>
                 {deltas.map(({ key, delta, now, ceil }) => {
                   const pct = Math.round((now / ceil) * 100);
@@ -365,7 +366,7 @@ export default function FighterDetail({ f, g, onBack, up, dispatch }) {
                         <div style={{ height: "100%", width: `${pct}%`, background: pct >= 90 ? T.gold : pct >= 70 ? T.pos : T.steel, borderRadius: 3 }} />
                       </div>
                       <span style={{ fontFamily: T.mono, fontSize: 11, color: T.txt2, minWidth: 44 }}>{now}/{ceil}</span>
-                      {plateau && <Tag color={T.warn}>Plateau</Tag>}
+                      {plateau && <Tag color={T.warn}>{t("FIGHTER.plateau")}</Tag>}
                     </div>
                   );
                 })}
