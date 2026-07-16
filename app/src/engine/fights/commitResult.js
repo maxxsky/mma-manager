@@ -86,6 +86,9 @@ export function commitFightResult(g, fighter, result) {
     g.log.unshift(`🏆 ${f.name} menang via ${result.how} R${result.r}!`);
 
     const oppName = fighter.booked?.opponent?.name || "Unknown";
+    if (!f.fightHistory) f.fightHistory = [];
+    f.fightHistory.push({ result: "W", opponent: oppName, method: result.how, round: result.r, tier: fighter.booked?.tier || "Local", week: g.week });
+    if (f.fightHistory.length > 30) f.fightHistory.shift();
     const careerEvents = processFightResult(f, g, { won: true, how: result.how });
     const rivalryEvents = processRivalry(f, { name: oppName }, g);
     updateRivalryResult(f, { name: oppName, rivalries: {} }, g);
@@ -179,6 +182,9 @@ export function commitFightResult(g, fighter, result) {
     g.log.unshift(`❌ ${f.name} kalah via ${result.how} R${result.r}.`);
 
     const oppName = fighter.booked?.opponent?.name || "Unknown";
+    if (!f.fightHistory) f.fightHistory = [];
+    f.fightHistory.push({ result: "L", opponent: oppName, method: result.how, round: result.r, tier: fighter.booked?.tier || "Local", week: g.week });
+    if (f.fightHistory.length > 30) f.fightHistory.shift();
     const careerEvents = processFightResult(f, g, { won: false, how: result.how });
     updateRivalryResult({ name: oppName, rivalries: {} }, f, g);
     careerEvents.forEach((ev) => {
