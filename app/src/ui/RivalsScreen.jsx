@@ -1,6 +1,7 @@
 import { fmt$ } from "../engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
+import { t } from "../i18n/index.js";
 import { ARCH_COLOR, RIVAL_TRAITS, CAMP_TIERS } from "../engine/data.js";
 import { getCampLifecycleLabel } from "../engine/shadow-ai.js";
 import { avgSkill, tierOf } from "../engine/fighter.js";
@@ -16,9 +17,9 @@ export default function RivalsScreen({ g, dispatch }) {
     return (
       <Panel style={{ textAlign: "center", padding: "40px 20px" }}>
         <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.6 }}>⚔️</div>
-        <Eyebrow>No Rivals</Eyebrow>
+        <Eyebrow>{t("RIVAL.empty")}</Eyebrow>
         <div style={{ fontSize: 13, color: T.txt3 }}>
-          The MMA scene is quiet. Advance the week for rival camps to emerge.
+          {t("RIVAL.emptyHint")}
         </div>
       </Panel>
     );
@@ -26,10 +27,9 @@ export default function RivalsScreen({ g, dispatch }) {
 
   return (
     <div>
-      <Eyebrow color={T.gold}>⚔️ Rival Camps · MMA Landscape</Eyebrow>
+      <Eyebrow color={T.gold}>{t("RIVAL.header")}</Eyebrow>
       <div style={{ color: T.txt3, fontSize: 12, marginBottom: 16, lineHeight: 1.5 }}>
-        Rival camps recruit, fight, and can threaten your camp's stability through
-        poaching. Monitor their growth and strike when the time is right.
+        {t("RIVAL.intro")}
       </div>
 
       {g.rivals.map((rc) => (
@@ -52,10 +52,10 @@ function RivalCard({ rc, g, dispatch }) {
   };
 
   const rivalryLabels = {
-    hostile: "Hostile",
-    heated: "Heated",
-    cool: "Cool",
-    cold: "Neutral",
+    hostile: t("RIVAL.label.hostile"),
+    heated: t("RIVAL.label.heated"),
+    cool: t("RIVAL.label.cool"),
+    cold: t("RIVAL.label.cold"),
   };
 
   const accentColor = rivalryColors[rivalryLevel];
@@ -133,10 +133,10 @@ function RivalCard({ rc, g, dispatch }) {
           borderBottom: `1px solid ${T.line}33`,
         }}
       >
-        <MiniStat label="Rep" value={Math.round(rc.rep)} color={T.txt} />
-        <MiniStat label="Fighters" value={rc.fighters.length} color={T.txt} />
-        <MiniStat label="Coaches" value={rc.coaches.length} color={T.txt} />
-        <MiniStat label="Chemistry" value={Math.round(rc.chemistry)} color={T.steel} />
+        <MiniStat label={t("RIVAL.stat.rep")} value={Math.round(rc.rep)} color={T.txt} />
+        <MiniStat label={t("RIVAL.stat.fighters")} value={rc.fighters.length} color={T.txt} />
+        <MiniStat label={t("RIVAL.stat.coaches")} value={rc.coaches.length} color={T.txt} />
+        <MiniStat label={t("RIVAL.stat.chemistry")} value={Math.round(rc.chemistry)} color={T.steel} />
         {(() => { const life = getCampLifecycleLabel(rc); return <div style={{ marginTop: 6 }}><Tag color={life.color}>{life.icon} {life.label}</Tag></div>; })()}
       </div>
 
@@ -156,12 +156,12 @@ function RivalCard({ rc, g, dispatch }) {
           }}
         >
           {rc.rivalry > 60
-            ? `🔥 ${rc.name} is a sworn enemy. Their fighters target yours and they actively try to poach talent. Every interaction escalates the conflict.`
+            ? t("RIVAL.story.hostile").replace("{0}", rc.name)
             : rc.rivalry > 30
-              ? `⚠ Tensions are rising with ${rc.name}. Failed poach attempts and fight results have strained relations.`
+              ? t("RIVAL.story.heated").replace("{0}", rc.name)
               : rc.rivalry > 10
-                ? `There's a competitive edge with ${rc.name}. Nothing serious yet, but worth watching.`
-                : `${rc.name} is a neutral camp. No significant history between you.`}
+                ? t("RIVAL.story.cool").replace("{0}", rc.name)
+                : t("RIVAL.story.cold").replace("{0}", rc.name)}
         </div>
       )}
 
@@ -177,10 +177,10 @@ function RivalCard({ rc, g, dispatch }) {
             marginBottom: 6,
           }}
         >
-          Top Fighters
+          {t("RIVAL.topFighters")}
         </div>
         {topFighters.length === 0 ? (
-          <div style={{ color: T.txt3, fontSize: 11 }}>No fighters in camp.</div>
+          <div style={{ color: T.txt3, fontSize: 11 }}>{t("RIVAL.noFighters")}</div>
         ) : (
           topFighters.map((f) => {
             const archColor = ARCH_COLOR[f.archetype] || T.steel;
@@ -227,8 +227,7 @@ function RivalCard({ rc, g, dispatch }) {
       {/* Full roster count if more than 3 */}
       {rc.fighters.length > 3 && (
         <div style={{ fontSize: 10, color: T.txt3, marginBottom: 12 }}>
-          +{rc.fighters.length - 3} more fighter
-          {rc.fighters.length - 3 !== 1 ? "s" : ""} in camp
+          {t("RIVAL.moreFighters").replace("{0}", rc.fighters.length - 3).replace("{1}", rc.fighters.length - 3 !== 1 ? "s" : "")}
         </div>
       )}
 
@@ -250,12 +249,12 @@ function RivalCard({ rc, g, dispatch }) {
             marginBottom: 8,
           }}
         >
-          🦅 Poach Fighter
+          🦅 {t("RIVAL.poachHeader")}
         </div>
 
         {poachTargets.length === 0 ? (
           <div style={{ color: T.txt3, fontSize: 11 }}>
-            No viable targets — all fighters are injured or booked.
+            {t("RIVAL.noTargets")}
           </div>
         ) : (
           poachTargets
@@ -294,7 +293,7 @@ function RivalCard({ rc, g, dispatch }) {
                       </span>
                     </div>
                     <div style={{ fontSize: 10, color: T.txt3, marginTop: 2 }}>
-                      OVR {Math.round(avgSkill(target))} · Chance:{" "}
+                      {t("UI.overall")} {Math.round(avgSkill(target))} · {t("RIVAL.chance")}{" "}
                       <span
                         style={{
                           color:
@@ -308,7 +307,7 @@ function RivalCard({ rc, g, dispatch }) {
                       >
                         {Math.round(successChance)}%
                       </span>
-                      {" · "}Success: {fmt$(cost)} · Fail: -{fmt$(failCost)}
+                      {" · "}{t("RIVAL.success")} {fmt$(cost)} · {t("RIVAL.fail")} -{fmt$(failCost)}
                     </div>
                   </div>
                   <Btn
@@ -320,10 +319,10 @@ function RivalCard({ rc, g, dispatch }) {
                     }
                     title={
                       !hasSpace
-                        ? "Roster full"
+                        ? t("RIVAL.tooltip.rosterFull")
                         : !canAfford
-                          ? `Need ${fmt$(cost)}`
-                          : `Success: ${fmt$(cost)} · Fail: -${fmt$(failCost)} (20%) · Chance: ${Math.round(successChance)}%`
+                          ? t("RIVAL.tooltip.need").replace("{0}", fmt$(cost))
+                          : t("RIVAL.tooltip.detail").replace("{0}", fmt$(cost)).replace("{1}", fmt$(failCost)).replace("{2}", Math.round(successChance))
                     }
                   >
                     🦅 {fmt$(cost)}
