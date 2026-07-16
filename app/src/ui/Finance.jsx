@@ -251,6 +251,9 @@ export default function Finance({ g }) {
         )}
       </Panel>
 
+      {/* ── DEBUG — Economy Ground Truth ── */}
+      <EconomyDebugPanel g={g} />
+
       {/* ── EXPENSE SPLIT VISUAL ──────────────────────────────── */}
       <Panel>
         <Eyebrow color={T.txt2}>{t("UI.expenseSplit")}</Eyebrow>
@@ -367,5 +370,61 @@ function SplitBar({ label, value, total, color }) {
         />
       </div>
     </div>
+  );
+}
+
+function EconomyDebugPanel({ g }) {
+  // Ground truth — persis yang dipakai tickSettlement buat motong g.cash
+  const incReal = computeMonthlyIncome(g);
+  const expReal = computeMonthlyExpense(g);
+  const netReal = incReal.total - expReal.total;
+
+  // Bandingin ke totalIncome versi lama (yang termasuk feeTotal palsu)
+  const feeTotal = g.roster.reduce((s, f) => s + weeklyFee(f) * 4, 0);
+  const displayedTotalIncome = incReal.sponsorAmt + incReal.fSponsor + feeTotal + incReal.merchRevenue + incReal.membershipRevenue;
+  const phantomGap = displayedTotalIncome - incReal.total;
+
+  // Sponsor cliff check — hitung ulang tanpa sponsor, bandingin
+  const incNoSponsor = computeMonthlyIncome({ ...g, sponsors: [] });
+  const sponsorDelta = incReal.sponsorAmt - incNoSponsor.sponsorAmt;
+
+  return (
+    <Panel style={{ marginBottom: 14, border: `1px dashed ${T.warn}` }}>
+      <Eyebrow color={T.warn}>⚠️ DEBUG — Economy Ground Truth (hapus setelah verifikasi)</Eyebrow>
+
+      <div style={{ fontSize: 11, color: T.txt3, marginBottom: 8 }}>
+        Angka di bawah dihitung langsung dari computeMonthlyIncome/computeMonthlyExpense —
+        ini yang BENERAN dipakai tickSettlement buat motong cash.
+      </div>
+
+      <Row label="REAL total income" value={incReal.total} color={T.pos} />
+      <Row label="REAL total expense" value={expReal.total} color={T.neg} />
+      <Row label="REAL net/month" value={netReal} color={netReal >= 0 ? T.pos : T.neg} />
+
+      <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${T.line}` }} />
+
+      <Row
+        label="Displayed totalIncome (Finance tab lama)"
+        value={displayedTotalIncome}
+        color={T.txt2}
+      />
+      <Row
+        label="Phantom gap (feeTotal yang gak pernah masuk cash)"
+        value={phantomGap}
+        color={phantomGap > 0 ? T.neg : T.txt2}
+        detail={phantomGap > 0 ? "⚠️ Finance tab OVERSTATE income sebesar ini" : "aman"}
+      />
+
+      <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${T.line}` }} />
+
+      <Row label="sponsorAmt SEKARANG (dengan sponsor aktif)" value={incReal.sponsorAmt} color={T.txt} />
+      <Row label="sponsorAmt KALAU sponsor dilepas semua" value={incNoSponsor.sponsorAmt} color={T.txt2} />
+      <Row
+        label="Delta sponsor"
+        value={sponsorDelta}
+        color={sponsorDelta < 0 ? T.neg : T.pos}
+        detail={sponsorDelta < 0 ? "⚠️ SPONSOR CLIFF TERKONFIRMASI — nerima sponsor bikin rugi" : (g.sponsors?.length ? "aman" : "belum ada sponsor aktif, gak bisa dicek")}
+      />
+    </Panel>
   );
 }
