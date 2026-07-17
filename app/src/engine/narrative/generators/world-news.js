@@ -13,7 +13,8 @@ export function generateWorldNews(ctx) {
   Object.values(ctx.divisions).forEach(d => {
     const top3 = d.list?.slice(0, 3) || [];
     top3.forEach(c => {
-      if (c.age <= 23 && c.points >= 75) {
+      if (c.age <= 23 && c.points >= 75 && !c.risingStarAnnounced) {
+        c.risingStarAnnounced = true;
         events.push(TEMPLATES.risingStar(c));
       }
     });
