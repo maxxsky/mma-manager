@@ -50,16 +50,26 @@ export function mulberry32(seed) {
   };
 }
 
-// Default random: masih Math.random() untuk non-fight logic
-// Fight engine akan override dengan RNG ber-seed
-let _rng = Math.random;
+// Default random: seeded world RNG — satu instance untuk semua non-fight logic
+// Fight engine override dengan RNG ber-seed via setRNG(), resetRNG() mengembalikan ke sini
+let _rng = null;
+let _worldRng = null;
+
+// Inisialisasi world RNG satu kali — seeded via Date.now()
+// Dipanggil dari resetRNG juga, tapi cuma instance pertama yang dipakai
+function initWorldRng() {
+  if (!_worldRng) _worldRng = mulberry32(Date.now() & 0xffffffff);
+  return _worldRng;
+}
+// Init pertama
+_rng = initWorldRng();
 
 export function setRNG(fn) {
   _rng = fn;
 }
 
 export function resetRNG() {
-  _rng = Math.random;
+  _rng = _worldRng; // nunjuk closure yang sama — world RNG jalan terus maju
 }
 
 export function random() {
