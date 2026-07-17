@@ -112,3 +112,34 @@ fighterRouter.get("/", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// ── GET /api/fighters/search — browse other camps' fighters ──
+fighterRouter.get("/search", async (req, res) => {
+  try {
+    const camp = await pool.query("SELECT id FROM camps WHERE user_id = $1", [req.userId]);
+    if (camp.rows.length === 0) {
+      return res.status(404).json({ error: "User has no camp" });
+    }
+    const campId = camp.rows[0].id;
+
+    const weightClass = req.query.weightClass;
+    let query;
+    let params;
+
+    if (weightClass) {
+      query = `SELECT id, name, archetype, weight_class, record FROM fighters
+               WHERE camp_id != $1 AND weight_class = $2 ORDER BY name LIMIT 50`;
+      params = [campId, weightClass];
+    } else {
+      query = `SELECT id, name, archetype, weight_class, record FROM fighters
+               WHERE camp_id != $1 ORDER BY name LIMIT 50`;
+      params = [campId];
+    }
+
+    const result = await pool.query(query, params);
+    res.json({ fighters: result.rows, count: result.rows.length });
+  } catch (err) {
+    console.error("Search fighters error:", err.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});

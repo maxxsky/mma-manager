@@ -213,10 +213,35 @@ fightRouter.post("/:id/resolve", async (req, res) => {
         result.round,
         winnerId,
         result.how || "Decision",
-        JSON.stringify(result.roundLogs),
+        JSON.stringify(result.logs || result.roundLogs),
         req.params.id,
       ]
     );
+
+    // ── Update fighter records ──
+    const how = result.how || "Decision";
+    const loserId = result.winner === "A" ? f.fighter_b_id : f.fighter_a_id;
+
+    // Read current records, modify in JS, write back
+    const [wRes, lRes] = await Promise.all([
+      pool.query("SELECT record FROM fighters WHERE id = $1", [winnerId]),
+      pool.query("SELECT record FROM fighters WHERE id = $1", [loserId]),
+    ]);
+
+    const wRec = wRes.rows[0].record;
+    const lRec = lRes.rows[0].record;
+
+    wRec.w = (wRec.w || 0) + 1;
+    if (how === "KO/TKO" || how === "Doctor Stoppage") wRec.ko = (wRec.ko || 0) + 1;
+    else if (how === "Submission") wRec.sub = (wRec.sub || 0) + 1;
+    else wRec.dec = (wRec.dec || 0) + 1;
+
+    lRec.l = (lRec.l || 0) + 1;
+
+    await Promise.all([
+      pool.query("UPDATE fighters SET record = $1 WHERE id = $2", [JSON.stringify(wRec), winnerId]),
+      pool.query("UPDATE fighters SET record = $1 WHERE id = $2", [JSON.stringify(lRec), loserId]),
+    ]);
 
     res.json({ fight: updated.rows[0] });
   } catch (err) {
