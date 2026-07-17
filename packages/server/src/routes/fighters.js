@@ -1,7 +1,9 @@
 import { Router } from "express";
 import pg from "pg";
+import crypto from "crypto";
 import { requireAuth } from "../middleware/auth.js";
 import { genFighter } from "@ironfist/engine/fighter.js";
+import { random, setRNG, mulberry32 } from "@ironfist/engine/rng.js";
 
 const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -24,7 +26,10 @@ fighterRouter.post("/", async (req, res) => {
 
     // Generate fighter with seeded engine call
     // Level range 0.35-0.6 matches genTalentEntry() in talentPool.js
-    const level = 0.35 + Math.random() * 0.25;
+    // Seed per-request dari crypto.randomBytes — bukan Math.random()
+    const seed = crypto.randomBytes(4).readUInt32BE(0);
+    setRNG(mulberry32(seed));
+    const level = 0.35 + random() * 0.25;
     const f = genFighter(level);
 
     // Map genFighter() fields to DB columns
