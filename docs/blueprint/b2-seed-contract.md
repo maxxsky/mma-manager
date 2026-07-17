@@ -77,6 +77,12 @@ Untuk async MVP, `cornerPolicy` nggak perlu real per-ronde decision tree yang ca
 
 ---
 
+## 4.5. KNOWN LIMITATION
+
+`corner_choice_b`: Sesuai desain `runFight()` di engine, `cornerPolicy` cuma dikirim buat fighter A. Fighter B pake default AI. Ini berarti `corner_choice_b` yang dikumpulin dari player lawan di PvP nggak kepake. Buat MVP ini nggak masalah karena dua-duanya pake strategi konstan ("go"), tapi kalau nanti ada strategi per-ronde yang berarti, fighter B harus dapet cornerPolicy juga — perlu ubah engine.
+
+---
+
 ## 5. Yang perlu ada di database (minimal untuk MVP ini)
 
 Tabel `fights` minimal butuh kolom: `id`, `fighter_a_id`, `fighter_b_id`, `seed` (integer), `plan_a`, `plan_b`, `corner_choice_a`, `corner_choice_b`, `status` (pending/resolved), `result` (JSON — winner, how, round), `round_log` (JSON, opsional bisa di-regenerate dari seed+input), `resolved_at`.
