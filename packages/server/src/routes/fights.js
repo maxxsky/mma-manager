@@ -10,6 +10,46 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const fightRouter = Router();
 fightRouter.use(requireAuth);
 
+// ── GET /api/fights — list user's fights ──
+fightRouter.get("/", async (req, res) => {
+  try {
+    const camp = await pool.query("SELECT id FROM camps WHERE user_id = $1", [req.userId]);
+    if (camp.rows.length === 0) {
+      return res.status(404).json({ error: "User has no camp" });
+    }
+    const campId = camp.rows[0].id;
+
+    const status = req.query.status; // optional: pending or resolved
+    let query;
+    let params;
+
+    if (status === "pending" || status === "resolved") {
+      query = `SELECT f.*, fa.name AS fighter_a_name, fb.name AS fighter_b_name
+               FROM fights f
+               JOIN fighters fa ON fa.id = f.fighter_a_id
+               JOIN fighters fb ON fb.id = f.fighter_b_id
+               WHERE (fa.camp_id = $1 OR fb.camp_id = $1)
+               AND f.status = $2
+               ORDER BY f.created_at DESC`;
+      params = [campId, status];
+    } else {
+      query = `SELECT f.*, fa.name AS fighter_a_name, fb.name AS fighter_b_name
+               FROM fights f
+               JOIN fighters fa ON fa.id = f.fighter_a_id
+               JOIN fighters fb ON fb.id = f.fighter_b_id
+               WHERE (fa.camp_id = $1 OR fb.camp_id = $1)
+               ORDER BY f.created_at DESC`;
+      params = [campId];
+    }
+
+    const result = await pool.query(query, params);
+    res.json({ fights: result.rows, count: result.rows.length });
+  } catch (err) {
+    console.error("List fights error:", err.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // ── POST /api/fights/book ────────────────────────────────────
 fightRouter.post("/book", async (req, res) => {
   try {
