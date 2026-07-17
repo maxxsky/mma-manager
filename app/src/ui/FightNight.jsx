@@ -11,6 +11,7 @@ import { commitFightResult } from "../engine/fights/commitResult.js";
 import { useFightSeed } from "../hooks/useFightSeed.js";
 import { useFightPrep } from "../hooks/useFightPrep.js";
 import { T, GlobalStyle } from "./theme.jsx";
+import { t } from "../i18n/index.js";
 
 import Staredown from "../components/fight/Staredown.jsx";
 import WeighIn from "../components/fight/WeighIn.jsx";
@@ -23,6 +24,7 @@ import ResultScreen from "../components/fight/ResultScreen.jsx";
 import Scoreboard from "../components/fight/Scoreboard.jsx";
 
 const STAGES = ["Staredown", "Weigh-in", "Fight", "Result"];
+const STAGE_KEYS = { "Staredown": "STAGE.staredown", "Weigh-in": "STAGE.weighin", "Fight": "STAGE.fight", "Result": "STAGE.result" };
 const IN_FIGHT = new Set(["round", "corner", "knockdown", "entrance"]);
 
 export default function FightNight({ fighter, done, staff }) {
@@ -164,7 +166,7 @@ export default function FightNight({ fighter, done, staff }) {
             <React.Fragment key={st}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ width: 20, height: 20, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.mono, fontSize: 10, fontWeight: 700, background: i <= stepIdx ? T.ember : T.raised, color: i <= stepIdx ? T.bg : T.txt3 }}>{i + 1}</span>
-                <span style={{ fontFamily: T.body, fontSize: 11.5, fontWeight: i === stepIdx ? 700 : 500, color: i === stepIdx ? T.txt : T.txt3 }}>{st}</span>
+                <span style={{ fontFamily: T.body, fontSize: 11.5, fontWeight: i === stepIdx ? 700 : 500, color: i === stepIdx ? T.txt : T.txt3 }}>{t(STAGE_KEYS[st])}</span>
               </div>
               {i < 3 && <div style={{ flex: 1, height: 1, background: i < stepIdx ? T.ember : T.line }} />}
             </React.Fragment>

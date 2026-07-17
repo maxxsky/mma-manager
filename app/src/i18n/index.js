@@ -207,6 +207,11 @@ const EN = {
   "STARE.trash.fx": "+8% striking (his +5%) · +5 pop",
   "STARE.trash.risk": "lose = morale −8, rep −5",
   "STARE.continue": "Continue to weigh-in",
+  // ---- STAGE ----
+  "STAGE.staredown": "Staredown",
+  "STAGE.weighin": "Weigh-in",
+  "STAGE.fight": "Fight",
+  "STAGE.result": "Result",
   // ---- WEIGH ----
   "WEIGH.header": "Weigh-in",
   "WEIGH.missed": "Missed weight",
@@ -234,6 +239,10 @@ const EN = {
   "RESULT.ppvRevenue": "PPV Revenue",
   "RESULT.fightNight": "Fight of the Night",
   "RESULT.backToCamp": "Back to camp",
+  "RESULT.how.KOTKO": "KO/TKO",
+  "RESULT.how.Submission": "Submission",
+  "RESULT.how.DoctorStoppage": "Doctor Stoppage",
+  "RESULT.how.Decision": "Decision",
   // ---- DOC ----
   "DOC.header": "Doctor check · cuts & damage",
   "DOC.severity": "Cut severity",
@@ -589,6 +598,11 @@ const ID = {
   "STARE.trash.fx": "+8% striking (dia +5%) · +5 pop",
   "STARE.trash.risk": "kalah = moral −8, reputasi −5",
   "STARE.continue": "Lanjut ke penimbangan",
+  // ---- STAGE ----
+  "STAGE.staredown": "Staredown",
+  "STAGE.weighin": "Penimbangan",
+  "STAGE.fight": "Tarung",
+  "STAGE.result": "Hasil",
   // ---- WEIGH ----
   "WEIGH.header": "Penimbangan",
   "WEIGH.missed": "Gagal timbang",
@@ -616,6 +630,10 @@ const ID = {
   "RESULT.ppvRevenue": "Pendapatan PPV",
   "RESULT.fightNight": "Fight of the Night",
   "RESULT.backToCamp": "Kembali ke camp",
+  "RESULT.how.KOTKO": "KO/TKO",
+  "RESULT.how.Submission": "Submission",
+  "RESULT.how.DoctorStoppage": "Doctor Stoppage",
+  "RESULT.how.Decision": "Keputusan",
   // ---- DOC ----
   "DOC.header": "Periksa dokter · luka & kerusakan",
   "DOC.severity": "Tingkat luka",
