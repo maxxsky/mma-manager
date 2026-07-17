@@ -6,5 +6,8 @@
     "packages/engine",
     "packages/server"
   ],
+  "scripts": {
+    "test": "npm test -w app -w packages/server"
+  },
   "type": "module"
 }

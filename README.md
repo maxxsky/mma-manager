@@ -214,6 +214,12 @@ Areas that would benefit from contributions:
 
 ---
 
+## ⚠️ Shared Engine Warning
+
+`packages/engine` (`@ironfist/engine`) is a **shared dependency** between `app/` (solo play, client-side) and `packages/server/` (multiplayer backend). Any change to `packages/engine/` **must** be tested in both workspaces before merging. Run `npm test` from the repo root to execute both test suites at once — this is the minimum gate before considering engine work done.
+
+---
+
 ## 📄 License
 
 This project is currently unlicensed. All rights reserved by the author.
