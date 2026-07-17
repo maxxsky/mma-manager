@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "app",
-    "packages/engine"
+    "packages/engine",
+    "packages/server"
   ],
   "type": "module"
 }
