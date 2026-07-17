@@ -12,7 +12,7 @@ import { REGION_COLOR } from "../engine/data/archetypes.js";
 export const T = {
   bg: "#0e1116", surface: "#161b23", raised: "#1e2530", raisedHi: "#252d3a",
   line: "#2a323f", line2: "#384556",
-  txt: "#eef2f7", txt2: "#9aa7b8", txt3: "#7d8a99",
+  txt: "#eef2f7", txt2: "#9aa7b8", txt3: "#8996a5",
   ember: "#f5623c", steel: "#3ea6ff", gold: "#ffd15c",
   pos: "#35c98a", warn: "#f5b942", neg: "#ef4d5a",
   disp: "'Barlow Condensed','Arial Narrow',sans-serif",
