@@ -1,23 +1,8 @@
 import "dotenv/config";
-import express from "express";
-import { authRouter } from "./routes/auth.js";
-import { campRouter } from "./routes/camp.js";
-import { fighterRouter } from "./routes/fighters.js";
-import { fightRouter } from "./routes/fights.js";
+import { app } from "./app.js";
 import { startResolveScheduler } from "./jobs/resolveScheduler.js";
 
-const app = express();
 const PORT = process.env.PORT || 3001;
-
-app.use(express.json());
-app.use("/api/auth", authRouter);
-app.use("/api/camp", campRouter);
-app.use("/api/fighters", fighterRouter);
-app.use("/api/fights", fightRouter);
-
-app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok" });
-});
 
 // Start background jobs
 startResolveScheduler();
