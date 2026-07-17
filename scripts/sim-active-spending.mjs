@@ -21,10 +21,10 @@ const CAMP_TIERS = [
 ];
 
 const INVESTMENTS = [
-  { id: "youthAcademy", name: "Youth Academy", cost: 250000, tierReq: 2 },
-  { id: "communityOutreach", name: "Community Outreach Program", cost: 400000, tierReq: 2 },
-  { id: "alumniNetwork", name: "Alumni Coaching Network", cost: 600000, tierReq: 3 },
-  { id: "legacyMuseum", name: "Fight Legacy Museum", cost: 800000, legacyReq: 5000 },
+  { id: "youthAcademy", name: "Youth Academy", cost: 45000, tierReq: 2 },
+  { id: "communityOutreach", name: "Community Outreach Program", cost: 70000, tierReq: 2 },
+  { id: "alumniNetwork", name: "Alumni Coaching Network", cost: 130000, tierReq: 3 },
+  { id: "legacyMuseum", name: "Fight Legacy Museum", cost: 300000, legacyReq: 5000 },
 ];
 
 const STAFF_ROLE_IDS = ["cutman", "nutritionist", "sportsPsych"];
