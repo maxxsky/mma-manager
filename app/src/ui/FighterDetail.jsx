@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { fmt$ } from "../engine/rng.js";
-import { ARCH_COLOR, TRAINING, INTENSITY, TRAITS } from "../engine/data.js";
-import { avgSkill } from "../engine/fighter.js";
-import { reducer } from "../engine/reducer.js";
-import { getStoryTags, getLifecyclePhase } from "../engine/career.js";
-import { generateFighterNickname } from "../engine/identity.js";
-import { getPublicOpinion } from "../engine/publicOpinion.js";
-import { getTrainingCycle, getCoachRecommendation, getDevelopmentPhilosophy, getTrainingIdentity, saveLastTraining } from "../engine/training-philosophy.js";
-import { getCoachArchetypeSynergy, getFightStyleSummary, getArchetypeBehavior } from "../engine/archetype-expression.js";
+import { fmt$ } from "@ironfist/engine/rng.js";
+import { ARCH_COLOR, TRAINING, INTENSITY, TRAITS } from "@ironfist/engine/data.js";
+import { avgSkill } from "@ironfist/engine/fighter.js";
+import { reducer } from "@ironfist/engine/reducer.js";
+import { getStoryTags, getLifecyclePhase } from "@ironfist/engine/career.js";
+import { generateFighterNickname } from "@ironfist/engine/identity.js";
+import { getPublicOpinion } from "@ironfist/engine/publicOpinion.js";
+import { getTrainingCycle, getCoachRecommendation, getDevelopmentPhilosophy, getTrainingIdentity, saveLastTraining } from "@ironfist/engine/training-philosophy.js";
+import { getCoachArchetypeSynergy, getFightStyleSummary, getArchetypeBehavior } from "@ironfist/engine/archetype-expression.js";
 import { T, Panel, Eyebrow, Tag, Btn, Ovr, Mono, AttrTele, Meter, OctaRadar, Icon, ICONS, heat } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 

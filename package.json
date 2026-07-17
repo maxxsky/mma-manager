@@ -1,0 +1,9 @@
+{
+  "name": "mma-manager",
+  "private": true,
+  "workspaces": [
+    "app",
+    "packages/engine"
+  ],
+  "type": "module"
+}

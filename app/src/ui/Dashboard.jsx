@@ -1,9 +1,9 @@
-import { fmt$ } from "../engine/rng.js";
+import { fmt$ } from "@ironfist/engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn, Icon, ICONS, Mono, ARCH_COLOR } from "./theme.jsx";
 import { t } from "../i18n/index.js";
-import { monthlyBurn, monthlyIn } from "../engine/finance.js";
-import { getObjectives } from "../engine/onboarding.js";
+import { monthlyBurn, monthlyIn } from "@ironfist/engine/finance.js";
+import { getObjectives } from "@ironfist/engine/onboarding.js";
 
 /* =============================================================================
    IRONFIST DASHBOARD — Verbatim from prototype, wired to real g state

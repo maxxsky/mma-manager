@@ -1,4 +1,4 @@
-import { fmt$ } from "../engine/rng.js";
+import { fmt$ } from "@ironfist/engine/rng.js";
 import React from "react";
 import {
   ATTRS,
@@ -6,8 +6,8 @@ import {
   WEIGHTS,
   ARCH_COLOR as DATA_ARCH_COLOR,
   AGENT_TYPES,
-} from "../engine/data.js";
-import { scoutGrade } from "../engine/fighter.js";
+} from "@ironfist/engine/data.js";
+import { scoutGrade } from "@ironfist/engine/fighter.js";
 import {
   T,
   Panel,

@@ -1,6 +1,6 @@
 // Fight seed hook — deterministic RNG for reproducible fights
 import { useEffect } from "react";
-import { setRNG, resetRNG, mulberry32 } from "../engine/rng.js";
+import { setRNG, resetRNG, mulberry32 } from "@ironfist/engine/rng.js";
 
 export function useFightSeed(fighterId, bookedSeed) {
   useEffect(() => {

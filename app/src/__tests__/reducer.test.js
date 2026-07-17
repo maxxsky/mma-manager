@@ -1,8 +1,8 @@
 // Reducer Tests — state mutation correctness
 import { describe, it, expect } from 'vitest'
 import { createTestGame, useSeed, createTestFighter } from './helpers.js'
-import { reducer } from '../engine/reducer.js'
-import { setRNG } from '../engine/rng.js'
+import { reducer } from '@ironfist/engine/reducer.js'
+import { setRNG } from '@ironfist/engine/rng.js'
 
 describe('Reducer', () => {
   describe('SET_TRAINING', () => {

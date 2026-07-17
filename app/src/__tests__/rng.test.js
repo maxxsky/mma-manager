@@ -2,7 +2,7 @@
 // Commit 36209cb: _worldRng = mulberry32(Date.now()) init sekali,
 // resetRNG() nunjuk closure yg sama — bukan reinstantiate.
 import { describe, it, expect } from 'vitest'
-import { mulberry32, setRNG, resetRNG, random } from '../engine/rng.js'
+import { mulberry32, setRNG, resetRNG, random } from '@ironfist/engine/rng.js'
 
 describe('RNG Determinism — same seed → same sequence', () => {
   it('produces identical values when seeded with the same number', () => {

@@ -1,7 +1,7 @@
 import React from "react";
 import { T, Panel, Eyebrow, Tag } from "./theme.jsx";
 import { t } from "../i18n/index.js";
-import { ACHIEVEMENTS } from "../engine/data.js";
+import { ACHIEVEMENTS } from "@ironfist/engine/data.js";
 
 export default function Achievements({ g }) {
   const unlocked = g._unlocked || [];

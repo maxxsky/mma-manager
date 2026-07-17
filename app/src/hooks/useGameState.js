@@ -1,10 +1,10 @@
 // Game state hook — state management, dispatch, auto-save, weekly tick
 import { useState, useRef, useEffect } from "react";
 import { saveGame } from "../services/saveService.js";
-import { checkAchievements } from "../engine/achievements.js";
-import { ACHIEVEMENTS } from "../engine/data.js";
-import { tick } from "../engine/state.js";
-import { reducer } from "../engine/reducer.js";
+import { checkAchievements } from "@ironfist/engine/achievements.js";
+import { ACHIEVEMENTS } from "@ironfist/engine/data.js";
+import { tick } from "@ironfist/engine/state.js";
+import { reducer } from "@ironfist/engine/reducer.js";
 
 export function useGameState(g, setGOrig, saveSlot) {
   const [activeFight, setActiveFight] = useState(null);

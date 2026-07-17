@@ -2,7 +2,7 @@
 import { Panel, Eyebrow, Tag, Btn } from "../../ui/theme.jsx";
 import { T, ARCH_COLOR } from "../../ui/theme.jsx";
 import { t } from "../../i18n/index.js";
-import { GAME_PLANS } from "../../engine/data.js";
+import { GAME_PLANS } from "@ironfist/engine/data.js";
 
 export default function WeighIn({ fighter, opp, cutInfo, cutPct, missedWeight, weighinIssue, setWeighinIssue, plan, setPlan, viewMode, setViewMode, onStart, ca, cb }) {
   const limit = fighter.natWeight || 155; // fallback

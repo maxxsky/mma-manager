@@ -1,8 +1,8 @@
 // Fight prep hook — fighter preparation, weight cut, attitude modifiers, staff bonuses
 import { useMemo } from "react";
-import { clamp, random } from "../engine/rng.js";
-import { WEIGHTS } from "../engine/data.js";
-import { prepFighter } from "../engine/fight.js";
+import { clamp, random } from "@ironfist/engine/rng.js";
+import { WEIGHTS } from "@ironfist/engine/data.js";
+import { prepFighter } from "@ironfist/engine/fight.js";
 
 export function useFightPrep(fighter, opp, attitude, staff) {
   const cutmanSkill = staff?.cutman?.skill || 0;

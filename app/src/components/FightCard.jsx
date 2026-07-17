@@ -1,8 +1,8 @@
 // FightCard — pre-fight Tale of the Tape
 // Visual layout from FightCardFull, simplified API for current flow.
-import { fmt$ } from "../engine/rng.js";
+import { fmt$ } from "@ironfist/engine/rng.js";
 import React from "react";
-import { ARCH_COLOR } from "../engine/data.js";
+import { ARCH_COLOR } from "@ironfist/engine/data.js";
 import { T, Panel, Eyebrow, Tag, Btn, Mono, CompareBar } from "../ui/theme.jsx";
 
 export default function FightCard({ fighter, g, onProceed }) {

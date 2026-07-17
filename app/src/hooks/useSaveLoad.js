@@ -1,15 +1,15 @@
 // Save/load hook — game persistence, slot management, migration
 import { useState, useEffect } from "react";
 import { getActiveSlot, setActiveSlot, loadGame, deleteGame, getSlotInfo } from "../services/saveService.js";
-import { backupSave } from "../engine/polish.js";
-import { genDivisions, initPromoterRel } from "../engine/rankings.js";
-import { genRivalCamp } from "../engine/rivals.js";
-import { clamp, RI, pick } from "../engine/rng.js";
-import { ATTRS, AMBITION_KEYS, PROMOTIONS } from "../engine/data.js";
-import { agentFor } from "../engine/fighter.js";
-import { setUID } from "../engine/rng.js";
-import { getPromotionsData } from "../engine/data/promotions.js";
-import { getTrainingCycle } from "../engine/training-philosophy.js";
+import { backupSave } from "@ironfist/engine/polish.js";
+import { genDivisions, initPromoterRel } from "@ironfist/engine/rankings.js";
+import { genRivalCamp } from "@ironfist/engine/rivals.js";
+import { clamp, RI, pick } from "@ironfist/engine/rng.js";
+import { ATTRS, AMBITION_KEYS, PROMOTIONS } from "@ironfist/engine/data.js";
+import { agentFor } from "@ironfist/engine/fighter.js";
+import { setUID } from "@ironfist/engine/rng.js";
+import { getPromotionsData } from "@ironfist/engine/data/promotions.js";
+import { getTrainingCycle } from "@ironfist/engine/training-philosophy.js";
 
 export function useSaveLoad(setG) {
   const [loaded, setLoaded] = useState(false);

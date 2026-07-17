@@ -1,7 +1,7 @@
-import { fmt$ } from "../engine/rng.js";
+import { fmt$ } from "@ironfist/engine/rng.js";
 import React, { useState, useEffect } from "react";
-import { WEIGHTS, ARCH_COLOR as DATA_ARCH_COLOR } from "../engine/data.js";
-import { avgSkill, tierOf } from "../engine/fighter.js";
+import { WEIGHTS, ARCH_COLOR as DATA_ARCH_COLOR } from "@ironfist/engine/data.js";
+import { avgSkill, tierOf } from "@ironfist/engine/fighter.js";
 import { T, Panel, Eyebrow, Tag, Btn, Ovr, heat, ARCH_COLOR, Mono } from "./theme.jsx";
 
 // Merge ARCH_COLOR from data.js to ensure full mapping (theme.jsx might differ)

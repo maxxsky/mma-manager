@@ -4,10 +4,10 @@
 // ============================================================
 
 import React, { useState, useEffect, useRef } from "react";
-import { clamp, random } from "../engine/rng.js";
-import { ARCH_COLOR } from "../engine/data.js";
-import { simRound } from "../engine/fight.js";
-import { commitFightResult } from "../engine/fights/commitResult.js";
+import { clamp, random } from "@ironfist/engine/rng.js";
+import { ARCH_COLOR } from "@ironfist/engine/data.js";
+import { simRound } from "@ironfist/engine/fight.js";
+import { commitFightResult } from "@ironfist/engine/fights/commitResult.js";
 import { useFightSeed } from "../hooks/useFightSeed.js";
 import { useFightPrep } from "../hooks/useFightPrep.js";
 import { T, GlobalStyle } from "./theme.jsx";

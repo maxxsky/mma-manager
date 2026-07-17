@@ -9,7 +9,7 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const appSrc = join(__dirname, "..", "app", "src", "engine");
+const appSrc = join(__dirname, "..", "packages", "engine", "src");
 
 // ── Data constants ──
 const CAMP_TIERS = [

@@ -1,8 +1,8 @@
 // Breakthrough — training reveals hidden potential
 import { describe, it, expect } from 'vitest'
 import { useSeed, clearSeed } from './helpers.js'
-import { tickTraining } from '../engine/tick/training.js'
-import { ATTRS } from '../engine/data/attributes.js'
+import { tickTraining } from '@ironfist/engine/tick/training.js'
+import { ATTRS } from '@ironfist/engine/data/attributes.js'
 
 describe('Breakthrough from training', () => {
   /** Set all attrs to currentVal and ceilings to ceilingVal on a fighter */

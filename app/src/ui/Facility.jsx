@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { fmt$ } from "../engine/rng.js";
+import { fmt$ } from "@ironfist/engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn, Meter, Mono, heat } from "./theme.jsx";
 import { t } from "../i18n/index.js";
-import { CAMP_TIERS, COACH_PERSONALITIES } from "../engine/data.js";
-import { FACILITY_MAINT_RATE } from "../engine/economy.js";
-import { STAFF_ROLES } from "../engine/data/staff.js";
+import { CAMP_TIERS, COACH_PERSONALITIES } from "@ironfist/engine/data.js";
+import { FACILITY_MAINT_RATE } from "@ironfist/engine/economy.js";
+import { STAFF_ROLES } from "@ironfist/engine/data/staff.js";
 
 export default function Facility({ g, dispatch, coachCap, rosterCap }) {
   const [showingMarket, setShowingMarket] = useState(false);

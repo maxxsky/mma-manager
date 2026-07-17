@@ -2,7 +2,7 @@
 import React from "react";
 import { T, Panel, Eyebrow, Tag } from "./theme.jsx";
 import { t } from "../i18n/index.js";
-import { PROMO_TIERS } from "../engine/data/rivals.js";
+import { PROMO_TIERS } from "@ironfist/engine/data/rivals.js";
 
 export default function Promoters({ g }) {
   const rel = g.promoterRel || {};

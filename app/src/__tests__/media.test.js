@@ -1,10 +1,10 @@
 // Media System Tests — press conferences, public opinion, rumors
 import { describe, it, expect } from 'vitest'
 import { createTestFighter, createTestGame, useSeed } from './helpers.js'
-import { commitFightResult } from '../engine/fights/commitResult.js'
-import { getPublicOpinion } from '../engine/publicOpinion.js'
-import { processRivalry, processFightResult, updateRivalryResult } from '../engine/career.js'
-import { tick } from '../engine/state.js'
+import { commitFightResult } from '@ironfist/engine/fights/commitResult.js'
+import { getPublicOpinion } from '@ironfist/engine/publicOpinion.js'
+import { processRivalry, processFightResult, updateRivalryResult } from '@ironfist/engine/career.js'
+import { tick } from '@ironfist/engine/state.js'
 
 // Helper: popularity gain from winning (replicates commitResult win-branch logic)
 function winPopGain(resultHow, f) {

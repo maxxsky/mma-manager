@@ -11,13 +11,13 @@ import { useSaveLoad } from "./hooks/useSaveLoad.js";
 import { useKeyboard } from "./hooks/useKeyboard.js";
 
 // Engine
-import { R, fmt$ } from "./engine/rng.js";
-import { genFighter, assignAgent, scoutGrade, makeReport } from "./engine/fighter.js";
-import { newGame } from "./engine/state.js";
-import { checkAchievements } from "./engine/achievements.js";
-import { CAMP_TIERS } from "./engine/data.js";
-import { ACHIEVEMENTS } from "./engine/data.js";
-import { generateTransferReason } from "./engine/narrative/generators/transfer.js";
+import { R, fmt$ } from "@ironfist/engine/rng.js";
+import { genFighter, assignAgent, scoutGrade, makeReport } from "@ironfist/engine/fighter.js";
+import { newGame } from "@ironfist/engine/state.js";
+import { checkAchievements } from "@ironfist/engine/achievements.js";
+import { CAMP_TIERS } from "@ironfist/engine/data.js";
+import { ACHIEVEMENTS } from "@ironfist/engine/data.js";
+import { generateTransferReason } from "@ironfist/engine/narrative/generators/transfer.js";
 
 // UI
 import { GlobalStyle, T } from "./ui/theme.jsx";

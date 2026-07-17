@@ -1,9 +1,9 @@
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
 import { t } from "../i18n/index.js";
-import { fmt$ } from "../engine/rng.js";
-import { getCampDynasty, getCampIdentity, getWorldRecords, getGenerationalLinks } from "../engine/dynasty.js";
-import { INVESTMENTS } from "../engine/data/investments.js";
+import { fmt$ } from "@ironfist/engine/rng.js";
+import { getCampDynasty, getCampIdentity, getWorldRecords, getGenerationalLinks } from "@ironfist/engine/dynasty.js";
+import { INVESTMENTS } from "@ironfist/engine/data/investments.js";
 
 export default function Dynasty({ g, dispatch }) {
   const dyn = getCampDynasty(g);

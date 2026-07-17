@@ -1,16 +1,16 @@
 // Fight Engine Tests — simulation correctness
 import { describe, it, expect } from 'vitest'
 import { createTestFighter, useSeed, TEST_SEED, createTestGame } from './helpers.js'
-import { simRound, prepFighter, autoGamePlan, runFight } from '../engine/fight.js'
-import { pickExchange } from '../engine/fight/exchanges.js'
-import { commitFightResult } from '../engine/fights/commitResult.js'
-import { processTitleChange } from '../engine/career.js'
-import { mulberry32, setRNG } from '../engine/rng.js'
-import { tick } from '../engine/state.js'
-import { tickSettlement } from '../engine/tick/settlement.js'
+import { simRound, prepFighter, autoGamePlan, runFight } from '@ironfist/engine/fight.js'
+import { pickExchange } from '@ironfist/engine/fight/exchanges.js'
+import { commitFightResult } from '@ironfist/engine/fights/commitResult.js'
+import { processTitleChange } from '@ironfist/engine/career.js'
+import { mulberry32, setRNG } from '@ironfist/engine/rng.js'
+import { tick } from '@ironfist/engine/state.js'
+import { tickSettlement } from '@ironfist/engine/tick/settlement.js'
 import { buildOptions, getContextual } from '../components/fight/Corner.jsx'
-import { computeMonthlyIncome, computeMonthlyExpense } from '../engine/economy.js'
-import { PROMOTIONS, pickPromotion, getPromotionsData } from '../engine/data.js'
+import { computeMonthlyIncome, computeMonthlyExpense } from '@ironfist/engine/economy.js'
+import { PROMOTIONS, pickPromotion, getPromotionsData } from '@ironfist/engine/data.js'
 
 describe('Fight Engine', () => {
   const fighterA = createTestFighter({ name: 'Alpha', id: 'a1' })
@@ -408,7 +408,7 @@ describe('Fight Engine', () => {
     })
 
     it('genRivalCamp Elite Stable produces philosophy.id === "elite"', () => {
-      const { genRivalCamp } = require('../engine/rivals.js')
+      const { genRivalCamp } = require('@ironfist/engine/rivals.js')
       const camp = genRivalCamp(0)
       expect(camp.philosophy).toBeDefined()
       expect(['elite', 'balanced']).toContain(camp.philosophy.id)
@@ -719,8 +719,8 @@ describe('Task 60 — Doctor Check kebalik', () => {
 
     // Manually test the engine's doctor stoppage logic:
     // If cutA >= 6 at round end → doctor stoppage → A loses (winner B)
-    const { runFight, simRound } = require('../engine/fight.js')
-    const { setRNG, mulberry32 } = require('../engine/rng.js')
+    const { runFight, simRound } = require('@ironfist/engine/fight.js')
+    const { setRNG, mulberry32 } = require('@ironfist/engine/rng.js')
 
     // Use a seed where cuts build on A
     setRNG(mulberry32(42))

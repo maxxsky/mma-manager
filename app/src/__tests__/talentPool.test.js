@@ -1,10 +1,10 @@
 // Talent Pool — tests for hidden internal prospect system
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useSeed, clearSeed, createTestGame, createTestFighter } from './helpers.js'
-import { genTalentEntry, rollAddTalent, rollDiscoverTalent, pushTalentDiscoveryEvent, TALENT_POOL_MAX, rosterHasSpace, rosterFullMessage } from '../engine/talentPool.js'
-import { defaultContract } from '../engine/fighter.js'
-import { CAMP_TIERS } from '../engine/data/camp.js'
-import { tick } from '../engine/state.js'
+import { genTalentEntry, rollAddTalent, rollDiscoverTalent, pushTalentDiscoveryEvent, TALENT_POOL_MAX, rosterHasSpace, rosterFullMessage } from '@ironfist/engine/talentPool.js'
+import { defaultContract } from '@ironfist/engine/fighter.js'
+import { CAMP_TIERS } from '@ironfist/engine/data/camp.js'
+import { tick } from '@ironfist/engine/state.js'
 
 describe('Talent Pool', () => {
   /** Create a minimal game state for talent pool tests */
@@ -182,7 +182,7 @@ describe('Talent Pool', () => {
       const loyaltyBefore = talent.loyalty
 
       // Simulate the handler
-      const { registerTalentHandlers } = require('../engine/dispatch/handlers/talent.js')
+      const { registerTalentHandlers } = require('@ironfist/engine/dispatch/handlers/talent.js')
       const handlers = {}
       registerTalentHandlers((key, fn) => { handlers[key] = fn })
       handlers.talentAccept({ g, c: { talentFighter: talent } })
@@ -208,7 +208,7 @@ describe('Talent Pool', () => {
       const g = makeG({ roster, campTier: 0, inbox: [], log: [] })
       const talent = genTalentEntry()
 
-      const { registerTalentHandlers } = require('../engine/dispatch/handlers/talent.js')
+      const { registerTalentHandlers } = require('@ironfist/engine/dispatch/handlers/talent.js')
       const handlers = {}
       registerTalentHandlers((key, fn) => { handlers[key] = fn })
       handlers.talentAccept({ g, c: { talentFighter: talent } })

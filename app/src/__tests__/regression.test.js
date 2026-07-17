@@ -1,8 +1,8 @@
 // Regression Tests — deterministic seeds, must never change
 import { describe, it, expect } from 'vitest'
 import { createTestFighter, useSeed, createTestGame } from './helpers.js'
-import { simRound, prepFighter } from '../engine/fight.js'
-import { tick } from '../engine/state.js'
+import { simRound, prepFighter } from '@ironfist/engine/fight.js'
+import { tick } from '@ironfist/engine/state.js'
 
 describe('Regression — Fight Engine (seed=12345)', () => {
   const fighterA = createTestFighter({ name: 'Alpha', id: 'a1' })

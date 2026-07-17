@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { R, RI, fmt$, clamp, random } from "../engine/rng.js";
-import { AGENT_TYPES } from "../engine/data.js";
+import { R, RI, fmt$, clamp, random } from "@ironfist/engine/rng.js";
+import { AGENT_TYPES } from "@ironfist/engine/data.js";
 import { T, Panel, Eyebrow as H, Btn, Tag, Bar } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 

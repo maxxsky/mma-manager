@@ -1,6 +1,6 @@
 import React from "react";
-import { clamp } from "../engine/rng.js";
-import { REGION_COLOR } from "../engine/data/archetypes.js";
+import { clamp } from "@ironfist/engine/rng.js";
+import { REGION_COLOR } from "@ironfist/engine/data/archetypes.js";
 
 /* =============================================================================
    IRONFIST DESIGN SYSTEM — theme.jsx

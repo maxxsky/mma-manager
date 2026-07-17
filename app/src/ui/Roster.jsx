@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { ARCH_COLOR, TRAINING } from "../engine/data.js";
-import { avgSkill } from "../engine/fighter.js";
-import { rankOf } from "../engine/rankings.js";
+import { ARCH_COLOR, TRAINING } from "@ironfist/engine/data.js";
+import { avgSkill } from "@ironfist/engine/fighter.js";
+import { rankOf } from "@ironfist/engine/rankings.js";
 import { T, Panel, Tag, Ovr, Mono, heat, Btn } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 import FighterDetail from "./FighterDetail.jsx";

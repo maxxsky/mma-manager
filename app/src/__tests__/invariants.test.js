@@ -1,10 +1,10 @@
 // Invariant tests — global game state integrity
 import { describe, it, expect } from 'vitest'
 import { createTestGame, useSeed, assertInvariants } from './helpers.js'
-import { tick } from '../engine/state.js'
-import { uid, resetUID, setUID } from '../engine/rng.js'
-import { stripTitle } from '../engine/rankings.js'
-import { tickSettlement } from '../engine/tick/settlement.js'
+import { tick } from '@ironfist/engine/state.js'
+import { uid, resetUID, setUID } from '@ironfist/engine/rng.js'
+import { stripTitle } from '@ironfist/engine/rankings.js'
+import { tickSettlement } from '@ironfist/engine/tick/settlement.js'
 
 describe('Game State Invariants', () => {
   it('newGame produces valid state', () => {

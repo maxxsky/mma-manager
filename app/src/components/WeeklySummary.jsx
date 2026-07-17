@@ -1,5 +1,5 @@
 // Weekly summary overlay
-import { fmt$ } from "../engine/rng.js";
+import { fmt$ } from "@ironfist/engine/rng.js";
 import { T, Btn, cut } from "../ui/theme.jsx";
 
 export default function WeeklySummary({ summary, onClose, t }) {

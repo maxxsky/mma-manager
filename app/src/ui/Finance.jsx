@@ -1,10 +1,10 @@
-import { fmt$ } from "../engine/rng.js";
+import { fmt$ } from "@ironfist/engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
 import { t } from "../i18n/index.js";
-import { weeklyFee } from "../engine/fighter.js";
-import { TRAINING } from "../engine/data.js";
-import { computeMonthlyIncome, computeMonthlyExpense } from "../engine/economy.js";
+import { weeklyFee } from "@ironfist/engine/fighter.js";
+import { TRAINING } from "@ironfist/engine/data.js";
+import { computeMonthlyIncome, computeMonthlyExpense } from "@ironfist/engine/economy.js";
 
 /* =============================================================================
    FINANCE — Ironfist Edition

@@ -1,7 +1,7 @@
 // Scout tests — package level ranges, scoutGrade/makeReport unchanged
 import { describe, it, expect } from 'vitest'
-import { R } from '../engine/rng.js'
-import { genFighter, scoutGrade, makeReport } from '../engine/fighter.js'
+import { R } from '@ironfist/engine/rng.js'
+import { genFighter, scoutGrade, makeReport } from '@ironfist/engine/fighter.js'
 import { useSeed, clearSeed } from './helpers.js'
 
 // Scout package ranges (mirroring Scout.jsx)

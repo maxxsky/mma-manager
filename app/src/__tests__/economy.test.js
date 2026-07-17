@@ -1,10 +1,10 @@
 // Economy bugfix tests — F1, F2, F3
 import { describe, it, expect } from 'vitest'
 import { useSeed, createTestGame } from './helpers.js'
-import { monthlyIn, monthlyBurn } from '../engine/finance.js'
-import { computeMonthlyIncome, computeMembership, FACILITY_MAINT_RATE } from '../engine/economy.js'
-import { tickSettlement } from '../engine/tick/settlement.js'
-import { genFighter } from '../engine/fighter.js'
+import { monthlyIn, monthlyBurn } from '@ironfist/engine/finance.js'
+import { computeMonthlyIncome, computeMembership, FACILITY_MAINT_RATE } from '@ironfist/engine/economy.js'
+import { tickSettlement } from '@ironfist/engine/tick/settlement.js'
+import { genFighter } from '@ironfist/engine/fighter.js'
 
 describe('F1 — monthlyIn matches actual settlement income', () => {
   it('monthlyIn(g).total equals settlement cash delta (excl purse/maintenance)', () => {

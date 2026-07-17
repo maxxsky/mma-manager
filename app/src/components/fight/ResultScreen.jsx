@@ -2,8 +2,8 @@
 import { Panel, Btn, Tag } from "../../ui/theme.jsx";
 import { T } from "../../ui/theme.jsx";
 import { t } from "../../i18n/index.js";
-import { fmt$ } from "../../engine/rng.js";
-import { generateFightNarrative, detectSignatureMoments } from "../../engine/narrative.js";
+import { fmt$ } from "@ironfist/engine/rng.js";
+import { generateFightNarrative, detectSignatureMoments } from "@ironfist/engine/narrative.js";
 
 export default function ResultScreen({ fighter, opp, roundLog, result, totalRounds, onCommit }) {
   const narrative = generateFightNarrative(fighter, opp, [roundLog].filter(Boolean), result);

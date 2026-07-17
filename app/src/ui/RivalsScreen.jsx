@@ -1,11 +1,11 @@
-import { fmt$ } from "../engine/rng.js";
+import { fmt$ } from "@ironfist/engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
 import { t } from "../i18n/index.js";
-import { ARCH_COLOR, RIVAL_TRAITS, CAMP_TIERS } from "../engine/data.js";
-import { getCampLifecycleLabel } from "../engine/shadow-ai.js";
-import { avgSkill, tierOf } from "../engine/fighter.js";
-import { clamp } from "../engine/rng.js";
+import { ARCH_COLOR, RIVAL_TRAITS, CAMP_TIERS } from "@ironfist/engine/data.js";
+import { getCampLifecycleLabel } from "@ironfist/engine/shadow-ai.js";
+import { avgSkill, tierOf } from "@ironfist/engine/fighter.js";
+import { clamp } from "@ironfist/engine/rng.js";
 
 /* =============================================================================
    RIVALS SCREEN — Ironfist Edition

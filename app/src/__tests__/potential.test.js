@@ -1,9 +1,9 @@
 // Potential tiers — tests for genFighter ceiling distribution & integrity
 import { describe, it, expect } from 'vitest'
 import { useSeed, clearSeed } from './helpers.js'
-import { genFighter } from '../engine/fighter.js'
-import { ATTRS } from '../engine/data/attributes.js'
-import { POTENTIAL_TIERS } from '../engine/data/archetypes.js'
+import { genFighter } from '@ironfist/engine/fighter.js'
+import { ATTRS } from '@ironfist/engine/data/attributes.js'
+import { POTENTIAL_TIERS } from '@ironfist/engine/data/archetypes.js'
 
 describe('Potential Tiers', () => {
   it('distribution roughly matches 70/22/7/1% over 1000 rolls', () => {

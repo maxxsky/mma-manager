@@ -11,11 +11,12 @@
   },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "@ironfist/engine": "*"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.0.0",
+    "vite": "^6.3.5",
     "vitest": "^4.1.10"
   }
 }

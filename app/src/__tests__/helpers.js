@@ -1,5 +1,5 @@
 // Test helpers — deterministic RNG, game state factory, invariant validators
-import { mulberry32, setRNG, resetRNG, R, RI, clamp, pick, random } from '../engine/rng.js'
+import { mulberry32, setRNG, resetRNG, R, RI, clamp, pick, random } from '@ironfist/engine/rng.js'
 
 // ── FIXED SEED ──
 export const TEST_SEED = 12345
@@ -14,7 +14,7 @@ export function clearSeed() {
 }
 
 // ── GAME STATE FACTORY ──
-import { newGame } from '../engine/state.js'
+import { newGame } from '@ironfist/engine/state.js'
 
 export function createTestGame(overrides = {}) {
   useSeed(TEST_SEED)

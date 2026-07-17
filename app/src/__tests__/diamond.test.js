@@ -1,7 +1,7 @@
 // Diamond in the Rough — eligibility gate & transfer reason tests
 import { describe, it, expect } from 'vitest'
-import { generateTransferReason } from '../engine/narrative/generators/transfer.js'
-import { genFighter } from '../engine/fighter.js'
+import { generateTransferReason } from '@ironfist/engine/narrative/generators/transfer.js'
+import { genFighter } from '@ironfist/engine/fighter.js'
 import { useSeed, clearSeed } from './helpers.js'
 
 describe('generateTransferReason', () => {
@@ -82,7 +82,7 @@ describe('Diamond Eligibility Gate', () => {
 describe('TransferReason stored on SCOUT action', () => {
   it('SCOUT action for Diamond stores transferReason on prospect', () => {
     // Simulate the reduceUI logic
-    const { uid, resetUID } = require('../engine/rng.js')
+    const { uid, resetUID } = require('@ironfist/engine/rng.js')
     resetUID()
 
     const uid1 = uid()
@@ -103,7 +103,7 @@ describe('TransferReason stored on SCOUT action', () => {
     }
 
     // Manually apply the SCOUT case from reduceUI
-    const { MAX_PROSPECTS } = require('../engine/reducer/constants.js')
+    const { MAX_PROSPECTS } = require('@ironfist/engine/reducer/constants.js')
     g.cash -= action.cost
     g.prospects.unshift({
       id: uid1,
@@ -133,7 +133,7 @@ describe('TransferReason stored on SCOUT action', () => {
     }
 
     const g = { prospects: [], cash: 50000, log: [] }
-    const { MAX_PROSPECTS } = require('../engine/reducer/constants.js')
+    const { MAX_PROSPECTS } = require('@ironfist/engine/reducer/constants.js')
     g.cash -= action.cost
     g.prospects.unshift({
       id: 999,
