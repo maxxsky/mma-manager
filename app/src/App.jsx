@@ -173,7 +173,7 @@ export default function App() {
           {tab === "finance" && <Finance g={g} />}
           {tab === "achievements" && <Achievements g={g} />}
           {tab === "world" && <WorldNews g={g} />}
-          {tab === "dynasty" && <Dynasty g={g} />}
+          {tab === "dynasty" && <Dynasty g={g} dispatch={dispatch} />}
 
           {/* Weekly summary overlay */}
           <WeeklySummary summary={weeklySummary} onClose={() => setWeeklySummary(null)} t={t} />

@@ -93,7 +93,8 @@ export function computeMembership(g) {
   const capacity = Math.round(mats * 90 * (1 + otherFacLevels * 0.06));
   const members = Math.min(demand, capacity);
   const fee = MEMBER_FEE[campTier] || 110;
-  const revenue = members * fee;
+  const outreachMult = g.investments?.communityOutreach ? 1.10 : 1;
+  const revenue = Math.round(members * fee * outreachMult);
   return { demand, capacity, members, revenue };
 }
 

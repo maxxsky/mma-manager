@@ -53,7 +53,8 @@ export function rollDiscoverTalent(g) {
   if (!g.talentPool || g.talentPool.length === 0) return null;
 
   const hasPlayersCoach = g.coaches?.some((c) => c.personality === "Player's Coach");
-  const chance = BASE_DISCOVERY_CHANCE + (hasPlayersCoach ? PLAYERS_COACH_BONUS : 0);
+  const academyBonus = g.investments?.youthAcademy ? 0.15 : 0;
+  const chance = BASE_DISCOVERY_CHANCE + (hasPlayersCoach ? PLAYERS_COACH_BONUS : 0) + academyBonus;
   if (random() >= chance) return null;
 
   // Pick one randomly from the pool

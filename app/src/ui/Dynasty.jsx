@@ -3,8 +3,9 @@ import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 import { fmt$ } from "../engine/rng.js";
 import { getCampDynasty, getCampIdentity, getWorldRecords, getGenerationalLinks } from "../engine/dynasty.js";
+import { INVESTMENTS } from "../engine/data/investments.js";
 
-export default function Dynasty({ g }) {
+export default function Dynasty({ g, dispatch }) {
   const dyn = getCampDynasty(g);
   const identity = getCampIdentity(g);
   const records = getWorldRecords(g);
@@ -141,6 +142,41 @@ export default function Dynasty({ g }) {
           </Panel>
         );
       })()}
+
+      {/* Legacy Investments */}
+      <Panel>
+        <Eyebrow color={T.gold}>Legacy Investments</Eyebrow>
+        <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3, marginBottom: 12 }}>
+          Investasi one-time pakai cash surplus — efek permanen ke talent pool, membership, atau coach market.
+        </div>
+        <div style={{ display: "grid", gap: 8 }}>
+          {INVESTMENTS.map((inv) => {
+            const owned = g.investments?.[inv.id];
+            const tierOk = !inv.tierReq || (g.campTier || 0) >= inv.tierReq;
+            const legacyOk = !inv.legacyReq || (g.legacy || 0) >= inv.legacyReq;
+            const affordable = g.cash >= inv.cost;
+            const locked = !tierOk || !legacyOk;
+            return (
+              <div key={inv.id} style={{ padding: "10px 12px", background: T.bg, borderRadius: T.r, border: `1px solid ${owned ? T.pos : T.line}`, opacity: locked ? 0.5 : 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                  <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 13, color: T.txt }}>{inv.name}</span>
+                  <span style={{ fontFamily: T.mono, fontSize: 12, color: owned ? T.pos : T.gold }}>{owned ? "OWNED" : fmt$(inv.cost)}</span>
+                </div>
+                <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3, marginBottom: 6 }}>{inv.desc}</div>
+                {!owned && (
+                  <Btn
+                    color={T.gold}
+                    disabled={locked || !affordable}
+                    onClick={() => dispatch({ type: "PURCHASE_INVESTMENT", investmentId: inv.id })}
+                  >
+                    {locked ? (inv.tierReq ? `Butuh Tier ${inv.tierReq}` : `Butuh Legacy ${inv.legacyReq}`) : !affordable ? "Cash Kurang" : "Beli"}
+                  </Btn>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Panel>
     </div>
   );
 }

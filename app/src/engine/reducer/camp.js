@@ -3,6 +3,7 @@ import { clamp, fmt$ } from "../rng.js";
 import { CAMP_TIERS, SPONSOR_BRANDS } from "../data.js";
 import { facilityCost } from "../economy.js";
 import { CHEM_BOOST_UPGRADE, TEAM_BONDING_COST, TEAM_BONDING_CHEM, TEAM_BONDING_COOLDOWN } from "./constants.js";
+import { INVESTMENTS } from "../data/investments.js";
 
 export function reduceCamp(g, action) {
   switch (action.type) {
@@ -58,6 +59,19 @@ export function reduceCamp(g, action) {
         const remaining = TEAM_BONDING_COOLDOWN - (g.week - g._lastTeamBonding);
         g.log.unshift("⏳ Team bonding on cooldown — available in " + remaining + " weeks.");
       }
+      break;
+    }
+    case "PURCHASE_INVESTMENT": {
+      const inv = INVESTMENTS.find((i) => i.id === action.investmentId);
+      if (!inv) break;
+      if (!g.investments) g.investments = {};
+      if (g.investments[inv.id]) break; // udah dibeli, one-time only
+      if (inv.tierReq && (g.campTier || 0) < inv.tierReq) break;
+      if (inv.legacyReq && (g.legacy || 0) < inv.legacyReq) break;
+      if (g.cash < inv.cost) break;
+      g.cash -= inv.cost;
+      g.investments[inv.id] = true;
+      g.log.unshift(`🏛️ Investasi baru: ${inv.name} ($${(inv.cost/1000).toFixed(0)}K).`);
       break;
     }
   }
