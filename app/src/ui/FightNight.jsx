@@ -141,7 +141,7 @@ export default function FightNight({ fighter, done, staff }) {
     const displayLog = roundLog.log || [];
     if (tickIdx >= displayLog.length) {
       if (roundLog.finish) {
-        setStage(roundLog.finish.how === "KO" || roundLog.finish.how === "TKO" ? "knockdown" : "result");
+        setStage(roundLog.finish.how === "KO/TKO" ? "knockdown" : "result");
       } else if (roundLog.knockdown) {
         setStage("knockdown");
       } else {
@@ -183,7 +183,7 @@ export default function FightNight({ fighter, done, staff }) {
         {stage === "staredown" && <Staredown fighter={fighter} attitude={attitude} setAttitude={setAttitude} onContinue={() => setStage("weighin")} />}
         {stage === "weighin" && <WeighIn fighter={fighter} opp={opp} cutInfo={cutInfo} cutPct={cutPct} missedWeight={missedWeight} weighinIssue={weighinIssue} setWeighinIssue={setWeighinIssue} plan={plan} setPlan={setPlan} viewMode={viewMode} setViewMode={setViewMode} onStart={startFight} ca={ca} cb={cb} />}
         {stage === "entrance" && <Entrance fighter={fighter} opp={opp} ca={ca} cb={cb} />}
-        {stage === "round" && roundLog && <RoundView rnd={rnd} roundLog={roundLog} viewMode={viewMode} tickIdx={tickIdx} displayLog={displayLog} onEndRound={() => { setStage("corner"); setTimer(60); }} onSeeFinish={() => { setStage(roundLog.finish.how === "KO" || roundLog.finish.how === "TKO" ? "knockdown" : "result"); if (roundLog.finish.how !== "KO" && roundLog.finish.how !== "TKO") processResult(); }} hasFinish={!!roundLog.finish} />}
+        {stage === "round" && roundLog && <RoundView rnd={rnd} roundLog={roundLog} viewMode={viewMode} tickIdx={tickIdx} displayLog={displayLog} onEndRound={() => { setStage("corner"); setTimer(60); }} onSeeFinish={() => { setStage(roundLog.finish.how === "KO/TKO" ? "knockdown" : "result"); if (roundLog.finish.how !== "KO/TKO") processResult(); }} hasFinish={!!roundLog.finish} />}
         {stage === "corner" && !docCheck && <Corner rnd={rnd} totalRounds={totalRounds} timer={timer} state={state} runRound={runRound} processResult={processResult} />}
         {stage === "corner" && docCheck && <DoctorCheck fighter={fighter} opp={opp} cutA={cutA} cutB={cutB} onContinue={() => { setDocCheck(false); setStage("corner"); }} onRetire={() => { const isPlayerCut = cutA >= 6; setResult({ won: !isPlayerCut, how: "Doctor Stoppage", r: rnd }); setStage("result"); }} />}
         {stage === "knockdown" && <Knockdown roundLog={roundLog} rnd={rnd} onSeeResult={() => { processResult(); }} />}
