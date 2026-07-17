@@ -116,7 +116,10 @@ describe("Fighters", () => {
     expect(res.body.fighter.name).toBeTruthy();
     expect(res.body.fighter.archetype).toBeTruthy();
     expect(res.body.fighter.attrs).toBeTruthy();
-    expect(Object.keys(res.body.fighter.attrs).length).toBe(8);
+    const CORE_ATTRS = ["striking","wrestling","bjj","footwork","strength","cardio","chin","fightIQ"];
+    const attrKeys = Object.keys(res.body.fighter.attrs);
+    expect(attrKeys.length).toBeGreaterThanOrEqual(8);
+    expect(attrKeys).toEqual(expect.arrayContaining(CORE_ATTRS));
   });
 
   it("GET /api/fighters — scoped to user's camp", async () => {
