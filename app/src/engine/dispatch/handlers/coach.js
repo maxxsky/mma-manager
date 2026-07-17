@@ -1,5 +1,5 @@
 // Coach handlers — salary, poach counter, resign chance, leave
-import { clamp } from "../../rng.js";
+import { clamp, random } from "../../rng.js";
 import { onCoachRaiseDenied } from "../../events.js";
 
 export function registerCoachHandlers(register) {
@@ -32,7 +32,7 @@ export function registerCoachHandlers(register) {
     if (coach) {
       const c2 = c.coachResignChance;
       onCoachRaiseDenied(g, coach);
-      if (Math.random() < c2.chance) {
+      if (random() < c2.chance) {
         g.coaches = g.coaches.filter((x) => x.id !== coach.id);
         g.chemistry = clamp(g.chemistry - 8, 0, 100);
         g.log.unshift(`👋 ${coach.name} resign.`);

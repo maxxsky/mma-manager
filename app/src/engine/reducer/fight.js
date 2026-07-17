@@ -1,5 +1,5 @@
 // Fight domain — accept, counter, reject fight offers
-import { clamp } from "../rng.js";
+import { clamp, random, uid } from "../rng.js";
 import {
   PROMOTER_REL_GAIN_ACCEPT, PROMOTER_REL_LOSS_COUNTER, PROMOTER_REL_LOSS_REJECT,
 } from "./constants.js";
@@ -16,14 +16,14 @@ export function reduceFight(g, action) {
           tier: action.tier, title: action.title,
           titleTier: action.titleTier, defense: action.defense,
           oppRank: action.oppRank, contenderId: action.contenderId,
-          seed: (Math.random() * 2**31) | 0,
+          seed: Math.floor(random() * 2**31),
         };
         g.inbox = g.inbox.filter((x) => x.id !== action.messageId);
         if (g.promoterRel) g.promoterRel[action.tier] = clamp((g.promoterRel[action.tier] || 30) + PROMOTER_REL_GAIN_ACCEPT, 0, 100);
         g.log.unshift("📝 " + nf.name + " menerima fight " + action.tier + " vs " + (action.opponent ? action.opponent.name : "?") + ". Relasi " + action.tier + " +" + PROMOTER_REL_GAIN_ACCEPT + ".");
         // Press conference — pick your stance
         g.inbox.unshift({
-          id: (Math.random() * 2**31) | 0,
+          id: uid(),
           type: "press",
           fighterId: nf.id,
           opponentName: action.opponent?.name || "?",
@@ -47,7 +47,7 @@ export function reduceFight(g, action) {
           tier: action.tier, title: action.title,
           titleTier: action.titleTier, defense: action.defense,
           oppRank: action.oppRank, contenderId: action.contenderId,
-          seed: (Math.random() * 2**31) | 0,
+          seed: Math.floor(random() * 2**31),
         };
         g.inbox = g.inbox.filter((x) => x.id !== action.messageId);
         if (g.promoterRel) g.promoterRel[action.tier] = clamp(action.rel - PROMOTER_REL_LOSS_COUNTER, 0, 100);

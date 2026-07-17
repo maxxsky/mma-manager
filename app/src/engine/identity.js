@@ -180,7 +180,7 @@ export function generateFighterNickname(f) {
   if ((f.age || 30) >= 36 && totalFights >= 10) nicknames.push("The Veteran");
 
   if (nicknames.length === 0) return null;
-  return nicknames[Math.floor(Math.random() * nicknames.length)];
+  return pick(nicknames);
 }
 
 // ── COACH CAREER TRACKING ──
