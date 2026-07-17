@@ -18,6 +18,7 @@ import { reduceCoach } from "./reducer/coach.js";
 import { reduceContract } from "./reducer/contract.js";
 import { reduceFight } from "./reducer/fight.js";
 import { reduceUI } from "./reducer/ui.js";
+import { reduceStaff } from "./reducer/staff.js";
 
 export function reducer(g, action) {
   // Ignore undo/redo in the action log itself
@@ -70,6 +71,7 @@ export function reducer(g, action) {
   reduceContract(g, action);
   reduceFight(g, action);
   reduceUI(g, action);
+  reduceStaff(g, action);
 
   return g;
 }

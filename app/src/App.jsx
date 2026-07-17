@@ -196,7 +196,7 @@ export default function App() {
       )}
 
       {fightFighter?.booked && !showFightCard && (
-        <FightNight key={fightFighter.id} fighter={fightFighter} done={(fx, fightCtx) => {
+        <FightNight key={fightFighter.id} fighter={fightFighter} staff={g.staff} done={(fx, fightCtx) => {
           setG((old) => {
             const n = structuredClone(old);
             fx(n);

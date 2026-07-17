@@ -104,6 +104,7 @@ export function computeMembership(g) {
  */
 export function computeMonthlyExpense(g) {
   const coachSal = g.coaches.reduce((s, c) => s + ((!c.freeUntil || g.week > c.freeUntil) ? c.salary : 0), 0);
+  const staffSal = Object.values(g.staff || {}).reduce((s, m) => s + (m?.salary || 0), 0);
   const facVal = Object.values(g.facilities || {}).reduce((s, l) => s + l * 30000, 0);
   const maint = Math.round(facVal * FACILITY_MAINT_RATE);
   let training = 0;
@@ -116,8 +117,8 @@ export function computeMonthlyExpense(g) {
   const { members } = computeMembership(g);
   const opCost = members * 30;
   const fighterSupport = (g.roster?.length || 0) * 600;
-  return { coachSal, maint, training, opCost, fighterSupport, members,
-    total: coachSal + maint + training + opCost + fighterSupport };
+  return { coachSal, staffSal, maint, training, opCost, fighterSupport, members,
+    total: coachSal + staffSal + maint + training + opCost + fighterSupport };
 }
 
 // Shared facility upgrade cost — used by both UI and reducer

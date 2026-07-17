@@ -25,7 +25,7 @@ import Scoreboard from "../components/fight/Scoreboard.jsx";
 const STAGES = ["Staredown", "Weigh-in", "Fight", "Result"];
 const IN_FIGHT = new Set(["round", "corner", "knockdown", "entrance"]);
 
-export default function FightNight({ fighter, done }) {
+export default function FightNight({ fighter, done, staff }) {
   const opp = fighter.booked.opponent;
   const totalRounds = fighter.booked.title === true ? 5 : 3;
   const ca = ARCH_COLOR[fighter.archetype] || T.steel;
@@ -53,7 +53,7 @@ export default function FightNight({ fighter, done }) {
 
   // Hooks
   useFightSeed(fighter.id, fighter.booked.seed);
-  const { A, B, cutInfo, cutPct, missedWeight } = useFightPrep(fighter, opp, attitude);
+  const { A, B, cutInfo, cutPct, missedWeight } = useFightPrep(fighter, opp, attitude, staff);
 
   // Run round
   const runRound = (rn, st0, corner) => {

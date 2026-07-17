@@ -8,6 +8,7 @@ import { computeMonthlyIncome, computeMonthlyExpense, FACILITY_MAINT_RATE } from
 import { pushInboxEvent } from "../events.js";
 import { rollAddTalent, rollDiscoverTalent, pushTalentDiscoveryEvent } from "../talentPool.js";
 import { getTrainingCycle, getDevelopmentPhilosophy } from "../training-philosophy.js";
+import { genStaffCandidate } from "../data/staff.js";
 
 const SPONSOR_RENEWAL_WINDOW = 4; // settlement cycle tersisa sebelum kontrak berakhir, saat tawaran perpanjangan muncul
 
@@ -129,6 +130,13 @@ export function tickSettlement(g) {
   const alumniBonus = g.investments?.alumniNetwork ? 15 : 0;
   for (let i = 0; i < marketSize; i++) market.push(genCoach((g.rep || 0) + alumniBonus));
   g.coachMarket = market;
+
+  // ── Staff market — refresh tiap settlement, mirror coachMarket ──
+  if (!g.staffMarket) g.staffMarket = { cutman: [], nutritionist: [], sportsPsych: [] };
+  ["cutman", "nutritionist", "sportsPsych"].forEach((role) => {
+    const size = clamp(1 + Math.floor((g.rep || 0) / 20), 1, 3);
+    g.staffMarket[role] = Array.from({ length: size }, () => genStaffCandidate(role, g.rep));
+  });
 
   // Coach skill growth: +0.5/year for coaches with active fighters
   g.coaches.forEach((c) => {

@@ -41,6 +41,8 @@ export function useSaveLoad(setG) {
           if (s.campTier == null) s.campTier = 0;
           if (!s.relationships) s.relationships = {};
           if (!s.investments) s.investments = {};
+          if (!s.staff) s.staff = {};
+          if (!s.staffMarket) s.staffMarket = { cutman: [], nutritionist: [], sportsPsych: [] };
           if (s.rep == null || isNaN(s.rep) || s.rep <= 0) s.rep = 8;
           if (!s.sponsors) {
             s.sponsors = s.sponsor ? [{ brand: s.sponsor.brand, terms: "placement", rate: s.sponsor.rate, weeksLeft: null }] : [];

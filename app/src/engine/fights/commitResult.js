@@ -175,7 +175,9 @@ export function commitFightResult(g, fighter, result) {
     }
   } else {
     f.record.l++; f.streakL = (f.streakL || 0) + 1; f.streakW = 0;
-    const moraleLoss = f.traits?.includes("Iron Will") ? -4 : -14;
+    const baseMoraleLoss = f.traits?.includes("Iron Will") ? -4 : -14;
+    const psychSkill = g.staff?.sportsPsych?.skill || 0;
+    const moraleLoss = psychSkill ? Math.round(baseMoraleLoss * (1 - Math.min(psychSkill * 0.04, 0.36))) : baseMoraleLoss;
     f.morale = clamp(f.morale + moraleLoss, 0, 100);
     g.rep = clamp(g.rep - 3, 2, 100);
     g.chemistry = clamp(g.chemistry - 2, 0, 100);

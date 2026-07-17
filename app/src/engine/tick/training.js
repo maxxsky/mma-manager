@@ -118,7 +118,9 @@ export function tickTraining(g) {
 
       // Overtraining
       const discMult = g.coaches.some((c) => c.personality === "Disciplinarian") ? 0.75 : 1;
-      f.overtraining = clamp(f.overtraining + inten.ot * (f.ambition === "Grinder" ? 0.75 : 1) * discMult - 8, 0, 100);
+      const psychSkill = g.staff?.sportsPsych?.skill || 0;
+      const psychMult = psychSkill ? (1 - Math.min(psychSkill * 0.03, 0.27)) : 1;
+      f.overtraining = clamp(f.overtraining + inten.ot * (f.ambition === "Grinder" ? 0.75 : 1) * discMult * psychMult - 8, 0, 100);
       if (f.overtraining >= 90) {
         f.injury = { weeks: 2, label: "Breakdown (overtraining)", costPerWeek: 0 };
       }

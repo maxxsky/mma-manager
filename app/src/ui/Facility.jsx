@@ -5,6 +5,7 @@ import { T, Panel, Eyebrow, Tag, Btn, Meter, Mono, heat } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 import { CAMP_TIERS, COACH_PERSONALITIES } from "../engine/data.js";
 import { FACILITY_MAINT_RATE } from "../engine/economy.js";
+import { STAFF_ROLES } from "../engine/data/staff.js";
 
 export default function Facility({ g, dispatch, coachCap, rosterCap }) {
   const [showingMarket, setShowingMarket] = useState(false);
@@ -129,6 +130,50 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
             </div>
           ))}
         </Panel>
+      </div>
+
+      {/* Support Staff — full width below 2-column grid */}
+      <div style={{ gridColumn: "1 / -1" }}>
+      <Panel>
+        <Eyebrow color={T.gold}>Support Staff</Eyebrow>
+        <div style={{ display: "grid", gap: 10 }}>
+          {Object.values(STAFF_ROLES).map((role) => {
+            const hired = g.staff?.[role.id];
+            const market = g.staffMarket?.[role.id] || [];
+            return (
+              <div key={role.id} style={{ padding: "10px 12px", background: T.bg, borderRadius: T.r, border: `1px solid ${hired ? T.pos : T.line}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                  <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 13 }}>{role.icon} {role.label}</span>
+                  {hired && (
+                    <Btn color={T.neg} small onClick={() => dispatch({ type: "FIRE_STAFF", role: role.id })}>
+                      Fire
+                    </Btn>
+                  )}
+                </div>
+                <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3, marginBottom: 6 }}>{role.desc}</div>
+                {hired ? (
+                  <div style={{ fontFamily: T.mono, fontSize: 12, color: T.pos }}>
+                    {hired.name} — Skill {hired.skill} — ${hired.salary}/bln
+                  </div>
+                ) : market.length > 0 ? (
+                  <div style={{ display: "grid", gap: 4 }}>
+                    {market.map((cand) => (
+                      <div key={cand.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>{cand.name} — Skill {cand.skill} — ${cand.salary}/bln</span>
+                        <Btn color={T.gold} small onClick={() => dispatch({ type: "HIRE_STAFF", role: role.id, staffId: cand.id })}>
+                          Hire
+                        </Btn>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>Gak ada kandidat bulan ini.</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Panel>
       </div>
     </div>
   );
