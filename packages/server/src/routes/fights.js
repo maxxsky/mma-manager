@@ -1,8 +1,7 @@
 import { Router } from "express";
 import pg from "pg";
-import crypto from "crypto";
+import { resolveFight } from "../services/resolveFight.js";
 import { requireAuth } from "../middleware/auth.js";
-import { runFight, prepFighter } from "@ironfist/engine/fight.js";
 
 const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -215,75 +214,9 @@ fightRouter.post("/:id/resolve", async (req, res) => {
       return res.status(400).json({ error: "Both gameplans required" });
     }
 
-    // Fetch full fighter data from DB
-    const [aRes, bRes] = await Promise.all([
-      pool.query("SELECT * FROM fighters WHERE id = $1", [f.fighter_a_id]),
-      pool.query("SELECT * FROM fighters WHERE id = $1", [f.fighter_b_id]),
-    ]);
-    const fighterA = aRes.rows[0];
-    const fighterB = bRes.rows[0];
-
-    // Generate seed — crypto.randomInt, NOT Math.random
-    const seed = crypto.randomInt(1, 2147483647);
-
-    // Prep fighters (morale/age modifiers, weight class delta)
-    const A = prepFighter(fighterA);
-    const B = prepFighter(fighterB);
-
-    // Corner policy: return stored choice every round (simple MVP)
-    // runFight applies cornerPolicy to fighter A; fighter B uses AI default
-    const cornerPolicy = () => f.corner_choice_a || "go";
-
-    // runFight already calls setRNG(mulberry32(seed)) internally
-    // Default 3 rounds for non-title fights
-    const result = runFight(A, B, f.plan_a, cornerPolicy, seed, 3);
-
-    // Map winner "A"/"B" back to UUID
-    const winnerId = result.winner === "A" ? f.fighter_a_id : f.fighter_b_id;
-
-    // Update fight record
-    const updated = await pool.query(
-      `UPDATE fights SET
-        status = 'resolved', seed = $1, round = $2,
-        winner_id = $3, how = $4, round_log = $5,
-        resolved_at = now()
-       WHERE id = $6 RETURNING *`,
-      [
-        seed,
-        result.round,
-        winnerId,
-        result.how || "Decision",
-        JSON.stringify(result.logs || result.roundLogs),
-        req.params.id,
-      ]
-    );
-
-    // ── Update fighter records ──
-    const how = result.how || "Decision";
-    const loserId = result.winner === "A" ? f.fighter_b_id : f.fighter_a_id;
-
-    // Read current records, modify in JS, write back
-    const [wRes, lRes] = await Promise.all([
-      pool.query("SELECT record FROM fighters WHERE id = $1", [winnerId]),
-      pool.query("SELECT record FROM fighters WHERE id = $1", [loserId]),
-    ]);
-
-    const wRec = wRes.rows[0].record;
-    const lRec = lRes.rows[0].record;
-
-    wRec.w = (wRec.w || 0) + 1;
-    if (how === "KO/TKO" || how === "Doctor Stoppage") wRec.ko = (wRec.ko || 0) + 1;
-    else if (how === "Submission") wRec.sub = (wRec.sub || 0) + 1;
-    else wRec.dec = (wRec.dec || 0) + 1;
-
-    lRec.l = (lRec.l || 0) + 1;
-
-    await Promise.all([
-      pool.query("UPDATE fighters SET record = $1 WHERE id = $2", [JSON.stringify(wRec), winnerId]),
-      pool.query("UPDATE fighters SET record = $1 WHERE id = $2", [JSON.stringify(lRec), loserId]),
-    ]);
-
-    res.json({ fight: updated.rows[0] });
+    // Delegate to shared resolve function
+    const result = await resolveFight(req.params.id);
+    res.json({ fight: result });
   } catch (err) {
     console.error("Resolve error:", err.message);
     res.status(500).json({ error: "Internal server error" });
