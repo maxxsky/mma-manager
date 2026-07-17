@@ -1,3 +1,5 @@
+> ⚠️ ARSIP -- jangan dipercaya sebagai fakta terkini, ground truth ada di kode + test suite.
+
 # Gap List — GDD v3 vs Implementasi Saat Ini
 
 Catatan cara kerja dokumen ini: setiap baris di bawah kucek langsung ke file kode

@@ -1,3 +1,5 @@
+> ⚠️ ARSIP -- jangan dipercaya sebagai fakta terkini, ground truth ada di kode + test suite.
+
 # 02_ARCHITECTURE — MMA Manager
 
 > **Purpose:** How systems work together. Read this before implementing any feature that spans multiple files.

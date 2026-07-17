@@ -1,3 +1,5 @@
+> ⚠️ ARSIP -- jangan dipercaya sebagai fakta terkini, ground truth ada di kode + test suite.
+
 # MMA Manager — Vision Alignment Audit
 > "Does the implementation create the intended player experience?"
 

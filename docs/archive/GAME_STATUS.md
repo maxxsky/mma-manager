@@ -1,3 +1,5 @@
+> ⚠️ ARSIP -- jangan dipercaya sebagai fakta terkini, ground truth ada di kode + test suite.
+
 # Game Status (v2)
 
 > **Dashboard Implementasi Game — Design Compliance Audit (Re-audit)**
