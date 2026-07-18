@@ -2,18 +2,31 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import pg from "pg";
+import rateLimit from "express-rate-limit";
+import { getJwtSecret } from "../config.js";
 
 const { Pool } = pg;
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const SALT_ROUNDS = 10;
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-do-not-use-in-prod";
+const JWT_SECRET = getJwtSecret();
 const JWT_EXPIRY = "7d";
 
 export const authRouter = Router();
 
-// ── POST /api/auth/register ──────────────────────────────────
-authRouter.post("/register", async (req, res) => {
+// Rate limiting: 10 attempts per 15 minutes per IP
+// Disabled in test environment so test suite can run without blocking
+const authLimiter = process.env.NODE_ENV === "test"
+  ? (req, _res, next) => next()
+  : rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 10,
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: { error: "Too many attempts. Try again later." },
+    });
+
+authRouter.post("/register", authLimiter, async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
@@ -47,7 +60,7 @@ authRouter.post("/register", async (req, res) => {
 });
 
 // ── POST /api/auth/login ─────────────────────────────────────
-authRouter.post("/login", async (req, res) => {
+authRouter.post("/login", authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 

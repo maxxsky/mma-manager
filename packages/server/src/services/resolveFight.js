@@ -7,11 +7,12 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 /**
  * Resolve a fight: run the engine, update fight record + fighter records.
+ * All writes are wrapped in a single DB transaction for atomicity.
  * @param {string} fightId - UUID of the fight to resolve
  * @returns {object} The updated fight row
  */
 export async function resolveFight(fightId) {
-  // Fetch fight with fighter data
+  // Fetch fight with fighter data (read-only, outside transaction)
   const fight = await pool.query(
     `SELECT f.*, fa.camp_id AS camp_a, fb.camp_id AS camp_b
      FROM fights f
@@ -35,7 +36,7 @@ export async function resolveFight(fightId) {
     throw new Error("Both gameplans required");
   }
 
-  // Fetch full fighter data
+  // Fetch full fighter data (read-only, outside transaction)
   const [aRes, bRes] = await Promise.all([
     pool.query("SELECT * FROM fighters WHERE id = $1", [f.fighter_a_id]),
     pool.query("SELECT * FROM fighters WHERE id = $1", [f.fighter_b_id]),
@@ -61,36 +62,48 @@ export async function resolveFight(fightId) {
   const how = result.how || "Decision";
   const loserId = result.winner === "A" ? f.fighter_b_id : f.fighter_a_id;
 
-  // Update fight record
-  const updated = await pool.query(
-    `UPDATE fights SET
-      status = 'resolved', seed = $1, round = $2,
-      winner_id = $3, how = $4, round_log = $5,
-      resolved_at = now()
-     WHERE id = $6 RETURNING *`,
-    [seed, result.round, winnerId, how, JSON.stringify(result.logs || result.roundLogs), fightId]
-  );
+  // ── All writes in a single transaction ──
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
 
-  // Update fighter records
-  const [wRes, lRes] = await Promise.all([
-    pool.query("SELECT record FROM fighters WHERE id = $1", [winnerId]),
-    pool.query("SELECT record FROM fighters WHERE id = $1", [loserId]),
-  ]);
+    // Update fight record
+    const updated = await client.query(
+      `UPDATE fights SET
+        status = 'resolved', seed = $1, round = $2,
+        winner_id = $3, how = $4, round_log = $5,
+        resolved_at = now()
+       WHERE id = $6 RETURNING *`,
+      [seed, result.round, winnerId, how, JSON.stringify(result.logs || result.roundLogs), fightId]
+    );
 
-  const wRec = wRes.rows[0].record;
-  const lRec = lRes.rows[0].record;
+    // Update fighter records
+    const [wRes, lRes] = await Promise.all([
+      client.query("SELECT record FROM fighters WHERE id = $1", [winnerId]),
+      client.query("SELECT record FROM fighters WHERE id = $1", [loserId]),
+    ]);
 
-  wRec.w = (wRec.w || 0) + 1;
-  if (how === "KO/TKO" || how === "Doctor Stoppage") wRec.ko = (wRec.ko || 0) + 1;
-  else if (how === "Submission") wRec.sub = (wRec.sub || 0) + 1;
-  else wRec.dec = (wRec.dec || 0) + 1;
+    const wRec = wRes.rows[0].record;
+    const lRec = lRes.rows[0].record;
 
-  lRec.l = (lRec.l || 0) + 1;
+    wRec.w = (wRec.w || 0) + 1;
+    if (how === "KO/TKO" || how === "Doctor Stoppage") wRec.ko = (wRec.ko || 0) + 1;
+    else if (how === "Submission") wRec.sub = (wRec.sub || 0) + 1;
+    else wRec.dec = (wRec.dec || 0) + 1;
 
-  await Promise.all([
-    pool.query("UPDATE fighters SET record = $1 WHERE id = $2", [JSON.stringify(wRec), winnerId]),
-    pool.query("UPDATE fighters SET record = $1 WHERE id = $2", [JSON.stringify(lRec), loserId]),
-  ]);
+    lRec.l = (lRec.l || 0) + 1;
 
-  return updated.rows[0];
+    await Promise.all([
+      client.query("UPDATE fighters SET record = $1 WHERE id = $2", [JSON.stringify(wRec), winnerId]),
+      client.query("UPDATE fighters SET record = $1 WHERE id = $2", [JSON.stringify(lRec), loserId]),
+    ]);
+
+    await client.query("COMMIT");
+    return updated.rows[0];
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
 }
