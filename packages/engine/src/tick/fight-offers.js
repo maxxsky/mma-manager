@@ -27,31 +27,11 @@ function attachPromotion(offer, tier, g, ctx) {
 export function tickFightOffers(g) {
   if (!g || !g.roster) return;
   g.roster.forEach((f) => {
-    // ── Defense escalation (sebelum guard injury/booked — strip tetap jalan walau cedera) ──
+    // ── Title safety net: auto-strip at 32 weeks regardless of injury/booked ──
     const div = g.divisions[f.weightClass];
     const isChamp = div && div.champ && div.champ.player && div.champ.fighterId === f.id;
     if (isChamp) {
       const lastDef = div.champ.lastDefenseWeek || f.lastFightWeek || 0;
-      // Escalation warning: 28 minggu tanpa defense (tidak perlu < 32 — chemistry bisa skip fight-offers)
-      if (g.week - lastDef >= 28) {
-        const warned = g.inbox.some((m) => m.defenseEscalation && m.fighterId === f.id);
-        if (!warned) {
-          const weeksSinceLastDef = g.week - lastDef;
-          g.inbox.unshift({
-            id: uid(), type: "event", fighterId: f.id, expires: null,
-            defenseEscalation: true,
-            tier: "Major", show: 0, winBonus: 0,
-            title: `⚠️ DEFENSE OVERDUE — ${f.name} akan dicopot dalam 4 minggu`,
-            body: `Gelar juara ${f.weightClass} terancam! ${f.name} sudah ${Math.floor(weeksSinceLastDef / 4)} bulan tanpa pertahanan gelar. Jika tidak bertarung dalam 4 minggu ke depan, gelar akan otomatis dicopot.`,
-            defense: false, oppRank: 0, contenderId: null,
-            titleTier: "Major",
-            titleText: `⚠️ DEFENSE OVERDUE — ${f.name} akan dicopot dalam 4 minggu`,
-            weeks: 0,
-          });
-          g.log.unshift(`⚠️ ${f.name} — defense overdue. Title otomatis dicopot minggu ke-${g.week + (32 - (g.week - lastDef))}.`);
-        }
-      }
-      // Auto-strip: 32 minggu tanpa defense
       if (g.week - lastDef >= 32) {
         stripTitle(g, f.id);
       }
@@ -80,11 +60,12 @@ export function tickFightOffers(g) {
     }
 
     if (isChamp) {
-    // Mandatory defense
+    // Mandatory defense — create offer + escalation warning simultaneously
     if (
       g.week - (div.champ.lastDefenseWeek || f.lastFightWeek || 0) >= 24 &&
       !g.inbox.some((m) => m.type === "offer" && m.defense && m.fighterId === f.id)
     ) {
+      const defenseExpireWeeks = 3;
       const c0 = div.list[0];
       const opp = genFighter(clamp((c0.level || 1.3) + 0.05, 0.8, 1.5));
       opp.name = c0.name; opp.archetype = c0.archetype; opp.weightClass = f.weightClass;
@@ -92,12 +73,22 @@ export function tickFightOffers(g) {
       opp.campId = c0.campId || null;
       opp.campName = c0.campName || null;
       g.inbox.unshift({
-        id: uid(), type: "offer", fighterId: f.id, expires: 3,
+        id: uid(), type: "offer", fighterId: f.id, expires: defenseExpireWeeks,
         tier: "Major", show: RI(100, 220) * 1000, winBonus: RI(100, 220) * 1000,
         opponent: opp, title: true, defense: true, oppRank: 1, contenderId: c0.id,
         titleTier: "Major", titleText: "🛡️ MANDATORY TITLE DEFENSE", weeks: RI(4, 6),
       });
-      attachPromotion(g.inbox[0], "Major", g, { r: rankOf(g, f), streakW: f.streakW, streakL: f.streakL });
+      // Push escalation warning at the same time — must appear before the offer expires
+      g.inbox.unshift({
+        id: uid(), type: "event", fighterId: f.id, expires: null,
+        defenseEscalation: true,
+        tier: "Major",
+        title: `⚠️ MANDATORY DEFENSE — ${f.name} harus terima tawaran dalam ${defenseExpireWeeks} minggu atau gelar dicopot`,
+        body: `Gelar juara ${f.weightClass} terancam! ${f.name} sudah ${Math.floor((g.week - (div.champ.lastDefenseWeek || f.lastFightWeek || 0)) / 4)} bulan tanpa pertahanan gelar. Tawaran mandatory defense ada di inbox — tolak atau expire dalam ${defenseExpireWeeks} minggu, gelar otomatis dicopot.`,
+        titleTier: "Major",
+        weeks: 0,
+      });
+      attachPromotion(g.inbox[1], "Major", g, { r: rankOf(g, f), streakW: f.streakW, streakL: f.streakL });
       g.log.unshift(
         `🛡️ Mandatory defense untuk ${f.name} tiba — tolak atau biarkan expire = title dicopot.`,
       );

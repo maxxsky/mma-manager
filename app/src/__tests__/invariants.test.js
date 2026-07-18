@@ -195,7 +195,7 @@ describe('Game State Invariants', () => {
     expect(stripped).toBe(true)
   })
 
-  it('escalation warning fires only once between week 28-31 (champion injured, no offers generated)', () => {
+  it('escalation warning fires alongside mandatory-offer, only once, before strip', () => {
     useSeed(42)
     const g = createTestGame()
     const f = g.roster[0]
@@ -203,20 +203,35 @@ describe('Game State Invariants', () => {
     g.divisions[f.weightClass].champ = { name: f.name, player: true, fighterId: f.id, wonWeek: 1, lastDefenseWeek: 1, titleDefenses: 0 }
     f.titles = ['Major World Champion']
     f.lastFightWeek = 1
-    // Champion injured — no mandatory offer is generated (guarded by f.injury)
-    f.injury = { weeks: 100, label: 'Test', costPerWeek: 0 }
+    // Champion NOT injured — mandatory offer + warning should fire at week 24
 
-    // Fast-forward to week ~27 by running ticks, then check explicitly
-    // Run up to 100 ticks to account for chemistry skipping fight-offers
-    let found = false
-    for (let i = 0; i < 100; i++) {
+    // Run ticks until warning appears
+    let warningFound = false
+    let warningWeek = -1
+    let stripWeek = -1
+    let offerFound = false
+    for (let i = 0; i < 35; i++) {
       tick(g)
-      if (g.inbox.some((m) => m.defenseEscalation && m.fighterId === f.id)) {
-        found = true
-        break
+
+      const hasWarning = g.inbox.some((m) => m.defenseEscalation && m.fighterId === f.id)
+      const hasOffer = g.inbox.some((m) => m.type === "offer" && m.defense && m.fighterId === f.id)
+
+      if (hasWarning && !warningFound) {
+        warningFound = true
+        warningWeek = g.week
+      }
+      if (hasOffer && !offerFound) {
+        offerFound = true
+      }
+      if (!g.divisions[f.weightClass]?.champ && stripWeek === -1) {
+        stripWeek = g.week
       }
     }
-    expect(found).toBe(true)
+
+    expect(warningFound).toBe(true)
+    expect(offerFound).toBe(true)
+    expect(warningWeek).toBeLessThanOrEqual(stripWeek) // warning BEFORE strip
+    expect(warningWeek).toBeGreaterThanOrEqual(22) // fires around week 24
 
     // Count total escalation warnings — should be exactly 1
     const warnings = g.inbox.filter((m) => m.defenseEscalation && m.fighterId === f.id)
@@ -226,6 +241,10 @@ describe('Game State Invariants', () => {
     for (let i = 0; i < 12; i++) tick(g)
     const warningsAfter = g.inbox.filter((m) => m.defenseEscalation && m.fighterId === f.id)
     expect(warningsAfter.length).toBe(1)
+
+    // Verify warning text uses actual expire weeks (not hardcoded 4)
+    const msg = g.inbox.find((m) => m.defenseEscalation)
+    expect(msg.title).toMatch(/3 minggu/) // uses defenseExpireWeeks = 3
   })
 
   it('vacant title: player rank #1 receives offer, AI resolution skipped', () => {
