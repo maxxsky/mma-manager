@@ -249,10 +249,14 @@ export function tickFightOffers(g) {
         opp = genFighter(aiScale); opp.name = div.champ.name; oppRank = 0;
       } else if (div && (r != null || (f.record.w >= 2 && rep >= 20 && random() < 0.35))) {
         const c = div.list[oppIdx];
-        opp = genFighter(clamp(c.level || 1, 0.5, 1.5));
-        opp.name = c.name; opp.archetype = c.archetype;
-        opp.campId = c.campId || null; opp.campName = c.campName || null;
-        oppRank = oppIdx + 1; contenderId = c.id;
+        if (c) {
+          opp = genFighter(clamp(c.level || 1, 0.5, 1.5));
+          opp.name = c.name; opp.archetype = c.archetype;
+          opp.campId = c.campId || null; opp.campName = c.campName || null;
+          oppRank = oppIdx + 1; contenderId = c.id;
+        } else {
+          opp = genFighter(clamp(avgSkill(f) / 60 + R(-0.08, 0.1), 0.3, 1.5));
+        }
       } else {
         opp = genFighter(clamp(avgSkill(f) / 60 + R(-0.08, 0.1), 0.3, 1.5));
       }
