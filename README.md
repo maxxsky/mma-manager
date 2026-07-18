@@ -1,5 +1,7 @@
 # 🥊 MMA Manager — Ironfist Edition
 
+[![CI](https://github.com/maxxsky/mma-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/maxxsky/mma-manager/actions/workflows/ci.yml)
+
 **A single-player MMA camp management simulation game.** Build your gym, recruit fighters, train champions, negotiate contracts, and compete through the ranks — from local shows to world title fights.
 
 Built with a **pure JavaScript engine** (zero UI dependencies) layered under a **React + Vite** frontend — architecturally ready for multiplayer backend migration.

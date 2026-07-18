@@ -36,11 +36,14 @@ export function tickFightOffers(g) {
       if (g.week - lastDef >= 28) {
         const warned = g.inbox.some((m) => m.defenseEscalation && m.fighterId === f.id);
         if (!warned) {
+          const weeksSinceLastDef = g.week - lastDef;
           g.inbox.unshift({
             id: uid(), type: "event", fighterId: f.id, expires: null,
             defenseEscalation: true,
             tier: "Major", show: 0, winBonus: 0,
-            title: true, defense: false, oppRank: 0, contenderId: null,
+            title: `⚠️ DEFENSE OVERDUE — ${f.name} akan dicopot dalam 4 minggu`,
+            body: `Gelar juara ${f.weightClass} terancam! ${f.name} sudah ${Math.floor(weeksSinceLastDef / 4)} bulan tanpa pertahanan gelar. Jika tidak bertarung dalam 4 minggu ke depan, gelar akan otomatis dicopot.`,
+            defense: false, oppRank: 0, contenderId: null,
             titleTier: "Major",
             titleText: `⚠️ DEFENSE OVERDUE — ${f.name} akan dicopot dalam 4 minggu`,
             weeks: 0,
