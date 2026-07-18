@@ -3,6 +3,7 @@ import { R, RI, clamp, pick, fmt$, uid, random } from "../rng.js";
 import { ATTRS } from "../data.js";
 import { genFighter, assignAgent, genCoach } from "../fighter.js";
 import { pushInboxEvent } from "../events.js";
+import { COACH_SALARY_CEILING } from "../economy.js";
 
 export function tickRivals(g) {
   if (!g || !g.rivals) return;
@@ -154,12 +155,13 @@ export function tickRivals(g) {
       const nonFree = g.coaches.filter((c) => !c.freeUntil || g.week > c.freeUntil);
       if (nonFree.length > 0) {
         const tc = pick(nonFree);
+        const poachSalary = Math.min(tc.salary * 2, COACH_SALARY_CEILING);
         g.inbox.unshift({
           id: uid(), type: "event",
           title: `🦊 ${r.name} coba poach ${tc.name}`,
-          body: `${tc.name} ditawari gaji ${fmt$(tc.salary * 2)} oleh ${r.name}. Kalau counter, harus naikkan gaji ke level itu.`,
+          body: `${tc.name} ditawari gaji ${fmt$(poachSalary)} oleh ${r.name}. Kalau counter, harus naikkan gaji ke level itu.`,
           choices: [
-            { label: `Naikkan gaji (${fmt$(tc.salary * 2)})`, coachPoach: { id: tc.id, newSalary: tc.salary * 2, rivalId: r.id } },
+            { label: `Naikkan gaji (${fmt$(poachSalary)})`, coachPoach: { id: tc.id, newSalary: poachSalary, rivalId: r.id } },
             { label: "Lepas — rekrut pengganti", coachLeave: tc.id },
           ],
         });

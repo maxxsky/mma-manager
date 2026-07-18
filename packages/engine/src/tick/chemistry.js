@@ -1,6 +1,7 @@
 // Chemistry domain — camp events, fighter relationships
 import { clamp, pick, fmt$, uid, random } from "../rng.js";
 import { CAMP_TIERS } from "../data.js";
+import { COACH_SALARY_CEILING } from "../economy.js";
 
 export function tickChemistry(g) {
   if (!g || !g.roster) return true;
@@ -32,7 +33,11 @@ export function tickChemistry(g) {
       const tenureYears = Math.floor(tenureWeeks / 48);
       const raisePct = clamp(0.10 + tenureYears * 0.03 + (coachTarget.skill - 3) * 0.02, 0.08, 0.50);
       const raiseAmt = Math.round(coachTarget.salary * raisePct);
-      const newSalary = coachTarget.salary + raiseAmt;
+      let newSalary = coachTarget.salary + raiseAmt;
+      // Apply salary ceiling — cap at max derived value
+      if (newSalary > COACH_SALARY_CEILING) {
+        newSalary = COACH_SALARY_CEILING;
+      }
       const hasRaisedRecently = coachTarget.lastRaiseWeek && g.week - coachTarget.lastRaiseWeek < 48;
       if (hasRaisedRecently || raiseAmt < 200) return false; // preserved: original returned from tick(), skipping rest of cycle
       g.inbox.unshift({

@@ -32,6 +32,12 @@ export function facBonus(g, gains) {
 // Shared facility maintenance rate — single source of truth
 export const FACILITY_MAINT_RATE = 0.012;
 
+// Coach salary ceiling — prevent runaway compounding from yearly raises + poach doubling
+// Derived from genCoach(): maxSkill=9, salary=skill*RI(1600,2400)
+// Ceiling = maxSkill * maxMultiplier * 5 = 9 * 2400 * 5 = $108,000
+// Allows ~5-7 years of raises before capping, then acts as hard limit
+export const COACH_SALARY_CEILING = 108000;
+
 /**
  * Compute monthly income exactly as tickSettlement pays it.
  * Used by both settlement.js (execution) and finance.js (preview)
