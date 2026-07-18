@@ -31,16 +31,18 @@ export function generateComparisonNews(ctx) {
   const events = [];
 
   ctx.roster.forEach(f => {
-    // Young champion comparison
+    // Young champion comparison — one-time flag per fighter
     if (f.milestoneFirstTitle && f.age <= 25 && ctx.youngestChamp.value > 0) {
-      if (f.age <= ctx.youngestChamp.value) {
+      if (f.age <= ctx.youngestChamp.value && !f.youngChampAnnounced) {
+        f.youngChampAnnounced = true;
         events.push(TEMPLATES.youngestChamp(f, ctx.youngestChamp));
       }
     }
 
-    // Approaching KO record
+    // Approaching KO record — one-time flag per fighter
     const koRecord = ctx.mostKOs.value || 0;
-    if ((f.record?.ko || 0) >= koRecord - 2 && koRecord > 0 && f.record.ko < koRecord) {
+    if ((f.record?.ko || 0) >= koRecord - 2 && koRecord > 0 && f.record.ko < koRecord && !f.koRecordChaseAnnounced) {
+      f.koRecordChaseAnnounced = true;
       events.push(TEMPLATES.closingInKO(f, ctx.mostKOs));
     }
   });

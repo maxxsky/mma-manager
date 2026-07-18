@@ -268,27 +268,72 @@ describe("narrative/generators — Dedup & Spam Audit", () => {
     });
   });
 
-  // 12. Comparison — POTENTIAL SPAM BUG (no dedup, no cooldown)
+  // 12. Comparison — FIXED spam bug (same pattern as Rising Star)
   describe("comparison.js — generateComparisonNews", () => {
-    it("fires for young champion with record — but NO dedup between calls", () => {
-      // This test proves the generator fires on EVERY call for same conditions
+    it("young champion comparison fires only once — flag prevents repeat", () => {
       const ctx = {
         roster: [makeFighter({ milestoneFirstTitle: true, age: 24, record: { w: 10, l: 2, ko: 8, sub: 0, dec: 2 } })],
         youngestChamp: { value: 25, holder: "Old Record" },
         mostKOs: { value: 12, holder: "KO King" },
       };
-      // Call 5 times with same state
+      // Call 5 times with same state — only 1 event total
       let totalEvents = 0;
       for (let i = 0; i < 5; i++) {
         const events = generateComparisonNews(ctx);
         totalEvents += events.length;
       }
-      // ⚠ If no dedup: each call produces events → total > 1 per target
-      // This test documents the current behavior (no dedup = can repeat)
-      // The generator has NEITHER a flag NOR a cooldown mechanism
-      // In practice, it's called every narrativeTick
-      expect(totalEvents).toBeGreaterThan(0);
-      // Document: this is the same bug pattern as Rising Star
+      // After fix: youngChampAnnounced flag blocks repeats
+      expect(totalEvents).toBe(1);
+      // Verify flag was set on the fighter
+      expect(ctx.roster[0].youngChampAnnounced).toBe(true);
+    });
+
+    it("KO record chase fires only once — flag prevents repeat", () => {
+      const ctx = {
+        roster: [makeFighter({ record: { w: 12, l: 2, ko: 11, sub: 0, dec: 1 } })],
+        youngestChamp: { value: 0, holder: "" },
+        mostKOs: { value: 12, holder: "KO King" },
+      };
+      // Fighter has 11 KOs, record is 12 → within 2 → should fire
+      let totalEvents = 0;
+      for (let i = 0; i < 5; i++) {
+        const events = generateComparisonNews(ctx);
+        totalEvents += events.length;
+      }
+      // After fix: koRecordChaseAnnounced flag blocks repeats
+      expect(totalEvents).toBe(1);
+      expect(ctx.roster[0].koRecordChaseAnnounced).toBe(true);
+    });
+
+    it("two conditions are independent — one fighter can trigger both", () => {
+      const ctx = {
+        roster: [makeFighter({
+          milestoneFirstTitle: true, age: 24,
+          record: { w: 12, l: 2, ko: 11, sub: 0, dec: 1 },
+        })],
+        youngestChamp: { value: 25, holder: "Old" },
+        mostKOs: { value: 12, holder: "KO King" },
+      };
+      const events = generateComparisonNews(ctx);
+      // Both conditions met → 2 events
+      expect(events.length).toBe(2);
+
+      // Second call — both flags set → 0 events
+      const again = generateComparisonNews(ctx);
+      expect(again.length).toBe(0);
+    });
+
+    it("does not fire for fighter who doesn't meet conditions", () => {
+      const ctx = {
+        roster: [makeFighter({ age: 30, record: { w: 5, l: 1, ko: 2, sub: 0, dec: 3 } })],
+        youngestChamp: { value: 0, holder: "" },
+        mostKOs: { value: 20, holder: "KO King" },
+      };
+      // age 30 > 25 → no young champ
+      // koRecord = 20, fighter has 2 KOs, 20-2 = 18, not >= (20-2=18)... wait, 2 >= 18? No.
+      // Actually 20-2=18, fighter has 2 KO, 2 >= 18 is false → no KO record event
+      const events = generateComparisonNews(ctx);
+      expect(events.length).toBe(0);
     });
   });
 
