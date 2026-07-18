@@ -45,10 +45,12 @@ const trainMod = await import(join(appSrc, "training-philosophy.js"));
 const fighterMod = await import(join(appSrc, "fighter.js"));
 const dispatchMod = await import(join(appSrc, "dispatch.js"));
 const reducerMod = await import(join(appSrc, "reducer", "ui.js"));
+const economyMod = await import(join(appSrc, "economy.js"));
 
 const { newGame, tick } = engine;
 const { setRNG, setUID, clamp, random } = rngMod;
 const { dispatchEvent } = dispatchMod;
+const { computeMonthlyIncome, computeMonthlyExpense } = economyMod;
 
 // ── Helpers ──
 function mulberry32(s) {
@@ -228,6 +230,7 @@ function run(seed, label) {
   let maxCoachCount = g.coaches?.length || 0;
   let predecessorCount = g.coaches?.length || 0;
   const saveSnapshots = [];  // weekly save-size snapshots
+  const economySnapshots = []; // annual income/expense breakdown
   const phaseRecords = [];   // 5-year (260-week) phase records
 
   // Phase tracking
@@ -326,6 +329,18 @@ function run(seed, label) {
       const saveSize = JSON.stringify(g).length;
       saveSnapshots.push({ week: w, saveSize });
 
+      // Capture income/expense breakdown at settlement week
+      if (w % 4 === 0) {
+        const income = computeMonthlyIncome(g);
+        const expense = computeMonthlyExpense(g);
+        economySnapshots.push({
+          week: w, year: Math.floor(w / 48) + 1,
+          roster: g.roster?.length || 0, campTier: g.campTier || 0, rep: g.rep || 0,
+          income,
+          expense,
+        });
+      }
+
       // Track roster replacements: roster not empty = alive
     }
 
@@ -370,6 +385,20 @@ function run(seed, label) {
   console.log(`  Week  Size (KB)`);
   for (const s of saveSnapshots) {
     console.log(`  W${String(s.week).padStart(4)}  ${(s.saveSize / 1024).toFixed(2)} KB`);
+  }
+
+  // Economy breakdown per year
+  console.log(`\n💰 Income/Expense Breakdown per Year (settlement month):`);
+  console.log(`  Year  Tier  Rep  Rstr  Income(Total)  Sponsor  FSpons  ChBonus  Merch   Member  |  Expense(Total) Coach  Staff  Maint  Train  OpCost  FSupport`);
+  console.log(`  ${"-".repeat(140)}`);
+  for (const s of economySnapshots) {
+    const inc = s.income;
+    const exp = s.expense;
+    console.log(
+      `  Y${String(s.year).padStart(2)}  T${s.campTier}  ${String(s.rep).padStart(3)}  ${String(s.roster).padStart(3)} ` +
+      `${fmt$(inc.total).padStart(10)}  ${fmt$(inc.sponsorAmt).padStart(7)}  ${fmt$(inc.fSponsor).padStart(6)}  ${fmt$(inc.championBonus).padStart(7)}  ${fmt$(inc.merchRevenue).padStart(5)}  ${fmt$(inc.membershipRevenue).padStart(6)}  |  ` +
+      `${fmt$(exp.total).padStart(10)}  ${fmt$(exp.coachSal).padStart(5)}  ${fmt$(exp.staffSal).padStart(5)}  ${fmt$(exp.maint).padStart(5)}  ${fmt$(exp.training).padStart(5)}  ${fmt$(exp.opCost).padStart(5)}  ${fmt$(exp.fighterSupport).padStart(5)}`
+    );
   }
 
   // Phase win-rates
