@@ -1,10 +1,11 @@
 // Fight outcome persistence — moved from UI to career layer
-import { clamp, RI, uid } from "../rng.js";
+import { clamp, RI, uid, random, pick, fmt$ } from "../rng.js";
 import { processFightResult, processRivalry, updateRivalryResult, processTitleChange } from "../career.js";
 import { queueDelayedEvent, pushInboxEvent } from "../events.js";
 import { TITLE_CELEBRATION_DELAY_WEEKS, TITLE_SPONSOR_DELAY_WEEKS } from "../events/config.js";
 import { recordEra } from "../world/history.js";
 import { avgSkill } from "../fighter.js";
+import { FIGHT_INJURY_CHANCE, FIGHT_INJURY_TIERS, FIGHT_INJURY_LABELS } from "../data.js";
 
 /** Commit fight result to game state. Called from FightNight done() callback. */
 export function commitFightResult(g, fighter, result) {
@@ -211,5 +212,64 @@ export function commitFightResult(g, fighter, result) {
       f.morale = clamp((f.morale || 0) - 8, 0, 100);
       g.rep = clamp((g.rep || 0) - 5, 2, 100);
     }
+  }
+
+  // ── Track last fight week ──
+  f.lastFightWeek = g.week;
+
+  // ── Fight → injury roll ──
+  // Roll injury chance for THIS fighter based on outcome + finish method.
+  // Losers always carry higher risk; finishes (KO/Sub) more dangerous than Decision.
+  // Uses seeded random() per CONSTRAINTS.md — fully deterministic.
+  const howKey = result.how === "Doctor Stoppage" ? "Doctor"
+    : result.how === "KO/TKO" ? "KO"
+    : result.how;
+  const chanceKey = (result.won ? "winner_" : "loser_") + howKey;
+  const baseChance = FIGHT_INJURY_CHANCE[chanceKey];
+  if (baseChance != null && random() < baseChance) {
+    // Determine severity tier
+    const sevRoll = random();
+    let tier = null;
+    for (const t of FIGHT_INJURY_TIERS) {
+      if (sevRoll < t.threshold) {
+        tier = t;
+        break;
+      }
+    }
+    if (!tier) tier = FIGHT_INJURY_TIERS[FIGHT_INJURY_TIERS.length - 1];
+
+    const weeks = RI(tier.weeksMin, tier.weeksMax);
+    const costPerWeek = Math.round(tier.totalCost / weeks);
+    const labelBodyParts = FIGHT_INJURY_LABELS[howKey] || FIGHT_INJURY_LABELS.Decision;
+    const label = pick(labelBodyParts);
+
+    f.injury = { weeks, label, costPerWeek, tier: tier.tier };
+
+    // Track injury stats
+    f.injuryCount = (f.injuryCount || 0) + 1;
+    if (tier.tier >= 2) f.seriousInjuries = (f.seriousInjuries || 0) + 1;
+
+    // Career history entry for notable injuries
+    if (tier.tier >= 2) {
+      if (!f.careerHistory) f.careerHistory = [];
+      f.careerHistory.push({ week: g.week, type: "injury", text: `${label} — ${weeks}w recovery (fight)` });
+    }
+
+    // Injury inbox event — allows physio/push/rest choices
+    const medMult = 1 - (g.facilities?.medical || 1 - 1) * 0.05;
+    const physioCost = Math.round(tier.totalCost * 0.5 * medMult);
+    g.inbox.unshift({
+      id: uid(), type: "injury", fighterId: f.id,
+      title: `🚑 ${f.name}: ${label} (${weeks} minggu)`,
+      body: `${f.name} mengalami ${tier.label.toLowerCase()} cedera akibat pertarungan. Biaya perawatan ${fmt$(tier.totalCost)}.`,
+      choices: [
+        { label: `🏥 Physio Therapy ($${physioCost}) — kurangi 30% waktu`, choice: "physio", fighterId: f.id, physioCost },
+        { label: "💪 Push Recovery (gratis) — kurangi 40%, risiko re-injury", choice: "push", fighterId: f.id },
+        { label: "🛌 Rest Normally — biarkan sembuh alami", choice: "rest", fighterId: f.id },
+      ],
+    });
+
+    f.morale = clamp(f.morale - (tier.tier >= 2 ? 14 : 8), 0, 100);
+    g.log.unshift(`🚑 ${f.name}: ${label} (${weeks} minggu, biaya ${fmt$(tier.totalCost)}).`);
   }
 }

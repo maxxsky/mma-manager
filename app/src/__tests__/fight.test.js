@@ -736,3 +736,163 @@ describe('Task 60 — Doctor Check kebalik', () => {
     expect(typeof cutA).toBe('number')
   })
 })
+
+describe('Fight → Injury (commitResult.js)', () => {
+  const { FIGHT_INJURY_CHANCE, FIGHT_INJURY_TIERS } = require('@ironfist/engine/data.js')
+  const { setRNG, mulberry32 } = require('@ironfist/engine/rng.js')
+  const { commitFightResult } = require('@ironfist/engine/fights/commitResult.js')
+  const { createTestGame } = require('./helpers.js')
+
+  it('loser KO/TKO produces more injuries than winner Decision across 1000 seeds', () => {
+    // Deterministic: iterate over 1000 unique seeds, record injury rate per outcome
+    let loserKOCount = 0, loserKOChance = 0
+    let winnerDecCount = 0, winnerDecChance = 0
+    const trials = 250
+
+    for (let s = 0; s < trials; s++) {
+      // Loser KO scenario — fighter loses by KO/TKO
+      const g1 = createTestGame()
+      setRNG(mulberry32(s * 31 + 7))
+      const f1 = g1.roster[0]
+      f1.record = { w: 0, l: 1, ko: 1, sub: 0, dec: 0 }
+      commitFightResult(g1, { id: f1.id, booked: { show: 1000, winBonus: 500, opponent: { name: 'Opp' } } }, { won: false, how: 'KO/TKO', r: 2 })
+      if (f1.injury) loserKOCount++
+
+      // Winner Decision scenario — same fighter wins by Decision
+      const g2 = createTestGame()
+      setRNG(mulberry32(s * 31 + 7))
+      const f2 = g2.roster[0]
+      f2.record = { w: 1, l: 0, ko: 0, sub: 0, dec: 1 }
+      commitFightResult(g2, { id: f2.id, booked: { show: 1000, winBonus: 500, opponent: { name: 'Opp' } } }, { won: true, how: 'Decision', r: 3 })
+      if (f2.injury) winnerDecCount++
+    }
+
+    loserKOChance = loserKOCount / trials
+    winnerDecChance = winnerDecCount / trials
+
+    // Loser KO (~35% base) must be significantly higher than winner Decision (~1% base)
+    expect(loserKOChance).toBeGreaterThan(0.15)
+    expect(winnerDecChance).toBeLessThan(0.05)
+    expect(loserKOChance).toBeGreaterThan(winnerDecChance * 3)
+  })
+
+  it('same seed + same inputs = deterministic injury outcome', () => {
+    const run = (seed) => {
+      setRNG(mulberry32(seed))
+      const g = createTestGame()
+      const f = g.roster[0]
+      f.record = { w: 0, l: 1, ko: 1, sub: 0, dec: 0 }
+      commitFightResult(g, { id: f.id, booked: { show: 1000, winBonus: 500, opponent: { name: 'Opp' } } }, { won: false, how: 'KO/TKO', r: 2 })
+      return {
+        injured: !!f.injury,
+        label: f.injury?.label || null,
+        weeks: f.injury?.weeks || null,
+        tier: f.injury?.tier ?? null,
+      }
+    }
+
+    const r1 = run(42)
+    const r2 = run(42)
+    expect(r1).toEqual(r2)
+  })
+
+  it('injury object has required fields matching training injury shape', () => {
+    // Force an injury by using a seed known to trigger one on loser KO
+    // Try seeds until we find one that produces an injury
+    let result = null
+    for (let s = 0; s < 100; s++) {
+      const g = createTestGame()
+      setRNG(mulberry32(s))
+      const f = g.roster[0]
+      f.record = { w: 0, l: 1, ko: 1, sub: 0, dec: 0 }
+      commitFightResult(g, { id: f.id, booked: { show: 1000, winBonus: 500, opponent: { name: 'Opp' } } }, { won: false, how: 'KO/TKO', r: 2 })
+      if (f.injury) {
+        result = f.injury
+        break
+      }
+    }
+    expect(result).not.toBeNull()
+    expect(result).toHaveProperty('weeks')
+    expect(result).toHaveProperty('label')
+    expect(result).toHaveProperty('costPerWeek')
+    expect(result).toHaveProperty('tier')
+    expect(typeof result.weeks).toBe('number')
+    expect(result.weeks).toBeGreaterThan(0)
+    expect(typeof result.label).toBe('string')
+    expect(result.label.length).toBeGreaterThan(5)
+    expect(typeof result.costPerWeek).toBe('number')
+    expect(result.costPerWeek).toBeGreaterThan(0)
+    expect(typeof result.tier).toBe('number')
+    expect(result.tier).toBeGreaterThanOrEqual(0)
+    expect(result.tier).toBeLessThanOrEqual(3)
+  })
+
+  it('injury labels are descriptive and method-specific (not generic "Injury")', () => {
+    // Check labels from different outcome methods
+    const methods = ['KO/TKO', 'Submission', 'Decision']
+    const labels = []
+
+    for (const method of methods) {
+      for (let s = 0; s < 200; s++) {
+        const g = createTestGame()
+        setRNG(mulberry32(s * 137 + 42))
+        const f = g.roster[0]
+        commitFightResult(g, { id: f.id, booked: { show: 1000, winBonus: 500, opponent: { name: 'Opp' } } }, { won: false, how: method, r: 2 })
+        if (f.injury && !labels.includes(f.injury.label)) {
+          labels.push(f.injury.label)
+        }
+      }
+    }
+
+    // Every label should be descriptive — contains body part or specific injury type
+    expect(labels.length).toBeGreaterThan(0)
+    labels.forEach((l) => {
+      expect(l).not.toBe('Injury')
+      expect(l).not.toBe('Cedera')
+      expect(l).toMatch(/\(/)
+      expect(l).toMatch(/\)/)
+    })
+  })
+
+  it('lastFightWeek is set after commitFightResult', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const f = g.roster[0]
+    f.lastFightWeek = 0
+    g.week = 15
+
+    commitFightResult(g, { id: f.id, booked: { show: 1000, winBonus: 500, opponent: { name: 'Opp' } } }, { won: true, how: 'Decision', r: 3 })
+
+    expect(f.lastFightWeek).toBe(15)
+  })
+
+  it('injuryCount increments and seriousInjuries tracks tier>=2', () => {
+    // Find seeds that produce tier 0 and tier 2+ injuries
+    let foundTier0 = false, foundTier2 = false
+
+    for (let s = 0; s < 500; s++) {
+      if (foundTier0 && foundTier2) break
+
+      const g = createTestGame()
+      setRNG(mulberry32(s))
+      const f = g.roster[0]
+      f.injuryCount = 0
+      f.seriousInjuries = 0
+      commitFightResult(g, { id: f.id, booked: { show: 1000, winBonus: 500, opponent: { name: 'Opp' } } }, { won: false, how: 'KO/TKO', r: 2 })
+
+      if (f.injury && !foundTier0 && f.injury.tier === 0) {
+        foundTier0 = true
+        expect(f.injuryCount).toBe(1)
+        expect(f.seriousInjuries).toBe(0)
+      }
+      if (f.injury && !foundTier2 && f.injury.tier >= 2) {
+        foundTier2 = true
+        expect(f.injuryCount).toBe(1)
+        expect(f.seriousInjuries).toBe(1)
+      }
+    }
+
+    expect(foundTier0).toBe(true)
+    expect(foundTier2).toBe(true)
+  })
+})

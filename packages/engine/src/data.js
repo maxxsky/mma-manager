@@ -12,6 +12,7 @@ export { RIVAL_NAMES, RIVAL_TRAITS, PROMO_TIERS } from "./data/rivals.js";
 export { CAMP_TIERS, FAC_LABEL, SPARRING_MATCH, MEMBER_FEE } from "./data/camp.js";
 export { SPONSOR_BRANDS, SPONSOR_TERMS } from "./data/sponsors.js";
 export { PROMOTIONS, pickPromotion, getPromotionsData } from "./data/promotions.js";
+export { FIGHT_INJURY_CHANCE, FIGHT_INJURY_TIERS, FIGHT_INJURY_LABELS } from "./data/injury.js";
 // ACHIEVEMENTS is defined here to avoid circular imports with achievements.js
 export const ACHIEVEMENTS = [
   { id: "first_win", title: "First Blood", desc: "Win your first fight", icon: "🩸" },
