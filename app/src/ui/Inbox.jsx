@@ -87,6 +87,19 @@ export default function Inbox({ g, dispatch, setTab }) {
                 )}
               </div>
 
+              {/* Dramatic titleText headline — only for offers that have one */}
+              {m.titleText && (
+                <div style={{
+                  fontFamily: T.disp, fontSize: 14, fontWeight: 700,
+                  color: T.gold, textTransform: "uppercase",
+                  textAlign: "center", letterSpacing: 1,
+                  margin: "2px 0 6px", padding: 0,
+                  lineHeight: 1.3,
+                }}>
+                  {m.titleText}
+                </div>
+              )}
+
               {/* Fighter vs Opponent */}
               <div style={{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
