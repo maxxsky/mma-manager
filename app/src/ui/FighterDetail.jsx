@@ -129,6 +129,18 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
               </div>
             );
           })()}
+          {/* Training identity badges */}
+          {(() => {
+            const identity = getTrainingIdentity(f);
+            if (!identity || identity.length === 0) return null;
+            return (
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+                {identity.map((id) => (
+                  <Tag key={id.id} color={T.steel}>{id.icon} {id.label}</Tag>
+                ))}
+              </div>
+            );
+          })()}
           <div style={{ display: "grid", gap: 10, marginBottom: 16 }}>
             <Meter label="Morale" v={f.morale} color={f.morale > 60 ? T.pos : T.warn} />
             <Meter label="Overtraining" v={f.overtraining} color={f.overtraining > 50 ? T.neg : T.txt3} />
