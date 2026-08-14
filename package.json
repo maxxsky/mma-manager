@@ -8,7 +8,8 @@
   ],
   "scripts": {
     "test": "npm test -w app -w packages/server",
-    "smoke": "node tools/smoke.mjs"
+    "smoke": "node tools/smoke.mjs",
+    "balance": "node tools/balance.mjs"
   },
   "type": "module"
 }

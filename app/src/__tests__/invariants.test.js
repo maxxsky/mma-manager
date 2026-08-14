@@ -391,22 +391,58 @@ describe('Game State Invariants', () => {
     expect(g.inbox.find(m => m.id === 3)).toBeDefined()
   })
 
-  it('auto-expiry: actionable messages with multiple choices are NOT removed regardless of age', () => {
+  // POLICY CHANGE. This test previously asserted that any message with
+  // multiple choices or a side-effect survived forever. That was the cause of
+  // unbounded inbox growth: a 10-year headless run reached 316 messages, 82 of
+  // them over a year old. Retention now distinguishes deadline-bearing types,
+  // which are protected, from stale prompts, which expire.
+  it('auto-expiry: deadline-bearing types survive; stale prompts do not', () => {
     useSeed(42)
     const g = createTestGame()
     g.inbox = [
       { id: 10, type: 'offer', title: 'Old offer', body: 'Still waiting', choices: [{ label: 'Accept' }, { label: 'Reject' }], createdWeek: 1 },
-      { id: 11, type: 'injury', title: 'Old injury', body: 'Choose', choices: [{ label: 'Physio' }, { label: 'Push' }], createdWeek: 1 },
       { id: 12, type: 'event', title: 'Has cash effect', body: 'Pay up', choices: [{ label: 'OK', cash: -5000 }], createdWeek: 1 },
     ]
     g.week = 100
 
     tickSettlement(g)
 
-    // All kept — offers have 2 choices, injury has 2 choices, event has cash side-effect
+    // Offers carry their own expiry clock and are never dropped on age alone.
     expect(g.inbox.find(m => m.id === 10)).toBeDefined()
-    expect(g.inbox.find(m => m.id === 11)).toBeDefined()
-    expect(g.inbox.find(m => m.id === 12)).toBeDefined()
+    // A two-year-old prompt is noise, side-effect or not.
+    expect(g.inbox.find(m => m.id === 12)).toBeUndefined()
+  })
+
+  it('auto-expiry: an injury notice is dropped once its fighter has healed', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const healed = g.roster[0]
+    healed.injury = null
+    g.inbox = [
+      { id: 20, type: 'injury', fighterId: healed.id, title: 'Resolved', body: 'x', choices: [{ label: 'Rest' }], createdWeek: 99 },
+      { id: 21, type: 'injury', fighterId: 999999, title: 'Ghost fighter', body: 'x', choices: [{ label: 'Rest' }], createdWeek: 99 },
+    ]
+    g.week = 100
+
+    tickSettlement(g)
+
+    expect(g.inbox.find(m => m.id === 20)).toBeUndefined()
+    expect(g.inbox.find(m => m.id === 21)).toBeUndefined()
+  })
+
+  it('auto-expiry: an injury notice is kept while the injury is live', () => {
+    useSeed(42)
+    const g = createTestGame()
+    const hurt = g.roster[0]
+    hurt.injury = { weeks: 6, label: 'Torn meniscus' }
+    g.inbox = [
+      { id: 30, type: 'injury', fighterId: hurt.id, title: 'Live', body: 'x', choices: [{ label: 'Physio' }, { label: 'Push' }], createdWeek: 1 },
+    ]
+    g.week = 100
+
+    tickSettlement(g)
+
+    expect(g.inbox.find(m => m.id === 30)).toBeDefined()
   })
 
   it('auto-expiry: event-type messages (same path as milestones) older than 8w are removed at settlement', () => {

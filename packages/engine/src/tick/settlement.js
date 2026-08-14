@@ -10,6 +10,12 @@ import { rollAddTalent, rollDiscoverTalent, pushTalentDiscoveryEvent } from "../
 import { getTrainingCycle, getDevelopmentPhilosophy } from "../training-philosophy.js";
 import { genStaffCandidate } from "../data/staff.js";
 
+// Inbox retention thresholds, in in-game weeks. INBOX_MAX is the backstop that
+// bounds growth no matter what new message shapes get added later.
+export const INBOX_INFO_WEEKS = 8;
+export const INBOX_STALE_WEEKS = 26;
+export const INBOX_MAX = 60;
+
 const SPONSOR_RENEWAL_WINDOW = 4; // settlement cycle tersisa sebelum kontrak berakhir, saat tawaran perpanjangan muncul
 
 export function tickSettlement(g) {
@@ -107,20 +113,72 @@ export function tickSettlement(g) {
     }
   }
 
-  // Auto-expiry: remove informational messages (event/world/milestone) older than 8 weeks
-  // with only a single "OK" choice (no consequences), but keep actionable messages intact.
+  // Inbox retention. Three layers, in order of increasing bluntness.
+  //
+  // Layer 1 backfills a timestamp. Not everything reaches the inbox through
+  // pushInboxEvent; several call sites unshift a raw object with no
+  // createdWeek, and those messages previously aged forever because the old
+  // filter waved through anything untimestamped. Stamping them here starts
+  // the clock now rather than deleting history we cannot date.
+  //
+  // Layer 2 expires informational chatter quickly and stale prompts slowly.
+  //
+  // Layer 3 is a hard cap. Layers 1 and 2 are rules, and rules leak as new
+  // message shapes get added; the cap is a bound that holds regardless. It is
+  // what actually guarantees the inbox cannot grow without limit.
   if (g.inbox) {
+    // Types that carry a live deadline or a pending decision. These manage
+    // their own lifecycle elsewhere and must never be dropped on age alone.
+    const PROTECTED = new Set(["offer", "press", "injury", "sponsor"]);
+
+    for (const m of g.inbox) {
+      if (m.createdWeek == null) m.createdWeek = g.week;
+    }
+
     g.inbox = g.inbox.filter((m) => {
-      if (!m.createdWeek) return true; // legacy, no timestamp
-      if (g.week - m.createdWeek < 8) return true; // not old enough
-      if (m.type !== "event" && m.type !== "world" && m.type !== "milestone") return true;
-      // Keep if it has actionable choices (more than 1, or non-OK choices)
-      if (!m.choices || m.choices.length !== 1) return true;
-      if (m.choices[0].label !== "OK") return true;
-      // Has side effects (rep/cash/chem changes) — keep
-      if (m.choices[0].rep || m.choices[0].cash || m.choices[0].chem) return true;
-      return false; // remove
+      // An injury notice outlives its purpose the moment the fighter is
+      // healthy again. These are protected from age-based expiry, so without
+      // this they accumulate for the life of the save. Only act when we can
+      // positively resolve the fighter; a notice with no fighterId is left to
+      // the ordinary age rules rather than silently deleted.
+      if (m.type === "injury" && m.fighterId != null) {
+        const f = g.roster.find((x) => x.id === m.fighterId);
+        if (!f || !f.injury) return false;
+        return true;
+      }
+      if (PROTECTED.has(m.type)) return true;
+      const age = g.week - m.createdWeek;
+
+      // Purely informational: single "OK" choice with no side effects.
+      const inert =
+        m.choices &&
+        m.choices.length === 1 &&
+        m.choices[0].label === "OK" &&
+        !m.choices[0].rep &&
+        !m.choices[0].cash &&
+        !m.choices[0].chem;
+      if (inert && age >= INBOX_INFO_WEEKS) return false;
+
+      // Anything else that has sat unanswered for half a season is stale.
+      // A prompt to promise a title shot two years ago means nothing now.
+      if (age >= INBOX_STALE_WEEKS) return false;
+
+      return true;
     });
+
+    // Hard cap: drop the oldest unprotected messages until we are under it.
+    if (g.inbox.length > INBOX_MAX) {
+      const protectedMsgs = [];
+      const droppable = [];
+      for (const m of g.inbox) {
+        (PROTECTED.has(m.type) ? protectedMsgs : droppable).push(m);
+      }
+      // Newest first, so slicing from the front keeps what matters most.
+      droppable.sort((a, b) => (b.createdWeek || 0) - (a.createdWeek || 0));
+      const room = Math.max(0, INBOX_MAX - protectedMsgs.length);
+      const kept = new Set(droppable.slice(0, room));
+      g.inbox = g.inbox.filter((m) => PROTECTED.has(m.type) || kept.has(m));
+    }
   }
 
   // Coach market refresh: regenerated from scratch every month.
