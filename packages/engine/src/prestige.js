@@ -24,13 +24,23 @@ import { clamp } from "./rng.js";
 export const PRESTIGE_MAX = 100;
 
 // What a camp's history is worth, in prestige points.
+//
+// Calibrated against measured runs rather than intuition. A simulated camp
+// reaches roughly 88,000 legacy by in-game year ten and 180,000 by year
+// twenty, so a linear legacy term alone blew past the cap on its own. Legacy
+// therefore uses a saturating curve: it establishes a floor early and then
+// yields, leaving titles and hall-of-fame careers to carry the top end.
+//
+// Rough targets: a modest ten-year camp lands near 20 (Known Locally), a
+// strong twenty-year camp near 75-80 (Renowned heading to Legendary), and the
+// cap requires an exceptional multi-decade run.
 export const PRESTIGE_WEIGHTS = {
-  championProduced: 8,
-  worldChampionProduced: 15,
-  titleDefense: 2,
-  hallOfFamer: 12,
-  peakLegacyPer1000: 1.5,
-  yearsOperatingPer5: 2,
+  championProduced: 4,
+  worldChampionProduced: 8,
+  titleDefense: 0.8,
+  hallOfFamer: 6,
+  legacyCurve: 1.2,
+  yearsOperatingPer5: 1.5,
 };
 
 /**
@@ -52,7 +62,7 @@ export function getPrestige(g) {
     (d.worldChampionsProduced || 0) * W.worldChampionProduced +
     (d.totalTitleDefenses || 0) * W.titleDefense +
     (d.hallOfFamers?.length || 0) * W.hallOfFamer +
-    ((d.peakLegacy || 0) / 1000) * W.peakLegacyPer1000 +
+    Math.sqrt(Math.max(0, d.peakLegacy || 0) / 1000) * W.legacyCurve +
     (years / 5) * W.yearsOperatingPer5;
 
   return clamp(Math.round(raw), 0, PRESTIGE_MAX);
@@ -96,6 +106,47 @@ export function prospectTierWeights(prestige) {
     ...t,
     weight: Math.max(0.01, t.weight * (scale[t.id] ?? 1)),
   }));
+}
+
+/**
+ * Where a camp's prestige came from, and what the next rung costs.
+ *
+ * A bare number is a statistic; a number with a visible source and a visible
+ * next threshold is a goal. Legacy already failed this test once by
+ * accumulating quietly where no player could see it, so prestige ships with
+ * the means to explain itself.
+ */
+export function getPrestigeBreakdown(g) {
+  const d = g?._dynasty;
+  const W = PRESTIGE_WEIGHTS;
+  const prestige = getPrestige(g);
+  const tier = getPrestigeTier(prestige);
+
+  const years = d ? Math.max(0, ((g.week || 1) - (d.foundedWeek || 1)) / 48) : 0;
+  const sources = d
+    ? [
+        { id: "champions", count: d.championsProduced || 0, points: (d.championsProduced || 0) * W.championProduced },
+        { id: "worldChampions", count: d.worldChampionsProduced || 0, points: (d.worldChampionsProduced || 0) * W.worldChampionProduced },
+        { id: "defenses", count: d.totalTitleDefenses || 0, points: (d.totalTitleDefenses || 0) * W.titleDefense },
+        { id: "hallOfFame", count: d.hallOfFamers?.length || 0, points: (d.hallOfFamers?.length || 0) * W.hallOfFamer },
+        { id: "legacy", count: Math.round(d.peakLegacy || 0), points: Math.sqrt(Math.max(0, d.peakLegacy || 0) / 1000) * W.legacyCurve },
+        { id: "years", count: Math.floor(years), points: (years / 5) * W.yearsOperatingPer5 },
+      ].map((s) => ({ ...s, points: Math.round(s.points * 10) / 10 }))
+    : [];
+
+  const ladder = [0, 12, 30, 55, 80];
+  const nextMin = ladder.find((m) => m > prestige) ?? null;
+
+  return {
+    prestige,
+    tier,
+    sources: sources.filter((s) => s.count > 0).sort((a, b) => b.points - a.points),
+    nextTier: nextMin == null ? null : getPrestigeTier(nextMin),
+    toNextTier: nextMin == null ? 0 : nextMin - prestige,
+    specialChance: specialProspectChance(prestige),
+    // What the next rung is worth, so the player can weigh the climb.
+    specialChanceAtNextTier: nextMin == null ? null : specialProspectChance(nextMin),
+  };
 }
 
 /**

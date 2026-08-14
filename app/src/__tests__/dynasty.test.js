@@ -25,9 +25,15 @@ function makeGame(overrides = {}) {
   };
 }
 
+// Every fighter needs a distinct id. Dynasty counters bank each fighter's
+// record by id so that leaving the roster cannot erase their contribution to
+// camp history, which means two fighters sharing an id are read as one person.
+// The real game issues ids from uid(); this fixture used to hand out "f-1" to
+// everyone, which silently collapsed multi-fighter rosters into a single one.
+let _fixtureId = 0;
 function makeFighter(overrides = {}) {
   return {
-    id: overrides.id || "f-1",
+    id: overrides.id || `f-${++_fixtureId}`,
     name: overrides.name || "Test Fighter",
     age: overrides.age ?? 25,
     weightClass: overrides.weightClass || "Lightweight",
@@ -101,18 +107,29 @@ describe("getCampDynasty", () => {
 });
 
 describe("updateDynasty", () => {
-  it("tracks cumulative wins, losses, KOs, subs across ticks", () => {
-    const g = makeGame({
-      roster: [
-        makeFighter({ record: { w: 10, l: 2, ko: 5, sub: 1, dec: 4 } }),
-        makeFighter({ record: { w: 5, l: 3, ko: 2, sub: 0, dec: 3 } }),
-      ],
-    });
+  // POLICY CHANGE. These counters used to be the high-water mark of the
+  // CURRENT roster's summed records. That measured the opposite of a dynasty:
+  // a retiring champion removed their wins from the total, and five champions
+  // produced across twenty years registered as one unless two belts were held
+  // at the same time. They are now cumulative and permanent — and they count
+  // only what a fighter achieves AFTER joining, so signing a 10-0 veteran no
+  // longer buys ten wins of camp history.
+  it("counts only what fighters achieve after joining the camp", () => {
+    const a = makeFighter({ record: { w: 10, l: 2, ko: 5, sub: 1, dec: 4 } });
+    const b = makeFighter({ record: { w: 5, l: 3, ko: 2, sub: 0, dec: 3 } });
+    const g = makeGame({ roster: [a, b] });
+
     updateDynasty(g);
-    expect(g._dynasty.totalWins).toBe(15);
-    expect(g._dynasty.totalLosses).toBe(5);
-    expect(g._dynasty.totalKOs).toBe(7);
-    expect(g._dynasty.totalSubs).toBe(1);
+    // Both arrived with those records; none of it was earned here.
+    expect(g._dynasty.totalWins).toBe(0);
+
+    a.record.w = 13;
+    a.record.ko = 7;
+    b.record.l = 5;
+    updateDynasty(g);
+    expect(g._dynasty.totalWins).toBe(3);
+    expect(g._dynasty.totalKOs).toBe(2);
+    expect(g._dynasty.totalLosses).toBe(2);
   });
 
   it("tracks champions produced — Major World Champion counts as world champ", () => {
@@ -128,12 +145,14 @@ describe("updateDynasty", () => {
   });
 
   it("tracks title defenses from all fighters", () => {
-    const g = makeGame({
-      roster: [
-        makeFighter({ titleDefenses: 5 }),
-        makeFighter({ titleDefenses: 2 }),
-      ],
-    });
+    const a = makeFighter({ titleDefenses: 0 });
+    const b = makeFighter({ titleDefenses: 0 });
+    const g = makeGame({ roster: [a, b] });
+    updateDynasty(g);
+
+    // Defences earned while at the camp, from both fighters.
+    a.titleDefenses = 5;
+    b.titleDefenses = 2;
     updateDynasty(g);
     expect(g._dynasty.totalTitleDefenses).toBe(7);
   });
@@ -152,20 +171,21 @@ describe("updateDynasty", () => {
   });
 
   it("does not decrease cumulative counters when roster shrinks", () => {
-    const g = makeGame({
-      roster: [
-        makeFighter({ record: { w: 10, l: 2, ko: 5, sub: 1, dec: 4 } }),
-        makeFighter({ record: { w: 8, l: 1, ko: 3, sub: 2, dec: 3 } }),
-      ],
-    });
+    const a = makeFighter({ record: { w: 10, l: 2, ko: 5, sub: 1, dec: 4 } });
+    const b = makeFighter({ record: { w: 8, l: 1, ko: 3, sub: 2, dec: 3 } });
+    const g = makeGame({ roster: [a, b] });
     updateDynasty(g);
-    expect(g._dynasty.totalWins).toBe(18);
 
-    // Roster shrinks (old fighter leaves)
-    g.roster = [makeFighter({ record: { w: 10, l: 2, ko: 5, sub: 1, dec: 4 } })];
+    // Each wins four more while at the camp.
+    a.record.w = 14;
+    b.record.w = 12;
     updateDynasty(g);
-    // totalWins should NOT decrease — it tracks peak
-    expect(g._dynasty.totalWins).toBe(18);
+    expect(g._dynasty.totalWins).toBe(8);
+
+    // Both retire. Their contribution stays on the camp's record forever.
+    g.roster = [];
+    updateDynasty(g);
+    expect(g._dynasty.totalWins).toBe(8);
   });
 });
 
@@ -288,9 +308,11 @@ describe("getCampIdentity", () => {
   });
 
   it("returns Knockout Factory when 20+ fights and KO rate > 50%", () => {
-    const g = makeGame({
-      roster: [makeFighter({ record: { w: 15, l: 5, ko: 12, sub: 0, dec: 3 } })],
-    });
+    const f = makeFighter({ record: { w: 0, l: 0, ko: 0, sub: 0, dec: 0 } });
+    const g = makeGame({ roster: [f] });
+    updateDynasty(g);
+    // Earned at this camp, so it counts toward camp identity.
+    f.record = { w: 15, l: 5, ko: 12, sub: 0, dec: 3 };
     updateDynasty(g);
     // 20 total fights, koRate = 12/20 = 0.6 > 0.5
     const ids = getCampIdentity(g);

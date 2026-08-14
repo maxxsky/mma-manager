@@ -43,27 +43,59 @@ export function updateDynasty(g) {
   if (!g._dynasty) initDynasty(g);
   const d = g._dynasty;
 
-  // Count current champions
-  const champs = g.roster?.filter(f => f.titles?.some(t => t.includes("Champion"))) || [];
-  if (champs.length > d.championsProduced) d.championsProduced = champs.length;
+  // These counters are cumulative across the whole life of the camp.
+  //
+  // They used to be high-water marks taken over the CURRENT roster, which
+  // measured the opposite of what a dynasty record is for: a camp that
+  // produced five champions across twenty years but never held two belts at
+  // once stayed on "1", and a retiring champion took their wins, KOs and
+  // title defences out of the totals with them. Prestige reads these numbers,
+  // so undercounting here silently caps the long game.
+  //
+  // Identity is tracked by id so a fighter is only ever counted once, and
+  // per-fighter records are banked as deltas so leaving the roster — retired,
+  // released, or sold — cannot reduce the camp's history.
+  if (!d.championIds) d.championIds = [];
+  if (!d.worldChampionIds) d.worldChampionIds = [];
+  if (!d._banked) d._banked = {};
 
-  // World champion = Major World Champion or Premier
-  const worldChamps = champs.filter(f => f.titles?.includes("Major World Champion"));
-  if (worldChamps.length > d.worldChampionsProduced) d.worldChampionsProduced = worldChamps.length;
+  for (const f of g.roster || []) {
+    const isChamp = f.titles?.some((t) => t.includes("Champion"));
+    if (isChamp && !d.championIds.includes(f.id)) d.championIds.push(f.id);
+    const isWorld = f.titles?.includes("Major World Champion");
+    if (isWorld && !d.worldChampionIds.includes(f.id)) d.worldChampionIds.push(f.id);
 
-  // Title defenses
-  const defenses = g.roster?.reduce((s, f) => s + (f.titleDefenses || 0), 0) || 0;
-  if (defenses > d.totalTitleDefenses) d.totalTitleDefenses = defenses;
+    // On first sight, the fighter's existing record becomes their baseline
+    // rather than being banked. A veteran signed at 10-0 won those ten fights
+    // somewhere else; crediting them to this camp would let a chequebook buy a
+    // dynasty. Only what happens after they arrive counts.
+    const firstSight = !(f.id in d._banked);
+    const prev = d._banked[f.id] || {
+      w: f.record?.w || 0,
+      l: f.record?.l || 0,
+      ko: f.record?.ko || 0,
+      sub: f.record?.sub || 0,
+      def: f.titleDefenses || 0,
+    };
+    const now = {
+      w: f.record?.w || 0,
+      l: f.record?.l || 0,
+      ko: f.record?.ko || 0,
+      sub: f.record?.sub || 0,
+      def: f.titleDefenses || 0,
+    };
+    if (!firstSight) {
+      d.totalWins = (d.totalWins || 0) + Math.max(0, now.w - prev.w);
+      d.totalLosses = (d.totalLosses || 0) + Math.max(0, now.l - prev.l);
+      d.totalKOs = (d.totalKOs || 0) + Math.max(0, now.ko - prev.ko);
+      d.totalSubs = (d.totalSubs || 0) + Math.max(0, now.sub - prev.sub);
+      d.totalTitleDefenses = (d.totalTitleDefenses || 0) + Math.max(0, now.def - prev.def);
+    }
+    d._banked[f.id] = now;
+  }
 
-  // Win/loss totals
-  const wins = g.roster?.reduce((s, f) => s + (f.record?.w || 0), 0) || 0;
-  const losses = g.roster?.reduce((s, f) => s + (f.record?.l || 0), 0) || 0;
-  const kos = g.roster?.reduce((s, f) => s + (f.record?.ko || 0), 0) || 0;
-  const subs = g.roster?.reduce((s, f) => s + (f.record?.sub || 0), 0) || 0;
-  if (wins > d.totalWins) d.totalWins = wins;
-  if (losses > d.totalLosses) d.totalLosses = losses;
-  if (kos > d.totalKOs) d.totalKOs = kos;
-  if (subs > d.totalSubs) d.totalSubs = subs;
+  d.championsProduced = d.championIds.length;
+  d.worldChampionsProduced = d.worldChampionIds.length;
 
   // Peaks
   if ((g.rep || 0) > d.peakRep) d.peakRep = g.rep;
