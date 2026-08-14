@@ -10,12 +10,13 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@ironfist/engine": "*",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "@ironfist/engine": "*"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
+    "puppeteer-core": "^24.43.1",
     "vite": "^6.3.5",
     "vitest": "^4.1.10"
   }

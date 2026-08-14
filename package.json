@@ -7,7 +7,8 @@
     "packages/server"
   ],
   "scripts": {
-    "test": "npm test -w app -w packages/server"
+    "test": "npm test -w app -w packages/server",
+    "smoke": "node tools/smoke.mjs"
   },
   "type": "module"
 }
