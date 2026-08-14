@@ -6,6 +6,7 @@ import { ATTRS } from "./data/attributes.js";
 import { computeMembership } from "./economy.js";
 import { pushInboxEvent } from "./events.js";
 import { CAMP_TIERS } from "./data.js";
+import { getPrestige, prospectTierWeights } from "./prestige.js";
 
 // ── Constants ──
 export const TALENT_POOL_MAX = 3;
@@ -17,9 +18,12 @@ const PLAYERS_COACH_BONUS = 0.20;
 
 // ── Generate a single talent pool entry ──
 // Low-level amateur fighter (0.35-0.6 range), full genFighter() with potentialTier
-export function genTalentEntry() {
+export function genTalentEntry(g = null) {
   const level = R(0.35, 0.6);
-  const f = genFighter(level);
+  // A camp's history shapes who turns up. Passing no game state falls back to
+  // the default distribution, which keeps existing callers and tests honest.
+  const weights = g ? prospectTierWeights(getPrestige(g)) : null;
+  const f = genFighter(level, undefined, weights);
   // Member recruits get higher loyalty — they grew up in this gym
   f.loyalty = RI(60, 90);
   return f;
@@ -37,7 +41,7 @@ export function rollAddTalent(g) {
   if (random() >= chance) return false;
 
   // Deduplicate by checking if a fighter with same name+region already in pool
-  const entry = genTalentEntry();
+  const entry = genTalentEntry(g);
   const exists = g.talentPool.some(
     (t) => t.name === entry.name && t.region === entry.region && t.archetype === entry.archetype
   );

@@ -13,7 +13,7 @@ export function genAttrs(level) {
   return o;
 }
 
-export function genFighter(level, regionName) {
+export function genFighter(level, regionName, tierWeights = null) {
   const region = regionName || pickRegion();
   const rd = REGIONS[region];
   const archetype = pickArchetypeForRegion(region);
@@ -21,10 +21,14 @@ export function genFighter(level, regionName) {
   Object.entries(ARCHETYPES[archetype]).forEach(([k, m]) => {
     attrs[k] = clamp(Math.round(attrs[k] * m), 15, 95);
   });
-  // Roll potential tier once for this fighter
-  const totalWeight = POTENTIAL_TIERS.reduce((s, t) => s + t.weight, 0);
+  // Roll potential tier once for this fighter. Callers may pass a shifted
+  // weight table — see prestige.js — so a camp's history can influence the
+  // calibre of talent it attracts. Omitted means the default distribution,
+  // which is what the wider world uses.
+  const tierTable = tierWeights && tierWeights.length ? tierWeights : POTENTIAL_TIERS;
+  const totalWeight = tierTable.reduce((s, t) => s + t.weight, 0);
   let roll = random() * totalWeight;
-  const tier = POTENTIAL_TIERS.find(t => { roll -= t.weight; return roll <= 0; }) || POTENTIAL_TIERS[POTENTIAL_TIERS.length - 1];
+  const tier = tierTable.find(t => { roll -= t.weight; return roll <= 0; }) || tierTable[tierTable.length - 1];
   const ceilings = {};
   ATTRS.forEach((k) => (ceilings[k] = clamp(attrs[k] + RI(tier.bonus[0], tier.bonus[1]), attrs[k], 99)));
   const wc = pick(WEIGHTS);
