@@ -3,6 +3,7 @@ import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 import { fmt$ } from "@ironfist/engine/rng.js";
 import { getCampDynasty, getCampIdentity, getWorldRecords, getGenerationalLinks } from "@ironfist/engine/dynasty.js";
+import { getPrestigeBreakdown, PRESTIGE_MAX } from "@ironfist/engine/prestige.js";
 import { INVESTMENTS } from "@ironfist/engine/data/investments.js";
 
 export default function Dynasty({ g, dispatch }) {
@@ -10,6 +11,7 @@ export default function Dynasty({ g, dispatch }) {
   const identity = getCampIdentity(g);
   const records = getWorldRecords(g);
   const links = getGenerationalLinks(g);
+  const prestige = getPrestigeBreakdown(g);
   const hof = g._hallOfFame || [];
 
   return (
@@ -29,6 +31,75 @@ export default function Dynasty({ g, dispatch }) {
             {identity.map(id => (
               <div key={id.id} style={{ fontFamily: T.body, fontSize: 12, color: T.txt2, fontStyle: "italic" }}>{id.desc}</div>
             ))}
+          </div>
+        )}
+      </Panel>
+
+      {/* Camp Prestige — the long arc. Everything the camp has ever done feeds
+          the calibre of talent that walks through the door. Shown with its
+          sources and the next threshold, because a bare score is a statistic
+          while a score with a visible cause and a visible target is a goal. */}
+      <Panel>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
+          <Eyebrow color={T.gold}>{t("PRES.title")}</Eyebrow>
+          <Tag color={T.gold} solid>{t("PRES.tier." + prestige.tier.id)}</Tag>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 10, marginBottom: 8 }}>
+          <span style={{ fontFamily: T.disp, fontSize: 42, fontWeight: 700, lineHeight: 1, color: T.gold }}>
+            {prestige.prestige}
+          </span>
+          <span style={{ fontFamily: T.mono, fontSize: 12, color: T.txt3, paddingBottom: 6 }}>
+            / {PRESTIGE_MAX}
+          </span>
+        </div>
+
+        {/* Progress toward the next tier */}
+        <div style={{ height: 6, background: T.bg, borderRadius: 3, overflow: "hidden", marginBottom: 6 }}>
+          <div style={{ width: `${Math.min(100, (prestige.prestige / PRESTIGE_MAX) * 100)}%`, height: "100%", background: T.gold }} />
+        </div>
+        <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt2, marginBottom: 14 }}>
+          {prestige.nextTier
+            ? t("PRES.toNext").replace("{0}", prestige.toNextTier).replace("{1}", t("PRES.tier." + prestige.nextTier.id))
+            : prestige.prestige < PRESTIGE_MAX
+              ? t("PRES.topTier").replace("{0}", PRESTIGE_MAX - prestige.prestige)
+              : t("PRES.atPeak")}
+        </div>
+
+        {/* What the history has actually bought */}
+        <div style={{ padding: "10px 12px", background: T.bg, borderRadius: T.r, marginBottom: 12 }}>
+          <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3, marginBottom: 4 }}>
+            {t("PRES.effect")}
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span style={{ fontFamily: T.mono, fontSize: 20, fontWeight: 700, color: T.steel }}>
+              {prestige.specialChance}%
+            </span>
+            {prestige.specialChanceAtNextTier != null && (
+              <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>
+                {t("PRES.effectNext").replace("{0}", prestige.specialChanceAtNextTier)}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Where the score came from */}
+        {prestige.sources.length > 0 ? (
+          <div style={{ display: "grid", gap: 4 }}>
+            {prestige.sources.map((src) => (
+              <div key={src.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "4px 0" }}>
+                <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt2 }}>
+                  {t("PRES.src." + src.id).replace("{0}", src.count)}
+                </span>
+                <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: T.gold }}>
+                  +{src.points}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, fontStyle: "italic" }}>
+            {t("PRES.empty")}
           </div>
         )}
       </Panel>

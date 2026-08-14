@@ -4,6 +4,7 @@ import { T, Panel, Eyebrow, Tag, Btn, Icon, ICONS, Mono, ARCH_COLOR } from "./th
 import { t } from "../i18n/index.js";
 import { monthlyBurn, monthlyIn } from "@ironfist/engine/finance.js";
 import { getObjectives } from "@ironfist/engine/onboarding.js";
+import { getPrestigeBreakdown } from "@ironfist/engine/prestige.js";
 
 /* =============================================================================
    IRONFIST DASHBOARD — Verbatim from prototype, wired to real g state
@@ -23,6 +24,10 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
   const pendingOffers = g.inbox.filter(m => m.type === "offer").length;
   const injuredCount = g.roster.filter(f => f.injury).length;
   const overtrainedCount = g.roster.filter(f => f.overtraining > 60).length;
+
+  // Camp prestige — the only progression axis that does not top out inside the
+  // first few in-game years, so it belongs where the player looks every week.
+  const prestige = getPrestigeBreakdown(g);
 
   // ---- Helper: is champ -------------------------------------------------------
   const isChamp = (f) => f.titles && f.titles.some(t => t.includes("Champion"));
@@ -60,6 +65,15 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
       T.txt,
       `${overtrainedCount > 0 ? `${overtrainedCount} overtrained` : ""}${overtrainedCount > 0 && injuredCount > 0 ? " · " : ""}${injuredCount > 0 ? `${injuredCount} injured` : injuredCount === 0 && overtrainedCount === 0 ? t("UI.allHealthy") : ""}`,
       "roster",
+    ],
+    [
+      t("PRES.title"),
+      String(prestige.prestige),
+      prestige.prestige >= 55 ? T.gold : prestige.prestige >= 12 ? T.steel : T.txt3,
+      prestige.nextTier
+        ? `${t("PRES.tier." + prestige.tier.id)} · ${t("PRES.toNext").replace("{0}", prestige.toNextTier).replace("{1}", t("PRES.tier." + prestige.nextTier.id))}`
+        : t("PRES.tier." + prestige.tier.id),
+      "crown",
     ],
   ];
 
@@ -134,7 +148,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       {/* KPI STRIP — 4 cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
         {kpis.map(([l, v, c, d, to], idx) => {
           const isHero = idx === 0;
           // Format fight matchup for hero card
