@@ -36,7 +36,7 @@ export default function FightNight({ fighter, done, staff }) {
   // Stage state machine
   const [stage, setStage] = useState("staredown");
   const [attitude, setAttitude] = useState(null);
-  const [plan, setPlan] = useState(null);
+  const [plan, setPlan] = useState(fighter.booked?.gamePlan || null);
   const [viewMode, setViewMode] = useState("summary");
   const [rnd, setRnd] = useState(1);
   const [state, setState] = useState(null);

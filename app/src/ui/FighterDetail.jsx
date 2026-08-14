@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { fmt$ } from "@ironfist/engine/rng.js";
-import { ARCH_COLOR, TRAINING, INTENSITY, TRAITS } from "@ironfist/engine/data.js";
+import { ARCH_COLOR, TRAINING, INTENSITY, TRAITS, GAME_PLANS } from "@ironfist/engine/data.js";
 import { avgSkill } from "@ironfist/engine/fighter.js";
 import { reducer } from "@ironfist/engine/reducer.js";
 import { getStoryTags, getLifecyclePhase } from "@ironfist/engine/career.js";
@@ -226,6 +226,42 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
             );
           })()}
         </Panel>
+
+        {/* Game plan — only while a fight is booked */}
+        {f.booked && (
+          <Panel style={{ gridColumn: "span 2" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+              <Eyebrow color={T.ember}>{t("UI.gamePlan")}</Eyebrow>
+              {f.booked.gamePlan
+                ? <Tag color={T.pos}>{f.booked.gamePlan}</Tag>
+                : <Tag color={T.warn}>{t("FIGHTER.gamePlanNone")}</Tag>}
+            </div>
+            <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3, marginBottom: 10, lineHeight: 1.5 }}>
+              {t("FIGHTER.gamePlanHint").replace("{0}", f.booked.opponent?.name || "?")}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 8 }}>
+              {Object.entries(GAME_PLANS).map(([k, d]) => {
+                const on = f.booked.gamePlan === k;
+                return (
+                  <button
+                    key={k}
+                    className="chip"
+                    onClick={() => dispatch({ type: "SET_GAME_PLAN", fighterId: f.id, plan: k })}
+                    aria-pressed={on}
+                    style={{
+                      textAlign: "left", padding: "10px 12px", borderRadius: T.r, cursor: "pointer",
+                      border: `1px solid ${on ? T.ember : T.line}`,
+                      background: on ? `${T.ember}12` : T.bg,
+                    }}
+                  >
+                    <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 14, letterSpacing: .4, textTransform: "uppercase", color: on ? T.ember : T.txt }}>{k}</div>
+                    <div style={{ fontFamily: T.body, fontSize: 10.5, color: T.txt2, marginTop: 3 }}>{d}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </Panel>
+        )}
 
         {/* Training assignment */}
         <Panel style={{ gridColumn: "span 2" }}>

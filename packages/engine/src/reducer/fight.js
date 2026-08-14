@@ -4,6 +4,7 @@ import {
   PROMOTER_REL_GAIN_ACCEPT, PROMOTER_REL_LOSS_COUNTER, PROMOTER_REL_LOSS_REJECT,
 } from "./constants.js";
 import { vacateTitle } from "../rankings.js";
+import { GAME_PLANS } from "../data.js";
 
 export function reduceFight(g, action) {
   switch (action.type) {
@@ -67,6 +68,14 @@ export function reduceFight(g, action) {
     case "VACATE_TITLE": {
       const f = g.roster.find((x) => x.id === action.fighterId);
       if (f) vacateTitle(g, f);
+      break;
+    }
+    case "SET_GAME_PLAN": {
+      const gpf = g.roster.find((x) => x.id === action.fighterId);
+      if (gpf && gpf.booked && GAME_PLANS[action.plan]) {
+        gpf.booked.gamePlan = action.plan;
+        g.log.unshift("📋 Game plan " + gpf.name + ": " + action.plan + ".");
+      }
       break;
     }
     case "SET_PRESS_CHOICE": {

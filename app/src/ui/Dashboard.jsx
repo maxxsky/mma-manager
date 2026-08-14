@@ -66,7 +66,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
   // ---- Priorities generated from game state -----------------------------------
   const priorities = [];
   // 1) Booked fighters without a game plan
-  g.roster.filter(f => f.booked && !f.gamePlan).forEach(f => {
+  g.roster.filter(f => f.booked && !f.booked.gamePlan).forEach(f => {
     priorities.push([`Set game plan for ${f.name} — fight camp active, no plan chosen`, "roster", T.ember]);
   });
   // 2) Expiring fight offers
