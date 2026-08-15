@@ -21,7 +21,7 @@
 import {
   newGame, tick, reducer, setRNG, mulberry32,
   prepFighter, autoGamePlan, avgSkill,
-  ATTRS, TRAINING,
+  ATTRS, TRAINING, getPrestige, getPrestigeTier,
 } from "../packages/engine/src/index.js";
 // Not re-exported by the barrel; imported directly.
 import { runFight } from "../packages/engine/src/fight.js";
@@ -65,7 +65,13 @@ function resolveDueFights(g, seed, week) {
       nanHits.push({ week, kind: "NaN-damage", name: opp.name || "?" });
     }
 
-    commitFightResult(g, f, {
+    // The fighter argument must be a detached copy. commitFightResult nulls
+    // f.booked partway through, and if the caller passed the roster object
+    // itself the two alias — so every later read of fighter.booked.titleTier
+    // sees null and no belt is ever awarded. The UI passes a fighter from the
+    // pre-clone state, so it never hit this; the harness did, and it reported
+    // zero championships across ten years while titles were being won.
+    commitFightResult(g, { ...f, booked: { ...f.booked } }, {
       won: res.winner === "A",
       how: res.how,
       r: res.finalRound,
@@ -208,6 +214,8 @@ function runSeed(seed) {
         identity: identityOf(g.roster),
         vet: veteransOf(g),
         tier: g.campTier,
+        champs: g._dynasty?.championsProduced || 0,
+        prestige: getPrestige(g),
         wins: g.roster.reduce((a, f) => a + (f.record?.w || 0), 0),
       });
     }
@@ -223,15 +231,15 @@ for (const seed of SEEDS) {
   const r = runSeed(seed);
   all.push(r);
   console.log(`seed ${r.seed}${r.over ? `   ENDED week ${r.endWeek}: ${r.over}` : ""}`);
-  console.log("  year        cash  rep  roster  avgSkill  vetSkill  identity  spread  tier  wins");
+  console.log("  year        cash  rep  roster  avgSkill  identity  tier  wins  champs  prestige");
   for (const s of r.snaps) {
     if (s.year % 2 && s.year !== 1) continue; // every other year, keep it readable
     console.log(
       `  ${String(s.year).padStart(4)}  ${String(s.cash).padStart(10)}  ` +
       `${String(s.rep).padStart(3)}  ${String(s.roster).padStart(6)}  ` +
-      `${String(s.avgSkill).padStart(8)}  ${String(s.vet ?? "-").padStart(8)}  ` +
-      `${String(s.identity ?? "-").padStart(8)}  ${String(s.spread ?? "-").padStart(6)}  ` +
-      `${String(s.tier).padStart(4)}  ${String(s.wins).padStart(4)}`,
+      `${String(s.avgSkill).padStart(8)}  ${String(s.identity ?? "-").padStart(8)}  ` +
+      `${String(s.tier).padStart(4)}  ${String(s.wins).padStart(4)}  ` +
+      `${String(s.champs).padStart(6)}  ${String(s.prestige).padStart(8)}`,
     );
   }
   console.log();

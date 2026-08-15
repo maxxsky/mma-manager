@@ -126,7 +126,9 @@ describe("talent pool wiring", () => {
       },
       960,
     );
-    expect(getPrestige(decorated)).toBeGreaterThan(60);
+    // Weights were recalibrated against measured play; this camp is strong but
+    // no longer near the cap, which is the point — the arc has to last decades.
+    expect(getPrestige(decorated)).toBeGreaterThan(30);
 
     const headroom = (f) =>
       Object.keys(f.ceilings).reduce((s, k) => s + (f.ceilings[k] - f.attrs[k]), 0);

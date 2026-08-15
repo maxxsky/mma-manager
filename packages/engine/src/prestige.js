@@ -31,16 +31,21 @@ export const PRESTIGE_MAX = 100;
 // therefore uses a saturating curve: it establishes a floor early and then
 // yields, leaving titles and hall-of-fame careers to carry the top end.
 //
-// Rough targets: a modest ten-year camp lands near 20 (Known Locally), a
-// strong twenty-year camp near 75-80 (Renowned heading to Legendary), and the
-// cap requires an exceptional multi-decade run.
+// Recalibrated a second time once championships actually became winnable. The
+// first pass used hypothetical camp records because the title ladder was
+// broken and no simulated camp had ever produced a champion; measured against
+// real play, a strong camp hit the cap by in-game year ten, which collapses
+// the long arc all over again.
+//
+// Rough targets now: a strong ten-year camp lands near 50 (Renowned), twenty
+// years near 80, and the cap needs an exceptional multi-decade run.
 export const PRESTIGE_WEIGHTS = {
-  championProduced: 4,
-  worldChampionProduced: 8,
-  titleDefense: 0.8,
-  hallOfFamer: 6,
-  legacyCurve: 1.2,
-  yearsOperatingPer5: 1.5,
+  championProduced: 2,
+  worldChampionProduced: 4.5,
+  titleDefense: 0.45,
+  hallOfFamer: 3,
+  legacyCurve: 0.7,
+  yearsOperatingPer5: 0.8,
 };
 
 /**

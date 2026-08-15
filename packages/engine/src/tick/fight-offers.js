@@ -75,7 +75,11 @@ export function tickFightOffers(g) {
       }
     }
 
-    if (isChamp) {
+    // isChamp is computed before the auto-strip above, which can vacate the
+    // belt and set div.champ to null. Re-checking div.champ here prevents a
+    // TypeError on the next line. This path was unreachable until title wins
+    // actually started working, so the crash had never been triggered.
+    if (isChamp && div.champ) {
     // Mandatory defense — create offer + escalation warning simultaneously
     if (
       g.week - (div.champ.lastDefenseWeek || f.lastFightWeek || 0) >= 24 &&
