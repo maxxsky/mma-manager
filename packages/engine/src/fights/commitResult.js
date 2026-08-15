@@ -45,6 +45,30 @@ export function commitFightResult(g, fighter, result) {
     else if (result.how === "Submission") f.record.sub++;
     else f.record.dec++;
 
+    // Divisional ranking points.
+    //
+    // Nothing in the codebase ever awarded these. rankPoints was initialised
+    // to zero, decayed weekly, and docked on a weight-class change — but never
+    // increased. rankOf() returns null whenever rankPoints is zero, so every
+    // player fighter was permanently unranked, and every rung of the title
+    // ladder above Regional requires a rank. The whole ladder was unreachable
+    // by construction: a ten-year run produced 47 title offers, all Regional,
+    // and zero championships.
+    //
+    // Scale is set against the AI divisions, whose fifteen ranked slots hold
+    // roughly 25 to 95 points. Beating a higher tier of opposition is worth
+    // more, finishes are worth more than decisions, and a title win is worth
+    // a jump — so a fighter who keeps beating real opposition climbs into the
+    // rankings within a handful of fights rather than never.
+    const TIER_POINTS = { Local: 3, Regional: 6, National: 10, Major: 16, Premier: 24 };
+    let rp = TIER_POINTS[fighter.booked?.tier] ?? 5;
+    if (result.how !== "Decision") rp = Math.round(rp * 1.3);
+    if (fighter.booked?.title) rp = Math.round(rp * 1.6);
+    // Beating a ranked contender is worth more than beating an unknown.
+    const oppRank = fighter.booked?.oppRank;
+    if (oppRank != null && oppRank > 0 && oppRank <= 5) rp = Math.round(rp * 1.4);
+    f.rankPoints = clamp((f.rankPoints || 0) + rp, 0, 99);
+
     f.morale = clamp(f.morale + 12, 0, 100);
     const popBase = result.how === "Decision" ? 3 : 7;
     const crowdMult = f.traits?.includes("Crowd Favorite") ? 2 : 1;
@@ -53,7 +77,19 @@ export function commitFightResult(g, fighter, result) {
     g.rep = clamp(g.rep + 7, 0, 100);
 
     if (fighter.booked?.title) {
-      if (!f.titles.includes("Major World Champion")) f.titles.push("Major World Champion");
+      // Award the belt that was actually contested. This used to hand out
+      // "Major World Champion" for every title win regardless of tier, so the
+      // ladder could never record that a Regional or National belt had been
+      // taken — and those are exactly the belts the next rung checks for.
+      const TITLE_NAME = {
+        Regional: "Regional Champion",
+        National: "National Champion",
+        Minor: "Minor World Champion",
+        Major: "Major World Champion",
+        Premier: "Premier World Champion",
+      };
+      const wonTitle = TITLE_NAME[fighter.booked?.titleTier] || "Major World Champion";
+      if (!f.titles.includes(wonTitle)) f.titles.push(wonTitle);
       const div = g.divisions?.[f.weightClass];
       if (div) {
         const wasAlreadyChamp = div.champ?.fighterId === f.id;
@@ -176,6 +212,9 @@ export function commitFightResult(g, fighter, result) {
     }
   } else {
     f.record.l++; f.streakL = (f.streakL || 0) + 1; f.streakW = 0;
+    // A loss costs ground but never wipes a career out; the weekly decay in
+    // tick/rankings.js already handles fighters who stop competing.
+    f.rankPoints = clamp(Math.round((f.rankPoints || 0) * 0.75), 0, 99);
     const baseMoraleLoss = f.traits?.includes("Iron Will") ? -4 : -14;
     const psychSkill = g.staff?.sportsPsych?.skill || 0;
     const moraleLoss = psychSkill ? Math.round(baseMoraleLoss * (1 - Math.min(psychSkill * 0.04, 0.36))) : baseMoraleLoss;

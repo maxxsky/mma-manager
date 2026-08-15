@@ -5,6 +5,22 @@ import { genFighter, avgSkill } from "../fighter.js";
 import { rankOf, stripTitle } from "../rankings.js";
 import { pickPromotion } from "../data/promotions.js";
 
+// Skill thresholds for each rung of the title ladder.
+//
+// Originally 45/55/65/72/80. Measured against real play: a fighter developed
+// with rotated training peaks around 45-58 avgSkill, so the ladder started
+// above where most careers end and every rung above it was unreachable, since
+// each rung requires holding the one below. Retuned so the bottom rung opens
+// to a competent fighter in their second or third year and the top stays the
+// preserve of genuinely exceptional talent.
+export const SKILL_GATE = {
+  regional: 38,
+  national: 45,
+  minor: 52,
+  major: 60,
+  premier: 70,
+};
+
 // Helper: attach promotion to an offer object based on its tier
 function attachPromotion(offer, tier, g, ctx) {
   // If fighter has an active exclusivity contract, force that promotion
@@ -157,33 +173,33 @@ export function tickFightOffers(g) {
       let titleReason = "";
 
       if (
-        rep >= 80 && r != null && r <= 3 && sk >= 80 &&
+        rep >= 80 && r != null && r <= 3 && sk >= SKILL_GATE.premier &&
         has("Major World Champion") && random() < 0.25
       ) {
         titleTier = "Premier";
         titleReason = `rank #${r} + juara Major + rep ${Math.round(rep)} + skill ${Math.round(sk)}`;
       } else if (
-        rep >= 60 && r != null && r <= 5 && sk >= 72 &&
+        rep >= 60 && r != null && r <= 5 && sk >= SKILL_GATE.major &&
         has("National Champion") && !has("Major World Champion") && random() < 0.35
       ) {
         titleTier = "Major";
         titleReason = `rank #${r} + juara Nasional + rep ${Math.round(rep)} + skill ${Math.round(sk)}`;
       } else if (
-        rep >= 50 && r != null && r <= 8 && sk >= 65 &&
+        rep >= 50 && r != null && r <= 8 && sk >= SKILL_GATE.minor &&
         has("National Champion") && !has("Minor World Champion") &&
         f.record.w >= 7 && random() < 0.3
       ) {
         titleTier = "Minor";
         titleReason = `rank #${r} + juara Nasional + ${f.record.w} menang + skill ${Math.round(sk)}`;
       } else if (
-        rep >= 40 && r != null && r <= 10 && sk >= 55 &&
+        rep >= 40 && r != null && r <= 10 && sk >= SKILL_GATE.national &&
         has("Regional Champion") && !has("National Champion") &&
         f.record.w >= 5 && random() < 0.3
       ) {
         titleTier = "National";
         titleReason = `rank #${r} + juara Regional + ${f.record.w} menang + skill ${Math.round(sk)}`;
       } else if (
-        rep >= 20 && f.record.w >= 3 && sk >= 45 &&
+        rep >= 20 && f.record.w >= 3 && sk >= SKILL_GATE.regional &&
         !has("Regional Champion") && random() < 0.3
       ) {
         titleTier = "Regional";
@@ -295,7 +311,16 @@ export function tickFightOffers(g) {
       g.inbox.unshift({
         id: uid(), type: "offer", fighterId: f.id, expires: shortNotice ? 2 : 3,
         tier, show, winBonus: show, opponent: opp,
-        title: (r != null && r <= 5) && (f.streakW >= 2 || f.streakW == null) && (titleTier === "Major" || titleTier === "Premier"),
+        // Every rung of the ladder is a real title fight.
+        //
+        // This flag used to be true only for Major and Premier. The lower
+        // three rungs were announced to the player as title fights and then
+        // resolved as ordinary bouts, so winning one granted nothing — while
+        // Major and Premier each require already holding a lower belt. The
+        // ladder was a closed loop with no entry: no camp could ever win a
+        // championship at all, which is why a ten-year run produced 46
+        // "Regional title" offers and zero titles.
+        title: !!titleTier,
         titleTier, oppRank, contenderId,
         titleText, story, shortNotice, isMainEvent, isTitleEliminator, isGrudgeMatch,
         weeks: shortNotice ? RI(1, 2) : RI(4, 6),
