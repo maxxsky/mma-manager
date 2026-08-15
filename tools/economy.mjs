@@ -103,6 +103,12 @@ function clearPrompts(g) {
   for (const m of [...g.inbox]) {
     if (m.type === "offer" || m.type === "press") continue;
     if (!m.choices || m.choices.length === 0) continue;
+    // Deliberately NOT special-casing release requests here. Two policies were
+    // tried and both distorted the run: releasing on request emptied the roster
+    // to two fighters, and the retention bonus that keeps a fighter drained the
+    // camp into bankruptcy by year eight. Roster policy has a large enough
+    // effect on the economy that it needs its own study rather than being
+    // smuggled into this harness as an incidental default.
     const choice =
       [...m.choices].sort((a, b) => (a.cash ? -a.cash : 0) - (b.cash ? -b.cash : 0))[0];
     reducer(g, { type: "INBOX_EVENT", messageId: m.id, choice, gambleRoll: 0.5 });
@@ -145,6 +151,23 @@ function spend(g) {
     reducer(g, { type: "HIRE_COACH", coachId: g.coachMarket[0].id });
   }
   reducer(g, { type: "UPGRADE_TIER" });
+}
+
+// Prospect intake, bucketed by era. This is the only direct read on whether
+// camp prestige is actually reaching the player: prestige shifts the potential
+// tier of generated prospects, but that is invisible in roster averages if
+// intake is slow or the roster never turns over.
+function trackIntake(g, seen, log) {
+  for (const f of g.roster) {
+    if (seen.has(f.id)) continue;
+    seen.add(f.id);
+    if (g.week <= 1) continue; // starting roster is not intake
+    log.push({
+      week: g.week,
+      tier: f.potentialTier,
+      headroom: ATTRS.reduce((s, k) => s + (f.ceilings[k] - f.attrs[k]), 0) / ATTRS.length,
+    });
+  }
 }
 
 // --- run -------------------------------------------------------------------
@@ -192,6 +215,8 @@ function runSeed(seed) {
   setRNG(mulberry32(seed));
   const g = newGame();
   const snaps = [];
+  const seenIds = new Set();
+  const intake = [];
 
   for (let w = 1; w <= WEEKS; w++) {
     resolveDueFights(g, seed, w);
@@ -201,6 +226,7 @@ function runSeed(seed) {
     if (w % 4 === 0) spend(g);
 
     tick(g);
+    trackIntake(g, seenIds, intake);
     if (g.over) break;
 
     if (w % YEAR === 0) {
@@ -220,7 +246,7 @@ function runSeed(seed) {
       });
     }
   }
-  return { seed, snaps, over: g.over, endWeek: g.week };
+  return { seed, snaps, intake, over: g.over, endWeek: g.week };
 }
 
 console.log(`Economy harness — ${WEEKS} weeks (${(WEEKS / YEAR).toFixed(0)}y) x ${SEEDS.length} seeds`);
@@ -242,6 +268,16 @@ for (const seed of SEEDS) {
       `${String(s.champs).padStart(6)}  ${String(s.prestige).padStart(8)}`,
     );
   }
+  const eras = [[1, 144, "y1-3"], [144, 336, "y4-7"], [336, 576, "y8-12"], [576, 99999, "y13+"]];
+  const rows = eras.map(([a, b, label]) => {
+    const set = r.intake.filter((x) => x.week >= a && x.week < b);
+    if (!set.length) return `  intake ${label.padEnd(6)} none`;
+    const mean = set.reduce((s2, x) => s2 + x.headroom, 0) / set.length;
+    const good = set.filter((x) => x.tier === "special" || x.tier === "generational").length;
+    return `  intake ${label.padEnd(6)} n=${String(set.length).padStart(3)}  ` +
+      `mean headroom ${mean.toFixed(1).padStart(5)}  special+ ${good}`;
+  });
+  console.log(rows.join("\n"));
   console.log();
 }
 
