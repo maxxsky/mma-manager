@@ -5,6 +5,7 @@ import { T, Panel, Eyebrow, Tag, Btn, Meter, Mono, heat } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 import { CAMP_TIERS, COACH_PERSONALITIES } from "@ironfist/engine/data.js";
 import { FACILITY_MAINT_RATE } from "@ironfist/engine/economy.js";
+import { getPrestige } from "@ironfist/engine/prestige.js";
 import { STAFF_ROLES } from "@ironfist/engine/data/staff.js";
 
 export default function Facility({ g, dispatch, coachCap, rosterCap }) {
@@ -12,6 +13,8 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
   const facLabels = { mats: "Mats", ring: "Ring", weights: "Weights", medical: "Medical" };
   const facCost = (lvl) => Math.round(lvl * 30000 * FACILITY_MAINT_RATE);
   const tier = CAMP_TIERS[g.campTier || 0] || CAMP_TIERS[0];
+  const nextTier = CAMP_TIERS[(g.campTier || 0) + 1] || null;
+  const prestige = getPrestige(g);
 
   const coachSpecLabel = (spec) => ({ Striking: "Striking", Wrestling: "Wrestling", BJJ: "BJJ", "S&C": "S&C", Head: "Head" }[spec] || spec);
 
@@ -94,7 +97,39 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
           <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt2, marginBottom: 12, lineHeight: 1.5 }}>
             {tier.desc || ""}
           </div>
-          <Meter label={`Rep to next tier`} v={Math.round((g.rep / (tier.rep || 80)) * 100)} color={T.gold} />
+          {/* Requirements for the NEXT tier. This used to measure reputation
+              against the CURRENT tier's threshold, which reads over 100% the
+              moment you arrive. It also showed only reputation, while the late
+              tiers are gated on camp prestige too — leaving a player at max rep
+              with no way to see why the upgrade was still refused. */}
+          {nextTier ? (
+            <div style={{ display: "grid", gap: 6, marginBottom: 4 }}>
+              <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>
+                {t("UI.nextTier")}: {nextTier.name}
+              </div>
+              <Meter
+                label={`Rep ${Math.round(g.rep)} / ${nextTier.rep}`}
+                v={Math.min(100, Math.round((g.rep / nextTier.rep) * 100))}
+                color={g.rep >= nextTier.rep ? T.pos : T.gold}
+              />
+              {nextTier.prestige != null && (
+                <Meter
+                  label={`${t("PRES.title")} ${prestige} / ${nextTier.prestige}`}
+                  v={Math.min(100, Math.round((prestige / nextTier.prestige) * 100))}
+                  color={prestige >= nextTier.prestige ? T.pos : T.gold}
+                />
+              )}
+              <Meter
+                label={`${t("UI.bank")} ${fmt$(g.cash)} / ${fmt$(nextTier.cost)}`}
+                v={Math.min(100, Math.round((g.cash / nextTier.cost) * 100))}
+                color={g.cash >= nextTier.cost ? T.pos : T.gold}
+              />
+            </div>
+          ) : (
+            <div style={{ fontFamily: T.body, fontSize: 12, color: T.gold, marginBottom: 4 }}>
+              {t("UI.maxTier")}
+            </div>
+          )}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, margin: "14px 0" }}>
             {[[t("UI.roster"), `${g.roster.length}/${rosterCap}`],
               [t("UI.coachingStaff"), `${g.coaches.length}/${coachCap}`],
@@ -110,25 +145,38 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
 
         <Panel>
           <Eyebrow>{t("UI.facilityUpgrades")}</Eyebrow>
-          {Object.entries(g.facilities).map(([k, lvl], i, arr) => (
+          {Object.entries(g.facilities).map(([k, lvl], i, arr) => {
+            // Segment count comes from the highest level any camp tier allows,
+            // not a hard-coded five. The bar was fixed at five while the top
+            // tier already permitted six, so a maxed facility looked identical
+            // to a level-five one — and the late tiers push the ceiling higher
+            // still. Reading it from the data keeps the two in step.
+            const segments = Math.max(
+              ...CAMP_TIERS.map((ct) => Math.max(...ct.facMax)),
+            );
+            const capHere = CAMP_TIERS[g.campTier || 0].facMax[i] ?? 0;
+            return (
             <div key={k} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0",
               borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none" }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: T.body, fontSize: 13, fontWeight: 600, color: T.txt, marginBottom: 5 }}>
                   {facLabels[k]}</div>
                 <div style={{ display: "flex", gap: 4 }}>
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <div key={j} style={{ width: 22, height: 5, borderRadius: 2,
+                  {Array.from({ length: segments }).map((_, j) => (
+                    <div key={j} style={{ width: 18, height: 5, borderRadius: 2,
                       background: j < lvl ? T.steel : T.bg,
+                      // Levels this camp tier cannot yet reach are dimmed, so
+                      // the bar shows both current progress and remaining room.
+                      opacity: j < capHere ? 1 : 0.35,
                       border: `1px solid ${j < lvl ? T.steel : T.line}` }} />
                   ))}
                 </div>
               </div>
-              <span style={{ fontFamily: T.mono, fontSize: 11, color: T.txt3 }}>L{lvl}</span>
+              <span style={{ fontFamily: T.mono, fontSize: 11, color: T.txt3 }}>L{lvl}/{capHere}</span>
               <span style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 700, color: T.txt2 }}>
                 {fmt$(facCost(lvl))}/mo</span>
             </div>
-          ))}
+          );})}
         </Panel>
       </div>
 
