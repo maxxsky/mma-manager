@@ -123,8 +123,14 @@ export function computeMonthlyExpense(g) {
   const { members } = computeMembership(g);
   const opCost = members * 30;
   const fighterSupport = (g.roster?.length || 0) * 600;
-  return { coachSal, staffSal, maint, training, opCost, fighterSupport, members,
-    total: coachSal + staffSal + maint + training + opCost + fighterSupport };
+  // Tier upkeep. Only the two prestige-gated late tiers carry one, so existing
+  // balance is untouched; running a multi-continent academy should not cost the
+  // same as running a neighbourhood gym. Income compounds indefinitely while
+  // one-off purchases do not, so a recurring cost is the only thing that can
+  // actually meet it.
+  const tierUpkeep = CAMP_TIERS[g.campTier || 0]?.upkeep || 0;
+  return { coachSal, staffSal, maint, training, opCost, fighterSupport, tierUpkeep, members,
+    total: coachSal + staffSal + maint + training + opCost + fighterSupport + tierUpkeep };
 }
 
 // Shared facility upgrade cost — used by both UI and reducer

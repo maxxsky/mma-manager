@@ -3,7 +3,7 @@ import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 import { weeklyFee } from "@ironfist/engine/fighter.js";
-import { TRAINING } from "@ironfist/engine/data.js";
+import { TRAINING, CAMP_TIERS } from "@ironfist/engine/data.js";
 import { computeMonthlyIncome, computeMonthlyExpense } from "@ironfist/engine/economy.js";
 
 /* =============================================================================
@@ -15,14 +15,18 @@ export default function Finance({ g }) {
   // ── Income breakdown (shared functions = settlement reality) ──
   const { sponsorAmt: sponsorIncome, fSponsor: popTotal, membershipRevenue,
     merchRevenue: merchTotal, championBonus } = computeMonthlyIncome(g);
-  const { coachSal, maint, training, opCost, fighterSupport } = computeMonthlyExpense(g);
+  const { coachSal, staffSal, maint, training, opCost, fighterSupport, tierUpkeep,
+    total: totalExpense } = computeMonthlyExpense(g);
   // NOTE: weeklyFee()/feeTotal sengaja gak dipake di totalIncome — belum di-wire
   // ke tickSettlement, jadi kalau ditampilin bikin Net/Month overstate.
   // Lihat commit e1b6569 (debug panel) buat bukti gap-nya di save nyata.
   const totalIncome = sponsorIncome + popTotal + merchTotal + membershipRevenue;
 
   // ── Expense breakdown ─────────────────────────────────────────
-  const totalExpense = coachSal + maint + training + opCost + fighterSupport;
+  // Take the total straight from computeMonthlyExpense rather than re-adding
+  // the line items. The local sum had already drifted — it omitted staff
+  // salaries — so the screen under-reported what the camp actually spends, and
+  // any component added later would silently go missing the same way.
   const netMonthly = totalIncome - totalExpense;
 
   // ── Mini components (inline — not exported) ──
@@ -120,6 +124,17 @@ export default function Finance({ g }) {
           color={T.neg}
           detail={`${g.roster.length} fighter${g.roster.length !== 1 ? "s" : ""}`}
         />
+        {staffSal > 0 && (
+          <Row label="Gaji Staf" value={staffSal} color={T.neg} />
+        )}
+        {tierUpkeep > 0 && (
+          <Row
+            label="Biaya Operasional Tier"
+            value={tierUpkeep}
+            color={T.neg}
+            detail={CAMP_TIERS[g.campTier || 0]?.name}
+          />
+        )}
         <TotalRow label={t("UI.expense") + " Total"} value={totalExpense} color={T.neg} />
 
         {/* Net */}

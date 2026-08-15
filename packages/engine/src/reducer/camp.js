@@ -4,6 +4,7 @@ import { CAMP_TIERS, SPONSOR_BRANDS } from "../data.js";
 import { facilityCost } from "../economy.js";
 import { CHEM_BOOST_UPGRADE, TEAM_BONDING_COST, TEAM_BONDING_CHEM, TEAM_BONDING_COOLDOWN } from "./constants.js";
 import { INVESTMENTS } from "../data/investments.js";
+import { getPrestige } from "../prestige.js";
 
 export function reduceCamp(g, action) {
   switch (action.type) {
@@ -25,7 +26,10 @@ export function reduceCamp(g, action) {
       const next = g.campTier + 1;
       if (next < CAMP_TIERS.length) {
         const t = CAMP_TIERS[next];
-        if (g.rep >= t.rep && g.cash >= t.cost) {
+        // Late tiers additionally require camp prestige. Reputation saturates
+        // early; prestige is what keeps a long save progressing.
+        const prestigeOk = t.prestige == null || getPrestige(g) >= t.prestige;
+        if (g.rep >= t.rep && g.cash >= t.cost && prestigeOk) {
           g.cash -= t.cost;
           g.campTier = next;
           g.rep = clamp(g.rep + 8, 0, 100);
