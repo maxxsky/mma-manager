@@ -1,10 +1,94 @@
 import React, { useState, useEffect } from "react";
-import { ARCH_COLOR, TRAINING } from "@ironfist/engine/data.js";
+import { ARCH_COLOR, TRAINING, INTENSITY, ATTRS } from "@ironfist/engine/data.js";
 import { avgSkill } from "@ironfist/engine/fighter.js";
 import { rankOf } from "@ironfist/engine/rankings.js";
 import { T, Panel, Tag, Ovr, Mono, heat, Btn } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 import FighterDetail from "./FighterDetail.jsx";
+
+// Bulk training assignment.
+//
+// Training could only be set from a fighter's own page: open Roster, click a
+// fighter, pick a programme, pick an intensity, go back, repeat. At the roster
+// caps this game now reaches — twenty-four fighters at the top tier — that is
+// roughly a hundred clicks a week, and a long save runs the weekly loop over a
+// thousand times. The arithmetic is what matters here, not taste.
+//
+// "Weakest area" is the important option. It is what a sensible manager does
+// anyway, and doing it by hand means comparing eight attributes against eight
+// ceilings for every fighter, every week.
+function BulkTraining({ g, dispatch }) {
+  const [program, setProgram] = React.useState("auto");
+  const [intensity, setIntensity] = React.useState("Medium");
+
+  // Injured fighters need recovery and booked fighters are in fight camp;
+  // neither should have a general programme stamped over them.
+  const eligible = g.roster.filter((f) => !f.injury && !f.booked);
+
+  const weakestProgram = (f) => {
+    let best = null, gap = -Infinity;
+    for (const key of Object.keys(TRAINING)) {
+      const gains = TRAINING[key].gains;
+      if (!gains || !gains.length) continue;
+      const room = gains.reduce((s, k) => s + ((f.ceilings?.[k] ?? 99) - f.attrs[k]), 0) / gains.length;
+      if (room > gap) { gap = room; best = key; }
+    }
+    return best;
+  };
+
+  const apply = () => {
+    for (const f of eligible) {
+      const prog = program === "auto" ? weakestProgram(f) : program;
+      if (!prog) continue;
+      dispatch({ type: "SET_TRAINING", fighterId: f.id, program: prog, intensity });
+    }
+  };
+
+  const programOptions = ["auto", ...Object.keys(TRAINING)];
+
+  return (
+    <Panel style={{ marginBottom: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <span style={{ fontFamily: T.disp, fontSize: 12, fontWeight: 700, letterSpacing: 1,
+          textTransform: "uppercase", color: T.txt3, marginRight: 2 }}>
+          {t("ROSTER.bulkTraining")}
+        </span>
+
+        <select
+          value={program}
+          onChange={(e) => setProgram(e.target.value)}
+          aria-label={t("ROSTER.bulkProgram")}
+          style={{ background: T.bg, color: T.txt, border: `1px solid ${T.line}`,
+            borderRadius: T.r, padding: "6px 8px", fontFamily: T.body, fontSize: 12 }}
+        >
+          {programOptions.map((k) => (
+            <option key={k} value={k}>
+              {k === "auto" ? t("ROSTER.bulkAuto") : (TRAINING[k].label || k)}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={intensity}
+          onChange={(e) => setIntensity(e.target.value)}
+          aria-label={t("ROSTER.bulkIntensity")}
+          style={{ background: T.bg, color: T.txt, border: `1px solid ${T.line}`,
+            borderRadius: T.r, padding: "6px 8px", fontFamily: T.body, fontSize: 12 }}
+        >
+          {Object.keys(INTENSITY).map((k) => <option key={k} value={k}>{k}</option>)}
+        </select>
+
+        <Btn sm onClick={apply} disabled={eligible.length === 0}>
+          {t("ROSTER.bulkApply").replace("{0}", eligible.length)}
+        </Btn>
+
+        <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>
+          {t("ROSTER.bulkSkips")}
+        </span>
+      </div>
+    </Panel>
+  );
+}
 
 export default function Roster({ g, setTab, dispatch }) {
   const [detailFighter, setDetailFighter] = useState(null);
@@ -29,8 +113,11 @@ export default function Roster({ g, setTab, dispatch }) {
   const cols = ["STR", "WRE", "BJJ", "FTW", "PWR", "CAR", "CHN", "IQ"];
   const keys = ["striking", "wrestling", "bjj", "footwork", "strength", "cardio", "chin", "fightIQ"];
 
+  const bulk = <BulkTraining g={g} dispatch={dispatch} />;
+
   return isMobile ? (
     <div style={{ display: "grid", gap: 10 }}>
+      {bulk}
       {g.roster.map((f) => {
         const ac = ARCH_COLOR[f.archetype];
         const r = rankOf(g, f);
@@ -84,7 +171,7 @@ export default function Roster({ g, setTab, dispatch }) {
                   : f.booked ? <Tag color={T.ember}>{t("UI.booked")}</Tag>
                   : f.injury ? <Tag color={T.neg}>{t("UI.injured")}</Tag>
                   : f.overtraining >= 50 ? <Tag color={T.warn}>{t("UI.fatigued")}</Tag>
-                  : <span style={{ fontSize: 11, color: T.txt3 }}>{t("TRAIN.sparring")}</span>}
+                  : <span style={{ fontSize: 11, color: T.txt3 }}>{t("TRAIN." + (f.training?.type || "sparring"))}</span>}
               </div>
               <div style={{ flex: 1, display: "flex", gap: 6, alignItems: "center" }}>
                 <div style={{ flex: 1, height: 4, background: T.bg, borderRadius: 2 }}>
@@ -102,7 +189,9 @@ export default function Roster({ g, setTab, dispatch }) {
       })}
     </div>
   ) : (
-    <Panel pad={0} style={{ overflow: "hidden" }} role="table" aria-label="Fighter roster table">
+    <div>
+      {bulk}
+      <Panel pad={0} style={{ overflow: "hidden" }} role="table" aria-label="Fighter roster table">
       <div style={{ overflowX: "auto" }}>
         <div role="row" style={{ display: "grid",
         gridTemplateColumns: "minmax(200px,1.4fr) 46px repeat(8, 40px) 90px 70px",
@@ -154,7 +243,7 @@ export default function Roster({ g, setTab, dispatch }) {
                 : f.booked ? <Tag color={T.ember}>{t("UI.booked")}</Tag>
                 : f.injury ? <Tag color={T.neg}>{t("UI.injured")}</Tag>
                 : f.overtraining >= 50 ? <Tag color={T.warn}>{t("UI.fatigued")}</Tag>
-                : <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>{t("TRAIN.sparring")}</span>}
+                : <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>{t("TRAIN." + (f.training?.type || "sparring"))}</span>}
             </div>
             <div role="cell" style={{ paddingLeft: 8 }}>
               <div style={{ height: 4, background: T.bg, borderRadius: 2, marginBottom: 3 }}>
@@ -168,6 +257,7 @@ export default function Roster({ g, setTab, dispatch }) {
         );
       })}
       </div>
-    </Panel>
+      </Panel>
+    </div>
   );
 }
