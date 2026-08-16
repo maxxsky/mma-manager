@@ -9,10 +9,26 @@ import { CAMP_TIERS } from "./data.js";
 import { getPrestige, prospectTierWeights } from "./prestige.js";
 
 // ── Constants ──
-export const TALENT_POOL_MAX = 3;
+//
+// Intake scales with the size of the camp. These numbers were tuned when the
+// roster capped at four to fourteen, and produced roughly two new fighters a
+// year — measured across twenty in-game years, forty-four in total. The late
+// camp tiers raise the cap to twenty-four, which that trickle cannot fill, so
+// improved prospects had nowhere to land and never showed up in the roster
+// average. A bigger camp should be noticed by more people, and needs to be.
+const TALENT_POOL_BASE = 3;
+const TALENT_POOL_PER_TIER = 1;
+
+// Kept as a plain export for callers that only need the floor.
+export const TALENT_POOL_MAX = TALENT_POOL_BASE;
+
+export function talentPoolMax(g) {
+  return TALENT_POOL_BASE + (g?.campTier || 0) * TALENT_POOL_PER_TIER;
+}
 
 // Base discovery chance per settlement cycle (4 weeks)
 const BASE_DISCOVERY_CHANCE = 0.30;
+const DISCOVERY_PER_TIER = 0.06;
 // Bonus if any coach has "Player's Coach" personality
 const PLAYERS_COACH_BONUS = 0.20;
 
@@ -34,7 +50,7 @@ export function genTalentEntry(g = null) {
 // Formula: members / 200 — at 200 members = 100% per cycle
 export function rollAddTalent(g) {
   if (!g.talentPool) g.talentPool = [];
-  if (g.talentPool.length >= TALENT_POOL_MAX) return false;
+  if (g.talentPool.length >= talentPoolMax(g)) return false;
 
   const { members } = computeMembership(g);
   const chance = Math.min(members / 200, 1.0);
@@ -58,7 +74,8 @@ export function rollDiscoverTalent(g) {
 
   const hasPlayersCoach = g.coaches?.some((c) => c.personality === "Player's Coach");
   const academyBonus = g.investments?.youthAcademy ? 0.15 : 0;
-  const chance = BASE_DISCOVERY_CHANCE + (hasPlayersCoach ? PLAYERS_COACH_BONUS : 0) + academyBonus;
+  const chance = BASE_DISCOVERY_CHANCE + (g.campTier || 0) * DISCOVERY_PER_TIER
+    + (hasPlayersCoach ? PLAYERS_COACH_BONUS : 0) + academyBonus;
   if (random() >= chance) return null;
 
   // Pick one randomly from the pool

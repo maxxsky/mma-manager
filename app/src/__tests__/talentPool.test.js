@@ -1,7 +1,7 @@
 // Talent Pool — tests for hidden internal prospect system
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useSeed, clearSeed, createTestGame, createTestFighter } from './helpers.js'
-import { genTalentEntry, rollAddTalent, rollDiscoverTalent, pushTalentDiscoveryEvent, TALENT_POOL_MAX, rosterHasSpace, rosterFullMessage } from '@ironfist/engine/talentPool.js'
+import { genTalentEntry, rollAddTalent, rollDiscoverTalent, pushTalentDiscoveryEvent, TALENT_POOL_MAX, talentPoolMax, rosterHasSpace, rosterFullMessage } from '@ironfist/engine/talentPool.js'
 import { defaultContract } from '@ironfist/engine/fighter.js'
 import { CAMP_TIERS } from '@ironfist/engine/data/camp.js'
 import { tick } from '@ironfist/engine/state.js'
@@ -38,7 +38,9 @@ describe('Talent Pool', () => {
   })
 
   describe('rollAddTalent', () => {
-    it('talentPool never exceeds TALENT_POOL_MAX', () => {
+    // The cap now scales with camp tier: a bigger camp is noticed by more people
+    // and needs a wider intake to fill a roster that grew from 14 slots to 24.
+    it('talentPool never exceeds the tier-scaled cap', () => {
       useSeed(42)
       const g = makeG({
         facilities: { mats: 10, ring: 10, weights: 10, medical: 10 },
@@ -46,15 +48,15 @@ describe('Talent Pool', () => {
         campTier: 4,
       })
       // Force-add to fill pool
-      for (let i = 0; i < TALENT_POOL_MAX; i++) {
+      for (let i = 0; i < talentPoolMax(g); i++) {
         g.talentPool.push(genTalentEntry())
       }
-      expect(g.talentPool.length).toBe(TALENT_POOL_MAX)
+      expect(g.talentPool.length).toBe(talentPoolMax(g))
 
       // rollAddTalent should return false and not add beyond max
       const result = rollAddTalent(g)
       expect(result).toBe(false)
-      expect(g.talentPool.length).toBe(TALENT_POOL_MAX)
+      expect(g.talentPool.length).toBe(talentPoolMax(g))
       clearSeed()
     })
 
@@ -73,7 +75,7 @@ describe('Talent Pool', () => {
       }
       // With near-100% chance, should fill all 3 slots very quickly
       expect(added).toBeGreaterThanOrEqual(2)
-      expect(g.talentPool.length).toBe(TALENT_POOL_MAX)
+      expect(g.talentPool.length).toBe(talentPoolMax(g))
       clearSeed()
     })
 
@@ -241,7 +243,7 @@ describe('Talent Pool', () => {
       for (let i = 0; i < 104; i++) {
         tick(g)
       }
-      expect(g.talentPool.length).toBeLessThanOrEqual(TALENT_POOL_MAX)
+      expect(g.talentPool.length).toBeLessThanOrEqual(talentPoolMax(g))
       clearSeed()
     })
   })
