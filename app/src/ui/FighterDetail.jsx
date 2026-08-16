@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { fmt$ } from "@ironfist/engine/rng.js";
 import { ARCH_COLOR, TRAINING, INTENSITY, TRAITS, GAME_PLANS } from "@ironfist/engine/data.js";
-import { avgSkill } from "@ironfist/engine/fighter.js";
+import { avgSkill, tierOf } from "@ironfist/engine/fighter.js";
 import { reducer } from "@ironfist/engine/reducer.js";
 import { getStoryTags, getLifecyclePhase } from "@ironfist/engine/career.js";
 import { generateFighterNickname } from "@ironfist/engine/identity.js";
@@ -189,6 +189,36 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
                   {t("FIGHTER.vacateTitle")}
                 </Btn>
               )}
+              {/* Release. Until now a fighter could only leave by asking to,
+                  which required their morale to collapse — so a full roster
+                  stayed full and better prospects had nowhere to go. The cost
+                  is shown up front because it is the whole point: cutting is a
+                  real decision, not housekeeping. */}
+              {!f.booked && (() => {
+                const fee = { Prospect: 200, Pro: 500, "Main Card": 800, Elite: 1200 }[tierOf(f)];
+                const monthsLeft = Math.max(
+                  0,
+                  (f.contract?.durationMo || 0) - Math.round((g.week - (f.contract?.signedWeek || 0)) / 4),
+                );
+                const severance = Math.max(2000, Math.round(fee * 4 * monthsLeft * 0.5));
+                const affordable = g.cash >= severance;
+                return (
+                  <Btn sm ghost color={T.neg} disabled={!affordable}
+                    style={{ marginTop: 8, width: "100%" }}
+                    onClick={() => {
+                      if (window.confirm(
+                        t("FIGHTER.releaseConfirm")
+                          .replace("{0}", f.name)
+                          .replace("{1}", fmt$(severance)),
+                      )) {
+                        dispatch({ type: "RELEASE_FIGHTER", fighterId: f.id });
+                      }
+                    }}>
+                    {t("FIGHTER.release").replace("{0}", fmt$(severance))}
+                  </Btn>
+                );
+              })()}
+
               {f.promotionContract && f.promotionContract.fightsLeft > 0 && (() => {
                 const prom = g.promotions?.find((p) => p.id === f.promotionContract.promotionId);
                 if (!prom) return null;

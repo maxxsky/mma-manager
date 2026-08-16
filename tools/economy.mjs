@@ -25,6 +25,9 @@ import {
 } from "../packages/engine/src/index.js";
 // Not re-exported by the barrel; imported directly.
 import { runFight } from "../packages/engine/src/fight.js";
+import { CAMP_TIERS } from "../packages/engine/src/data/camp.js";
+
+const ROSTER_CAP_BY_TIER = CAMP_TIERS.map((t) => t.rosterCap);
 import { commitFightResult } from "../packages/engine/src/fights/commitResult.js";
 
 const WEEKS = Number(process.argv[2] || 960);
@@ -139,6 +142,29 @@ function manageTraining(g) {
   }
 }
 
+// Roster turnover. A camp that never cuts anyone fills up with journeymen and
+// then has nowhere to put the better prospects its prestige is attracting —
+// measured before this existed, roster average skill sat flat for a decade
+// while intake quality rose 70%. Cutting has a real cost, so the policy is
+// deliberately conservative: only fighters who are past their peak AND have
+// almost no development left, and only when the roster is nearly full.
+function cutDeadWeight(g) {
+  const cap = ROSTER_CAP_BY_TIER[g.campTier] ?? 14;
+  if (g.roster.length < cap - 1) return;
+
+  const candidates = g.roster
+    .filter((f) => !f.booked && !f.injury && !(f.titles?.length))
+    .map((f) => ({
+      f,
+      headroom: ATTRS.reduce((s2, k) => s2 + ((f.ceilings?.[k] ?? 99) - f.attrs[k]), 0) / ATTRS.length,
+    }))
+    .filter((c) => c.f.age >= 32 && c.headroom < 3)
+    .sort((a, b) => a.headroom - b.headroom);
+
+  if (!candidates.length) return;
+  reducer(g, { type: "RELEASE_FIGHTER", fighterId: candidates[0].f.id });
+}
+
 function spend(g) {
   // Facilities first, then coaches. Keep a buffer so the camp is not one bad
   // month from insolvency.
@@ -223,7 +249,7 @@ function runSeed(seed) {
     acceptOffers(g);
     clearPrompts(g);
     manageTraining(g);
-    if (w % 4 === 0) spend(g);
+    if (w % 4 === 0) { spend(g); cutDeadWeight(g); }
 
     // Drop the undo history before ticking. Every reducer dispatch deep-clones
     // the whole game state into it, and a scripted player issues one dispatch

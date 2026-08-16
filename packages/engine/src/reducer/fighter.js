@@ -7,9 +7,53 @@ import {
   CHEM_PENALTY_TALK_POACH, CHEM_MIN_TALK_POACH,
   MANAGER_CUT_INCREMENT, MANAGER_CUT_MAX,
 } from "./constants.js";
+import { weeklyFee, avgSkill } from "../fighter.js";
 
 export function reduceFighter(g, action) {
   switch (action.type) {
+    case "RELEASE_FIGHTER": {
+      // Proactive roster cutting.
+      //
+      // Until now the only way a fighter could leave was by asking to, which
+      // required their morale to fall below 20. That left the roster frozen:
+      // camp prestige raises the calibre of incoming prospects, but a full
+      // roster of mediocre fighters has no room for them, which is why roster
+      // average skill sat flat for a decade while intake quality rose 70%.
+      //
+      // Cutting is not free. Fighters are under contract, so releasing one
+      // costs severance, unsettles the gym, and — if they were worth keeping —
+      // damages the camp's standing. Without a cost, roster churn becomes a
+      // dominant strategy: sign, evaluate, discard, repeat.
+      const rf = g.roster.find((x) => x.id === action.fighterId);
+      if (!rf) break;
+
+      const fee = weeklyFee(rf);
+      const monthsLeft = Math.max(
+        0,
+        (rf.contract?.durationMo || 0) - Math.round((g.week - (rf.contract?.signedWeek || 0)) / 4),
+      );
+      // Roughly half the remaining contract, floored so cutting a cheap
+      // prospect still stings a little.
+      const severance = Math.max(2000, Math.round(fee * 4 * monthsLeft * 0.5));
+      if (g.cash < severance) {
+        g.log.unshift(
+          `⚠️ Tidak cukup dana untuk release ${rf.name} — butuh ${fmt$(severance)} pesangon.`,
+        );
+        break;
+      }
+
+      vacateTitle(g, rf);
+      g.cash -= severance;
+      g.roster = g.roster.filter((x) => x.id !== action.fighterId);
+      g.chemistry = clamp(g.chemistry - 8, 0, 100);
+      // Cutting a genuinely good fighter is noticed; cutting a journeyman is not.
+      const repHit = avgSkill(rf) >= 55 || (rf.titles?.length || 0) > 0 ? 4 : 1;
+      g.rep = clamp(g.rep - repHit, 0, 100);
+      g.log.unshift(
+        `👋 ${rf.name} di-release. Pesangon ${fmt$(severance)}, chemistry -8, rep -${repHit}.`,
+      );
+      break;
+    }
     case "SET_TRAINING": {
       const f = g.roster.find((x) => x.id === action.fighterId);
       if (f) { f.training.type = action.program; f.training.intensity = action.intensity || "Medium"; }
