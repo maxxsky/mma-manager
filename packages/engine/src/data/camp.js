@@ -15,9 +15,9 @@ export const CAMP_TIERS = [
   // late tiers on it gives the money somewhere to go and gives a camp's
   // history a concrete payoff beyond better prospects.
   { name: "Global Fight Academy", rep: 85, prestige: 45, cost: 4000000, upkeep: 200000, rosterCap: 18, coachCap: 6, facMax: [7,7,7,6], trainBonus: 0.28, desc: "Akademi lintas benua. Roster & staf jauh lebih besar." },
-  { name: "Dynasty Institution",  rep: 95, prestige: 75, cost: 20000000, upkeep: 800000, rosterCap: 24, coachCap: 8, facMax: [8,8,8,7], trainBonus: 0.35, desc: "Institusi warisan. Hanya untuk camp dengan sejarah panjang." },
+  { name: "Dynasty Institution",  rep: 95, prestige: 75, cost: 20000000, upkeep: 520000, rosterCap: 24, coachCap: 8, facMax: [8,8,8,7], trainBonus: 0.35, desc: "Institusi warisan. Hanya untuk camp dengan sejarah panjang." },
 ];
-export const MEMBER_FEE = [110, 130, 150, 175, 200, 240, 290];
+export const MEMBER_FEE = [110, 130, 150, 175, 200, 260, 340];
 export const FAC_LABEL = {
   mats: "Training Mats", ring: "Boxing Ring", weights: "Weight Room", medical: "Medical Room",
 };

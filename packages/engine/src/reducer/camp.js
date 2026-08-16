@@ -29,7 +29,13 @@ export function reduceCamp(g, action) {
         // Late tiers additionally require camp prestige. Reputation saturates
         // early; prestige is what keeps a long save progressing.
         const prestigeOk = t.prestige == null || getPrestige(g) >= t.prestige;
-        if (g.rep >= t.rep && g.cash >= t.cost && prestigeOk) {
+        // A tier with recurring costs also demands a year of those costs in
+        // reserve. Without it the upgrade is a trap: the purchase drains the
+        // camp, the new upkeep starts immediately, and a healthy camp can be
+        // bankrupted by taking an option the game itself offered. Measured
+        // across three twenty-year runs, one camp died this way at year twelve.
+        const reserve = (t.upkeep || 0) * 12;
+        if (g.rep >= t.rep && g.cash >= t.cost + reserve && prestigeOk) {
           g.cash -= t.cost;
           g.campTier = next;
           g.rep = clamp(g.rep + 8, 0, 100);
