@@ -4,7 +4,7 @@ import { vacateTitle } from "../../rankings.js";
 import { recordRetirement } from "../../world/history.js";
 import { avgSkill } from "../../fighter.js";
 import { checkHallOfFame } from "../../dynasty.js";
-import { pushInboxEvent } from "../../events.js";
+import { pushInboxEvent, onFightComplaintIgnored } from "../../events.js";
 
 export function registerFighterHandlers(register) {
   register("release", ({ g, c }) => {
@@ -58,6 +58,23 @@ export function registerFighterHandlers(register) {
       g.chemistry = clamp(g.chemistry + 5, 0, 100);
       g.log.unshift(`👨‍🏫 ${f.name} pensiun dan jadi coach.`);
     }
+  });
+
+  // Ignoring a fighter who asked to leave is remembered.
+  //
+  // The engine already contains a "fighter frustrated" event whose trigger is
+  // three ignored complaints, but nothing ever recorded one — a reachability
+  // scan showed onFightComplaintIgnored was exported and never called, and
+  // there is no complaint feature anywhere in the codebase. The branch was
+  // unreachable by construction.
+  //
+  // Rather than invent a complaint system, this hangs the memory on an action
+  // the player already takes: brushing off a retention request. Ignore the same
+  // fighter three times and he starts talking to other camps.
+  register("complaint", ({ g, c }) => {
+    const f = g.roster.find((x) => x.id === c.complaint);
+    if (!f) return;
+    onFightComplaintIgnored(g, f);
   });
 
   register("moraleTo", ({ g, c }) => {

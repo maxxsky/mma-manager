@@ -379,7 +379,7 @@ export function tickSettlement(g) {
         // hurried player lands on.
         choices: [
           { label: `Bonus retensi ${fmt$(bonus)}`, cash: -bonus, moraleTo: { id: f.id, amt: 30 } },
-          { label: "Abaikan", chem: -5 },
+          { label: "Abaikan", chem: -5, complaint: f.id },
           { label: "Kabulkan release", release: f.id },
         ],
       });

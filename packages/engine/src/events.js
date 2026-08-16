@@ -139,19 +139,20 @@ export function onCoachRaiseDenied(g, coach) {
 }
 
 export function onFightComplaintIgnored(g, fighter) {
+  // Only the memory. Setting fighter_frustrated here would have blocked the
+  // very event it feeds: the generator fires on three ignored complaints and
+  // guards on !hasFlag(f, "fighter_frustrated"), setting that flag itself when
+  // it fires. Raising it on the first complaint meant the threshold could never
+  // be reached — which went unnoticed because nothing called this function at
+  // all until now.
   recordMemory(fighter, "complaint_ignored");
-  setFlag(fighter, "fighter_frustrated");
 }
 
-export function onConflictMediated(g) {
-  setFlag(g, "team_momentum");
-}
+// onConflictMediated, onWinningStreak and onRetentionBonusPaid were removed.
+//
+// All three were exported, never called, and set flags — "team_momentum" and
+// "morale_boost" — that nothing in the codebase ever reads. Calling them would
+// have changed nothing observable. They are left documented here rather than
+// silently deleted so it is clear the behaviour was absent, not lost: if these
+// states are wanted later they need a reader first, not just a setter.
 
-export function onWinningStreak(g) {
-  setFlag(g, "team_momentum");
-}
-
-export function onRetentionBonusPaid(g, fighter) {
-  recordMemory(fighter, "retention_bonus");
-  setFlag(fighter, "morale_boost");
-}
