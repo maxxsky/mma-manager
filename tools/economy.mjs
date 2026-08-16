@@ -284,6 +284,52 @@ for (const seed of SEEDS) {
 // --- read the result -------------------------------------------------------
 console.log("=".repeat(72));
 
+// Cross-run comparison warning.
+//
+// Any engine change shifts the order in which the seeded RNG is consumed, so
+// the same seed produces a completely different history before and after. A
+// single-seed number therefore cannot be compared across versions: a run that
+// showed 15.7M cash before a change and 44M after may reflect the change, or
+// may reflect nothing but a reshuffled stream. Only the median across several
+// seeds carries a signal, and even then only for quantities the change
+// actually touches.
+if (SEEDS.length < 3) {
+  console.log(
+    `WARNING  only ${SEEDS.length} seed(s). Do not compare these figures against
+` +
+    `         another version of the engine — RNG divergence alone can move them
+` +
+    `         several fold. Use at least 3 seeds and read the median below.
+`,
+  );
+}
+
+const median = (a) => {
+  if (!a.length) return 0;
+  const s2 = [...a].sort((x, y) => x - y);
+  const mid = Math.floor(s2.length / 2);
+  return s2.length % 2 ? s2[mid] : Math.round((s2[mid - 1] + s2[mid]) / 2);
+};
+
+const finals = all.filter((r) => r.snaps.length).map((r) => r.snaps[r.snaps.length - 1]);
+if (finals.length) {
+  console.log("Median at end of run across seeds:");
+  console.log(`  cash      ${median(finals.map((s2) => s2.cash)).toLocaleString()}`);
+  console.log(`  champs    ${median(finals.map((s2) => s2.champs))}`);
+  console.log(`  prestige  ${median(finals.map((s2) => s2.prestige))}`);
+  console.log(`  roster    ${median(finals.map((s2) => s2.roster))}`);
+  console.log(`  avgSkill  ${median(finals.map((s2) => s2.avgSkill))}`);
+  const spread = finals.map((s2) => s2.cash);
+  if (spread.length > 1) {
+    console.log(
+      `  cash range across seeds ${Math.min(...spread).toLocaleString()} .. ` +
+      `${Math.max(...spread).toLocaleString()}  ` +
+      `(seed-to-seed variance, not a trend)`,
+    );
+  }
+  console.log();
+}
+
 const withSnaps = all.filter((r) => r.snaps.length >= 4);
 if (withSnaps.length === 0) {
   console.log("No seed survived long enough to judge. That is itself the finding.");
