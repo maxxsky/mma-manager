@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { T, Icon, ICONS } from "./theme.jsx";
 import { t } from "../i18n/index.js";
+import { exportSave, importSave } from "@ironfist/engine/polish.js";
 
 /** Determine flash direction from raw numeric comparison */
 export function flashDirection(prev, current) {
@@ -110,6 +111,60 @@ export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
                   ))}
                 </select>
               )}
+              {/* Save backup. exportSave/importSave have existed in polish.js
+                  since the save system was written and were never wired to
+                  anything — a reachability scan found thirteen unreferenced
+                  exports in that file. For a game whose entire premise is a
+                  two-hundred-hour run living in localStorage, having no way to
+                  back it up means one cleared cache erases everything. */}
+              {!isMobile && (
+                <button onClick={() => {
+                  const json = exportSave(saveSlot);
+                  if (!json) { window.alert("Slot ini masih kosong."); return; }
+                  // Week comes from the exported payload, not from slotInfo —
+                  // slotInfo lags behind the live game and produced filenames
+                  // like "w0" for a save that was actually on week 2.
+                  let wk = 0;
+                  try { wk = JSON.parse(json).week ?? 0; } catch { /* keep 0 */ }
+                  const blob = new Blob([json], { type: "application/json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `ironfist-slot${saveSlot}-w${wk}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }} aria-label="Export save"
+                  style={{ fontFamily: T.mono, fontSize: 10, background: "transparent",
+                    border: `1px solid ${T.line}`, borderRadius: T.r, color: T.txt3,
+                    padding: "3px 6px", cursor: "pointer" }}>
+                  ↓ Backup
+                </button>
+              )}
+              {!isMobile && (
+                <label aria-label="Import save"
+                  style={{ fontFamily: T.mono, fontSize: 10, background: "transparent",
+                    border: `1px solid ${T.line}`, borderRadius: T.r, color: T.txt3,
+                    padding: "3px 6px", cursor: "pointer" }}>
+                  ↑ Pulihkan
+                  <input type="file" accept="application/json" style={{ display: "none" }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        // Overwriting a save is destructive and irreversible, so
+                        // it asks first and names the slot it will replace.
+                        if (!window.confirm(`Timpa slot ${saveSlot} dengan isi file ini? Save yang sekarang akan hilang.`)) return;
+                        const res = importSave(saveSlot, String(reader.result));
+                        if (res.success) window.location.reload();
+                        else window.alert(`Gagal memulihkan: ${res.error}`);
+                      };
+                      reader.readAsText(file);
+                      e.target.value = "";
+                    }} />
+                </label>
+              )}
+
               {!isMobile && onLangChange && (
                 <button onClick={onLangChange} aria-label="Toggle language"
                   style={{ fontFamily: T.mono, fontSize: 10, background: "transparent",
