@@ -129,7 +129,20 @@ export function tickSettlement(g) {
   if (g.inbox) {
     // Types that carry a live deadline or a pending decision. These manage
     // their own lifecycle elsewhere and must never be dropped on age alone.
-    const PROTECTED = new Set(["offer", "press", "injury", "sponsor"]);
+    // Press conferences are deliberately NOT protected. They were, and that
+    // was wrong: a press prompt is tied to a fight that has long since
+    // happened, so an unanswered one is dead weight rather than a live
+    // decision. Under active play they accumulated without limit — a ten-year
+    // run reached 555 inbox messages, 554 of them press, 477 over a year old.
+    // The passive balance harness never caught it because a camp that books no
+    // fights holds no press conferences.
+    const PROTECTED = new Set(["offer", "injury", "sponsor"]);
+
+    // An absolute ceiling that applies to every message regardless of type.
+    // The earlier cap only reclaimed space from unprotected messages, so once
+    // protected ones exceeded it the cap silently stopped doing anything. A
+    // bound that a category can opt out of is not a bound.
+    const INBOX_HARD_CEILING = INBOX_MAX * 2;
 
     for (const m of g.inbox) {
       if (m.createdWeek == null) m.createdWeek = g.week;
@@ -166,7 +179,19 @@ export function tickSettlement(g) {
       return true;
     });
 
-    // Hard cap: drop the oldest unprotected messages until we are under it.
+    // Last resort: enforce the absolute ceiling across every type, oldest
+    // first. Live offers are kept ahead of everything else because they carry
+    // a countdown the player can still act on.
+    if (g.inbox.length > INBOX_HARD_CEILING) {
+      const ranked = [...g.inbox].sort((a, b) => {
+        if ((a.type === "offer") !== (b.type === "offer")) return a.type === "offer" ? -1 : 1;
+        return (b.createdWeek || 0) - (a.createdWeek || 0);
+      });
+      const keep = new Set(ranked.slice(0, INBOX_HARD_CEILING));
+      g.inbox = g.inbox.filter((m) => keep.has(m));
+    }
+
+    // Soft cap: drop the oldest unprotected messages until we are under it.
     if (g.inbox.length > INBOX_MAX) {
       const protectedMsgs = [];
       const droppable = [];

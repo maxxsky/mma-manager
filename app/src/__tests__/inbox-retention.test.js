@@ -6,6 +6,7 @@
 // reached 316 messages, 82 of them over a year old.
 import { describe, it, expect } from "vitest";
 import { newGame, tick, setRNG, mulberry32 } from "@ironfist/engine/index.js";
+import { tickSettlement } from "@ironfist/engine/tick/settlement.js";
 import {
   INBOX_MAX,
   INBOX_INFO_WEEKS,
@@ -72,5 +73,49 @@ describe("inbox retention", () => {
     expect(INBOX_INFO_WEEKS).toBeLessThan(INBOX_STALE_WEEKS);
     expect(INBOX_STALE_WEEKS).toBeLessThanOrEqual(48);
     expect(INBOX_MAX).toBeGreaterThan(0);
+  });
+});
+
+describe("inbox retention under active play", () => {
+  // The passive simulation above never books a fight, so it never generates a
+  // press conference. Press was marked as a protected type and therefore never
+  // expired: a ten-year active run reached 555 messages, 554 of them press and
+  // 477 over a year old. The cap did not help, because it only reclaimed space
+  // from unprotected messages.
+  it("expires stale press prompts", () => {
+    setRNG(mulberry32(11));
+    const g = newGame();
+    g.week = 300;
+    g.inbox = [
+      { id: 1, type: "press", title: "old", body: "x", choices: [{ label: "A" }, { label: "B" }], createdWeek: 10 },
+      { id: 2, type: "press", title: "recent", body: "x", choices: [{ label: "A" }, { label: "B" }], createdWeek: 296 },
+    ];
+    tickSettlement(g);
+    expect(g.inbox.find((m) => m.id === 1)).toBeUndefined();
+    expect(g.inbox.find((m) => m.id === 2)).toBeDefined();
+  });
+
+  it("enforces an absolute ceiling even when every message is protected", () => {
+    setRNG(mulberry32(12));
+    const g = newGame();
+    g.week = 300;
+    // Offers are protected and carry their own countdown, so they are the
+    // hardest case: without an absolute ceiling they can grow without limit.
+    g.inbox = Array.from({ length: 400 }, (_, i) => ({
+      id: 1000 + i, type: "offer", title: "o", body: "x",
+      choices: [{ label: "Accept" }, { label: "Reject" }], createdWeek: 100 + i,
+    }));
+    tickSettlement(g);
+    // Retention runs early in settlement and other subsystems push messages
+    // afterwards in the same tick, so a handful above the ceiling is expected.
+    // What matters is that 400 collapses to roughly the ceiling, not to 400.
+    expect(g.inbox.length).toBeLessThanOrEqual(INBOX_MAX * 2 + 10);
+    // The survivors should be the most recent ones. Messages pushed later in
+    // the same tick have no timestamp yet, so only the seeded ones are checked.
+    // uid() is a global counter and can itself exceed 1000, so filter on the
+    // timestamp rather than the id.
+    const seeded = g.inbox.filter((m) => m.createdWeek != null);
+    expect(seeded.length).toBeGreaterThan(0);
+    expect(Math.min(...seeded.map((m) => m.createdWeek))).toBeGreaterThan(100);
   });
 });
