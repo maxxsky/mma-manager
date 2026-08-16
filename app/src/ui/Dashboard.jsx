@@ -78,34 +78,76 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
   ];
 
   // ---- Priorities generated from game state -----------------------------------
-  const priorities = [];
-  // 1) Booked fighters without a game plan
-  g.roster.filter(f => f.booked && !f.booked.gamePlan).forEach(f => {
-    priorities.push([`Set game plan for ${f.name} — fight camp active, no plan chosen`, "roster", T.ember]);
-  });
-  // 2) Expiring fight offers
-  g.inbox.filter(m => m.type === "offer" && m.expires != null && m.expires <= 3).forEach(m => {
+  //
+  // This is an exception feed, not a dump. Two things were wrong with emitting
+  // one line per fighter per category: at an eighteen-fighter roster a single
+  // category floods the panel — a measured save showed all ten visible slots
+  // taken by "set game plan" — and because categories were appended in
+  // declaration order and then truncated, the flood pushed out the genuinely
+  // time-critical entries below it. An expiring title offer was being hidden
+  // behind nine reminders that could wait.
+  //
+  // So: each entry carries an urgency, the list is sorted by it, and any
+  // category with more than two hits collapses to a single counted line.
+  const groups = [];
+  const addGroup = (urgency, items, one, many, tab, color) => {
+    if (!items.length) return;
+    if (items.length <= 2) {
+      for (const text of items.map(one)) groups.push({ urgency, text, tab, color });
+    } else {
+      groups.push({ urgency, text: many(items.length), tab, color });
+    }
+  };
+
+  // Urgency is a deadline, not a severity. An offer that lapses this week
+  // outranks an injury that resolves on its own.
+  const expiring = g.inbox.filter(m => m.type === "offer" && m.expires != null && m.expires <= 3);
+  for (const m of expiring) {
     const f = g.roster.find(x => x.id === m.fighterId);
     const name = f ? f.name : "Fighter";
     const urgency = m.expires <= 1 ? `${m.expires} week` : `${m.expires} weeks`;
-    priorities.push([`Fight offer for ${name} expires in ${urgency}${m.title ? " — declining strips the belt" : ""}`, "inbox", m.expires <= 2 ? T.neg : T.warn]);
-  });
-  // 3) Overtraining > 60
-  g.roster.filter(f => f.overtraining > 60).forEach(f => {
-    priorities.push([`${f.name} overtraining at ${Math.round(f.overtraining)}% — switch to recovery before injury risk climbs`, "roster", T.warn]);
-  });
-  // 4) Low morale
-  g.roster.filter(f => f.morale < 25).forEach(f => {
-    priorities.push([`Low morale: ${f.name} (${Math.round(f.morale)}%)`, "roster", T.warn]);
-  });
-  // 5) Injured
-  g.roster.filter(f => f.injury).forEach(f => {
-    priorities.push([`${f.name} injured — ${f.injury.label || "recovering"} (${f.injury?.weeks ?? "?"}w remaining)`, "roster", T.warn]);
-  });
-  // 6) Contract expiring (1 fight left)
-  g.roster.filter(f => f.contract && f.contract.fightsLeft === 1).forEach(f => {
-    priorities.push([`${f.name} has 1 fight left on contract — open renewal talks or let him walk`, "roster", T.warn]);
-  });
+    groups.push({
+      urgency: 100 - m.expires,
+      text: `Fight offer for ${name} expires in ${urgency}${m.title ? " — declining strips the belt" : ""}`,
+      tab: "inbox",
+      color: m.expires <= 2 ? T.neg : T.warn,
+    });
+  }
+
+  addGroup(80,
+    g.roster.filter(f => f.overtraining > 60),
+    f => `${f.name} overtraining at ${Math.round(f.overtraining)}% — switch to recovery before injury risk climbs`,
+    n => `${n} fighters overtraining above 60% — switch them to recovery`,
+    "roster", T.warn);
+
+  addGroup(70,
+    g.roster.filter(f => f.contract && f.contract.fightsLeft === 1),
+    f => `${f.name} has 1 fight left on contract — open renewal talks or let him walk`,
+    n => `${n} contracts down to their last fight — open renewal talks`,
+    "roster", T.warn);
+
+  addGroup(60,
+    g.roster.filter(f => f.booked && !f.booked.gamePlan),
+    f => `Set game plan for ${f.name} — fight camp active, no plan chosen`,
+    n => `${n} booked fighters have no game plan set`,
+    "roster", T.ember);
+
+  addGroup(50,
+    g.roster.filter(f => f.morale < 25),
+    f => `Low morale: ${f.name} (${Math.round(f.morale)}%)`,
+    n => `${n} fighters on low morale — chemistry and training both suffer`,
+    "roster", T.warn);
+
+  addGroup(30,
+    g.roster.filter(f => f.injury),
+    f => `${f.name} injured — ${f.injury.label || "recovering"} (${f.injury?.weeks ?? "?"}w remaining)`,
+    n => `${n} fighters injured and recovering`,
+    "roster", T.warn);
+
+  const priorities = groups
+    .sort((a, b) => b.urgency - a.urgency)
+    .map(x => [x.text, x.tab, x.color]);
+
   // Cap at 12
   const topPriorities = priorities.slice(0, 12);
 
