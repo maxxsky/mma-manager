@@ -151,6 +151,12 @@ export const EVENTS = {
       { label: "Lepas", coachLeave: c.id },
     ],
   },
+  // WARNING: this EVENTS table is not imported anywhere. The live definitions
+  // live in events/generators/*.js, and events.js only pulls FLAG_DURATIONS and
+  // EVENT_INTERVAL out of this file. Editing an entry here changes nothing in
+  // the game, and the two copies of fighterFrustration have stayed identical by
+  // luck rather than by design. Deleting it is worth doing, but on its own so
+  // the removal can be verified in isolation.
   fighterFrustration: {
     titleFn: (f) => `${f.name} frustrasi`,
     bodyFn: (f) => `${f.name} merasa diabaikan setelah 3 kali komplain. Dia mulai bicara dengan camp lain.`,

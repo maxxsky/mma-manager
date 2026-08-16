@@ -372,10 +372,15 @@ export function tickSettlement(g) {
         id: uid(), type: "event", releaseFighterId: f.id,
         title: `${f.name} minta release`,
         body: `Morale sangat rendah (${Math.round(f.morale)}). Dia merasa tidak berkembang dan ingin keluar dari camp.`,
+        // Destructive option last, matching every other prompt that can remove
+        // a fighter — contract renewals and the frustration event both already
+        // put "let them go" at the bottom. This one alone led with it, which
+        // makes losing a fighter permanently the reflex answer and the one a
+        // hurried player lands on.
         choices: [
-          { label: "Kabulkan release", release: f.id },
           { label: `Bonus retensi ${fmt$(bonus)}`, cash: -bonus, moraleTo: { id: f.id, amt: 30 } },
           { label: "Abaikan", chem: -5 },
+          { label: "Kabulkan release", release: f.id },
         ],
       });
     }

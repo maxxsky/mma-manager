@@ -106,12 +106,29 @@ function clearPrompts(g) {
   for (const m of [...g.inbox]) {
     if (m.type === "offer" || m.type === "press") continue;
     if (!m.choices || m.choices.length === 0) continue;
-    // Deliberately NOT special-casing release requests here. Two policies were
-    // tried and both distorted the run: releasing on request emptied the roster
-    // to two fighters, and the retention bonus that keeps a fighter drained the
-    // camp into bankruptcy by year eight. Roster policy has a large enough
-    // effect on the economy that it needs its own study rather than being
-    // smuggled into this harness as an incidental default.
+    // Prompts that can remove a fighter are decided explicitly, by intent
+    // rather than by price.
+    //
+    // The generic rule below picks the cheapest option, and ties are broken by
+    // whichever choice happens to be listed first — so reordering buttons in
+    // the UI silently changed what the harness did, which made the harness
+    // useless for evaluating exactly that kind of change. Five separate prompts
+    // carry a release option, and a blanket "always take the release" rule
+    // gutted the roster because it also fired on contract renewals.
+    //
+    // This reproduces the previous behaviour exactly, just without depending on
+    // ordering: renew a contract when that is offered, otherwise let them go.
+    // Letting them go is harsh, but every attempt at a retention-paying policy
+    // collapsed the simulated economy — median cash fell from 8.5M to 34K in
+    // one attempt. Retention is a load-bearing economic system and deserves its
+    // own study rather than an incidental default here.
+    const exitChoice =
+      m.choices.find((c) => c.openExtend) || m.choices.find((c) => c.release);
+    if (exitChoice) {
+      reducer(g, { type: "INBOX_EVENT", messageId: m.id, choice: exitChoice, gambleRoll: 0.5 });
+      continue;
+    }
+
     const choice =
       [...m.choices].sort((a, b) => (a.cash ? -a.cash : 0) - (b.cash ? -b.cash : 0))[0];
     reducer(g, { type: "INBOX_EVENT", messageId: m.id, choice, gambleRoll: 0.5 });
