@@ -154,6 +154,18 @@ export function tickSettlement(g) {
       // this they accumulate for the life of the save. Only act when we can
       // positively resolve the fighter; a notice with no fighterId is left to
       // the ordinary age rules rather than silently deleted.
+      // A press conference previews a specific fight. Once that fight has
+      // happened — the booking is gone — the prompt is moot, and answering it
+      // can no longer affect anything. Left to the ordinary age rules they
+      // accumulated faster than any player could clear them: measured on a
+      // ten-year save, 51 of the 53 items awaiting a decision were press.
+      // Tying them to their fight is the natural lifecycle; a cap would have
+      // been an arbitrary one.
+      if (m.type === "press" && m.fighterId != null) {
+        const pf = g.roster.find((x) => x.id === m.fighterId);
+        return !!(pf && pf.booked);
+      }
+
       if (m.type === "injury" && m.fighterId != null) {
         const f = g.roster.find((x) => x.id === m.fighterId);
         if (!f || !f.injury) return false;

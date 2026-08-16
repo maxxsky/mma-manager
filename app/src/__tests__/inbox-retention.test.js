@@ -119,3 +119,49 @@ describe("inbox retention under active play", () => {
     expect(Math.min(...seeded.map((m) => m.createdWeek))).toBeGreaterThan(100);
   });
 });
+
+describe("press conference lifecycle", () => {
+  // A press prompt previews one specific fight. Measured on a ten-year save,
+  // 51 of the 53 inbox items awaiting a decision were press conferences that
+  // had outlived their fights — every one a real multi-choice call, so the
+  // player could not safely skim them.
+  it("drops a press prompt once the fight has happened", () => {
+    setRNG(mulberry32(21));
+    const g = newGame();
+    g.week = 200;
+    const f = g.roster[0];
+    f.booked = null;
+    g.inbox = [
+      { id: 1, type: "press", fighterId: f.id, title: "p", body: "x",
+        choices: [{ label: "A" }, { label: "B" }], createdWeek: 198 },
+    ];
+    tickSettlement(g);
+    expect(g.inbox.find((m) => m.id === 1)).toBeUndefined();
+  });
+
+  it("keeps a press prompt while the fight is still ahead", () => {
+    setRNG(mulberry32(22));
+    const g = newGame();
+    g.week = 200;
+    const f = g.roster[0];
+    f.booked = { opponent: { name: "Opp" }, weeksLeft: 3, tier: "Local" };
+    g.inbox = [
+      { id: 2, type: "press", fighterId: f.id, title: "p", body: "x",
+        choices: [{ label: "A" }, { label: "B" }], createdWeek: 198 },
+    ];
+    tickSettlement(g);
+    expect(g.inbox.find((m) => m.id === 2)).toBeDefined();
+  });
+
+  it("drops a press prompt whose fighter has left the camp", () => {
+    setRNG(mulberry32(23));
+    const g = newGame();
+    g.week = 200;
+    g.inbox = [
+      { id: 3, type: "press", fighterId: 999999, title: "p", body: "x",
+        choices: [{ label: "A" }, { label: "B" }], createdWeek: 198 },
+    ];
+    tickSettlement(g);
+    expect(g.inbox.find((m) => m.id === 3)).toBeUndefined();
+  });
+});

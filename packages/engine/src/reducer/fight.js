@@ -3,7 +3,7 @@ import { clamp, random, uid } from "../rng.js";
 import {
   PROMOTER_REL_GAIN_ACCEPT, PROMOTER_REL_LOSS_COUNTER, PROMOTER_REL_LOSS_REJECT,
 } from "./constants.js";
-import { vacateTitle } from "../rankings.js";
+import { vacateTitle, rankOf } from "../rankings.js";
 import { GAME_PLANS } from "../data.js";
 
 export function reduceFight(g, action) {
@@ -22,8 +22,23 @@ export function reduceFight(g, action) {
         g.inbox = g.inbox.filter((x) => x.id !== action.messageId);
         if (g.promoterRel) g.promoterRel[action.tier] = clamp((g.promoterRel[action.tier] || 30) + PROMOTER_REL_GAIN_ACCEPT, 0, 100);
         g.log.unshift("📝 " + nf.name + " menerima fight " + action.tier + " vs " + (action.opponent ? action.opponent.name : "?") + ". Relasi " + action.tier + " +" + PROMOTER_REL_GAIN_ACCEPT + ".");
-        // Press conference — pick your stance
-        g.inbox.unshift({
+        // Press conference — pick your stance.
+        //
+        // Only fights the media would actually turn up for. This used to fire
+        // on every accepted offer, which at an eighteen-fighter roster meant a
+        // standing queue of fifty-one unanswered press prompts — measured on a
+        // ten-year save, they were 51 of the 53 items awaiting a decision.
+        // Every one is a genuine multi-choice call with consequences, so the
+        // player cannot safely skim them; the volume simply buried the feature.
+        // Rationing it makes each one an event rather than paperwork.
+        const pressWorthy =
+          !!action.title ||
+          action.tier === "Major" || action.tier === "Premier" ||
+          (nf.rivalId != null && action.opponent?.id === nf.rivalId) ||
+          (nf.record?.w || 0) + (nf.record?.l || 0) === 0 ||
+          (rankOf(g, nf) ?? 99) <= 10;
+
+        if (pressWorthy) g.inbox.unshift({
           id: uid(),
           type: "press",
           fighterId: nf.id,
