@@ -122,7 +122,14 @@ export function computeMonthlyExpense(g) {
   });
   const { members } = computeMembership(g);
   const opCost = members * 30;
-  const fighterSupport = (g.roster?.length || 0) * 600;
+  // Per-fighter support scales with camp tier. A flat 600 was written when the
+  // roster capped at fourteen and the top tier was a single gym; an elite camp
+  // flies fighters to overseas training blocks, pays medical and nutrition
+  // staff around each of them, and runs full fight camps. Leaving it flat meant
+  // a larger roster generated more purses with almost no matching cost, which
+  // is how raising the intake rate quietly undid the late-game cash sink.
+  const supportPerFighter = 600 + (g.campTier || 0) * 2200;
+  const fighterSupport = (g.roster?.length || 0) * supportPerFighter;
   // Tier upkeep. Only the two prestige-gated late tiers carry one, so existing
   // balance is untouched; running a multi-continent academy should not cost the
   // same as running a neighbourhood gym. Income compounds indefinitely while

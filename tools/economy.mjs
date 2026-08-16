@@ -225,6 +225,15 @@ function runSeed(seed) {
     manageTraining(g);
     if (w % 4 === 0) spend(g);
 
+    // Drop the undo history before ticking. Every reducer dispatch deep-clones
+    // the whole game state into it, and a scripted player issues one dispatch
+    // per fighter per week — at a twenty-four man roster that is tens of
+    // thousands of clones of a hundred-kilobyte object across a twenty-year
+    // run, which made three-seed measurement impractical. Undo has no meaning
+    // in a headless simulation.
+    g._undoStack = [];
+    g._redoStack = [];
+
     tick(g);
     trackIntake(g, seenIds, intake);
     if (g.over) break;
