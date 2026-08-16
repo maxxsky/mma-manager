@@ -13,6 +13,13 @@ export default function Dynasty({ g, dispatch }) {
   const links = getGenerationalLinks(g);
   const prestige = getPrestigeBreakdown(g);
   const hof = g._hallOfFame || [];
+  // Fighters who have left. The hall of fame only admits the exceptional —
+  // a camp that produced thirteen champions kept records for three of them —
+  // so this is where the rest of the camp's history lives.
+  const alumni = [...(g._dynasty?.alumni || [])].sort((a, b) => {
+    const rank = (x) => (x.titles?.length || 0) * 100 + (x.titleDefenses || 0) * 10 + (x.record?.w || 0);
+    return rank(b) - rank(a);
+  });
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -146,6 +153,56 @@ export default function Dynasty({ g, dispatch }) {
       </Panel>
 
       {/* Hall of Fame */}
+      {/* Alumni — everyone who has passed through the camp */}
+      <Panel>
+        <Eyebrow color={T.steel}>{t("DYN.alumni").replace("{0}", alumni.length)}</Eyebrow>
+        {alumni.length === 0 ? (
+          <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, textAlign: "center", padding: 20 }}>
+            {t("DYN.alumniEmpty")}
+          </div>
+        ) : (
+          <div style={{ display: "grid", gap: 4 }}>
+            {alumni.slice(0, 15).map((a) => {
+              const years = Math.max(0, Math.round((a.leftWeek - a.joinedWeek) / 48 * 10) / 10);
+              const rec = a.record || {};
+              return (
+                <div key={a.id} style={{ display: "grid",
+                  gridTemplateColumns: "minmax(140px,1.4fr) 1fr 90px 70px 110px",
+                  alignItems: "center", gap: 8, padding: "8px 10px",
+                  background: T.bg, borderRadius: T.r,
+                  border: `1px solid ${(a.titles?.length || 0) > 0 ? `${T.gold}33` : T.line}` }}>
+                  <div>
+                    <div style={{ fontFamily: T.disp, fontSize: 13, fontWeight: 700, color: T.txt }}>{a.name}</div>
+                    <div style={{ fontFamily: T.body, fontSize: 10.5, color: T.txt3 }}>
+                      {a.archetype} · {a.weightClass}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                    {(a.titles || []).map((ti) => (
+                      <Tag key={ti} color={T.gold}>{ti}</Tag>
+                    ))}
+                  </div>
+                  <span style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2, textAlign: "center" }}>
+                    {rec.w || 0}-{rec.l || 0}
+                  </span>
+                  <span style={{ fontFamily: T.mono, fontSize: 11, color: T.txt3, textAlign: "center" }}>
+                    {years}y
+                  </span>
+                  <span style={{ fontFamily: T.body, fontSize: 10.5, color: T.txt3, textAlign: "right" }}>
+                    {t("DYN.alumniLeft").replace("{0}", a.ageAtExit ?? "?")}
+                  </span>
+                </div>
+              );
+            })}
+            {alumni.length > 15 && (
+              <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3, textAlign: "center", paddingTop: 6 }}>
+                {t("DYN.alumniMore").replace("{0}", alumni.length - 15)}
+              </div>
+            )}
+          </div>
+        )}
+      </Panel>
+
       <Panel>
         <Eyebrow color={T.gold}>{t("DYN.hallOfFame").replace("{0}", hof.length)}</Eyebrow>
         {hof.length === 0 ? (

@@ -4,6 +4,7 @@
 // ============================================================
 
 import { clamp } from "./rng.js";
+import { avgSkill } from "./fighter.js";
 
 // ── CAMP DYNASTY ──
 
@@ -38,6 +39,8 @@ function initDynasty(g) {
   };
   return g._dynasty;
 }
+
+export const ALUMNI_MAX = 200;
 
 export function updateDynasty(g) {
   if (!g._dynasty) initDynasty(g);
@@ -96,6 +99,64 @@ export function updateDynasty(g) {
 
   d.championsProduced = d.championIds.length;
   d.worldChampionsProduced = d.worldChampionIds.length;
+
+  // Alumni archive.
+  //
+  // Everything a fighter did used to vanish the moment they left the roster.
+  // A ten-year camp produced thirteen champions and kept nothing about twelve
+  // of them: hallOfFamers stored bare names, championIds stored ids pointing
+  // at people who no longer exist, and careerHistory died with the fighter.
+  // For a game whose whole long arc is generational, that is the camp having
+  // no memory of its own past.
+  //
+  // Archiving happens here rather than at the five separate departure paths
+  // (retire, release, poach, contract lapse, frustration) because _banked
+  // already knows who was on the roster last tick. One hook cannot be forgotten
+  // when a sixth way to leave is added later.
+  if (!d.alumni) d.alumni = [];
+  const present = new Set(g.roster.map((x) => x.id));
+  for (const id of Object.keys(d._banked)) {
+    const numericId = isNaN(Number(id)) ? id : Number(id);
+    if (present.has(numericId) || present.has(id)) continue;
+    if (d.alumni.some((a) => String(a.id) === String(id))) continue;
+    const snap = d._lastSeenFighter?.[id];
+    if (!snap) continue;
+    d.alumni.push({
+      id: snap.id, name: snap.name, archetype: snap.archetype,
+      weightClass: snap.weightClass,
+      joinedWeek: snap.joinedWeek || 0, leftWeek: g.week, ageAtExit: snap.age,
+      record: snap.record, peakSkill: snap.peakSkill,
+      titles: snap.titles, titleDefenses: snap.titleDefenses,
+      potentialTier: snap.potentialTier,
+    });
+  }
+  // Keep the archive bounded; a fifty-year save should not grow without limit.
+  // The most decorated are kept ahead of the merely recent.
+  if (d.alumni.length > ALUMNI_MAX) {
+    d.alumni.sort((a, b) => {
+      const score = (x) => (x.titles?.length || 0) * 100 + (x.titleDefenses || 0) * 10 + (x.record?.w || 0);
+      return score(b) - score(a);
+    });
+    d.alumni = d.alumni.slice(0, ALUMNI_MAX);
+  }
+
+  // Snapshot everyone currently on the roster so their details survive the
+  // tick in which they leave. Without this the archive would only ever hold an
+  // id, since by the time we notice a departure the fighter object is gone.
+  if (!d._lastSeenFighter) d._lastSeenFighter = {};
+  for (const f of g.roster || []) {
+    d._lastSeenFighter[f.id] = {
+      id: f.id, name: f.name, archetype: f.archetype, weightClass: f.weightClass,
+      joinedWeek: f.joinedWeek || 0, age: f.age,
+      record: { ...(f.record || {}) },
+      // Guarded: updateDynasty runs against whatever is on the roster, and a
+      // partially-built fighter has no attribute block.
+      peakSkill: Math.max(f.attrs ? avgSkill(f) : 0, d._lastSeenFighter[f.id]?.peakSkill || 0),
+      titles: [...(f.titles || [])],
+      titleDefenses: f.titleDefenses || 0,
+      potentialTier: f.potentialTier,
+    };
+  }
 
   // Peaks
   if ((g.rep || 0) > d.peakRep) d.peakRep = g.rep;
