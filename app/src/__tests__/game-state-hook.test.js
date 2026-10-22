@@ -5,6 +5,7 @@ import { useGameState } from '../hooks/useGameState.js'
 import { saveGame } from '../services/saveService.js'
 import { createTestGame } from './helpers.js'
 import { MAX_UNDO_STACK } from '@ironfist/engine/reducer/constants.js'
+import { getWorldRNGState, restoreWorldRNGState, resetRNG, random, uid } from '@ironfist/engine/rng.js'
 
 vi.mock('../services/saveService.js', () => ({ saveGame: vi.fn() }))
 
@@ -71,7 +72,28 @@ describe('useGameState undo/redo through actual dispatch', () => {
     app.hook.dispatch({ type: 'UNDO' })
     vi.advanceTimersByTime(1000)
     expect(saveGame).toHaveBeenCalledTimes(1)
-    expect(saveGame).toHaveBeenCalledWith(2, app.state())
+    expect(saveGame).toHaveBeenCalledWith(2, app.state(), app.state().worldRngState)
     expect(saveGame.mock.calls[0][1].roster[0].training.type).toBe('grappling')
+  })
+
+  it('captures world RNG before the autosave delay and restores it with undo/redo', () => {
+    const app = mount()
+    restoreWorldRNGState({ state: 789, nextUID: 3000 })
+    resetRNG()
+    app.train('grappling')
+    const first = getWorldRNGState()
+    app.hook.up(n => { n.roll = random(); n.generatedId = uid() })
+    app.train('sparring')
+    const second = getWorldRNGState()
+    app.hook.dispatch({ type: 'UNDO' })
+    expect(getWorldRNGState()).toEqual(second)
+    app.hook.dispatch({ type: 'UNDO' })
+    expect(getWorldRNGState()).toEqual(first)
+    app.hook.dispatch({ type: 'REDO' })
+    expect(getWorldRNGState()).toEqual(second)
+    random()
+    vi.advanceTimersByTime(1000)
+    expect(saveGame.mock.calls[0][2]).toEqual(second)
+    expect(getWorldRNGState()).not.toEqual(second)
   })
 })

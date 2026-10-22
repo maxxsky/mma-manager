@@ -5,7 +5,7 @@ import { checkAchievements } from "@ironfist/engine/achievements.js";
 import { ACHIEVEMENTS } from "@ironfist/engine/data.js";
 import { tick } from "@ironfist/engine/state.js";
 import { reducer } from "@ironfist/engine/reducer.js";
-import { snapshot } from "@ironfist/engine/rng.js";
+import { snapshot, getWorldRNGState, restoreWorldRNGState } from "@ironfist/engine/rng.js";
 
 export function useGameState(g, setGOrig, saveSlot) {
   const [activeFight, setActiveFight] = useState(null);
@@ -23,10 +23,12 @@ export function useGameState(g, setGOrig, saveSlot) {
     // twenty complete saves on every UI update.
     if (old._undoStack) n._undoStack = [...old._undoStack];
     if (old._redoStack) n._redoStack = [...old._redoStack];
+    n.worldRngState ??= getWorldRNGState();
     fn(n);
+    n.worldRngState = getWorldRNGState();
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      saveGame(saveSlot, n);
+      saveGame(saveSlot, n, n.worldRngState);
     }, 1000);
     return n;
   });
@@ -39,7 +41,10 @@ export function useGameState(g, setGOrig, saveSlot) {
       setNego({ fighter: action.fighter, mode: action.mode || "sign", prospectId: action.prospectId, fighterId: action.fighterId });
       return;
     }
-    up((n) => { reducer(n, action); });
+    up((n) => {
+      reducer(n, action);
+      if (action.type === "UNDO" || action.type === "REDO") restoreWorldRNGState(n.worldRngState);
+    });
   };
 
   // Weekly advance

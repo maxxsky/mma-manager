@@ -4,10 +4,9 @@ import { getActiveSlot, setActiveSlot, loadGame, deleteGame, getSlotInfo } from 
 import { backupSave } from "@ironfist/engine/polish.js";
 import { genDivisions, initPromoterRel } from "@ironfist/engine/rankings.js";
 import { genRivalCamp } from "@ironfist/engine/rivals.js";
-import { clamp, RI, pick } from "@ironfist/engine/rng.js";
+import { clamp, RI, pick, getWorldRNGState } from "@ironfist/engine/rng.js";
 import { ATTRS, AMBITION_KEYS, PROMOTIONS } from "@ironfist/engine/data.js";
 import { agentFor } from "@ironfist/engine/fighter.js";
-import { setUID } from "@ironfist/engine/rng.js";
 import { getPromotionsData } from "@ironfist/engine/data/promotions.js";
 import { getTrainingCycle } from "@ironfist/engine/training-philosophy.js";
 
@@ -68,7 +67,7 @@ export function useSaveLoad(setG) {
             f.loyalty = f.loyalty ?? 50;
             f.firstFightWeek = f.firstFightWeek || null;
             f.reignHistory = f.reignHistory || [];
-            if (f.booked && f.booked.seed == null) f.booked.seed = (Math.random() * 2**31) | 0;
+            if (f.booked && f.booked.seed == null) f.booked.seed = RI(0, 2**31 - 1);
             if (f.lastReviewedPhase === undefined) f.lastReviewedPhase = getTrainingCycle(f).phase;
           });
           // Division champ field defaults
@@ -79,21 +78,9 @@ export function useSaveLoad(setG) {
               d.champ.lastDefenseWeek = d.champ.lastDefenseWeek || d.champ.wonWeek;
             }
           });
+          // loadGame restored RNG and UID before migrations generated any data.
+          s.worldRngState = getWorldRNGState();
           setG(s);
-
-          // Rehydrate UID: scan seluruh state untuk id numerik, set UID ke max + 1
-          ;(function rehydrateUID(obj) {
-            let maxId = 0;
-            function walk(v) {
-              if (v == null || typeof v !== 'object') return;
-              if (Array.isArray(v)) { v.forEach(walk); return; }
-              // Check this object for a numeric id
-              if (typeof v.id === 'number' && v.id > maxId) maxId = v.id;
-              Object.values(v).forEach(walk);
-            }
-            walk(obj);
-            if (maxId > 0) setUID(maxId + 1);
-          })(s);
         }
       } catch (e) { console.warn("Load failed:", e); }
       setLoaded(true);

@@ -11,7 +11,7 @@ import { useSaveLoad } from "./hooks/useSaveLoad.js";
 import { useKeyboard } from "./hooks/useKeyboard.js";
 
 // Engine
-import { R, fmt$ } from "@ironfist/engine/rng.js";
+import { R, fmt$, getWorldRNGState } from "@ironfist/engine/rng.js";
 import { genFighter, assignAgent, scoutGrade, makeReport } from "@ironfist/engine/fighter.js";
 import { newGame } from "@ironfist/engine/state.js";
 import { checkAchievements } from "@ironfist/engine/achievements.js";
@@ -211,6 +211,7 @@ export default function App() {
                 setToasts((prev) => [...prev, ...newToasts]);
               }
             }
+            n.worldRngState = getWorldRNGState();
             saveGame(saveSlot, n);
             return n;
           });
