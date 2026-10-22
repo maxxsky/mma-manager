@@ -406,13 +406,6 @@ describe('Fight Engine', () => {
       })
       expect(Object.keys(TRAITS).length).toBe(12)
     })
-
-    it('genRivalCamp Elite Stable produces philosophy.id === "elite"', () => {
-      const { genRivalCamp } = require('@ironfist/engine/rivals.js')
-      const camp = genRivalCamp(0)
-      expect(camp.philosophy).toBeDefined()
-      expect(['elite', 'balanced']).toContain(camp.philosophy.id)
-    })
   })
 
   describe('loyalty', () => {

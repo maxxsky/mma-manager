@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { getActiveSlot, setActiveSlot, loadGame, deleteGame, getSlotInfo } from "../services/saveService.js";
 import { backupSave } from "@ironfist/engine/polish.js";
 import { genDivisions, initPromoterRel } from "@ironfist/engine/rankings.js";
-import { genRivalCamp } from "@ironfist/engine/rivals.js";
+import { migrateRemovedRivalCamps } from "@ironfist/engine/migrations/remove-rival-camps.js";
 import { clamp, RI, pick, getWorldRNGState } from "@ironfist/engine/rng.js";
 import { ATTRS, AMBITION_KEYS, PROMOTIONS } from "@ironfist/engine/data.js";
 import { agentFor } from "@ironfist/engine/fighter.js";
@@ -35,7 +35,6 @@ export function useSaveLoad(setG) {
             s.week = 1; s.cash = 100000; s.roster = []; s.log = ["Save rusak — dimulai ulang."];
           }
           if (!s.divisions) s.divisions = genDivisions();
-          if (!s.rivals) s.rivals = [genRivalCamp(0), genRivalCamp(1), genRivalCamp(2)];
           if (!s.promoterRel) s.promoterRel = initPromoterRel();
           if (!s.promotions) s.promotions = getPromotionsData();
           if (!s.talentPool) s.talentPool = [];
@@ -74,6 +73,7 @@ export function useSaveLoad(setG) {
           });
           migrateChampionships(s);
           migrateWorldProfiles(s);
+          migrateRemovedRivalCamps(s);
           // Division champ field defaults
           Object.values(s.divisions || {}).forEach((d) => {
             if (d.champ) {

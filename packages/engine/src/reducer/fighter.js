@@ -1,4 +1,4 @@
-// Fighter domain — training, class changes, poaching, prospect dismissal
+// Fighter domain — training, class changes, poach responses, prospect dismissal
 import { clamp, R, random, fmt$ } from "../rng.js";
 import { WEIGHTS } from "../data.js";
 import { vacateTitle } from "../rankings.js";
@@ -8,7 +8,6 @@ import {
   MANAGER_CUT_INCREMENT, MANAGER_CUT_MAX,
 } from "./constants.js";
 import { weeklyFee, avgSkill } from "../fighter.js";
-import { poachTerms } from "../rivals.js";
 
 export function reduceFighter(g, action) {
   switch (action.type) {
@@ -109,32 +108,6 @@ export function reduceFighter(g, action) {
     }
     case "DISMISS_PROSPECT": {
       g.prospects = g.prospects.filter((x) => x.id !== action.prospectId);
-      break;
-    }
-    case "POACH_FIGHTER": {
-      const riv = g.rivals?.find((x) => x.id === action.rivalId);
-      if (!riv) break;
-      const tf = riv.fighters?.find((x) => x.id === action.targetId);
-      if (!tf) break;
-      const { cost, failCost, successChance, blocked } = poachTerms(g, riv, tf);
-      if (blocked) {
-        const why = { unavailable: "cedera/sudah dijadwalkan", rosterFull: "roster penuh", cash: `butuh ${fmt$(cost)}` }[blocked];
-        g.log.unshift(`⛔ Poach ${tf.name} dibatalkan — ${why}.`);
-        break;
-      }
-      if (random() * 100 < successChance) {
-        tf.contract = { managerCut: 0.15, fightsLeft: 3, fightsTotal: 3, durationMo: 18, signedWeek: g.week, renegoFlagged: false };
-        tf.morale = clamp(tf.morale + 15, 0, 100);
-        g.roster.push(tf);
-        riv.fighters = riv.fighters.filter((x) => x.id !== action.targetId);
-        g.cash -= cost;
-        riv.rivalry = clamp(riv.rivalry + 20, 0, 100);
-        g.log.unshift(`🦅 POACH SUKSES: ${tf.name} (${tf.archetype}) dari ${riv.name}!`);
-      } else {
-        g.cash -= failCost;
-        riv.rivalry = clamp(riv.rivalry + 5, 0, 100);
-        g.log.unshift(`❌ Poach ${tf.name} GAGAL (${fmt$(failCost)}) — ${riv.name} sadar.`);
-      }
       break;
     }
     case "RESOLVE_INJURY_CHOICE": {

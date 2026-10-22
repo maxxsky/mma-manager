@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7 dan P1 #8–#20 selesai (20 dari 63 item). #19–#20 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7 dan P1 #8–#21 selesai (21 dari 63 item). #19–#21 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -44,7 +44,7 @@ Selesai kalau: fighter identik 48–52% di kedua sisi, keputusan juri tidak pern
 | 18 | Lawan ber-ranking punya atribut tetap yang disimpan, bukan dibuat ulang tiap tawaran | DU5 | data dunia, pembuat tawaran fight | S |
 | 19 | Scouting: OVR dan warna atribut di layar Pencari memakai angka laporan scout | CA1 | layar Pencari | K |
 | 20 | Perburuan rival: harga ikut OVR sekarang, peluang lebih bergantung kekuatan, reducer `POACH_FIGHTER` menghitung ulang biaya/peluang dan cek batas roster | CA5 | `packages/engine/src/reducer/fighter.js:113`, `RivalsScreen.jsx` | S |
-| 21 | Satu sistem rival camp saja; duel rival pakai fight engine; rival tidak latih semua atribut gratis | DU6 | `tick/rivals.js`, `shadow-ai.js` | B |
+| 21 | Satu sistem rival camp saja; duel rival pakai fight engine; rival tidak latih semua atribut gratis. **Diputuskan: rival camp dibuang** (lihat log) | DU6 | `tick/rivals.js`, `shadow-ai.js` | B |
 | 22 | Cedera fight: pakai peluang TKO, perbaiki key doctor stoppage, ikut damage, fasilitas medis berpengaruh | FT7 | `commitResult.js` | S |
 | 23 | Pindah kelas: hitung kemenangan beruntun sungguhan | FI7 | `packages/engine/src/tick/weight-change.js` | K |
 | 24 | Samakan rumus diskon medis | CA4 | `commitResult.js` | K |
@@ -355,12 +355,23 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Angka harga dan peluang adalah pilihan balancing awal, dipatok kira-kira ke biaya Diamond in the Rough dan kas pemain di harness ekonomi (sekitar $14.000–37.000 di tahun pertama). Bisa dituning lagi di P3.
   - Validasi: test baru `poach.test.js` (9 test; 4 test reducer gagal di reducer lama), dua test lama di `reducer.test.js` disesuaikan agar tidak bergantung pada angka dari action. **819 test aplikasi / 53 file lulus**, build Vite lulus, harness dunia 480 minggu × 5 seed lulus, diff bersih.
   - Kode: `rivals.js`, `index.js`, `reducer/fighter.js`, `app/src/ui/RivalsScreen.jsx`.
-  - Masih terbuka: AI rival yang mencoba membajak fighter pemain (`tick/rivals.js`) masih memakai `asking`. Itu bagian dari #21.
+  - Digantikan oleh #21: rival camp dibuang, termasuk `poachTerms` dan reducer `POACH_FIGHTER`.
+
+- **22 Oktober 2026: P1 #21 selesai — rival camp dibuang.** Branch `claude/quirky-mccarthy-7jogso`. Keputusan user: konsep rival camp tidak dipertahankan. Satu mekanik kecil tanpa camp disimpan.
+  - Alasan teknis, dari kode dan simulasi 480 minggu (seed 1000): `shadow-ai.js` mengembangkan field `level` yang tidak pernah diubah jadi atribut, sehingga label lifecycle salah (camp reputasi 86 berlabel "Decline"). Reputasi rival diubah dua sistem dan mentok sekitar 86 sejak tahun ke-2. Fighter rival tidak pernah menua atau pensiun, dan roster membeku di 8 sejak tahun pertama. Duel rival tetap undian 50/50.
+  - Event "rival coba poach" fighter pemain praktis tidak pernah muncul. Syaratnya rivalry > 15, yang hanya tercapai kalau pemain sendiri memancing rival. Diukur: 0 event di harness dunia (480 minggu × 5 seed; 103 cek dengan fighter yang memenuhi syarat) dan 0 di harness ekonomi (960 minggu × 3 seed).
+  - Dihapus: `tick/rivals.js`, `shadow-ai.js` dan folder `shadow-ai/`, `rivals.js` (`genRivalCamp`, `poachTerms` dari #20), `RivalsScreen.jsx`, tab dan ikon Rivals, 54 teks i18n `RIVAL.*`/`UI.rival(s)`, reducer `POACH_FIGHTER`, handler `coachPoach`, tag camp (`campId`/`campName`) pada fighter dunia, juara, dan layar Ranking, nudge rivalry camp di `commitResult`, serta bonus grudge karena rivalry camp. `RIVAL_NAMES`/`RIVAL_TRAITS` dihapus; `PROMO_TIERS` dipindah ke `data/promo-tiers.js`.
+  - Tetap ada: rivalitas personal antar fighter (`f.rivalries`) beserta bonus grudge match +25% kalau bertemu lawan yang sama dua kali.
+  - Pengganti: `tick/outside-offers.js`. Tiap 8 minggu, kalau ada fighter dengan morale < 70, loyalty < 60, kontrak masih berjalan, tidak cedera/terjadwal, dan belum punya tawaran tertunda, peluang 25% muncul event "Camp lain mendekati …" dengan pilihan counter / biarkan pergi / bicara (handler lama). Bonus counter = `asking × 1,25`. Tidak memakai RNG kalau tidak ada fighter yang memenuhi syarat. Frekuensi terukur: 18 event di harness dunia (480 minggu × 5 seed, sekitar 3–4 per 10 tahun per save) dan 0 di harness ekonomi karena pemain skrip menjaga morale tinggi. Angka 25% adalah pilihan awal; bisa dituning di P3.
+  - Migrasi save `migrateRemovedRivalCamps`: hapus `g.rivals`, tag camp di daftar divisi, juara, juara tier, booking, dan tawaran inbox, serta prompt coach-poach yang handler-nya sudah tidak ada. Prompt poach fighter lama tetap bisa dijawab. Tidak memakai RNG dan aman dijalankan berulang. Tab "rivals" yang tersimpan di memori UI dibuka sebagai dashboard.
+  - RNG dunia bergeser karena tick rival tidak lagi mengambil angka acak. Hasil seed di harness ekonomi ikut berubah (misalnya seed 3222 sebelumnya bangkrut di minggu 345, sekarang bertahan 20 tahun). Ini efek urutan RNG, bukan bukti ekonomi membaik.
+  - Test: `shadow-ai.test.js` dan `poach.test.js` dihapus. Test camp di `rankings.test.js`, `fight.test.js`, `media.test.js`, `invariants.test.js`, dan `reducer.test.js` dihapus atau diganti. Test baru `outside-offers.test.js` (7 test) dan blok baru di `rankings.test.js`: tidak ada camp atau tag setelah 10 tahun simulasi, gelar pemain tanpa field camp, grudge dari rivalitas personal tetap 1,25×. Satu test lama di `prestige.test.js` diperbaiki: `newGame()` dipanggil sesudah seed sehingga hanya satu sisi yang menghabiskan RNG; sebelumnya lulus karena kebetulan.
+  - Validasi: **762 test aplikasi / 52 file lulus**, build Vite lulus, harness dunia 480 minggu × 5 seed lulus, harness fight lulus, smoke test browser (Chromium, 30 minggu, satu fight penuh, semua tab) lulus tanpa error console, diff bersih.
 
 ## Urutan kerja yang disarankan
 
-1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`. P1 #19–#20 selesai di branch `claude/quirky-mccarthy-7jogso`.
-2. Berikutnya P1 #21 (satu sistem rival camp; ukuran B, butuh keputusan desain), lalu #22–#25.
+1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`. P1 #19–#21 selesai di branch `claude/quirky-mccarthy-7jogso` (#21: rival camp dibuang).
+2. Berikutnya P1 #22 (cedera fight), lalu #23–#25.
 3. P1 lainnya: #21–#25. P5 #53–#54 (keamanan kecil) bisa disisipkan lebih awal.
 4. Mainkan beberapa jam setelah bug state utama selesai; tandai temuan yang sudah terbantu dan yang masih bisa direproduksi.
 5. Mainkan beberapa jam. Putuskan P2 dan daftar pangkas.

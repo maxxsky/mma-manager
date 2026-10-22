@@ -1,7 +1,6 @@
 // Builders — newGame() component factories
 import { genFighter, assignAgent, genCoach } from "./fighter.js";
 import { genDivisions, initPromoterRel } from "./rankings.js";
-import { genRivalCamp } from "./rivals.js";
 import { getPromotionsData } from "./data/promotions.js";
 
 export function createEconomy() {
@@ -48,11 +47,9 @@ export function createCoaches() {
 }
 
 export function createWorld() {
-  const rivals = [genRivalCamp(0), genRivalCamp(1), genRivalCamp(2)];
   return {
-    divisions: genDivisions(rivals),
+    divisions: genDivisions(),
     prospects: [],
-    rivals,
     promoterRel: initPromoterRel(),
     promotions: getPromotionsData(),
   };

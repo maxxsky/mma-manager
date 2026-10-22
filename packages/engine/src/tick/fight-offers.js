@@ -265,7 +265,6 @@ export function tickFightOffers(g) {
         contenderId = holder.id ?? null;
         oppRank = titleTier === "Major" ? 0
           : divisionRankings(g, f.weightClass).find(c => c.fighter.name === titleHolder.name)?.rank ?? null;
-        opp.campId = titleHolder.campId || null; opp.campName = titleHolder.campName || null;
       } else if (div && (r != null || (f.record.w >= 2 && rep >= 20 && random() < 0.35))) {
         const candidate = opponents[oppIdx];
         const c = candidate?.fighter;
@@ -281,16 +280,8 @@ export function tickFightOffers(g) {
       opp.weightClass = f.weightClass;
       if (!titleHolder && contenderId == null && !opp.record.w) opp.record = { w: RI(2, 14), l: RI(0, 5), ko: 0, sub: 0, dec: 0 };
 
-      // Grudge match hype bonus: fighter rivalry OR camp rivalry → +25% purse
-      let isGrudgeMatch = false;
-      if (f.rivalries?.[opp.name]?.count >= 2) {
-        isGrudgeMatch = true;
-      } else if (opp.campId && g.rivals) {
-        const rivalCamp = g.rivals.find((r) => r.id === opp.campId);
-        if (rivalCamp && rivalCamp.rivalry >= 40) {
-          isGrudgeMatch = true;
-        }
-      }
+      // Grudge match hype bonus: fighter rivalry → +25% purse
+      const isGrudgeMatch = f.rivalries?.[opp.name]?.count >= 2;
       if (isGrudgeMatch) {
         const hypeBonus = 1.25;
         show = Math.round(show * hypeBonus);

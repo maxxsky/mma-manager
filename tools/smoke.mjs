@@ -36,7 +36,7 @@ if (!chromePath) {
 // Tabs are keyed by the aria-label the sidebar renders (an i18n key).
 const TABS = [
   "UI.dashboard", "UI.roster", "UI.rankings", "UI.scout", "UI.inbox",
-  "UI.finance", "UI.promoters", "UI.facility", "UI.rivals",
+  "UI.finance", "UI.promoters", "UI.facility",
   "UI.achievements", "UI.dynasty", "UI.world",
 ];
 

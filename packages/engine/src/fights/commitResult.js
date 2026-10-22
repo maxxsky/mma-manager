@@ -105,7 +105,7 @@ export function commitFightResult(g, fighter, result) {
         removeChampion(g, f.weightClass, contestedTier);
         setChampion(div, contestedTier, { name: f.name, player: true, fighterId: f.id,
           tier: contestedTier, wonWeek: g.week, lastDefenseWeek: g.week, titleDefenses: 0,
-          promotionId: booking?.promotionId || null, campId: null, campName: null });
+          promotionId: booking?.promotionId || null });
         if (!f.reignHistory) f.reignHistory = [];
         f.reignHistory.push({ wonWeek: g.week, weightClass: f.weightClass, tier: contestedTier });
       }
@@ -162,17 +162,6 @@ export function commitFightResult(g, fighter, result) {
       g.log.unshift("💬 " + f.name + " trash talk berhasil! Popularity +5.");
     }
 
-    // ── Rivalry nudge: beating a camp-affiliated fighter ──
-    const oppData = booking?.opponent;
-    if (oppData?.campId && g.rivals) {
-      const camp = g.rivals.find((r) => r.id === oppData.campId);
-      if (camp) {
-        const nudge = RI(3, 6);
-        camp.rivalry = clamp((camp.rivalry || 0) + nudge, 0, 100);
-        g.log.unshift(`⚔️ ${f.name} mengalahkan fighter ${camp.name} — rivalry +${nudge}.`);
-      }
-    }
-
     // ── Fan reactions ──
     const opp = booking?.opponent;
     const totalDmg = (result.totalDmgA || 0) + (result.totalDmgB || 0);
@@ -212,7 +201,7 @@ export function commitFightResult(g, fighter, result) {
         const player = g.roster.find(x => x.id !== f.id && (x.id === opponent.id || x.name === opponent.name));
         setChampion(div, contestedTier, { ...(player ? {} : aiChampion(opponent, f.weightClass)), name: opponent.name, player: !!player,
           fighterId: player?.id || null, tier: contestedTier, level: opponent.level,
-          age: opponent.age, campId: opponent.campId || null, campName: opponent.campName || null,
+          age: opponent.age,
           wonWeek: g.week, lastDefenseWeek: g.week, titleDefenses: 0 });
         if (player && !player.titles.includes(TITLE_NAMES[contestedTier])) player.titles.push(TITLE_NAMES[contestedTier]);
       }

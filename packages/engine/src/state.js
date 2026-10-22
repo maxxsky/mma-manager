@@ -13,7 +13,7 @@
 //   tick/yearly.js       — aging, retirement, fight inactivity
 //   tick/weight-change.js— weight class movement
 //   tick/rankings.js     — division rankings
-//   tick/rivals.js       — rival camp simulation, poaching
+//   tick/outside-offers.js — other camps approach unhappy fighters
 
 import { uid } from "./rng.js";
 import { BANKRUPT_THRESHOLD, BANKRUPTCY_GRACE_WEEKS, CASH_WARNING_THRESHOLD, CASH_WARNING_RESET_BUFFER } from "./reducer/constants.js";
@@ -25,11 +25,10 @@ import { tickFightOffers } from "./tick/fight-offers.js";
 import { tickSettlement } from "./tick/settlement.js";
 import { tickYearly } from "./tick/yearly.js";
 import { tickWeightChange } from "./tick/weight-change.js";
-import { tickRivals } from "./tick/rivals.js";
+import { tickOutsideOffers } from "./tick/outside-offers.js";
 import { worldTick } from "./world.js";
 import { processEventSystem, pushInboxEvent } from "./events.js";
 import { trackCoachCareer, trackSponsorRelations } from "./identity.js";
-import { tickAllShadowCamps } from "./shadow-ai.js";
 import { narrativeTick } from "./narrative-presentation.js";
 import { updateDynasty } from "./dynasty.js";
 import { checkObjectives, getTip } from "./onboarding.js";
@@ -95,8 +94,8 @@ export function tick(g) {
   // Phase 6: Weight class changes
   tickWeightChange(g);
 
-  // Phase 7: Rival simulation
-  tickRivals(g);
+  // Phase 7: Outside offers to unhappy fighters
+  tickOutsideOffers(g);
 
   // Phase 8: World simulation — returns events, deliver to inbox
   const worldEvents = worldTick(g);
@@ -105,7 +104,6 @@ export function tick(g) {
   });
   processEventSystem(g);
   trackCoachCareer(g);
-  tickAllShadowCamps(g);
   narrativeTick(g);
   checkObjectives(g);
   updateDynasty(g);

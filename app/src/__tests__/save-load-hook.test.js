@@ -35,7 +35,6 @@ function loadWithMigrations() {
 it('repeats old-save migrations and subsequent weeks identically across reloads', () => {
   const legacy = newGame()
   delete legacy.divisions
-  delete legacy.rivals
   delete legacy.roster[0].ambition
   delete legacy.roster[0].ceilings
   legacy.roster[0].booked = { seed: null, weeksLeft: 4 }

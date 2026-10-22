@@ -12,7 +12,6 @@ const NAV = [
   ["finance", "UI.finance", ICONS.money],
   ["promoters", "UI.promoters", ICONS.promoter],
   ["mgmt", "UI.facility", ICONS.facility],
-  ["rivals", "UI.rivals", ICONS.rivals],
   ["achievements", "UI.achievements", ICONS.trophy],
   ["dynasty", "UI.dynasty", ICONS.crown],
   ["world", "UI.world", ICONS.cal],

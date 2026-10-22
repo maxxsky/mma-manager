@@ -163,61 +163,6 @@ describe('getPublicOpinion — 4 combinations + neutral', () => {
   })
 })
 
-describe('Rumors — tick/rivals.js timing', () => {
-  it('rumor fires at week % 8 === 6, body contains no fighter name', () => {
-    useSeed(42)
-    const g = createTestGame()
-    const f = g.roster[0]
-    f.morale = 40
-    f.loyalty = 30
-    f.contract = { managerCut: 0.18, fightsLeft: 2, fightsTotal: 4, durationMo: 24, signedWeek: 1 }
-    g.rivals.forEach(r => { r.rivalry = 80 }) // keep above 15 despite 0.5/tick decay
-
-    let rumorBody = null
-    let rumorWeek = null
-    for (let w = 0; w < 48; w++) {
-      tick(g)
-      const msgs = g.inbox.filter(m => m.title === '👂 Rumor Mill')
-      if (msgs.length > 0) {
-        rumorWeek = g.week
-        rumorBody = msgs[0].body
-        break
-      }
-    }
-
-    expect(rumorWeek).not.toBeNull()
-    // Body should be generic — no roster fighter name
-    const anyFighterName = g.roster.some(f => rumorBody && rumorBody.includes(f.name))
-    expect(anyFighterName).toBe(false)
-  })
-
-  it('rumor at %8===6 AND poach at %8===0 both fire, poach type is "event"', () => {
-    useSeed(42)
-    const g = createTestGame()
-    const f = g.roster[0]
-    f.morale = 40
-    f.loyalty = 30
-    f.contract = { managerCut: 0.18, fightsLeft: 2, fightsTotal: 4, durationMo: 24, signedWeek: 1 }
-    g.rivals.forEach(r => { r.rivalry = 80 })
-
-    let poachFired = false
-    let rumorFired = false
-
-    for (let w = 0; w < 24; w++) {
-      tick(g)
-      if (g.inbox.some(m => m.title && m.title.includes('coba poach'))) poachFired = true
-      if (g.inbox.some(m => m.title === '👂 Rumor Mill')) rumorFired = true
-    }
-
-    expect(poachFired).toBe(true)
-    expect(rumorFired).toBe(true)
-
-    // Confirm poach type is "event" (normal inbox event, not world/press)
-    const poachMsg = g.inbox.find(m => m.title && m.title.includes('coba poach'))
-    if (poachMsg) expect(poachMsg.type).toBe('event')
-  })
-})
-
 // ── RIVALRY SYSTEM TESTS (Task 30) ──
 
 describe('Rivalry system — processRivalry lastMeetingWeek', () => {

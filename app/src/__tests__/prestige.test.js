@@ -152,8 +152,10 @@ describe("talent pool wiring", () => {
   });
 
   it("leaves a fresh camp's prospects unchanged", () => {
+    // Build the game first so both rolls start from the same RNG position.
+    const g = newGame();
     setRNG(mulberry32(77));
-    const a = genTalentEntry(newGame());
+    const a = genTalentEntry(g);
     setRNG(mulberry32(77));
     const b = genTalentEntry(null);
     expect(a.potentialTier).toBe(b.potentialTier);

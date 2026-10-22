@@ -31,7 +31,6 @@ import Scout from "./ui/Scout.jsx";
 import Inbox from "./ui/Inbox.jsx";
 import Finance from "./ui/Finance.jsx";
 import Facility from "./ui/Facility.jsx";
-import RivalsScreen from "./ui/RivalsScreen.jsx";
 import Promoters from "./ui/Promoters.jsx";
 import Roster from "./ui/Roster.jsx";
 import WinConditionBanner from "./components/WinConditionBanner.jsx";
@@ -100,7 +99,7 @@ export default function App() {
     dispatch({ type: "SCOUT", cost, fighter: f, report: makeReport(f, grade), grade, method: label, transferReason: label === "Diamond in the Rough" ? generateTransferReason(f) : undefined });
   };
 
-  const tabLabel = { dashboard: t("UI.camp"), roster: t("UI.roster"), rank: t("UI.rank"), scout: t("UI.scout"), inbox: `${t("UI.inbox")}${g.inbox?.length ? ` ${g.inbox.length}` : ""}`, finance: t("UI.finance"), promoters: t("UI.promoters"), mgmt: t("UI.staff"), rivals: t("UI.rival"), achievements: t("UI.achievements"), dynasty: t("UI.dynasty"), world: t("UI.world") }[tab] || t("UI.camp");
+  const tabLabel = { dashboard: t("UI.camp"), roster: t("UI.roster"), rank: t("UI.rank"), scout: t("UI.scout"), inbox: `${t("UI.inbox")}${g.inbox?.length ? ` ${g.inbox.length}` : ""}`, finance: t("UI.finance"), promoters: t("UI.promoters"), mgmt: t("UI.staff"), achievements: t("UI.achievements"), dynasty: t("UI.dynasty"), world: t("UI.world") }[tab] || t("UI.camp");
 
   const tier = CAMP_TIERS[g.campTier || 0];
   const fightFighter = activeFight ? g.roster?.find((f) => f.id === activeFight) : null;
@@ -167,7 +166,6 @@ export default function App() {
           {tab === "rank" && <Rankings g={g} t={t} rankDiv={rankDiv} setRankDiv={setRankDiv} />}
           {tab === "scout" && <Scout g={g} dispatch={dispatch} t={t} fmt$={fmt$} scoutFilterArch={scoutFilterArch} setScoutFilterArch={setScoutFilterArch} scoutFilterWC={scoutFilterWC} setScoutFilterWC={setScoutFilterWC} scoutFighter={scoutFighter} tier={tier} />}
           {tab === "inbox" && <Inbox g={g} dispatch={dispatch} setTab={setTab} />}
-          {tab === "rivals" && <RivalsScreen g={g} dispatch={dispatch} />}
           {tab === "promoters" && <Promoters g={g} />}
           {tab === "mgmt" && <Facility g={g} dispatch={dispatch} coachCap={tier.coachCap} rosterCap={tier.rosterCap} />}
           {tab === "finance" && <Finance g={g} />}

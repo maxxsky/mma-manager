@@ -77,7 +77,6 @@ const ICONS = {
   inbox: <><path d="M3 13l3-8h12l3 8" /><path d="M3 13v6h18v-6" /><path d="M3 13h5l1.5 3h5L15 13h5" /></>,
   money: <><rect x="3" y="6" width="18" height="12" rx="1.5" /><circle cx="12" cy="12" r="2.6" /></>,
   facility: <><path d="M4 21V9l8-5 8 5v12" /><path d="M9 21v-6h6v6" /></>,
-  rivals: <><path d="M14.5 4.5l5 5-9 9-5-5z" /><path d="M4 20l3-3M17 4l3 3-2 2" /></>,
   bolt: <><path d="M13 2 4 14h6l-1 8 9-12h-6z" /></>,
   cal: <><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></>,
   chevR: <><path d="M9 6l6 6-6 6" /></>,

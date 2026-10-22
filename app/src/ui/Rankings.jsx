@@ -39,7 +39,7 @@ export default function Rankings({ g, t }) {
     streak: player ? f.streakL || 0 : null,
     change: player ? f.lastRankChange || 0 : null,
     fighterId: player ? f.id : undefined,
-    titles: f.titles || [], campId: f.campId, campName: f.campName,
+    titles: f.titles || [],
   }));
   const top15 = combined.slice(0, 15);
   const outsideTop15 = combined.slice(15).filter((x) => x.player);
@@ -325,7 +325,6 @@ export default function Rankings({ g, t }) {
               </div>
               {/* Archetype */}
               <div style={{ fontSize: 10.5, color: T.txt3, marginBottom: 6 }}>
-                {f.campId && f.campName && <Tag color={T.steel} style={{ fontSize: 9, marginRight: 6 }}>{f.campName}</Tag>}
                 {f.archetype}
               </div>
               {/* Stats chips */}
@@ -534,11 +533,6 @@ export default function Rankings({ g, t }) {
                   {f.name}
                   {f.player ? " ★" : ""}
                 </span>
-                {f.campId && f.campName && (
-                  <Tag color={T.steel} style={{ fontSize: 9, marginLeft: 4 }}>
-                    {f.campName}
-                  </Tag>
-                )}
                 {f.titles?.length > 0 && (
                   <span style={{ fontSize: 11 }}>👑</span>
                 )}

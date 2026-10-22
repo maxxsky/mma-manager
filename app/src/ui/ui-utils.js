@@ -21,8 +21,12 @@ export function rememberTab(tab) {
   saveMemory({ lastTab: tab });
 }
 
+// Tabs that no longer exist (the rivals tab was removed in P1 #21).
+const REMOVED_TABS = new Set(["rivals"]);
+
 export function getLastTab() {
-  return loadMemory().lastTab || "dashboard";
+  const tab = loadMemory().lastTab;
+  return tab && !REMOVED_TABS.has(tab) ? tab : "dashboard";
 }
 
 export function rememberDivision(division) {

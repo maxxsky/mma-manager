@@ -90,7 +90,7 @@ export function registerFighterHandlers(register) {
     g.roster = g.roster.filter((x) => x.id !== c.letGo);
     g.rep = clamp(g.rep - 3, 0, 100);
     g.chemistry = clamp(g.chemistry - 5, 0, 100);
-    g.log.unshift(`🚪 ${f.name} pergi ke rival.`);
+    g.log.unshift(`🚪 ${f.name} pindah ke camp lain.`);
   });
 
   register("talk", ({ g, c }) => {

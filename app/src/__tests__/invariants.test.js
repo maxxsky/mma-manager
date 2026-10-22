@@ -92,26 +92,6 @@ describe('Game State Invariants', () => {
     }
   })
 
-  it('rival camp lifecycle never returns to expansion once left, stays in valid enum', () => {
-    useSeed(42)
-    const g = createTestGame()
-    const VALID_LIFECYCLES = ['expansion', 'growth', 'championship', 'decline', 'rebuild']
-    const hasLeftExpansion = {}
-
-    for (let i = 0; i < 104; i++) { // 2 tahun — shadow tick tiap 12 minggu (SHADOW_TICK_INTERVAL)
-      tick(g)
-      g.rivals?.forEach((camp) => {
-        if (!camp._shadow) return
-        const lc = camp._shadow.lifecycle
-        expect(VALID_LIFECYCLES).toContain(lc)
-        if (hasLeftExpansion[camp.id] && lc === 'expansion') {
-          throw new Error(`Camp ${camp.id} (${camp.name}) balik ke 'expansion' setelah pernah keluar`)
-        }
-        if (lc !== 'expansion') hasLeftExpansion[camp.id] = true
-      })
-    }
-  })
-
   it('fighter never has two simultaneous bookings after accepting multiple offers', () => {
     useSeed(42)
     const g = createTestGame()

@@ -41,10 +41,10 @@ Built with a **pure JavaScript engine** (zero UI dependencies) layered under a *
 - **Title fights** — Major, Premier, Minor, National, Regional title tiers with mandatory defenses
 - **Double Champion** — Cross-division super fights
 
-### 📊 Rankings & Rivals
+### 📊 Rankings
 - **Division rankings** — Top 15 per weight class with point decay and AI fighter rotation
 - **P4P Top 10** — Cross-division pound-for-pound rankings
-- **Rival camps** — 3 AI-managed rival gyms with fighter poaching mechanics
+- **Outside offers** — other camps approach unhappy fighters (low morale and loyalty)
 
 ### 💰 Finance
 - **Monthly P&L** — Income (sponsors, training fees, popularity) vs expenses (coach salaries, maintenance, training costs)
@@ -116,7 +116,6 @@ mma-manager/
 │       │   ├── i18n.js           # EN/ID translation tables
 │       │   ├── economy.js        # Training bonus calculations
 │       │   ├── rankings.js       # Division generation, ranking, titles
-│       │   ├── rivals.js         # Rival camp generation
 │       │   ├── relationships.js  # Fighter-to-fighter relationship tracking
 │       │   ├── achievements.js   # Achievement unlock checks
 │       │   └── finance.js        # Shared monthly financial calculations
@@ -132,7 +131,6 @@ mma-manager/
 │           ├── Finance.jsx       # Monthly P&L, cash reserve, split bars
 │           ├── Facility.jsx      # Camp tier, coaches, facility upgrades
 │           ├── Inbox.jsx         # Fight offers, sponsor offers, events
-│           ├── RivalsScreen.jsx  # Rival camp overview + poaching
 │           ├── NegotiateModal.jsx# Contract negotiation dialog
 │           ├── Sidebar.jsx       # Navigation sidebar
 │           ├── TopBar.jsx        # Header: date, KPI chips, save/language
@@ -192,7 +190,7 @@ User sees updated UI ← React re-render ← setG(structuredClone(state)) ←─
 | Fighter system | ✅ Training, traits, contracts, aging |
 | Scouting | ✅ 4 tiers with grade-based reports |
 | Rankings | ✅ Division top 15 + P4P |
-| Rival camps | ✅ AI simulation + poaching |
+| Outside offers | ✅ Other camps approach unhappy fighters |
 | Finance | ✅ Monthly P&L + runway |
 | Sponsors | ✅ Placement & royalty deals |
 | i18n | ✅ 200+ keys EN/ID |

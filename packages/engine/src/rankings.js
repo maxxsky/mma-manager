@@ -1,85 +1,12 @@
-import { R, RI, clamp, pick, random, uid } from "./rng.js";
-import { WEIGHTS, RIVAL_TRAITS } from "./data.js";
+import { R, RI, clamp, uid } from "./rng.js";
+import { WEIGHTS } from "./data.js";
 import { genFighter } from "./fighter.js";
 import { ensureWorldProfile, aiChampion } from "./world/fighter-profile.js";
 import { genBio } from "./fighter.js";
 import { TITLE_NAMES, championAt, removeChampion } from "./championships.js";
 
-// ── Archetype → RIVAL_TRAITS spec mapping ──
-const ARCH_TO_SPEC = {
-  "Boxer": "striking",
-  "Muay Thai": "striking",
-  "Wrestler": "wrestling",
-  "BJJ Specialist": "bjj",
-  "All-Rounder": null,
-};
-
-/**
- * Weighted random pick from items array.
- * Higher weight = higher probability.
- */
-function weightedPick(items, weights) {
-  const total = weights.reduce((a, b) => a + b, 0);
-  let r = random() * total;
-  for (let i = 0; i < items.length; i++) {
-    r -= weights[i];
-    if (r <= 0) return items[i];
-  }
-  return items[items.length - 1];
-}
-
-/**
- * Select 2-4 fighters from a division list and mark them with campId/campName.
- * Weighted by camp rep, with spec-matching priority.
- */
-function assignCampMarkings(list, rivals) {
-  const count = RI(2, 4);
-  const available = list.map((f, i) => ({ fighter: f, idx: i }));
-  const result = [];
-
-  for (let c = 0; c < count && available.length > 0 && rivals.length > 0; c++) {
-    // Compute camp weights: base = rep, boost if spec-matched fighters remain
-    const campWeights = rivals.map((rc) => {
-      const spec = RIVAL_TRAITS[rc.trait]?.spec;
-      let w = rc.rep;
-      // Bonus if any remaining fighter matches this camp's spec
-      const hasMatch = available.some((a) => {
-        const fighterSpec = ARCH_TO_SPEC[a.fighter.archetype];
-        return spec && fighterSpec === spec;
-      });
-      if (hasMatch) w *= 1.5;
-      return Math.max(1, Math.round(w));
-    });
-
-    const camp = weightedPick(rivals, campWeights);
-    const spec = RIVAL_TRAITS[camp.trait]?.spec;
-
-    // Pick fighter — prefer spec match, fallback to any
-    let chosen;
-    const matching = available.filter((a) => {
-      const fighterSpec = ARCH_TO_SPEC[a.fighter.archetype];
-      return spec && fighterSpec === spec;
-    });
-    if (matching.length > 0 && random() < 0.7) {
-      chosen = pick(matching);
-    } else {
-      chosen = pick(available);
-    }
-
-    if (chosen) {
-      chosen.fighter.campId = camp.id;
-      chosen.fighter.campName = camp.name;
-      result.push(chosen);
-      const idx = available.findIndex((a) => a.idx === chosen.idx);
-      if (idx !== -1) available.splice(idx, 1);
-    }
-  }
-
-  return result;
-}
-
 // ---------- divisions & rankings ----------
-export function genDivisions(rivals = []) {
+export function genDivisions() {
   const d = {};
   WEIGHTS.forEach((w) => {
     const list = [];
@@ -97,10 +24,6 @@ export function genDivisions(rivals = []) {
       list[list.length - 1].record.dec = list[list.length - 1].record.w - list[list.length - 1].record.ko - list[list.length - 1].record.sub;
     }
     list.forEach(f => ensureWorldProfile(f, w.name));
-    // Assign camp markings after all 15 fighters are generated
-    if (rivals.length > 0) {
-      assignCampMarkings(list, rivals);
-    }
     d[w.name] = { champ: aiChampion(list[0], w.name), tierChamps: {}, list };
   });
   return d;

@@ -35,8 +35,6 @@ function makeFighter(overrides = {}) {
     points: overrides.points ?? 50,
     record: overrides.record || { w: 5, l: 3, ko: 0, sub: 0, dec: 0 },
     _streak: overrides._streak ?? 0,
-    campId: overrides.campId || null,
-    campName: overrides.campName || null,
     peaked: overrides.peaked ?? false,
     _breakthroughNotified: overrides._breakthroughNotified ?? false,
     retiring: overrides.retiring ?? false,
@@ -58,7 +56,6 @@ function makeGame(overrides = {}) {
     roster: overrides.roster ?? [],
     coaches: overrides.coaches ?? [],
     divisions: overrides.divisions ?? {},
-    rivals: overrides.rivals ?? [],
     ...overrides,
   };
 }

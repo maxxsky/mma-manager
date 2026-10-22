@@ -3,7 +3,6 @@ import { describe, it, expect } from 'vitest'
 import { createTestGame, useSeed, createTestFighter } from './helpers.js'
 import { reducer } from '@ironfist/engine/reducer.js'
 import { setRNG } from '@ironfist/engine/rng.js'
-import { poachTerms } from '@ironfist/engine/rivals.js'
 
 describe('Reducer', () => {
   describe('SET_TRAINING', () => {
@@ -85,48 +84,6 @@ describe('Reducer', () => {
       expect(g.coaches).toBeDefined()
       expect(g.cash).toBeDefined()
       expect(g.log).toBeDefined()
-    })
-  })
-
-  describe('POACH_FIGHTER', () => {
-    it('success: fighter moves to roster, cash decreases, rivalry increases', () => {
-      useSeed(42)
-      const g = createTestGame()
-      const rivalId = 'poach-rival-1'
-      const target = { id: 'poach1', name: 'PoachTarget', archetype: 'Boxer', attrs: { striking: 50, wrestling: 50, bjj: 50, cardio: 50, strength: 50, chin: 50, footwork: 50, fightIQ: 50 } }
-      g.rivals.push({ id: rivalId, name: 'TestRival', fighters: [target], rivalry: 30 })
-      const rosterBefore = g.roster.length
-      const cashBefore = g.cash
-
-      const { cost } = poachTerms(g, g.rivals.at(-1), target)
-      setRNG(() => 0) // roll under any success chance
-      reducer(g, { type: 'POACH_FIGHTER', rivalId, targetId: 'poach1', cost: 1, failCost: 1, successChance: 0 })
-
-      expect(g.roster.length).toBe(rosterBefore + 1)
-      expect(g.roster.find((x) => x.id === 'poach1')).toBeDefined()
-      expect(g.cash).toBe(cashBefore - cost) // engine price, not the action's
-      expect(g.rivals.find((x) => x.id === rivalId).rivalry).toBe(50) // 30 + 20
-      expect(g.rivals.find((x) => x.id === rivalId).fighters.length).toBe(0)
-    })
-
-    it('failure: fighter stays with rival, cash decreases less, rivalry increases less', () => {
-      useSeed(42)
-      const g = createTestGame()
-      const rivalId = 'poach-rival-2'
-      const target = { id: 'poach2', name: 'FailTarget', archetype: 'Wrestler', attrs: { striking: 40, wrestling: 70, bjj: 40, cardio: 50, strength: 60, chin: 50, footwork: 40, fightIQ: 50 } }
-      g.rivals.push({ id: rivalId, name: 'TestRival2', fighters: [target], rivalry: 30 })
-      const rosterBefore = g.roster.length
-      const cashBefore = g.cash
-
-      const { failCost } = poachTerms(g, g.rivals.at(-1), target)
-      setRNG(() => 0.999) // roll over any success chance
-      reducer(g, { type: 'POACH_FIGHTER', rivalId, targetId: 'poach2', cost: 1, failCost: 1, successChance: 100 })
-
-      expect(g.roster.length).toBe(rosterBefore) // no change
-      expect(g.roster.find((x) => x.id === 'poach2')).toBeUndefined()
-      expect(g.cash).toBe(cashBefore - failCost)
-      expect(g.rivals.find((x) => x.id === rivalId).rivalry).toBe(35) // 30 + 5
-      expect(g.rivals.find((x) => x.id === rivalId).fighters.length).toBe(1) // still there
     })
   })
 
