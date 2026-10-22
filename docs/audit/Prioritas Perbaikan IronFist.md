@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7 dan P1 #8–#22 selesai (22 dari 63 item). #19–#22 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7 dan P1 #8–#23 selesai (23 dari 63 item). #19–#23 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -381,10 +381,15 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Kode: `fights/injury.js` (baru), `fights/commitResult.js`, `data/injury.js`, `data.js`, `app/src/ui/FightNight.jsx`.
   - Masih terbuka: cedera fight tingkat 3 ("Berat") belum memberi kerusakan permanen seperti cedera latihan "Career-Threatening". Temuan baru: cedera latihan itu menampilkan pesan "Karirnya telah berakhir", padahal fighter tetap di roster dan hanya kehilangan 3–8 poin satu atribut. Teks dan perilakunya perlu disamakan; belum dikerjakan. Diskon medis untuk biaya physio di `commitResult` tetap item #24.
 
+- **22 Oktober 2026: P1 #23 selesai.** Branch `claude/quirky-mccarthy-7jogso`.
+  - `tick/weight-change.js` sekarang memakai `f.streakW`, kemenangan beruntun yang sudah dirawat `career.js` dan `commitResult`, bukan `record.w` (total kemenangan). Fighter 10-5 yang baru menang sekali tidak lagi dianggap menang 10 kali beruntun. Save tanpa `streakW` dianggap tanpa streak.
+  - Validasi: test baru `weight-change.test.js` (3 test, semuanya gagal di kode lama), **771 test aplikasi / 54 file lulus**, harness dunia lulus, diff bersih.
+  - Masih terbuka (bagian lain FI7): pemain tidak bisa memulai pindah kelas sendiri. Reducer `CLASS_CHANGE` ada di engine, tapi tidak ada UI yang memanggilnya. Ini keputusan desain/UI, belum dikerjakan.
+
 ## Urutan kerja yang disarankan
 
-1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`. P1 #19–#22 selesai di branch `claude/quirky-mccarthy-7jogso` (#21: rival camp dibuang).
-2. Berikutnya P1 #23–#25.
+1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`. P1 #19–#23 selesai di branch `claude/quirky-mccarthy-7jogso` (#21: rival camp dibuang).
+2. Berikutnya P1 #24–#25.
 3. P1 lainnya: #21–#25. P5 #53–#54 (keamanan kecil) bisa disisipkan lebih awal.
 4. Mainkan beberapa jam setelah bug state utama selesai; tandai temuan yang sudah terbantu dan yang masih bisa direproduksi.
 5. Mainkan beberapa jam. Putuskan P2 dan daftar pangkas.

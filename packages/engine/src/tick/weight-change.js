@@ -13,7 +13,9 @@ export function tickWeightChange(g) {
 
     const div = g.divisions[f.weightClass];
     const wcIdx = WEIGHTS.findIndex((w) => w.name === f.weightClass);
-    const streakW = f.record.w > 0 && f.streakL === 0 ? f.record.w : 0;
+    // Current win streak (career.js keeps it), not total wins: a 10-5 fighter
+    // who just won once is on a 1-fight streak.
+    const streakW = f.streakW || 0;
     const r = rankOf(g, f);
     const isChamp = div && div.champ && div.champ.player && div.champ.fighterId === f.id;
 
