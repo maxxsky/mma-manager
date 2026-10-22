@@ -2,6 +2,7 @@
 import { clamp } from "../rng.js";
 import { genBio } from "../fighter.js";
 import { MORALE_BOOST_SIGN_EXTEND } from "./constants.js";
+import { checkAchievements } from "../achievements.js";
 
 export function reduceContract(g, action) {
   if (action.type !== "SIGN_CONTRACT") return;
@@ -24,6 +25,7 @@ export function reduceContract(g, action) {
     g.prospects = g.prospects.filter((x) => x.id !== action.prospectId);
     if (!f.bio) f.bio = genBio(f);
     g.log.unshift("✍️ " + f.name + " teken kontrak: cut " + Math.round(action.deal.cut * 100) + "%, " + action.deal.fights + " fight.");
+    if (prospect.grade === "S") checkAchievements(g, { signedSProspect: true });
   } else {
     const f = g.roster.find((x) => x.id === action.fighterId);
     if (!f) return;

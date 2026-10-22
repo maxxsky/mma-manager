@@ -8,6 +8,7 @@ import { avgSkill } from "../fighter.js";
 import { FIGHT_INJURY_CHANCE, FIGHT_INJURY_TIERS, FIGHT_INJURY_LABELS } from "../data.js";
 import { fightPurse } from "../fight/purse.js";
 import { aiChampion } from "../world/fighter-profile.js";
+import { isKnockout, koWinStreak } from "../achievements.js";
 
 /** Commit fight result to game state. Called from FightNight done() callback. */
 export function commitFightResult(g, fighter, result) {
@@ -19,6 +20,8 @@ export function commitFightResult(g, fighter, result) {
   const div = g.divisions?.[f.weightClass];
   const previousChamp = championAt(div, contestedTier);
   const defending = !!previousChamp?.player && previousChamp.fighterId === f.id;
+  const previousKOStreak = Number.isInteger(f.koStreak) ? f.koStreak : koWinStreak(f);
+  f.koStreak = result.won && !result.draw && isKnockout(result.how) ? previousKOStreak + 1 : 0;
 
   // ── Purse payout (show money always, win bonus only on win) ──
   const { purse, forfeit } = fightPurse(booking, result);
@@ -311,4 +314,9 @@ export function commitFightResult(g, fighter, result) {
     f.morale = clamp(f.morale - (tier.tier >= 2 ? 14 : 8), 0, 100);
     g.log.unshift(`🚑 ${f.name}: ${label} (${weeks} minggu, biaya ${fmt$(tier.totalCost)}).`);
   }
+  return {
+    fightResult: { ...result, titleWon: !!(result.won && !defending && contestedTier &&
+      championAt(div, contestedTier)?.fighterId === f.id) },
+    koStreak: f.koStreak,
+  };
 }

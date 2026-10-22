@@ -54,6 +54,7 @@ export default function FightNight({ fighter, done, staff }) {
   const [totalLandB, setTotalLandB] = useState(0);
   const [totalTdA, setTotalTdA] = useState(0);
   const [totalTdB, setTotalTdB] = useState(0);
+  const committed = useRef(false);
 
   // Hooks
   useFightSeed(fighter.id, fighter.booked.seed);
@@ -138,7 +139,9 @@ export default function FightNight({ fighter, done, staff }) {
 
   const commitResult = () => {
     if (!result) { done((g) => {}); return; }
-    done((g) => { commitFightResult(g, fighter, { ...result, weighinIssue }); });
+    if (committed.current) return;
+    committed.current = true;
+    done((g) => commitFightResult(g, fighter, { ...result, weighinIssue }), { fightResult: result });
   };
 
   // Corner countdown timer

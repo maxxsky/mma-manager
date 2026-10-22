@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useGameState } from '../hooks/useGameState.js'
 import { saveGame } from '../services/saveService.js'
-import { createTestGame } from './helpers.js'
+import { createTestGame, createTestFighter } from './helpers.js'
 import { MAX_UNDO_STACK } from '@ironfist/engine/reducer/constants.js'
 import { getWorldRNGState, restoreWorldRNGState, resetRNG, random, uid } from '@ironfist/engine/rng.js'
 
@@ -26,6 +26,19 @@ beforeEach(() => { vi.useFakeTimers(); vi.clearAllMocks() })
 afterEach(() => { vi.clearAllTimers(); vi.useRealTimers() })
 
 describe('useGameState undo/redo through actual dispatch', () => {
+  it('persists an S-grade signing achievement and restores it with undo/redo', () => {
+    const app = mount()
+    app.state().prospects = [{ id: 's-prospect', grade: 'S', fighter: createTestFighter({ id: 'signed-fighter' }) }]
+    app.hook.dispatch({ type: 'SIGN_CONTRACT', mode: 'sign', prospectId: 's-prospect',
+      deal: { signBonus: 1000, cut: 0.2, fights: 4, duration: 12 } })
+    expect(app.state()._unlocked).toContain('sign_s_prospect')
+    app.hook.dispatch({ type: 'UNDO' })
+    expect(app.state()._unlocked || []).not.toContain('sign_s_prospect')
+    app.hook.dispatch({ type: 'REDO' })
+    expect(app.state()._unlocked).toContain('sign_s_prospect')
+    vi.advanceTimersByTime(1000)
+    expect(saveGame.mock.calls[0][1]._unlocked).toContain('sign_s_prospect')
+  })
   it('walks back multiple actions, then reapplies them with redo', () => {
     const app = mount()
     const before = app.state().roster[0].training.type
