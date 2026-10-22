@@ -26,10 +26,20 @@ function simulate(weeks, seed = 4242) {
 }
 
 describe("inbox retention", () => {
-  it("stamps every message with a createdWeek", () => {
-    const g = simulate(60);
-    const unstamped = g.inbox.filter((m) => m.createdWeek == null);
-    expect(unstamped).toEqual([]);
+  it("stamps existing messages during monthly settlement, preserving their original dates", () => {
+    // Messages created between settlements receive their fallback date at the
+    // next monthly cleanup. Test that boundary directly, independent of which
+    // random events a long simulation happens to create on its last week.
+    setRNG(mulberry32(4242));
+    const g = newGame();
+    g.week = 4;
+    g.inbox = [
+      { id: 'undated', type: 'event', title: 'Undated', choices: [{ label: 'OK' }] },
+      { id: 'dated', type: 'event', title: 'Dated', choices: [{ label: 'OK' }], createdWeek: 2 },
+    ];
+    tickSettlement(g);
+    expect(g.inbox.find(m => m.id === 'undated').createdWeek).toBe(4);
+    expect(g.inbox.find(m => m.id === 'dated').createdWeek).toBe(2);
   });
 
   it("keeps nothing older than a full in-game year", () => {

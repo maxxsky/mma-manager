@@ -1,6 +1,7 @@
 // Rankings domain — AI movement, rotation, player rank decay
 import { RI, clamp, R, uid } from "../rng.js";
 import { genFighter } from "../fighter.js";
+import { rankedAIContenders } from "../rankings.js";
 
 export function tickRankings(g) {
   if (!g || !g.divisions) return;
@@ -11,9 +12,18 @@ export function tickRankings(g) {
 
   // AI fighter rotation every 48 weeks
   if (g.week % 48 === 0) {
-    Object.values(g.divisions).forEach((d) => {
-      const retireCount = 3;
-      const retired = d.list.splice(d.list.length - retireCount, retireCount);
+    Object.entries(g.divisions).forEach(([wc, d]) => {
+      // Storage order is not rank order. Rotate the lowest-ranked eligible AI,
+      // preserving every reigning champion and all other fighters' positions.
+      const champions = [d.champ, ...Object.values(d.tierChamps || {})].filter(Boolean);
+      const retired = rankedAIContenders(g, wc)
+        .filter(({ fighter }) => !champions.some(c => c.name === fighter.name ||
+          (c.fighterId != null && c.fighterId === fighter.id)))
+        .slice(-3).map(({ fighter }) => fighter);
+      const retireCount = retired.length;
+      if (!retireCount) return;
+      const retiring = new Set(retired);
+      d.list = d.list.filter(f => !retiring.has(f));
       const retiredNames = retired.map((x) => x.name).join(", ");
       for (let i = 0; i < retireCount; i++) {
         const lvl = R(0.5, 0.85);
@@ -24,7 +34,7 @@ export function tickRankings(g) {
           record: { w: RI(0, 3), l: RI(0, 2), ko: 0, sub: 0, dec: 0 },
         });
       }
-      g.log.unshift(`🔄 Divisi — 3 fighter pensiun diganti prospect baru. (${retiredNames})`);
+      g.log.unshift(`🔄 Divisi — ${retireCount} fighter pensiun diganti prospect baru. (${retiredNames})`);
     });
   }
 
