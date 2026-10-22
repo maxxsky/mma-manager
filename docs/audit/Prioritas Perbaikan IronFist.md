@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, seluruh P2 #26–#37, dan P5 #53–#54 selesai (39 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#37 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, seluruh P2 #26–#37, P3 #40, dan P5 #53–#54 selesai (40 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#37, #40, dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -75,7 +75,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 |---|---|---|
 | 38 | Gabungkan angka status camp (Reputasi, Prestise, Legacy, Tier, Identitas Dinasti) jadi 1–2 | EK1 |
 | 39 | Ekonomi late game: kurangi banjir uang dan reputasi; prestise sekitar 50 di tahun ke-10. Ukur ulang setelah bug sabuk (#8) dan sponsor (#12) diperbaiki | EK1 |
-| 40 | Grade scout tidak otomatis S hanya karena reputasi tinggi | CA1 |
+| 40 | Grade scout tidak otomatis S hanya karena reputasi tinggi. **Selesai** | CA1 |
 | 41 | Intensitas Hard: gain lebih tinggi atau risiko lebih rendah sampai layak dipilih | FI1 |
 | 42 | Kurangi atau tampilkan pengali training yang tidak terlihat | FI1 |
 | 43 | Pergantian juara AI lebih jarang | DU7 |
@@ -486,6 +486,12 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 
 - **22 Oktober 2026: P2 #37 selesai — `SET_SPONSOR` lama dihapus.** Aksi ini tidak dipanggil dari mana pun dan menulis ke field lama `g.sponsor` (sistem sponsor sekarang memakai `g.sponsors`, dan save lama sudah dimigrasikan). Test di `removed-systems.test.js`. `npm test` root: 829 test app + 28 test server lulus.
 - **Seluruh P2 selesai** (dengan #33 bagian pinjaman ditunda ke P3). Berikutnya P3 (balancing).
+
+- **22 Oktober 2026: P3 #40 selesai — grade scout per metode, scouting pindah ke engine.**
+  - Grade laporan dulu hanya dari reputasi (S di rep ≥60), dan reputasi mencapai 100 dalam 2–4 tahun, jadi semua laporan cepat menjadi grade S (angka persis). Sekarang `scoutGradeFor` = yang lebih rendah dari grade reputasi dan batas metode: Local maksimal B, Regional maksimal A, National maksimal S, Diamond in the Rough maksimal A. Kartu metode menampilkan grade yang akan didapat.
+  - Modul baru `scouting.js`: daftar metode (biaya, level, batas grade), cek blokir (roster penuh, kas kurang, Diamond terkunci), dan `runScout` yang membuat prospek, laporan, dan alasan pindah untuk Diamond. Reducer `SCOUT` hanya menerima `methodId` dan filter. Sebelumnya `App.jsx` membuat fighter, laporan, grade, dan biaya lalu mengirimnya apa adanya, dengan roll RNG di luar reducer.
+  - **Temuan, belum dikerjakan:** deskripsi tier "Elite MMA Factory" menjanjikan "Scout otomatis per bulan", tapi tidak ada kode yang menjalankannya.
+  - Validasi: test baru `scouting.test.js` (5 test). `npm test` root: **834 test app + 28 test server lulus**. Build, harness dunia, 2 run smoke test, dan skrip browser Scout → Negosiasi lulus tanpa error console.
 
 ## Urutan kerja yang disarankan
 

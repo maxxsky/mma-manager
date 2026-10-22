@@ -11,12 +11,10 @@ import { useSaveLoad } from "./hooks/useSaveLoad.js";
 import { useKeyboard } from "./hooks/useKeyboard.js";
 
 // Engine
-import { R, fmt$, getWorldRNGState } from "@ironfist/engine/rng.js";
-import { genFighter, assignAgent, scoutGrade, makeReport } from "@ironfist/engine/fighter.js";
+import { fmt$, getWorldRNGState } from "@ironfist/engine/rng.js";
 import { newGame } from "@ironfist/engine/state.js";
 import { CAMP_TIERS } from "@ironfist/engine/data.js";
 import { ACHIEVEMENTS } from "@ironfist/engine/data.js";
-import { generateTransferReason } from "@ironfist/engine/narrative/generators/transfer.js";
 
 // UI
 import { GlobalStyle, T } from "./ui/theme.jsx";
@@ -82,21 +80,9 @@ export default function App() {
   // Toast dismiss
   const dismissToast = (id) => setToasts((prev) => prev.filter((t) => t.id !== id));
 
-  // Scout action
-  const scoutFighter = (cost, level, label, filterArch, filterWC) => {
-    const grade = scoutGrade(g.rep);
-    const existingNames = new Set([
-      ...(g.roster || []).map((x) => x.name),
-      ...(g.prospects || []).map((x) => x.fighter?.name),
-    ]);
-    let f = assignAgent(genFighter(R(level[0], level[1])));
-    for (let attempt = 0; attempt < 10; attempt++) {
-      const matchesFilter = (!filterArch || f.archetype === filterArch) && (!filterWC || f.weightClass === filterWC);
-      const nameOk = !existingNames.has(f.name);
-      if (matchesFilter && nameOk) break;
-      f = assignAgent(genFighter(R(level[0], level[1])));
-    }
-    dispatch({ type: "SCOUT", cost, fighter: f, report: makeReport(f, grade), grade, method: label, transferReason: label === "Diamond in the Rough" ? generateTransferReason(f) : undefined });
+  // Scout action — the engine generates the prospect (scouting.js)
+  const scoutFighter = (methodId, filterArch, filterWC) => {
+    dispatch({ type: "SCOUT", methodId, filterArch, filterWC });
   };
 
   const tabLabel = { dashboard: t("UI.camp"), roster: t("UI.roster"), rank: t("UI.rank"), scout: t("UI.scout"), inbox: `${t("UI.inbox")}${g.inbox?.length ? ` ${g.inbox.length}` : ""}`, finance: t("UI.finance"), promoters: t("UI.promoters"), mgmt: t("UI.staff"), achievements: t("UI.achievements"), dynasty: t("UI.dynasty"), world: t("UI.world") }[tab] || t("UI.camp");

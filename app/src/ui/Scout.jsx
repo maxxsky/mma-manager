@@ -7,7 +7,8 @@ import {
   ARCH_COLOR as DATA_ARCH_COLOR,
   AGENT_TYPES,
 } from "@ironfist/engine/data.js";
-import { scoutGrade, reportAttrValue, reportOvr } from "@ironfist/engine/fighter.js";
+import { reportAttrValue, reportOvr } from "@ironfist/engine/fighter.js";
+import { SCOUT_METHODS, scoutMethod, scoutGradeFor, repScoutGrade, diamondEligibility } from "@ironfist/engine/scouting.js";
 import {
   T,
   Panel,
@@ -35,7 +36,8 @@ export default function Scout({
   scoutFighter,
   tier,
 }) {
-  const grade = scoutGrade(g.rep);
+  // Reputation sets the best grade any report can reach; each method caps it further.
+  const grade = repScoutGrade(g.rep);
 
   // tier may be a camp tier object (with .rosterCap) or a plain number
   const rosterCap =
@@ -44,41 +46,15 @@ export default function Scout({
   const isRosterFull = g.roster.length >= rosterCap;
 
   // ── Diamond eligibility ──
-  const facLevels = g.facilities ? Object.values(g.facilities) : [];
-  const avgFacLevel = facLevels.length > 0 ? facLevels.reduce((s, v) => s + v, 0) / facLevels.length : 0;
-  const diamondEligible = g.rep >= 20 && avgFacLevel >= 2;
+  const { eligible: diamondEligible, avgFac: avgFacLevel } = diamondEligibility(g);
   const diamondBlockReason = !diamondEligible
     ? `Fighter established belum melirik camp-mu — butuh reputasi (≥20) & fasilitas rata-rata ≥2. (Saat ini: rep ${g.rep}, fasilitas ${avgFacLevel.toFixed(1)})`
     : null;
 
-  // ── scout methods ──
-  const amateurMethods = [
-    {
-      label: "Local Amateur Circuit",
-      cost: 75,
-      level: [0.30, 0.45],
-      desc: "Sirkuit amatir lokal — jangkauan sempit, cocok cari bakat kampung.",
-    },
-    {
-      label: "Regional Tryouts",
-      cost: 400,
-      level: [0.35, 0.55],
-      desc: "Tryout lintas daerah — jangkauan lebih luas, tetap di level amatir.",
-    },
-    {
-      label: "National Scouting Trip",
-      cost: 1200,
-      level: [0.40, 0.60],
-      desc: "Pencarian nasional — jangkauan terluas untuk level amatir.",
-    },
-  ];
-
-  const diamondMethod = {
-    label: "Diamond in the Rough",
-    cost: 10000 + Math.floor(g.rep * 150),
-    level: [1.0, 1.45],
-    desc: "Fighter established kadang mempertimbangkan pindah camp — tapi cuma kalau reputasi & fasilitasmu meyakinkan.",
-  };
+  // ── scout methods (engine: scouting.js) ──
+  const amateurMethods = SCOUT_METHODS.filter((m) => m.id !== "diamond").map((m) => ({ ...m, cost: m.cost(g), grade: scoutGradeFor(g, m) }));
+  const dm = scoutMethod("diamond");
+  const diamondMethod = { ...dm, cost: dm.cost(g), grade: scoutGradeFor(g, dm) };
 
   return (
     <>
@@ -93,8 +69,9 @@ export default function Scout({
             lineHeight: 1.5,
           }}
         >
-          Report accuracy improves with camp reputation. Low-grade reports can
-          miss significantly. Use filters below to narrow your search.
+          Report accuracy depends on the scouting method and is capped by camp
+          reputation: Local up to B, Regional up to A, National up to S, Diamond up to A.
+          Low-grade reports can miss significantly.
         </div>
 
         {/* ── Archetype Filter ── */}
@@ -305,6 +282,7 @@ export default function Scout({
                   >
                     {fmt$(m.cost)}
                   </span>
+                  <span>{t("UI.grade")} {m.grade}</span>
                 </div>
 
                 <Btn
@@ -312,15 +290,7 @@ export default function Scout({
                   wide
                   disabled={!canScout}
                   color={T.steel}
-                  onClick={() =>
-                    scoutFighter(
-                      m.cost,
-                      m.level,
-                      m.label,
-                      scoutFilterArch,
-                      scoutFilterWC
-                    )
-                  }
+                  onClick={() => scoutFighter(m.id, scoutFilterArch, scoutFilterWC)}
                 >
                   {!canAfford
                     ? t("UI.notEnoughCash")
@@ -385,21 +355,14 @@ export default function Scout({
             >
               {fmt$(diamondMethod.cost)}
             </span>
+            <span>{t("UI.grade")} {diamondMethod.grade}</span>
           </div>
           <Btn
             sm
             wide
             disabled={!diamondEligible || g.cash < diamondMethod.cost || isRosterFull}
             color={T.steel}
-            onClick={() =>
-              scoutFighter(
-                diamondMethod.cost,
-                diamondMethod.level,
-                diamondMethod.label,
-                scoutFilterArch,
-                scoutFilterWC
-              )
-            }
+            onClick={() => scoutFighter(diamondMethod.id, scoutFilterArch, scoutFilterWC)}
           >
             {!diamondEligible
               ? "🔒 Belum tersedia"
