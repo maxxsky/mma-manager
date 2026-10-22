@@ -45,7 +45,7 @@ export function reducer(g, action) {
     if (g._undoStack && g._undoStack.length > 0) {
       const current = snapshot(g);
       g._redoStack.push({ snapshot: current });
-      const prev = g._undoStack.pop().snapshot;
+      const prev = snapshot(g._undoStack.pop().snapshot);
       // The stacks are our own bookkeeping and are deliberately absent from
       // snapshots. Wiping every key would therefore destroy them, which is why
       // redo used to do nothing: undo erased the redo stack it had just filled.
@@ -63,7 +63,7 @@ export function reducer(g, action) {
     if (g._redoStack && g._redoStack.length > 0) {
       const current = snapshot(g);
       g._undoStack.push({ snapshot: current });
-      const next = g._redoStack.pop().snapshot;
+      const next = snapshot(g._redoStack.pop().snapshot);
       const undoStack = g._undoStack;
       const redoStack = g._redoStack;
       Object.keys(g).forEach((k) => delete g[k]);

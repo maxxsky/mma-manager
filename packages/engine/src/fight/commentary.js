@@ -5,11 +5,13 @@ import { pick } from "../rng.js";
 export function createCommentary() {
   const summaryLog = [];
   const tickLog = [];
+  const summaryTimes = [], tickTimes = [];
+  const seconds = (min, sec) => Math.max(0, Math.min(300, min * 60 + sec));
 
   // Format timestamp dengan carry — offset komentar (misal exSec + 12) bisa
   // dorong detik lewat dari 60, jadi perlu di-normalize ke menit:detik yang valid.
   const fmtTime = (min, sec) => {
-    const totalSec = min * 60 + sec;
+    const totalSec = seconds(min, sec);
     const m = Math.floor(totalSec / 60);
     const s = totalSec % 60;
     return `${m}:${String(s).padStart(2, "0")}`;
@@ -18,9 +20,13 @@ export function createCommentary() {
   const both = (min, sec, msg) => {
     const line = `[${fmtTime(min, sec)}] ${msg}`;
     summaryLog.push(line); tickLog.push(line);
+    const at = seconds(min, sec);
+    summaryTimes.push(at); tickTimes.push(at);
   };
-  const tickOnly = (min, sec, msg) =>
+  const tickOnly = (min, sec, msg) => {
     tickLog.push(`[${fmtTime(min, sec)}] ${msg}`);
+    tickTimes.push(seconds(min, sec));
+  };
 
   const say = (templates, ...args) => {
     const t = pick(templates);
@@ -29,7 +35,13 @@ export function createCommentary() {
   const bothS = (min, sec, templates, ...args) => both(min, sec, say(templates, ...args));
   const tickS = (min, sec, templates, ...args) => tickOnly(min, sec, say(templates, ...args));
 
-  return { summaryLog, tickLog, both, tickOnly, say, bothS, tickS };
+  const sortLog = (lines, times) => lines.map((line, i) => ({ line, at: times[i] }))
+    .sort((a, b) => a.at - b.at).map(entry => entry.line);
+  const ordered = () => ({
+    log: sortLog(summaryLog, summaryTimes),
+    tickLog: sortLog(tickLog, tickTimes),
+  });
+  return { summaryLog, tickLog, both, tickOnly, say, bothS, tickS, ordered };
 }
 
 // ── STRIKING COMMENTARY ──

@@ -2,7 +2,9 @@
 import { R, RI, clamp, uid, random } from "../rng.js";
 import { WEIGHTS } from "../data.js";
 import { genFighter, avgSkill } from "../fighter.js";
-import { rankOf, stripTitle } from "../rankings.js";
+import { worldOpponent, championFighter } from "../world/fighter-profile.js";
+import { championAt } from "../championships.js";
+import { rankOf, stripTitle, divisionRankings, rankedAIContenders } from "../rankings.js";
 import { pickPromotion } from "../data/promotions.js";
 
 // Skill thresholds for each rung of the title ladder.
@@ -45,6 +47,8 @@ export function tickFightOffers(g) {
   g.roster.forEach((f) => {
     // ── Title safety net: auto-strip at 32 weeks regardless of injury/booked ──
     const div = g.divisions[f.weightClass];
+    const contenders = rankedAIContenders(g, f.weightClass);
+    const opponents = contenders.filter(c => c.rank <= 15);
     const isChamp = div && div.champ && div.champ.player && div.champ.fighterId === f.id;
     if (isChamp) {
       const lastDef = div.champ.lastDefenseWeek || f.lastFightWeek || 0;
@@ -58,15 +62,14 @@ export function tickFightOffers(g) {
     if (div && div.champ === null) {
       const r = rankOf(g, f);
       if (r != null && r <= 2 && !g.inbox.some((m) => m.type === "offer" && m.vacantTitle && m.fighterId === f.id && m.weightClass === f.weightClass)) {
-        const opp = div.list[0] || genFighter(0.9);
-        const isPlayerRank1 = r === 1;
-        const opponent = isPlayerRank1 ? opp : (div.list[1] || div.list[0] || genFighter(0.9));
+        const candidate = contenders[0];
+        const opponent = candidate ? worldOpponent(candidate.fighter, f.weightClass) : genFighter(0.9);
         const oppName = opponent.name || "Unknown";
         g.inbox.unshift({
           id: uid(), type: "offer", fighterId: f.id, expires: 4,
           tier: "Major", show: RI(80, 150) * 1000, winBonus: RI(80, 150) * 1000,
           opponent: opponent, title: true, defense: false,
-          oppRank: isPlayerRank1 ? 2 : 1, contenderId: opponent.id,
+          oppRank: candidate?.rank ?? null, contenderId: candidate?.fighter.id ?? null,
           titleTier: "Major", vacantTitle: true, weightClass: f.weightClass,
           titleText: `👑 VACANT TITLE FIGHT — ${f.weightClass} belt up for grabs!`,
           weeks: RI(4, 6),
@@ -86,16 +89,14 @@ export function tickFightOffers(g) {
       !g.inbox.some((m) => m.type === "offer" && m.defense && m.fighterId === f.id)
     ) {
       const defenseExpireWeeks = 3;
-      const c0 = div.list[0];
-      const opp = genFighter(clamp((c0.level || 1.3) + 0.05, 0.8, 1.5));
-      opp.name = c0.name; opp.archetype = c0.archetype; opp.weightClass = f.weightClass;
-      opp.record = { w: RI(10, 18), l: RI(0, 3), ko: 0, sub: 0, dec: 0 };
-      opp.campId = c0.campId || null;
-      opp.campName = c0.campName || null;
+      const candidate = contenders[0];
+      const c0 = candidate?.fighter;
+      if (!c0) return;
+      const opp = worldOpponent(c0, f.weightClass);
       g.inbox.unshift({
         id: uid(), type: "offer", fighterId: f.id, expires: defenseExpireWeeks,
         tier: "Major", show: RI(100, 220) * 1000, winBonus: RI(100, 220) * 1000,
-        opponent: opp, title: true, defense: true, oppRank: 1, contenderId: c0.id,
+        opponent: opp, title: true, defense: true, oppRank: candidate.rank, contenderId: c0.id,
         titleTier: "Major", titleText: "🛡️ MANDATORY TITLE DEFENSE", weeks: RI(4, 6),
       });
       // Push escalation warning at the same time — must appear before the offer expires
@@ -112,8 +113,8 @@ export function tickFightOffers(g) {
       g.log.unshift(
         `🛡️ Mandatory defense untuk ${f.name} tiba — tolak atau biarkan expire = title dicopot.`,
       );
+      return;
     }
-    return;
     }
 
     // FTUE: guarantee fight offer in first 2 weeks
@@ -136,7 +137,7 @@ export function tickFightOffers(g) {
             g.inbox.unshift({
               id: uid(), type: "offer", fighterId: interimChamp.id, expires: 4,
               tier: "Major", show: RI(150, 350) * 1000, winBonus: RI(150, 350) * 1000,
-              opponent: { name: currentChamp.name, archetype: currentChamp.archetype, record: currentChamp.record, weightClass: interimChamp.weightClass, campId: currentChamp.campId || null, campName: currentChamp.campName || null },
+              opponent: structuredClone(currentChamp),
               title: true, defense: false, oppRank: 0, contenderId: null,
               titleTier: "Major", titleText: "🤝 INTERIM TITLE UNIFICATION", weeks: RI(4, 6),
               unificationFor: interimChamp.id,
@@ -178,7 +179,7 @@ export function tickFightOffers(g) {
 
       if (
         rep >= 80 && r != null && r <= 3 && sk >= SKILL_GATE.premier &&
-        has("Major World Champion") && random() < 0.25
+        has("Major World Champion") && !has("Premier World Champion") && random() < 0.25
       ) {
         titleTier = "Premier";
         titleReason = `rank #${r} + juara Major + rep ${Math.round(rep)} + skill ${Math.round(sk)}`;
@@ -238,33 +239,39 @@ export function tickFightOffers(g) {
       if (random() < 0.08) { shortNotice = true; show = Math.round(show * RI(15, 20) / 10); }
 
       // Streak-based opponent selection
-      let oppIdx = r != null ? clamp(r - 2 + RI(-1, 1), 0, 14) : RI(11, 14);
-      if (f.streakL >= 2) oppIdx = clamp(oppIdx - RI(2, 4), 0, 14);
-      else if (f.streakW >= 3) oppIdx = clamp(oppIdx + RI(1, 2), 0, 14);
+      const maxOppIdx = Math.max(0, opponents.length - 1);
+      const targetRank = r != null ? r - 1 + RI(-1, 1) : RI(12, 15);
+      let oppIdx = opponents.findIndex(c => c.rank >= targetRank);
+      if (oppIdx < 0) oppIdx = maxOppIdx;
+      if (f.streakL >= 2) oppIdx = clamp(oppIdx - RI(2, 4), 0, maxOppIdx);
+      else if (f.streakW >= 3) oppIdx = clamp(oppIdx + RI(1, 2), 0, maxOppIdx);
       // Rivalry nudge: if a past opponent (count >= 2) is near oppIdx, nudge toward them
       if (f.rivalries && div) {
-        for (let i = Math.max(0, oppIdx - 3); i <= Math.min(14, oppIdx + 3); i++) {
-          const c = div.list[i];
+        for (let i = Math.max(0, oppIdx - 3); i <= Math.min(maxOppIdx, oppIdx + 3); i++) {
+          const c = opponents[i]?.fighter;
           if (c && f.rivalries[c.name]?.count >= 2) {
-            if (i > oppIdx) oppIdx = clamp(oppIdx + RI(1, 2), 0, 14);
-            else oppIdx = clamp(oppIdx - RI(1, 2), 0, 14);
+            if (i > oppIdx) oppIdx = clamp(oppIdx + RI(1, 2), 0, maxOppIdx);
+            else oppIdx = clamp(oppIdx - RI(1, 2), 0, maxOppIdx);
             break;
           }
         }
       }
 
       let opp, oppRank = null, contenderId = null;
-      if (titleTier === "Major" && div && div.champ) {
-        const worldYear = Math.floor(g.week / 48);
-        const aiScale = worldYear > 5 ? clamp(1.45 + (worldYear - 5) * 0.02, 1.45, 1.7) : 1.45;
-        opp = genFighter(aiScale); opp.name = div.champ.name; oppRank = 0;
+      const titleHolder = titleTier && championAt(div, titleTier);
+      if (titleHolder && titleHolder.fighterId !== f.id) {
+        const holder = championFighter(div, titleHolder, f.weightClass, g.roster);
+        opp = worldOpponent(holder, f.weightClass);
+        contenderId = holder.id ?? null;
+        oppRank = titleTier === "Major" ? 0
+          : divisionRankings(g, f.weightClass).find(c => c.fighter.name === titleHolder.name)?.rank ?? null;
+        opp.campId = titleHolder.campId || null; opp.campName = titleHolder.campName || null;
       } else if (div && (r != null || (f.record.w >= 2 && rep >= 20 && random() < 0.35))) {
-        const c = div.list[oppIdx];
+        const candidate = opponents[oppIdx];
+        const c = candidate?.fighter;
         if (c) {
-          opp = genFighter(clamp(c.level || 1, 0.5, 1.5));
-          opp.name = c.name; opp.archetype = c.archetype;
-          opp.campId = c.campId || null; opp.campName = c.campName || null;
-          oppRank = oppIdx + 1; contenderId = c.id;
+          opp = worldOpponent(c, f.weightClass);
+          oppRank = candidate.rank; contenderId = c.id;
         } else {
           opp = genFighter(clamp(avgSkill(f) / 60 + R(-0.08, 0.1), 0.3, 1.5));
         }
@@ -272,7 +279,7 @@ export function tickFightOffers(g) {
         opp = genFighter(clamp(avgSkill(f) / 60 + R(-0.08, 0.1), 0.3, 1.5));
       }
       opp.weightClass = f.weightClass;
-      if (!opp.record.w) opp.record = { w: RI(2, 14), l: RI(0, 5), ko: 0, sub: 0, dec: 0 };
+      if (!titleHolder && contenderId == null && !opp.record.w) opp.record = { w: RI(2, 14), l: RI(0, 5), ko: 0, sub: 0, dec: 0 };
 
       // Grudge match hype bonus: fighter rivalry OR camp rivalry → +25% purse
       let isGrudgeMatch = false;

@@ -134,7 +134,7 @@ describe('F3 — exponential asking curve', () => {
   })
 })
 
-describe('F6 — sponsor cap rep×500 fallback', () => {
+describe('F6 — reputation income cap plus sponsor contracts', () => {
   it('g.rep=50 with no sponsors: sponsorAmt capped at $15,000 (rep 30 max)', () => {
     const g = { rep: 50, sponsors: [], roster: [], coaches: [], facilities: { mats: 1, ring: 0, weights: 0, medical: 0 } }
     const { sponsorAmt } = computeMonthlyIncome(g)
@@ -154,7 +154,7 @@ describe('F6 — sponsor cap rep×500 fallback', () => {
     expect(sponsorAmt).toBe(15000)
   })
 
-  it('real sponsors bypass the cap entirely', () => {
+  it('adds uncapped sponsor contracts to the capped reputation income', () => {
     const g = {
       rep: 50,
       sponsors: [{ brand: 'FightFist Gear', rate: 30000, terms: 'placement' }],
@@ -162,7 +162,7 @@ describe('F6 — sponsor cap rep×500 fallback', () => {
     }
     const { sponsorAmt } = computeMonthlyIncome(g)
     expect(sponsorAmt).toBeGreaterThan(15000)
-    expect(sponsorAmt).toBe(30000)
+    expect(sponsorAmt).toBe(15000 + 30000)
   })
 })
 

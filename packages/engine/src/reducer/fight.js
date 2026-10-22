@@ -3,7 +3,7 @@ import { clamp, random, uid } from "../rng.js";
 import {
   PROMOTER_REL_GAIN_ACCEPT, PROMOTER_REL_LOSS_COUNTER, PROMOTER_REL_LOSS_REJECT,
 } from "./constants.js";
-import { vacateTitle, rankOf } from "../rankings.js";
+import { vacateTitle, stripTitle, rankOf } from "../rankings.js";
 import { GAME_PLANS } from "../data.js";
 
 export function reduceFight(g, action) {
@@ -17,6 +17,7 @@ export function reduceFight(g, action) {
           tier: action.tier, title: action.title,
           titleTier: action.titleTier, defense: action.defense,
           oppRank: action.oppRank, contenderId: action.contenderId,
+          playerRank: rankOf(g, nf),
           seed: Math.floor(random() * 2**31),
         };
         g.inbox = g.inbox.filter((x) => x.id !== action.messageId);
@@ -63,6 +64,7 @@ export function reduceFight(g, action) {
           tier: action.tier, title: action.title,
           titleTier: action.titleTier, defense: action.defense,
           oppRank: action.oppRank, contenderId: action.contenderId,
+          playerRank: rankOf(g, nf2),
           seed: Math.floor(random() * 2**31),
         };
         g.inbox = g.inbox.filter((x) => x.id !== action.messageId);
@@ -75,14 +77,13 @@ export function reduceFight(g, action) {
       g.inbox = g.inbox.filter((x) => x.id !== action.messageId);
       if (g.promoterRel) g.promoterRel[action.tier] = clamp((g.promoterRel[action.tier] || 30) - PROMOTER_REL_LOSS_REJECT, 0, 100);
       if (action.stripTitle) {
-        const f3 = g.roster.find((x) => x.id === action.fighterId);
-        if (f3) { f3.titles = f3.titles.filter((t) => !t.includes("Champion")); }
+        stripTitle(g, action.fighterId, action.titleTier || "Major");
       }
       break;
     }
     case "VACATE_TITLE": {
       const f = g.roster.find((x) => x.id === action.fighterId);
-      if (f) vacateTitle(g, f);
+      if (f) vacateTitle(g, f, action.titleTier || "Major");
       break;
     }
     case "SET_GAME_PLAN": {

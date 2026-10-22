@@ -41,13 +41,15 @@
 // ---------- seedable RNG (mulberry32) ----------
 // Ganti Math.random() di engine — server & client bisa reproduce fight yg sama
 export function mulberry32(seed) {
-  return function () {
+  const next = function () {
     seed |= 0;
     seed = (seed + 0x6d2b79f5) | 0;
     let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+  next.getState = () => seed >>> 0;
+  return next;
 }
 
 // Default random: seeded world RNG — satu instance untuk semua non-fight logic
@@ -70,6 +72,22 @@ export function setRNG(fn) {
 
 export function resetRNG() {
   _rng = _worldRng; // nunjuk closure yang sama — world RNG jalan terus maju
+}
+
+// Persist the world stream, never a temporary fight/test override. UID belongs
+// to the same simulation checkpoint so newly generated entities replay too.
+export function getWorldRNGState() {
+  return { state: _worldRng.getState(), nextUID: UID };
+}
+
+export function restoreWorldRNGState(saved) {
+  if (!saved || !Number.isInteger(saved.state) || saved.state < 0 || saved.state > 0xffffffff ||
+      !Number.isSafeInteger(saved.nextUID) || saved.nextUID < 1) return false;
+  const wasWorld = _rng === _worldRng;
+  _worldRng = mulberry32(saved.state);
+  UID = saved.nextUID;
+  if (wasWorld) _rng = _worldRng;
+  return true;
 }
 
 export function random() {

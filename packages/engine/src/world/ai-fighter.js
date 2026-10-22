@@ -1,4 +1,5 @@
 // AI fighter factory — consistent creation for world simulation
+import { ensureWorldProfile } from "./fighter-profile.js";
 import { R, RI, clamp, pick, uid } from "../rng.js";
 import { SKILL_MIN, SKILL_MAX, POINTS_MIN, POINTS_MAX } from "./config.js";
 import { pickRegion, pickArchetypeForRegion } from "../identity.js";
@@ -18,7 +19,7 @@ export function createAIFighter(overrides = {}) {
   const region = overrides.region || pickRegion();
   // Younger fighters tend to have lower current level but higher potential
   const ageAdjust = age <= 22 ? -0.05 : age >= 30 ? 0.05 : 0;
-  return {
+  return ensureWorldProfile({
     id: uid(),
     name: overrides.name || generateAIName(),
     region,
@@ -27,13 +28,13 @@ export function createAIFighter(overrides = {}) {
     level: clamp(baseLevel + ageAdjust, SKILL_MIN, SKILL_MAX),
     record: overrides.record || { w: RI(0, 8), l: RI(0, 6), ko: 0, sub: 0, dec: 0 },
     age,
-  };
+  }, overrides.weightClass);
 }
 
 /** Create a veteran AI fighter (former champ, higher stats) */
 export function createVeteranFighter(overrides = {}) {
   const region = overrides.region || pickRegion();
-  return {
+  return ensureWorldProfile({
     id: uid(),
     name: overrides.name || generateAIName(),
     region,
@@ -42,5 +43,5 @@ export function createVeteranFighter(overrides = {}) {
     level: overrides.level != null ? clamp(overrides.level, SKILL_MIN, SKILL_MAX) : R(0.6, 1.0),
     record: overrides.record || { w: RI(8, 18), l: RI(1, 5), ko: 0, sub: 0, dec: 0 },
     age: overrides.age != null ? overrides.age : RI(30, 37),
-  };
+  }, overrides.weightClass);
 }

@@ -94,6 +94,7 @@ function resolveSubmission(A, B, stA, stB, isTopA, gType, _subProgress, SUB_THRE
     momDelta: !finish ? (attacker === A ? 2 : -2) : 0,
     newPosition: null, finish,
     subProgress, bjjGuardProgress,
+    subAttemptsA: attacker === A ? 1 : 0, subAttemptsB: attacker === B ? 1 : 0,
   };
 
   if (!finish) {
@@ -109,6 +110,10 @@ function resolveSubmission(A, B, stA, stB, isTopA, gType, _subProgress, SUB_THRE
         CFG.BJJ_GUARD_ADV_MIN, CFG.BJJ_GUARD_ADV_MAX
       );
       result.bjjGuardProgress = bjjGuardProgress + bjjAdv;
+      if (bjjAdv > 0) {
+        if (defender === A) result.subAttemptsA++;
+        else result.subAttemptsB++;
+      }
       if (result.bjjGuardProgress >= CFG.BJJ_GUARD_THRESHOLD) {
         result.finish = { by: defender === A ? "A" : "B", how: "Submission" };
         comm.both(exMin + 1, 0, `SUBMISSION! ${defender.name} locks it from the bottom! IT'S OVER!`);

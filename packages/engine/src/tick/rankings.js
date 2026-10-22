@@ -1,30 +1,44 @@
 // Rankings domain — AI movement, rotation, player rank decay
 import { RI, clamp, R, uid } from "../rng.js";
 import { genFighter } from "../fighter.js";
+import { ensureWorldProfile } from "../world/fighter-profile.js";
+import { rankedAIContenders } from "../rankings.js";
 
 export function tickRankings(g) {
   if (!g || !g.divisions) return;
-  // AI ranking jitter
+  // Monthly ranking noise has no directional drift. The previous -8..12 roll
+  // added two points per settlement on average, pushing everyone to the cap.
   Object.values(g.divisions).forEach((d) =>
-    d.list.forEach((c) => { c.points = clamp(c.points + RI(-8, 12), 5, 120); })
+    d.list.forEach((c) => { c.points = clamp(c.points + RI(-8, 8), 5, 120); })
   );
 
   // AI fighter rotation every 48 weeks
   if (g.week % 48 === 0) {
-    Object.values(g.divisions).forEach((d) => {
-      const retireCount = 3;
-      const retired = d.list.splice(d.list.length - retireCount, retireCount);
+    Object.entries(g.divisions).forEach(([wc, d]) => {
+      // Storage order is not rank order. Rotate the lowest-ranked eligible AI,
+      // preserving every reigning champion and all other fighters' positions.
+      const champions = [d.champ, ...Object.values(d.tierChamps || {})].filter(Boolean);
+      const retired = rankedAIContenders(g, wc)
+        .filter(({ fighter }) => !champions.some(c => c.name === fighter.name ||
+          (c.fighterId != null && c.fighterId === fighter.id)))
+        .slice(-3).map(({ fighter }) => fighter);
+      const retireCount = retired.length;
+      if (!retireCount) return;
+      const retiring = new Set(retired);
+      d.list = d.list.filter(f => !retiring.has(f));
       const retiredNames = retired.map((x) => x.name).join(", ");
       for (let i = 0; i < retireCount; i++) {
         const lvl = R(0.5, 0.85);
         const nf = genFighter(lvl);
         d.list.push({
           id: uid(), name: nf.name, archetype: nf.archetype,
+          attrs: nf.attrs, traits: nf.traits, region: nf.region, age: nf.age,
           points: Math.round(R(10, 25)), level: lvl,
           record: { w: RI(0, 3), l: RI(0, 2), ko: 0, sub: 0, dec: 0 },
         });
+        ensureWorldProfile(d.list[d.list.length - 1], wc);
       }
-      g.log.unshift(`🔄 Divisi — 3 fighter pensiun diganti prospect baru. (${retiredNames})`);
+      g.log.unshift(`🔄 Divisi — ${retireCount} fighter pensiun diganti prospect baru. (${retiredNames})`);
     });
   }
 

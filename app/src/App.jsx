@@ -11,10 +11,9 @@ import { useSaveLoad } from "./hooks/useSaveLoad.js";
 import { useKeyboard } from "./hooks/useKeyboard.js";
 
 // Engine
-import { R, fmt$ } from "@ironfist/engine/rng.js";
+import { R, fmt$, getWorldRNGState } from "@ironfist/engine/rng.js";
 import { genFighter, assignAgent, scoutGrade, makeReport } from "@ironfist/engine/fighter.js";
 import { newGame } from "@ironfist/engine/state.js";
-import { checkAchievements } from "@ironfist/engine/achievements.js";
 import { CAMP_TIERS } from "@ironfist/engine/data.js";
 import { ACHIEVEMENTS } from "@ironfist/engine/data.js";
 import { generateTransferReason } from "@ironfist/engine/narrative/generators/transfer.js";
@@ -44,6 +43,7 @@ import WorldNews from "./ui/WorldNews.jsx";
 import Dynasty from "./ui/Dynasty.jsx";
 import { rememberTab, getLastTab } from "./ui/ui-utils.js";
 import { saveGame } from "./services/saveService.js";
+import { applyFightCompletion } from "./services/fightCompletion.js";
 
 // ── MAIN APP ──
 
@@ -198,19 +198,15 @@ export default function App() {
       {fightFighter?.booked && !showFightCard && (
         <FightNight key={fightFighter.id} fighter={fightFighter} staff={g.staff} done={(fx, fightCtx) => {
           setG((old) => {
-            const n = structuredClone(old);
-            fx(n);
-            let newly = [];
-            if (fightCtx) {
-              newly = checkAchievements(n, fightCtx);
-              if (newly.length > 0) {
-                const newToasts = newly.map((id) => {
-                  const a = ACHIEVEMENTS.find((x) => x.id === id);
-                  return a ? { id: a.id + "_" + Date.now(), icon: a.icon, title: a.title, desc: a.desc } : null;
-                }).filter(Boolean);
-                setToasts((prev) => [...prev, ...newToasts]);
-              }
+            const { state: n, newly } = applyFightCompletion(old, fx, fightCtx);
+            if (newly.length > 0) {
+              const newToasts = newly.map((id) => {
+                const a = ACHIEVEMENTS.find((x) => x.id === id);
+                return a ? { id: a.id + "_" + Date.now(), icon: a.icon, title: a.title, desc: a.desc } : null;
+              }).filter(Boolean);
+              setToasts((prev) => [...prev, ...newToasts]);
             }
+            n.worldRngState = getWorldRNGState();
             saveGame(saveSlot, n);
             return n;
           });

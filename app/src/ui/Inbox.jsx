@@ -199,7 +199,7 @@ export default function Inbox({ g, dispatch, setTab }) {
                     } else {
                       dispatch({
                         type: "REJECT_FIGHT", fighterId: m.fighterId, tier: m.tier,
-                        messageId: m.id, stripTitle: m.defense,
+                        messageId: m.id, stripTitle: m.defense, titleTier: m.titleTier,
                       });
                     }
                   }}
@@ -212,7 +212,7 @@ export default function Inbox({ g, dispatch, setTab }) {
                   ghost
                   onClick={() => dispatch({
                     type: "REJECT_FIGHT", fighterId: m.fighterId, tier: m.tier,
-                    messageId: m.id, stripTitle: m.defense,
+                    messageId: m.id, stripTitle: m.defense, titleTier: m.titleTier,
                   })}
                 >
                   {t("UI.reject")}

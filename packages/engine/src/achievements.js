@@ -3,6 +3,19 @@
 
 import { ACHIEVEMENTS } from "./data.js";
 
+export const isKnockout = how => how === "KO/TKO" || how === "Doctor Stoppage";
+
+export function koWinStreak(f) {
+  if (!f.fightHistory?.length) return f.koStreak || 0;
+  let streak = 0;
+  for (let i = f.fightHistory.length - 1; i >= 0; i--) {
+    const fight = f.fightHistory[i];
+    if (fight.result !== "W" || !isKnockout(fight.method)) break;
+    streak++;
+  }
+  return streak;
+}
+
 export function checkAchievements(g, context = {}) {
   // g._unlocked = Set of achievement IDs already unlocked
   if (!g._unlocked) g._unlocked = [];
@@ -17,13 +30,12 @@ export function checkAchievements(g, context = {}) {
   };
 
   const totalWins = g.roster.reduce((s, f) => s + f.record.w, 0);
-  const totalKOs = g.roster.reduce((s, f) => s + f.record.ko, 0);
-  const totalSubs = g.roster.reduce((s, f) => s + f.record.sub, 0);
 
-  if (context.fightResult?.won && !context.fightResult?.draw) add("first_win");
-  if (context.fightResult?.how === "KO/TKO" || context.fightResult?.how === "Doctor Stoppage") add("first_ko");
-  if (context.fightResult?.how === "Submission") add("first_sub");
-  if (context.fightResult?.titleWon) add("first_title");
+  const won = context.fightResult?.won && !context.fightResult?.draw;
+  if (won) add("first_win");
+  if (won && isKnockout(context.fightResult.how)) add("first_ko");
+  if (won && context.fightResult.how === "Submission") add("first_sub");
+  if (won && context.fightResult.titleWon) add("first_title");
   if (totalWins >= 5) add("five_wins");
   if (totalWins >= 10) add("ten_wins");
   if (g.legacy >= 1000) add("legacy_1k");

@@ -96,13 +96,13 @@ describe("generateFightNarrative", () => {
     expect(story.keyMoments.some((m) => m.type === "flash_ko")).toBe(true);
   });
 
-  it("detects close decision when score margin < 10", () => {
+  it("detects close decision from a one-point judges margin", () => {
     const roundLogs = [
       makeRound({ scoreA: 10, scoreB: 9 }),
       makeRound({ scoreA: 9, scoreB: 10 }),
       makeRound({ scoreA: 10, scoreB: 9 }),
     ];
-    // totalScoreA = 29, totalScoreB = 28, diff = 1 < 10
+    // Judges score the split rounds 29-28: a one-point decision.
     const story = generateFightNarrative(makeFighter(), makeOpponent(), roundLogs, makeResult({ won: true }));
     expect(story.keyMoments.some((m) => m.type === "close_decision")).toBe(true);
   });
@@ -147,8 +147,8 @@ describe("generateFightNarrative", () => {
     expect(story.rating).toBeLessThanOrEqual(5);
   });
 
-  it("includes title fight in narrative text when booked fight is a title fight", () => {
-    const fighter = makeFighter({ booked: { title: true, opponent: { name: "Challenger" } } });
+  it("describes a successful title defense as retaining the championship", () => {
+    const fighter = makeFighter({ booked: { title: true, defense: true, opponent: { name: "Challenger" } } });
     const roundLogs = [makeRound({}), makeRound({}), makeRound({})];
     const story = generateFightNarrative(fighter, makeOpponent(), roundLogs, makeResult({ won: true }));
     expect(story.narrative).toContain("remains the champion");
@@ -161,7 +161,7 @@ describe("generateFightNarrative", () => {
       makeRound({ landA: 8, landB: 7, scoreA: 9, scoreB: 10 }),
     ];
     const story = generateFightNarrative(makeFighter({ name: "Dominator" }), makeOpponent(), roundLogs, makeResult({ won: true }));
-    expect(story.narrative).toContain("came out strong");
+    expect(story.narrative).toContain("Dominator took the early rounds");
   });
 });
 
@@ -205,42 +205,23 @@ describe("detectSignatureMoments", () => {
     expect(moments.some((m) => m.id === "flash_ko")).toBe(true);
   });
 
-  it("detects Comeback KO: KO in round 3+ after losing early rounds", () => {
+  it("detects Comeback KO after the eventual winner lost the preceding rounds", () => {
     const roundLogs = [
-      makeRound({ scoreA: 8, scoreB: 10 }),  // lost round 1
-      makeRound({ scoreA: 8, scoreB: 10 }),  // lost round 2 (earlyScore = (10-8)+(10-8) = 4... wait)
-      makeRound({ scoreA: 10, scoreB: 8 }),  // won round 3
+      makeRound({ scoreA: 30, scoreB: 45 }),
+      makeRound({ scoreA: 20, scoreB: 50 }),
+      makeRound({ scoreA: 25, scoreB: 30, finish: { by: "A", how: "KO/TKO" } }),
     ];
-    // earlyScore = (scoreB-scoreA) for first 2 = (10-8)+(10-8) = 4... that's not > 5
-    // Let me recalculate: earlyScore = (10-8) + (10-8) = 2 + 2 = 4. Need > 5.
-    // I need bigger score differences in first 2 rounds
-    const roundLogs2 = [
-      makeRound({ scoreA: 8, scoreB: 10 }),  // lost round 1 clearly
-      makeRound({ scoreA: 7, scoreB: 10 }),  // lost round 2 clearly (earlyScore = (10-8)+(10-7) = 5... NOT > 5)
-    ];
-    // Hmm, "earlyScore > 5" means strictly greater than 5.
-    // (10-8)+(10-7) = 5 — not > 5
-    // Need (10-8)+(10-6) = 6 > 5, so round 2 scoreA = 6
-    const roundLogs3 = [
-      makeRound({ scoreA: 8, scoreB: 10 }),
-      makeRound({ scoreA: 6, scoreB: 10 }), // (10-8)+(10-6) = 6 > 5
-    ];
-    // For rnd >= 3, need a 3rd round with KO
-    // Add the KO round
-    roundLogs3.push(makeRound({ scoreA: 10, scoreB: 7, finish: { how: "KO/TKO" } }));
-    
     const moments = detectSignatureMoments(
-      makeFighter({ name: "Comeback King" }),
-      roundLogs3,
+      makeFighter({ name: "Comeback King" }), roundLogs,
       makeResult({ won: true, how: "KO/TKO", r: 3 }),
     );
-    expect(moments.some((m) => m.id === "comeback_ko")).toBe(true);
+    expect(moments.some(m => m.id === "comeback_ko")).toBe(true);
   });
 
   it("detects Submission Clinic: 3+ sub attempts", () => {
     const roundLogs = [
-      makeRound({ log: ["submission attempt", "submission attempt"] }),
-      makeRound({ log: ["submission attempt"] }),
+      makeRound({ subAttemptsA: 2 }),
+      makeRound({ subAttemptsA: 1 }),
     ];
     // subAttempts = 3
     const moments = detectSignatureMoments(makeFighter(), roundLogs, makeResult());
@@ -257,9 +238,9 @@ describe("detectSignatureMoments", () => {
     expect(moments.some((m) => m.id === "beatdown")).toBe(true);
   });
 
-  it("detects Huge Upset: beating #3 contender", () => {
+  it("detects Huge Upset when a lower-ranked fighter beats a top-three contender", () => {
     const roundLogs = [makeRound({})];
-    const fighter = makeFighter({ name: "Underdog", booked: { oppRank: 2 } });
+    const fighter = makeFighter({ name: "Underdog", booked: { oppRank: 2, playerRank: 10 } });
     const moments = detectSignatureMoments(fighter, roundLogs, makeResult({ won: true }));
     expect(moments.some((m) => m.id === "upset")).toBe(true);
   });
@@ -275,20 +256,10 @@ describe("detectSignatureMoments", () => {
     expect(moments2.some((m) => m.id === "upset")).toBe(false);
   });
 
-  it("does NOT detect Fight of the Night when score diff is too large", () => {
-    const roundLogs = [
-      makeRound({ landA: 20, landB: 2, scoreA: 10, scoreB: 8 }),
-      makeRound({ landA: 18, landB: 3, scoreA: 10, scoreB: 7 }),
-    ];
-    // total score diff = (10-8)+(10-7) = 5... that's < 15
-    // But total land = 43 < 40 threshold, so let me increase
-    const roundLogs2 = [
-      makeRound({ landA: 25, landB: 2, scoreA: 30, scoreB: 8 }),
-      makeRound({ landA: 20, landB: 3, scoreA: 28, scoreB: 7 }),
-    ];
-    // totalLand = 50 > 40, but score diff = (30-8)+(28-7) = 43 > 15
-    const moments = detectSignatureMoments(makeFighter(), roundLogs2, makeResult({ r: 3 }));
-    expect(moments.some((m) => m.id === "fotn")).toBe(false);
+  it("does not award Fight of the Night for a one-sided sweep", () => {
+    const roundLogs = [1, 2, 3].map(() => makeRound({ landA: 25, landB: 10, scoreA: 30, scoreB: 8 }));
+    const moments = detectSignatureMoments(makeFighter(), roundLogs, makeResult({ r: 3 }));
+    expect(moments.some(m => m.id === "fotn")).toBe(false);
   });
 });
 

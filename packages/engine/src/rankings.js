@@ -1,8 +1,9 @@
 import { R, RI, clamp, pick, random, uid } from "./rng.js";
 import { WEIGHTS, RIVAL_TRAITS } from "./data.js";
 import { genFighter } from "./fighter.js";
+import { ensureWorldProfile, aiChampion } from "./world/fighter-profile.js";
 import { genBio } from "./fighter.js";
-import { recordEra } from "./world/history.js";
+import { TITLE_NAMES, championAt, removeChampion } from "./championships.js";
 
 // ── Archetype → RIVAL_TRAITS spec mapping ──
 const ARCH_TO_SPEC = {
@@ -89,49 +90,79 @@ export function genDivisions(rivals = []) {
       const baseWins = Math.round(20 - r * 0.8);
       list.push({
         id: uid(), name: nf.name, archetype: nf.archetype,
+        attrs: nf.attrs, traits: nf.traits, region: nf.region, age: nf.age,
         points: Math.round(100 - r * 5 + R(-2, 2)), level: lvl,
         record: { w: baseWins + RI(-2, 2), l: RI(0, clamp(r - 3, 0, 6)), ko: Math.round((baseWins + 2) * 0.35), sub: Math.round((baseWins + 2) * 0.20), dec: 0 },
       });
       list[list.length - 1].record.dec = list[list.length - 1].record.w - list[list.length - 1].record.ko - list[list.length - 1].record.sub;
     }
+    list.forEach(f => ensureWorldProfile(f, w.name));
     // Assign camp markings after all 15 fighters are generated
     if (rivals.length > 0) {
       assignCampMarkings(list, rivals);
     }
-    d[w.name] = { champ: { name: list[0].name, player: false, fighterId: null }, list };
+    d[w.name] = { champ: aiChampion(list[0], w.name), tierChamps: {}, list };
   });
   return d;
 }
 
+/** The shared order for UI, eligibility, matchmaking and world simulation.
+ * Returns references to fighters, without sorting/mutating the storage array.
+ * The Major champion is separate (rank 0). Ties: AI first, then stable ID/name.
+ */
+export function divisionRankings(g, weightClass) {
+  const div = g.divisions?.[weightClass];
+  if (!div) return [];
+  const roster = (g.roster || []).filter(f => f.weightClass === weightClass);
+  const playerNames = new Set(roster.map(f => f.name));
+  const entries = (div.list || [])
+    .filter(f => f.name !== div.champ?.name && !playerNames.has(f.name))
+    .map(fighter => ({ fighter, player: false, points: fighter.points || 0 }));
+  roster.filter(f => f.rankPoints > 0 && !(div.champ?.player && div.champ.fighterId === f.id))
+    .forEach(fighter => entries.push({ fighter, player: true, points: fighter.rankPoints }));
+  return entries.sort((a, b) => {
+    const byPoints = b.points - a.points || Number(a.player) - Number(b.player);
+    if (byPoints) return byPoints;
+    const keyA = String(a.fighter.id ?? a.fighter.name);
+    const keyB = String(b.fighter.id ?? b.fighter.name);
+    return keyA < keyB ? -1 : keyA > keyB ? 1 : 0;
+  }).map((entry, i) => ({ ...entry, rank: i + 1 }));
+}
+
+export function rankedAIContenders(g, weightClass) {
+  return divisionRankings(g, weightClass).filter(entry => !entry.player);
+}
+
 export function rankOf(g, f) {
-  const div = g.divisions && g.divisions[f.weightClass];
-  if (!div || !(f.rankPoints > 0)) return null;
-  const better = div.list.filter((c) => c.points > f.rankPoints).length;
-  return better < 15 ? better + 1 : null;
+  const div = g.divisions?.[f.weightClass];
+  if (div?.champ?.player && div.champ.fighterId === f.id) return 0;
+  const entry = divisionRankings(g, f.weightClass).find(entry => entry.player && entry.fighter.id === f.id);
+  return entry?.rank <= 15 ? entry.rank : null;
 }
 
-export function vacateTitle(g, f) {
-  const div = g.divisions && g.divisions[f.weightClass];
-  if (div && div.champ && div.champ.player && div.champ.fighterId === f.id) {
-    // ── Era ends if active ──
-    if (div.era) {
-      g.inbox.unshift({ id: uid(), type: "world", severity: "major", title: `The ${div.era.championName} Era Ends`, body: `${div.era.championName}'s era of dominance in ${f.weightClass} has come to an end after ${div.era.defenses} title defenses.` });
-      recordEra(g, div.era.championName, f.weightClass, div.era.startedWeek, g.week, div.era.defenses);
-      div.era = null;
-    }
-    div.champ = null;
-    g.log.unshift(`👑 Title ${f.weightClass} kosong — akan diperebutkan.`);
-  }
+export function vacateTitle(g, f, tier = null) {
+  // Scan all divisions: callers may already have changed f.weightClass.
+  Object.entries(g.divisions || {}).forEach(([wc, div]) => {
+    const tiers = tier ? [tier] : Object.keys(TITLE_NAMES);
+    tiers.forEach(t => {
+      const champ = championAt(div, t);
+      if (champ?.player && champ.fighterId === f.id) {
+        removeChampion(g, wc, t);
+        g.log.unshift(`👑 Title ${t} ${wc} kosong — akan diperebutkan.`);
+      }
+    });
+  });
 }
 
-export function stripTitle(g, fighterId) {
-  const f = g.roster.find((x) => x.id === fighterId);
+export function stripTitle(g, fighterId, tier = "Major") {
+  const f = g.roster.find(x => x.id === fighterId);
   if (!f) return;
-  vacateTitle(g, f);
-  f.titles = f.titles.filter((t) => t !== "Major World Champion");
+  const champ = championAt(g.divisions?.[f.weightClass], tier);
+  if (!champ?.player || champ.fighterId !== f.id) return;
+  vacateTitle(g, f, tier);
   f.morale = clamp(f.morale - 15, 0, 100);
   g.rep = clamp(g.rep - 5, 0, 100);
-  g.log.unshift(`🚨 ${f.name} dicopot dari title (mandatory defense diabaikan). Rep -5.`);
+  g.log.unshift(`🚨 ${f.name} dicopot dari title ${tier} (mandatory defense diabaikan). Rep -5.`);
 }
 
 // ---------- promoter relationship ----------
