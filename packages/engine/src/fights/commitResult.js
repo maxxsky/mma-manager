@@ -6,7 +6,7 @@ import { TITLE_CELEBRATION_DELAY_WEEKS, TITLE_SPONSOR_DELAY_WEEKS } from "../eve
 import { TITLE_NAMES, titleTier, championAt, setChampion, removeChampion } from "../championships.js";
 import { avgSkill } from "../fighter.js";
 import { FIGHT_INJURY_TIERS, FIGHT_INJURY_LABELS } from "../data.js";
-import { fightInjuryChance, fightInjuryHowKey, medicalInjuryMult } from "./injury.js";
+import { fightInjuryChance, fightInjuryHowKey, medicalInjuryMult, checkInjuryProne } from "./injury.js";
 import { applyFightAmbition } from "../ambitions.js";
 import { fightTotals } from "../fight/report.js";
 import { fightPurse } from "../fight/purse.js";
@@ -284,6 +284,7 @@ export function commitFightResult(g, fighter, result) {
     // Track injury stats
     f.injuryCount = (f.injuryCount || 0) + 1;
     if (tier.tier >= 2) f.seriousInjuries = (f.seriousInjuries || 0) + 1;
+    checkInjuryProne(g, f);
 
     // Career history entry for notable injuries
     if (tier.tier >= 2) {

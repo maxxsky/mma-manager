@@ -13,6 +13,11 @@ export const TRAITS = {
   Showboat: "Popularity +5 per finish, defense -5%",
 };
 export const TRAIT_KEYS = Object.keys(TRAITS);
+// Traits earned during a career, never rolled at generation (P2 #36).
+export const ACQUIRED_TRAITS = {
+  "Injury Prone": "Risiko cedera latihan dan fight 2x — didapat setelah 4 cedera serius",
+};
+export const INJURY_PRONE_SERIOUS_INJURIES = 4;
 export const TRAIT_CONFLICTS = {
   "Glass Jaw": ["Iron Chin"], "Iron Chin": ["Glass Jaw"],
   Cautious: ["Explosive"], Explosive: ["Cautious"],

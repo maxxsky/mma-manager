@@ -4,7 +4,7 @@
 export { ATTRS, ATTR_LABEL } from "./data/attributes.js";
 export { WEIGHTS } from "./data/weights.js";
 export { ARCHETYPES, ARCH_COLOR, REGIONS, REGION_COLOR, POTENTIAL_TIERS } from "./data/archetypes.js";
-export { TRAITS, TRAIT_KEYS, TRAIT_CONFLICTS, AMBITIONS, AMBITION_KEYS } from "./data/traits.js";
+export { TRAITS, TRAIT_KEYS, TRAIT_CONFLICTS, AMBITIONS, AMBITION_KEYS, ACQUIRED_TRAITS, INJURY_PRONE_SERIOUS_INJURIES } from "./data/traits.js";
 export { GAME_PLANS, TRAINING, INTENSITY } from "./data/training.js";
 export { COACH_SPECS, COACH_NAMES, COACH_PERSONALITIES } from "./data/coaches.js";
 export { AGENT_TYPES } from "./data/agents.js";

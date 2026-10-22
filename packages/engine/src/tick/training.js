@@ -4,6 +4,7 @@ import { ATTRS, ATTR_LABEL, TRAINING, INTENSITY, CAMP_TIERS, SPARRING_MATCH } fr
 import { coachBonus, facBonus } from "../economy.js";
 import { pushInboxEvent } from "../events.js";
 import { MOTIVATOR_RECOVERY_MULT } from "../ambitions.js";
+import { checkInjuryProne } from "../fights/injury.js";
 
 function calcSparringMult(f, g) {
   if (!g.roster || g.roster.length <= 1) return 1;
@@ -173,10 +174,7 @@ export function tickTraining(g) {
         f.ceilings[attr] = clamp(f.ceilings[attr] - reduction, f.attrs[attr], 99);
         g.log.unshift(`💀 ${f.name} mengalami kerusakan permanen: ${ATTR_LABEL[attr]} -${reduction} (sekarang ${Math.round(f.attrs[attr])}).`);
       }
-      if (f.seriousInjuries >= 4 && !f.traits?.includes("Injury Prone")) {
-        f.traits.push("Injury Prone");
-        g.log.unshift(`⚠️ ${f.name} kini memiliki trait "Injury Prone" — 4+ cedera serius. Risiko cedera naik permanen.`);
-      }
+      checkInjuryProne(g, f);
       f.morale = clamp(f.morale - (sev.tier >= 2 ? 14 : 8), 0, 100);
       g.log.unshift(`🚑 ${f.name}: ${sev.label} (${sev.weeks} minggu, biaya ${fmt$(sev.cost)}).`);
     }

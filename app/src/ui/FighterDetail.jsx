@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { fmt$ } from "@ironfist/engine/rng.js";
-import { ARCH_COLOR, TRAINING, INTENSITY, TRAITS, GAME_PLANS } from "@ironfist/engine/data.js";
+import { ARCH_COLOR, TRAINING, INTENSITY, TRAITS, ACQUIRED_TRAITS, GAME_PLANS } from "@ironfist/engine/data.js";
 import { avgSkill, tierOf } from "@ironfist/engine/fighter.js";
 import { reducer } from "@ironfist/engine/reducer.js";
 import { getStoryTags, getLifecyclePhase } from "@ironfist/engine/career.js";
@@ -86,7 +86,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
           <Eyebrow>{t("FIGHTER.profile")}</Eyebrow>
           <div style={{ marginBottom: 14 }}>
             {f.traits?.map((t) => (
-              <Tag key={t} color={t.includes("Glass") || t.includes("Chinny") ? T.neg : T.ember} title={TRAITS[t] || ""}>{t}</Tag>
+              <Tag key={t} color={t.includes("Glass") || t.includes("Chinny") ? T.neg : T.ember} title={TRAITS[t] || ACQUIRED_TRAITS[t] || ""}>{t}</Tag>
             ))}
           </div>
           {f.ambition && (

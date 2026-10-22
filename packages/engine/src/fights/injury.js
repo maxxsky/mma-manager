@@ -3,6 +3,7 @@
 import { clamp } from "../rng.js";
 import {
   FIGHT_INJURY_CHANCE, FIGHT_INJURY_DMG_REF, FIGHT_INJURY_DMG_MULT_MIN, FIGHT_INJURY_DMG_MULT_MAX,
+  INJURY_PRONE_SERIOUS_INJURIES,
 } from "../data.js";
 
 // Engine finish names → injury table keys.
@@ -27,4 +28,13 @@ export function fightInjuryChance(g, f, result) {
   if (f.traits?.includes("Cautious")) traitMult *= 0.85;
   if (f.traits?.includes("Injury Prone")) traitMult *= 2.0;
   return { key, chance: clamp(base * dmgMult * medicalInjuryMult(g) * traitMult, 0, 0.95), dmgMult };
+}
+
+/** Grant Injury Prone once a fighter reaches the serious-injury count, from
+ * any source. Was only checked inside the training-injury branch (P2 #36). */
+export function checkInjuryProne(g, f) {
+  if ((f.seriousInjuries || 0) < INJURY_PRONE_SERIOUS_INJURIES || f.traits?.includes("Injury Prone")) return;
+  if (!f.traits) f.traits = [];
+  f.traits.push("Injury Prone");
+  g.log.unshift(`⚠️ ${f.name} kini memiliki trait "Injury Prone" — ${INJURY_PRONE_SERIOUS_INJURIES}+ cedera serius. Risiko cedera naik permanen.`);
 }

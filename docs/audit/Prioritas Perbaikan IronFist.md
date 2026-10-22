@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#35, dan P5 #53–#54 selesai (37 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#35 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#36, dan P5 #53–#54 selesai (38 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#36 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -66,7 +66,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | 33 | Pinjaman dan penjualan darurat | EK4 | Pinjaman baru perlu kalau ekonomi sudah ketat (setelah P3). Penjualan darurat jual aset nyata. **Penjualan darurat selesai; pinjaman masih ditunda** |
 | 34 | Mentor | FI6 | Perbesar dan tampilkan, atau buang. **Selesai: dibuang** |
 | 35 | Kepribadian promotor | DU8 | Beri efek nyata (purse, tipe lawan) atau buang. **Selesai: diberi efek purse** |
-| 36 | Trait Injury Prone | FI4 | Bisa didapat, atau hapus pengecekannya |
+| 36 | Trait Injury Prone | FI4 | Bisa didapat, atau hapus pengecekannya. **Selesai: bisa didapat dari cedera mana pun** |
 | 37 | `SET_SPONSOR` lama | EK5 | Hapus |
 
 ## P3 — Balancing (setelah P0 dan P1)
@@ -477,6 +477,12 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Pemasangan promotor di akhir tick dan untuk mandatory defense sekarang meneruskan fighter, rank, dan streak. Sebelumnya konteksnya kosong, sehingga pembobotan Grassroots selalu aktif.
   - Efek "tipe lawan" dari saran tidak dikerjakan; efek purse dipilih karena sederhana dan langsung terlihat.
   - Validasi: test baru `promoter-personality.test.js` (3 test). `npm test` root: **826 test app + 28 test server lulus**. Build dan harness dunia lulus; harness ekonomi sama seperti sebelumnya (500 dan 1861 bertahan, 3222 bangkrut minggu 56).
+
+- **22 Oktober 2026: P2 #36 selesai — Injury Prone.**
+  - Koreksi atas FI4: trait ini sebenarnya bisa didapat (setelah 4 cedera serius), tapi pengecekannya hanya berjalan di cabang cedera latihan. Kalau cedera serius ke-4 terjadi di fight, trait baru diberikan pada cedera latihan berikutnya, atau tidak sama sekali.
+  - `checkInjuryProne` (`fights/injury.js`) dipanggil setelah cedera latihan maupun cedera fight. Ambang tetap 4 (`INJURY_PRONE_SERIOUS_INJURIES`). Efeknya ×2 risiko di latihan dan, sejak #22, di fight.
+  - Trait ini tidak ada di tabel deskripsi `TRAITS`, jadi tooltip-nya kosong. Ditambahkan tabel `ACQUIRED_TRAITS` (trait yang didapat selama karier, tidak di-roll saat fighter dibuat), dipakai tooltip di detail fighter.
+  - Validasi: test baru `injury-prone.test.js` (2 test; test cedera fight gagal di kode lama). `npm test` root: **828 test app + 28 test server lulus**. Build dan harness dunia lulus.
 
 ## Urutan kerja yang disarankan
 
