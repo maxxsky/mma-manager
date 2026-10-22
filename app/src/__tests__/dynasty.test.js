@@ -432,7 +432,7 @@ describe("checkHallOfFame", () => {
       titleDefenses: 3,
       milestoneFirstTitle: true,
     });
-    // score: 15*2 + 30(champ) + 20(Major) + 3*5(def) + 10(firstTitle) = 30+30+20+15+10 = 105 >= 50
+    // score: 15*2 + 40(Major) + 3*5(def) = 85 >= 80
     const result = checkHallOfFame(f, g);
 
     expect(result).not.toBeNull();
@@ -440,7 +440,7 @@ describe("checkHallOfFame", () => {
     expect(result.record).toBe("15-3");
     expect(result.titles).toContain("Major World Champion");
     expect(result.defenses).toBe(3);
-    expect(result.highlights).toContain("World Champion");
+    expect(result.highlights).toContain("Major World Champion");
     expect(result.highlights).toContain("3x Title Defenses");
   });
 
@@ -451,7 +451,7 @@ describe("checkHallOfFame", () => {
       titles: [],
       titleDefenses: 0,
     });
-    // score: 3*2 = 6 < 50
+    // score: 3*2 = 6 < 80
     const result = checkHallOfFame(f, g);
     expect(result).toBeNull();
   });
@@ -460,10 +460,10 @@ describe("checkHallOfFame", () => {
     const g = makeGame();
     const f = makeFighter({
       record: { w: 12, l: 2, ko: 10, sub: 0, dec: 2 },
-      titles: ["Champion"],
+      titles: ["Major World Champion"],
       titleDefenses: 2,
     });
-    // score: 12*2 + 30(champ) + 2*5(def) + 10(ko>=10) = 24+30+10+10 = 74 >= 50
+    // score: 12*2 + 40(Major) + 2*5(def) + 10(ko>=10) = 84 >= 80
     const result = checkHallOfFame(f, g);
     expect(result).not.toBeNull();
     expect(result.highlights).toContain("Knockout Artist");
@@ -474,12 +474,27 @@ describe("checkHallOfFame", () => {
     const f = makeFighter({
       name: "Sub King",
       record: { w: 10, l: 2, ko: 0, sub: 8, dec: 2 },
-      titles: ["Champion"],
+      titles: ["Major World Champion"],
+      titleDefenses: 2,
     });
-    // score: 10*2 + 30(champ) + 10(sub>=8) = 20+30+10 = 60 >= 50
+    // score: 10*2 + 40(Major) + 2*5(def) + 10(sub>=8) = 80 >= 80
     const result = checkHallOfFame(f, g);
     expect(result).not.toBeNull();
     expect(result.highlights).toContain("Submission Specialist");
+  });
+
+  it("ten wins and a Regional belt is no longer enough (P3 #44)", () => {
+    const g = makeGame();
+    const f = makeFighter({ record: { w: 10, l: 2, ko: 3, sub: 1, dec: 6 }, titles: ["Regional Champion"], milestoneFirstTitle: true });
+    // score: 10*2 + 8(Regional) = 28 < 80; was 20 + 30 + 10 = 60 >= 50
+    expect(checkHallOfFame(f, g)).toBeNull();
+  });
+
+  it("a long career below world level can still get in", () => {
+    const g = makeGame();
+    const f = makeFighter({ record: { w: 22, l: 6, ko: 6, sub: 2, dec: 14 }, titles: ["National Champion"], titleDefenses: 5 });
+    // score: 22*2 + 15(National) + 5*5(def) = 84 >= 80
+    expect(checkHallOfFame(f, g)).not.toBeNull();
   });
 
   it("does NOT induct the same fighter twice", () => {
@@ -521,10 +536,11 @@ describe("checkHallOfFame", () => {
     const g = makeGame();
     const f = makeFighter({
       record: { w: 10, l: 0, ko: 0, sub: 0, dec: 10 },
-      titles: ["Champion"],
+      titles: ["Major World Champion"],
+      titleDefenses: 1,
       milestone10Wins: true,
     });
-    // score: 10*2 + 30(champ) + 15(milestone10Wins) = 20+30+15 = 65 >= 50
+    // score: 10*2 + 40(Major) + 5(def) + 15(milestone10Wins) = 80 >= 80; without the bonus 65
     const result = checkHallOfFame(f, g);
     expect(result).not.toBeNull();
   });
@@ -533,12 +549,13 @@ describe("checkHallOfFame", () => {
     const g = makeGame();
     const f = makeFighter({
       record: { w: 8, l: 4, ko: 2, sub: 1, dec: 5 },
-      titles: ["Champion"],
+      titles: ["Major World Champion"],
+      titleDefenses: 1,
       giantKills: 3,
       streakW: 2,
       milestone3Losses: true,
     });
-    // score: 8*2 + 30(champ) + 15(giantKills=3) + 5(comeback) = 16+30+15+5 = 66 >= 50
+    // score: 8*2 + 40(Major) + 5(def) + 15(giantKills=3) + 5(comeback) = 81 >= 80; without them 61
     const result = checkHallOfFame(f, g);
     expect(result).not.toBeNull();
   });

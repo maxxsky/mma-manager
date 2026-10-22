@@ -332,6 +332,20 @@ function initWorldRecords() {
 
 // ── HALL OF FAME ──
 
+export const HALL_OF_FAME_THRESHOLD = 80;
+// Points for the highest belt a fighter held. Old saves may carry generic names.
+const TITLE_POINTS = [
+  [/Premier/, 50], [/Major|World/, 40], [/Minor/, 25], [/National|Interim/, 15], [/Champion/, 8],
+];
+function bestTitle(titles = []) {
+  let best = null;
+  for (const name of titles) {
+    const hit = TITLE_POINTS.find(([re]) => re.test(name));
+    if (hit && (!best || hit[1] > best.points)) best = { name, points: hit[1] };
+  }
+  return best;
+}
+
 export function checkHallOfFame(f, g) {
   if (!g._hallOfFame) g._hallOfFame = [];
   if (g._hallOfFame.some(h => h.id === f.id)) return null; // already inducted
@@ -339,17 +353,18 @@ export function checkHallOfFame(f, g) {
   let score = 0;
   const wins = f.record?.w || 0;
   score += wins * 2;
-  if (f.titles?.some(t => t.includes("Champion"))) score += 30;
-  if (f.titles?.includes("Major World Champion")) score += 20;
+  // Highest belt held, by tier (P3 #44): any belt used to count 30, so ten
+  // wins plus a Regional belt was enough for the Hall of Fame.
+  const best = bestTitle(f.titles);
+  score += best?.points || 0;
   score += (f.titleDefenses || 0) * 5;
-  if (f.milestoneFirstTitle) score += 10;
   if ((f.milestone10Wins)) score += 15;
   if ((f.record?.ko || 0) >= 10) score += 10;
   if ((f.record?.sub || 0) >= 8) score += 10;
   if (f.giantKills >= 3) score += 15;
   if (f.milestone3Losses && f.streakW >= 2) score += 5; // comeback
 
-  const threshold = 50; // minimum Hall of Fame score
+  const threshold = HALL_OF_FAME_THRESHOLD;
 
   if (score >= threshold) {
     const entry = {
@@ -361,7 +376,7 @@ export function checkHallOfFame(f, g) {
     };
     if ((f.record?.ko || 0) >= 10) entry.highlights.push("Knockout Artist");
     if ((f.record?.sub || 0) >= 8) entry.highlights.push("Submission Specialist");
-    if (f.milestoneFirstTitle) entry.highlights.push("World Champion");
+    if (best) entry.highlights.push(best.name);
     if ((f.titleDefenses || 0) >= 3) entry.highlights.push(`${f.titleDefenses}x Title Defenses`);
     g._hallOfFame.push(entry);
     if (g._dynasty) g._dynasty.hallOfFamers = g._hallOfFame.map(h => h.name);

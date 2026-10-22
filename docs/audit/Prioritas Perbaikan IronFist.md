@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, seluruh P2 #26–#37, P3 #40 dan #43, dan P5 #53–#54 selesai (41 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#37, #40, #43, dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, seluruh P2 #26–#37, P3 #40, #43, #44, dan P5 #53–#54 selesai (42 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#37, #40, #43, #44, dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -79,7 +79,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | 41 | Intensitas Hard: gain lebih tinggi atau risiko lebih rendah sampai layak dipilih | FI1 |
 | 42 | Kurangi atau tampilkan pengali training yang tidak terlihat | FI1 |
 | 43 | Pergantian juara AI lebih jarang. **Selesai** | DU7 |
-| 44 | Ambang Hall of Fame lebih tinggi | SV5 |
+| 44 | Ambang Hall of Fame lebih tinggi. **Selesai** | SV5 |
 | 45 | Event: kurangi "Division Shake-up", hilangkan dobel dengan "New Champion", tambah variasi template | DU9 |
 
 ## P4 — UI, bahasa, aksesibilitas
@@ -499,6 +499,12 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Sesudah: 0,32 pergantian per divisi per tahun (masa jabatan rata-rata sekitar 3 tahun), 1,8 dari 8 divisi dalam 8 bulan pertama. Test statistik (40 seed × 5 defense): laju kalah per defense harus 10–22%; kode lama 24,75%.
   - Catatan: kedelapan divisi masih melakukan defense di minggu yang sama (tiap 24 minggu), jadi pergantian tetap cenderung berkelompok. Belum diubah.
   - Validasi: test baru `ai-title-defense.test.js` (2 test). `npm test` root: **836 test app + 28 test server lulus**. Harness dunia lulus.
+
+- **22 Oktober 2026: P3 #44 selesai — ambang Hall of Fame.**
+  - Dulu: sabuk apa pun +30 (+20 lagi untuk Major), bonus gelar pertama +10, ambang 50. Sepuluh menang + sabuk Regional = 60, langsung lolos.
+  - Sekarang: hanya sabuk tertinggi yang dihitung, berdasarkan tier (Premier 50, Major 40, Minor 25, National/Interim 15, Regional atau nama lama lain 8). Bonus gelar pertama dihapus (hitungan ganda). Ambang 80 (`HALL_OF_FAME_THRESHOLD`). Highlight "World Champion" yang dulu muncul untuk gelar pertama apa pun diganti nama sabuk tertinggi yang sebenarnya.
+  - Contoh: 10 menang + Regional = 28 (tidak lolos); juara Major 15-3 dengan 3 defense = 85; juara National 22 menang dengan 5 defense = 84.
+  - Validasi: dua test baru dan empat fixture lama disesuaikan di `dynasty.test.js`. `npm test` root: **838 test app + 28 test server lulus**. Harness dunia lulus.
 
 ## Urutan kerja yang disarankan
 
