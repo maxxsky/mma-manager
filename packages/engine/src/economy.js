@@ -47,7 +47,6 @@ export function computeMonthlyIncome(g) {
   // Sponsor income — mirrors tickSettlement exactly
   let sponsorAmt = Math.round(Math.min(g.rep, 30) * 500);
   if (g.sponsors && g.sponsors.length > 0) {
-    sponsorAmt = 0;
     const hasChampion = g.roster?.some((f) => f.titles?.includes("Major World Champion"));
     g.sponsors.forEach((sp) => {
       const brand = SPONSOR_BRANDS.find((b) => b.name === sp.brand);
