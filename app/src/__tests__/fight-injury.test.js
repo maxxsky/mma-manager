@@ -81,3 +81,20 @@ describe('commitFightResult injury roll', () => {
     expect(commit(game(5), lossBy('KO/TKO', ref), roll).injury).toBeNull()
   })
 })
+
+describe('fight injury physio cost (P1 #24, CA4)', () => {
+  it('uses the same medical discount as training injuries: none at level 1, -5% per level', () => {
+    for (const med of [1, 2, 4]) {
+      const g = game(med)
+      const f = g.roster[0]
+      f.injury = null
+      g.inbox = []
+      setRNG(() => 0) // injure, lowest severity tier
+      commitFightResult(g, { id: f.id, booked: { opponent: { name: 'Opp', level: 0.8 }, show: 1000, winBonus: 500 } }, lossBy('KO/TKO', 40))
+      resetRNG()
+      const msg = g.inbox.find((m) => m.type === 'injury' && m.fighterId === f.id)
+      const physio = msg.choices.find((c) => c.choice === 'physio')
+      expect(physio.physioCost).toBe(Math.round(1500 * 0.5 * (1 - (med - 1) * 0.05)))
+    }
+  })
+})

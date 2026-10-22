@@ -6,7 +6,7 @@ import { TITLE_CELEBRATION_DELAY_WEEKS, TITLE_SPONSOR_DELAY_WEEKS } from "../eve
 import { TITLE_NAMES, titleTier, championAt, setChampion, removeChampion } from "../championships.js";
 import { avgSkill } from "../fighter.js";
 import { FIGHT_INJURY_TIERS, FIGHT_INJURY_LABELS } from "../data.js";
-import { fightInjuryChance, fightInjuryHowKey } from "./injury.js";
+import { fightInjuryChance, fightInjuryHowKey, medicalInjuryMult } from "./injury.js";
 import { fightTotals } from "../fight/report.js";
 import { fightPurse } from "../fight/purse.js";
 import { aiChampion } from "../world/fighter-profile.js";
@@ -287,7 +287,7 @@ export function commitFightResult(g, fighter, result) {
     }
 
     // Injury inbox event — allows physio/push/rest choices
-    const medMult = 1 - (g.facilities?.medical || 1 - 1) * 0.05;
+    const medMult = medicalInjuryMult(g);
     const physioCost = Math.round(tier.totalCost * 0.5 * medMult);
     g.inbox.unshift({
       id: uid(), type: "injury", fighterId: f.id,
