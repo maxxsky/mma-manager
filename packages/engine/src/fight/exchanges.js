@@ -24,9 +24,11 @@ export function pickExchange(pos, A, B, planA, planB) {
     pool.push("strike", "strike", "strike", "strike");
     pool.push("power");
     pool.push("clinch", "clinch");
-    const tdWeightA = A.attrs.wrestling > 55 || planA === "Take It Down" ? 4 : 1;
-    const tdWeightB = B.attrs.wrestling > 55 || planB === "Take It Down" ? 4 : 1;
-        // Archetype expression: add behavior-weighted entries
+    const tdWeightA = planA === "Keep It Standing" ? 1 : planA === "Take It Down" ? 4 : 2;
+    const tdWeightB = planB === "Keep It Standing" ? 1 : planB === "Take It Down" ? 4 : 2;
+    if (planA === "Keep It Standing") pool.push("strike", "strike");
+    if (planB === "Keep It Standing") pool.push("strike", "strike");
+    // Archetype expression: add behavior-weighted entries
     for (let i = 0; i < (behaviorA.strikeWeight || 0); i++) pool.push("strike");
     for (let i = 0; i < (behaviorB.strikeWeight || 0); i++) pool.push("strike");
     for (let i = 0; i < (behaviorA.clinchWeight || 0); i++) pool.push("clinch");

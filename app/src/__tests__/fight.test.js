@@ -684,12 +684,16 @@ describe('Task 59 — Corner kontekstual (N5)', () => {
     const A = prepFighter(createTestFighter({ attrs: { striking: 70, wrestling: 30, bjj: 20, cardio: 50, strength: 60, chin: 45, footwork: 40, fightIQ: 38 } }))
     const B = prepFighter(createTestFighter({ name: 'OppBuffer', attrs: { striking: 30, wrestling: 30, bjj: 30, cardio: 50, strength: 40, chin: 30, footwork: 30, fightIQ: 30 } }))
 
-    // Force a scenario with damage to trigger cut
-    const base = simRound(1, A, B, 100, 100, 'Balanced', 'go', 0, 0, 0)
-    const targetCut = simRound(1, A, B, 100, 100, 'Balanced', 'target_cut', 0, 0, 0)
-
-    // target_cut should cause more cuts on opponent
-    expect(targetCut.cutB).toBeGreaterThanOrEqual(base.cutB)
+    // Compare matched seeds across many rounds: one unseeded second draw
+    // cannot establish whether targeting a cut increases its probability.
+    let baseCuts = 0, targetedCuts = 0
+    for (let seed = 1; seed <= 1000; seed++) {
+      useSeed(seed)
+      baseCuts += simRound(1, A, B, 100, 100, 'Balanced', 'neutral', 0, 0, 0).cutB
+      useSeed(seed)
+      targetedCuts += simRound(1, A, B, 100, 100, 'Balanced', 'target_cut', 0, 0, 0).cutB
+    }
+    expect(targetedCuts).toBeGreaterThan(baseCuts)
   })
 })
 

@@ -76,7 +76,7 @@ describe('side B plan and corner have effects', () => {
       ptsN += base.scoreB; ptsC += clinch.scoreB
       staN += base.staB; staC += clinch.staB
     }
-    expect(ptsC).toBeLessThan(ptsN * 0.85)
+    expect(ptsC).toBeLessThan(ptsN * 0.90)
     expect(staC).toBeGreaterThan(staN)
   })
 

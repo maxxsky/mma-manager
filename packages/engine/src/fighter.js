@@ -18,8 +18,8 @@ export function genFighter(level, regionName, tierWeights = null) {
   const rd = REGIONS[region];
   const archetype = pickArchetypeForRegion(region);
   const attrs = genAttrs(level);
-  Object.entries(ARCHETYPES[archetype]).forEach(([k, m]) => {
-    attrs[k] = clamp(Math.round(attrs[k] * m), 15, 95);
+  ATTRS.forEach((k) => {
+    attrs[k] = clamp(Math.round(attrs[k] * (ARCHETYPES[archetype][k] ?? 1)), 15, 95);
   });
   // Roll potential tier once for this fighter. Callers may pass a shifted
   // weight table — see prestige.js — so a camp's history can influence the

@@ -41,7 +41,7 @@ jobs:
         env:
           TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mma_manager_test
 
-      # Many-fight checks: side bias, decisions vs rounds. Fails on drift.
+      # Side bias, decisions, archetype 45-55% bands and trait mirrors.
       - name: Fight harness
         run: npm run fight-balance
 

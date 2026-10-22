@@ -22,7 +22,7 @@ function buildFighter(id, archetype, ovr, rng) {
   return prepFighter({ id, name: id, archetype, age: 26, morale: 60, traits: [], attrs })
 }
 
-// AI plan and corner on both sides, including neutral in round 1.
+// The same AI plan and corner rules on both sides, including round 1.
 function aiFight(A, B, seed, totalRounds = 3) {
   const planA = autoGamePlan(A, B)
   const planB = autoGamePlan(B, A)
@@ -79,7 +79,22 @@ describe('side swap: the same fighter wins about as often from either side', () 
     expect(share).toBeLessThan(0.53)
   })
 
-  it.todo('identical fighters with Warrior, Explosive or Cautious win about half from either side (P0 #3)')
+  for (const trait of ['Warrior', 'Explosive', 'Cautious']) {
+    it(`mirrored fighters with ${trait} win about half from either side`, () => {
+      let wins = 0
+      const n = 2000
+      for (let i = 0; i < n; i++) {
+        const A = buildFighter('A', ARCHS[i % ARCHS.length], 65, mulberry32(3719 + i))
+        A.traits = [trait]
+        const B = { ...A, id: 'B', name: 'B' }
+        const r = runFight(A, B, 'Balanced', () => 'neutral', 9151 * i + 1, 3,
+          { planB: 'Balanced', cornerPolicyB: () => 'neutral' })
+        wins += Number(r.winner === 'A')
+      }
+      expect(wins / n).toBeGreaterThan(0.46)
+      expect(wins / n).toBeLessThan(0.54)
+    })
+  }
 })
 
 describe('decisions follow the rounds across archetypes and fight lengths', () => {

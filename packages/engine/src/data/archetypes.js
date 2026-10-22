@@ -1,7 +1,7 @@
 // Fighter archetypes and regions
 export const ARCHETYPES = {
   Boxer: { striking: 1.22, footwork: 1.18, wrestling: 1.05, bjj: 0.80 },
-  "Muay Thai": { striking: 1.08, bjj: 0.80, wrestling: 0.95, footwork: 1.00, clinch: 1.15, cardio: 0.90 },
+  "Muay Thai": { striking: 1.08, bjj: 0.80, wrestling: 0.95, footwork: 1.00, cardio: 0.90 },
   "Wrestler": { wrestling: 1.18, strength: 1.00, striking: 0.75, bjj: 0.90, footwork: 0.80, cardio: 0.97 },
   "BJJ Specialist": { bjj: 1.15, wrestling: 1.05, striking: 0.70, footwork: 0.80, fightIQ: 1.05 },
   "All-Rounder": { fightIQ: 1.10, striking: 1.00, wrestling: 1.00, bjj: 1.00 },

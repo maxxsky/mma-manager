@@ -86,7 +86,7 @@ describe("getArchetypeBehavior", () => {
   it("All-Rounder has adaptabilityBonus but no weight modifiers", () => {
     const b = getArchetypeBehavior(makeFighter({ archetype: "All-Rounder" }));
     expect(b.style).toBe("Adaptive Fighter");
-    expect(b.adaptabilityBonus).toBe(0.05);
+    expect(b.adaptabilityBonus).toBe(0.055);
     // All-Rounder should NOT have weight modifiers that skew exchange pools
     expect(b.strikeWeight).toBeUndefined();
     expect(b.clinchWeight).toBeUndefined();

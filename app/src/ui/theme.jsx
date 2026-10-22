@@ -1,6 +1,7 @@
 import React from "react";
 import { clamp } from "@ironfist/engine/rng.js";
 import { REGION_COLOR } from "@ironfist/engine/data/archetypes.js";
+import { avgSkill } from "@ironfist/engine/fighter.js";
 
 /* =============================================================================
    IRONFIST DESIGN SYSTEM — theme.jsx
@@ -143,7 +144,7 @@ export const Mono = ({ name, color, size = 44, champ, region, titleTier }) => {
 
 // OVR badge — synced with fighter avgSkill
 export const OVR = ({ f, size = 40 }) => {
-  const avg = f.attrs ? Math.round(Object.values(f.attrs).reduce((s, v) => s + v, 0) / Object.keys(f.attrs).length) : 0;
+  const avg = f.attrs ? avgSkill(f) : 0;
   return <Ovr v={avg} size={size} />;
 };
 export const Ovr = ({ v, size = 40 }) => (

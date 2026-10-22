@@ -1,5 +1,5 @@
 // Clinch resolution — clinch exchanges with Muay Thai bonuses
-import { R, clamp, random } from "../rng.js";
+import { R, random } from "../rng.js";
 import * as CFG from "./config.js";
 import { effAttr } from "../fight.js";
 import { muayThaiMult, muayThaiDmg } from "./trait-effects.js";
@@ -12,10 +12,14 @@ export function resolveClinch(exType, A, B, stA, stB, side, matchup, comm, exMin
   const isThaiB = muayThaiMult(B) > 1;
   const outA = effAttr(A, "striking", stA, {}) * side.aggA * muayThaiMult(A) * (1 + (matchup.aClinch || 0));
   const outB = effAttr(B, "striking", stB, {}) * side.aggB * muayThaiMult(B) * (1 + (matchup.bClinch || 0));
-  const la = Math.round(outA * R(CFG.CLINCH_STRIKE_MIN, CFG.CLINCH_STRIKE_MAX) * (side.exposedB ?? 1));
-  const lb = Math.round(outB * R(CFG.CLINCH_STRIKE_MIN, CFG.CLINCH_STRIKE_MAX) * (side.exposedA ?? 1));
-  const dmgB = la * muayThaiDmg(A);
-  const dmgA = lb * muayThaiDmg(B);
+  // Pummelling and strength limit clean clinch hits, just as footwork limits
+  // open striking. Raw striking used to land 20-40 hits in one exchange.
+  const defA = (effAttr(A, "wrestling", stA) + effAttr(A, "strength", stA)) / 2;
+  const defB = (effAttr(B, "wrestling", stB) + effAttr(B, "strength", stB)) / 2;
+  const la = Math.round(outA / (defB + CFG.CLINCH_DEF_DIVISOR) * R(CFG.CLINCH_STRIKE_MIN, CFG.CLINCH_STRIKE_MAX) * (side.exposedB ?? 1));
+  const lb = Math.round(outB / (defA + CFG.CLINCH_DEF_DIVISOR) * R(CFG.CLINCH_STRIKE_MIN, CFG.CLINCH_STRIKE_MAX) * (side.exposedA ?? 1));
+  const dmgB = la * muayThaiDmg(A) * effAttr(A, "strength", stA) / CFG.STR_MULT;
+  const dmgA = lb * muayThaiDmg(B) * effAttr(B, "strength", stB) / CFG.STR_MULT;
 
   if (la + lb > 0) {
     const descA = isThaiA ? "knees & elbows" : "dirty boxing";
@@ -53,7 +57,7 @@ export function resolveClinch(exType, A, B, stA, stB, side, matchup, comm, exMin
 
   return {
     dmgA, dmgB,
-    bodyDmgA: lb * 0.5, bodyDmgB: la * 0.5,
+    bodyDmgA: dmgA * 0.5, bodyDmgB: dmgB * 0.5,
     legDmgA: 0, legDmgB: 0,
     landA: la, landB: lb,
     ptsA: Math.round(la * 1.2), ptsB: Math.round(lb * 1.2),

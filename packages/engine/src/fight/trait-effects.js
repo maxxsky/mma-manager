@@ -39,7 +39,7 @@ export function warriorBonus(f, ownPts, oppPts) {
   return f.traits?.includes("Warrior") && ownPts < oppPts ? 1.15 : 1;
 }
 
-/** Muay Thai: clinch damage bonus (1.4x) */
+/** Muay Thai: clinch volume bonus (1.3x) */
 export function muayThaiMult(f) {
   return f.archetype === "Muay Thai" ? 1.30 : 1;
 }

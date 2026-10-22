@@ -13,11 +13,9 @@
 //      same fighter wins about as often from side A as from side B.
 //   3. Decisions: the decision winner did not win fewer rounds than the loser,
 //      except when a 10-8 round evened the scorecard.
-// Reported only (target for P0 #7, not enforced yet):
-//   4. Archetype win rate at equal OVR. Target 45-55%.
-//
-// Fighters here have no traits. Trait effects (Warrior, Explosive, Cautious)
-// are not measured yet.
+//   4. Archetype win rate at equal OVR, 45-55% overall and separately
+//      by OVR and fight length. Individual matchups can have style edges.
+//   5. Mirror fighters carrying Warrior, Explosive or Cautious.
 //
 // Usage:  node tools/fight-balance.mjs [scale]
 //   node tools/fight-balance.mjs        # default sample sizes
@@ -29,10 +27,12 @@ import { ATTRS } from "../packages/engine/src/data/attributes.js";
 import { ARCHETYPES } from "../packages/engine/src/data/archetypes.js";
 
 const SCALE = Number(process.argv[2] || 1);
+if (!Number.isInteger(SCALE) || SCALE < 1) throw new Error("scale must be a positive integer");
 const ARCHS = Object.keys(ARCHETYPES);
 const PLANS = ["Balanced", "Take It Down", "Keep It Standing", "Finish It", "Survive & Outpoint"];
-const CORNERS = ["neutral", "go", "save", "body", "clinch"];
+const CORNERS = ["neutral", "go", "save", "body", "target_cut", "stop_bleed", "clinch", "empty_tank"];
 const OVR_LEVELS = [50, 65, 80];
+const ROUND_COUNTS = [3, 5];
 
 const MIRROR_PER_COMBO = 2000 * SCALE;
 const SWAP_PER_PAIR_LEVEL = 400 * SCALE;
@@ -55,7 +55,7 @@ function buildFighter(id, archetype, ovr, rng) {
 
 const ovrOf = (f) => ATTRS.reduce((s, k) => s + f.attrs[k], 0) / ATTRS.length;
 
-// Both sides use the same AI corner policy, including neutral in round 1.
+// Use the same AI policy for both sides, including round 1 (P0 #5).
 function aiPolicyA(planA, totalRounds) {
   return (_res, r, st) => aiCorner({
     rnd: r, totalRounds, staOwn: st.staA, staOpp: st.staB,
@@ -97,7 +97,7 @@ const pct = (x) => (x * 100).toFixed(1).padStart(5) + "%";
 const t0 = Date.now();
 console.log(`Fight harness — scale ${SCALE}\n`);
 console.log(`1. Mirror: identical fighters, same plan and corner, ${MIRROR_PER_COMBO} fights per cell. Side A win %`);
-console.log("   " + "".padEnd(20) + CORNERS.map((c) => c.padStart(8)).join(""));
+console.log("   " + "".padEnd(20) + CORNERS.map((c) => c.padStart(12)).join(""));
 
 let mirrorWinsA = 0, mirrorTotal = 0;
 let mirrorWorst = { share: 0.5, label: "" };
@@ -120,39 +120,49 @@ for (const plan of PLANS) {
     if (Math.abs(share - 0.5) > Math.abs(mirrorWorst.share - 0.5)) mirrorWorst = { share, label: `${plan} / ${corner}` };
     mirrorWinsA += winsA;
     mirrorTotal += MIRROR_PER_COMBO;
-    cells.push(pct(share).padStart(8));
+    cells.push(pct(share).padStart(12));
   }
   console.log("   " + plan.padEnd(20) + cells.join(""));
 }
 
 // --- 2. side swap and 4. archetype matrix ------------------------------------
 // Each sample plays the same pair twice with the same seed: X as A, then X as B.
-console.log(`\n2. Side swap: different fighters, AI corners, ${SWAP_PER_PAIR_LEVEL * OVR_LEVELS.length} fights per side per pair`);
+console.log(`\n2. Side swap: different fighters, AI corners, ${SWAP_PER_PAIR_LEVEL * OVR_LEVELS.length * ROUND_COUNTS.length} fights per side per pair`);
 console.log("   pair".padEnd(34) + "X wins as A   X wins as B   gap");
 
 const archWins = Object.fromEntries(ARCHS.map((a) => [a, { w: 0, n: 0 }]));
+const strata = Object.fromEntries(ROUND_COUNTS.flatMap((r) => OVR_LEVELS.map((o) => [
+  `${r}r/${o}`, Object.fromEntries(ARCHS.map((a) => [a, { w: 0, n: 0 }]))
+])));
 let swapWinsA = 0, swapTotal = 0, swapWorst = { gap: 0, label: "" };
 let ovrGapMax = 0;
 for (let xi = 0; xi < ARCHS.length; xi++) {
   for (let yi = xi + 1; yi < ARCHS.length; yi++) {
     const X = ARCHS[xi], Y = ARCHS[yi];
     let xWinsAsA = 0, xWinsAsB = 0, n = 0;
-    for (const ovr of OVR_LEVELS) {
-      for (let i = 0; i < SWAP_PER_PAIR_LEVEL; i++) {
-        const rng = mulberry32(99991 * (xi * 7 + yi) + 31 * ovr + i);
-        const fx = buildFighter("X", X, ovr, rng);
-        const fy = buildFighter("Y", Y, ovr, rng);
-        ovrGapMax = Math.max(ovrGapMax, Math.abs(ovrOf(fx) - ovrOf(fy)));
-        const seed = 50021 * i + ovr * 13 + xi * 101 + yi;
-        const r1 = aiFight(fx, fy, seed);
-        const r2 = aiFight(fy, fx, seed);
-        trackDecision(r1);
-        trackDecision(r2);
-        if (r1.winner === "A") { xWinsAsA++; swapWinsA++; }
-        if (r2.winner === "B") xWinsAsB++;
-        else swapWinsA++;
-        n++;
-        swapTotal += 2;
+    for (const rounds of ROUND_COUNTS) {
+      for (const ovr of OVR_LEVELS) {
+        for (let i = 0; i < SWAP_PER_PAIR_LEVEL; i++) {
+          const rng = mulberry32(99991 * (xi * 7 + yi) + 31 * ovr + i);
+          const fx = buildFighter("X", X, ovr, rng);
+          const fy = buildFighter("Y", Y, ovr, rng);
+          ovrGapMax = Math.max(ovrGapMax, Math.abs(ovrOf(fx) - ovrOf(fy)));
+          const seed = 50021 * i + ovr * 13 + xi * 101 + yi;
+          const r1 = aiFight(fx, fy, seed, rounds);
+          const r2 = aiFight(fy, fx, seed, rounds);
+          const xWins = Number(r1.winner === "A") + Number(r2.winner === "B");
+          strata[`${rounds}r/${ovr}`][X].w += xWins;
+          strata[`${rounds}r/${ovr}`][X].n += 2;
+          strata[`${rounds}r/${ovr}`][Y].w += 2 - xWins;
+          strata[`${rounds}r/${ovr}`][Y].n += 2;
+          trackDecision(r1);
+          trackDecision(r2);
+          if (r1.winner === "A") { xWinsAsA++; swapWinsA++; }
+          if (r2.winner === "B") xWinsAsB++;
+          else swapWinsA++;
+          n++;
+          swapTotal += 2;
+        }
       }
     }
     const a = xWinsAsA / n, b = xWinsAsB / n, gap = a - b;
@@ -170,11 +180,15 @@ console.log(`   winner won fewer rounds: ${decisions.fewerRounds} (${pct(decisio
   `of which not explained by a 10-8 round: ${decisions.unexplained}`);
 
 // --- 4. archetype ------------------------------------------------------------------
-console.log("\n4. Archetype win rate at equal OVR, all opponents, both sides (report only, target 45-55% for P0 #7)");
+console.log("\n4. Archetype win rate at equal OVR, all opponents, both sides (target 45-55%)");
 for (const a of ARCHS) {
   const s = archWins[a].w / archWins[a].n;
   const mark = s >= 0.45 && s <= 0.55 ? "  " : " !";
   console.log(`  ${mark} ${a.padEnd(18)}${pct(s)}`);
+}
+console.log("\n   rounds/OVR".padEnd(20) + ARCHS.map((a) => a.padStart(16)).join(""));
+for (const [key, results] of Object.entries(strata)) {
+  console.log(`   ${key.padEnd(17)}` + ARCHS.map((a) => pct(results[a].w / results[a].n).padStart(16)).join(""));
 }
 
 // --- bands -------------------------------------------------------------------------
@@ -209,6 +223,36 @@ const BANDS = [
   },
 ];
 
+for (const arch of ARCHS) {
+  const band = (label, results) => {
+    const w = results.reduce((sum, x) => sum + x[arch].w, 0);
+    const n = results.reduce((sum, x) => sum + x[arch].n, 0);
+    BANDS.push({ label: `${arch}: ${label}`, value: w / n, min: 0.45, max: 0.55, show: pct,
+      reason: "Archetype drift at equal OVR. Check the matchup matrix and phase balance." });
+  };
+  band("all OVRs / rounds", [archWins]);
+  for (const rounds of ROUND_COUNTS) band(`${rounds} rounds`, OVR_LEVELS.map((ovr) => strata[`${rounds}r/${ovr}`]));
+  for (const ovr of OVR_LEVELS) band(`OVR ${ovr}`, ROUND_COUNTS.map((rounds) => strata[`${rounds}r/${ovr}`]));
+}
+
+console.log("\n5. Trait mirrors, identical choices on both sides");
+let traitTotal = 0;
+for (const trait of ["Warrior", "Explosive", "Cautious"]) {
+  let wins = 0;
+  const n = 3000 * SCALE;
+  for (let i = 0; i < n; i++) {
+    const A = buildFighter("A", ARCHS[i % ARCHS.length], OVR_LEVELS[i % OVR_LEVELS.length], mulberry32(3719 + i));
+    A.traits = [trait];
+    const B = { ...A, id: "B", name: "B" };
+    const result = runFight(A, B, "Balanced", () => "neutral", 9151 * i + 1, 3,
+      { planB: "Balanced", cornerPolicyB: () => "neutral" });
+    wins += Number(result.winner === "A");
+  }
+  traitTotal += n;
+  BANDS.push({ label: `Trait mirror: ${trait}`, value: wins / n, min: 0.48, max: 0.52, show: pct,
+    reason: "An identical trait gives one side an advantage." });
+}
+
 console.log("\n" + "=".repeat(70));
 let failures = 0;
 for (const b of BANDS) {
@@ -220,8 +264,8 @@ for (const b of BANDS) {
     console.log(`      ${b.reason}`);
   }
 }
-console.log(`\nnote  ${mirrorTotal + swapTotal} fights in ${((Date.now() - t0) / 1000).toFixed(1)}s. ` +
-  "Fighters have no traits; trait effects are not measured.");
+console.log(`\nnote  ${mirrorTotal + swapTotal + traitTotal} fights in ${((Date.now() - t0) / 1000).toFixed(1)}s. ` +
+  "Archetype matrix excludes traits and weight cuts; trait mirrors are checked separately.");
 console.log("=".repeat(70));
 console.log(failures === 0 ? "FIGHTS OK — every band held." : `FIGHT DRIFT — ${failures} band(s) out of range. Read the reasons above.`);
 process.exit(failures === 0 ? 0 : 1);

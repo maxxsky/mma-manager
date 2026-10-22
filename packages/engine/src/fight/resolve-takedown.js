@@ -14,20 +14,20 @@ export function resolveTakedown(exType, A, B, stA, stB, side, matchup, comm, exM
   }
 }
 
-// Shooter bonus: the "Take It Down" plan helps; a "tdd" corner (defend
-// takedowns) makes the fighter less committed to shooting.
+// Shooting is helped by "Take It Down", reduced by "Keep It Standing" or
+// a defensive "tdd" corner. Staying upright trades offense for defense.
 function shotBonus(plan, corner) {
-  return (plan === "Take It Down" ? 0.18 : 0) + (corner === "tdd" ? -0.10 : 0);
+  return (plan === "Take It Down" ? 0.18 : plan === "Keep It Standing" ? -0.12 : 0) + (corner === "tdd" ? -0.10 : 0);
 }
 
-// Defender bonus from a "tdd" corner.
-function sprawlBonus(corner) {
-  return corner === "tdd" ? 0.10 : 0;
+// Defender bonus from the standing plan or a "tdd" corner.
+function sprawlBonus(corner, plan) {
+  return (corner === "tdd" ? 0.10 : 0) + (plan === "Keep It Standing" ? 0.10 : 0);
 }
 
 function resolveTakedownByA(A, B, stA, stB, side, matchup, comm, exMin, exSec) {
   const tdBonus = (matchup.aTD || 0) + shotBonus(side.planA, side.cornerA);
-  const tdDefBonus = -((matchup.bTDDef || 0) + sprawlBonus(side.cornerB));
+  const tdDefBonus = -((matchup.bTDDef || 0) + sprawlBonus(side.cornerB, side.planB));
   const p = clamp(CFG.TD_BASE_CHANCE + (effAttr(A, "wrestling", stA, {}) - effAttr(B, "wrestling", stB, {})) / CFG.TD_SKILL_DIVISOR + tdBonus + tdDefBonus, CFG.TD_MIN_CHANCE, CFG.TD_MAX_CHANCE);
 
   if (random() < p) {
@@ -62,7 +62,7 @@ function resolveTakedownByA(A, B, stA, stB, side, matchup, comm, exMin, exSec) {
 
 function resolveTakedownByB(A, B, stA, stB, side, matchup, comm, exMin, exSec) {
   const bTDBonus = (matchup.bTD || 0) + shotBonus(side.planB, side.cornerB);
-  const aTDDefBonus = (matchup.aTDDef || 0) + sprawlBonus(side.cornerA);
+  const aTDDefBonus = (matchup.aTDDef || 0) + sprawlBonus(side.cornerA, side.planA);
   const pB = clamp(CFG.TD_BASE_CHANCE + (effAttr(B, "wrestling", stB, {}) - effAttr(A, "wrestling", stA, {})) / CFG.TD_SKILL_DIVISOR + bTDBonus - aTDDefBonus, CFG.TD_MIN_CHANCE, CFG.TD_MAX_CHANCE);
 
   if (random() < pB) {

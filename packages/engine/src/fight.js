@@ -13,6 +13,7 @@
 
 import { R, RI, clamp, random, mulberry32, setRNG } from "./rng.js";
 import { ATTRS } from "./data.js";
+import { getArchetypeBehavior } from "./archetype-expression.js";
 import * as CFG from "./fight/config.js";
 import { matchupMods } from "./fight/matchup.js";
 import { pickExchange } from "./fight/exchanges.js";
@@ -48,7 +49,7 @@ export function effAttr(f, k, sta, mods) {
   let v = f.attrs[k] * (CFG.STA_BASE_WEIGHT + CFG.STA_SCALE_WEIGHT * (sta / 100));
   if (k === "chin") v = chinModifier(f, v);
   if (k === "footwork") v = footworkModifier(f, v);
-  return v * (mods?.[k] || 1);
+  return v * (mods?.[k] || 1) * (1 + (getArchetypeBehavior(f).adaptabilityBonus || 0));
 }
 
 // ── AUTO GAME PLAN ──
@@ -144,7 +145,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
 
   let subProgress = 0;
   let bjjGuardProgress = 0;
-  const SUB_THRESHOLD = (A.archetype === "BJJ Specialist" || B.archetype === "BJJ Specialist") ? CFG.SUB_THRESHOLD_BJJ : CFG.SUB_THRESHOLD_BASE;
+  const SUB_THRESHOLD = CFG.SUB_THRESHOLD_BASE;
 
   comm.both(0, 5, `Round ${rnd} — bell rings! ${A.name} vs ${B.name}!`);
   comm.tickOnly(0, 10, `${A.name} in the center of the cage.`);

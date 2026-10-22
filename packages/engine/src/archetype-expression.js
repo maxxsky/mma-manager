@@ -1,53 +1,49 @@
 // ============================================================
-//   ARCHETYPE EXPRESSION — Identity through behavior, not mechanics
-//   No new combat math. No new archetypes. Existing systems only.
+//   ARCHETYPE EXPRESSION — Style tendencies and adaptation bonuses
 // ============================================================
 
 import { clamp } from "./rng.js";
 
 // ── ARCHETYPE EXPRESSION (pickExchange modifiers) ──
 
+const behaviors = {
+  Boxer: {
+    style: "Distance Manager",
+    aggressionBias: -0.05,      // Slightly less aggressive — picks shots
+    tdDefBonus: 0.10,           // Better takedown defense
+    strikeWeight: 2,            // Extra striking exchanges in pool
+    description: "Controls distance with jabs and footwork. Patient, technical striker."
+  },
+  "Muay Thai": {
+    style: "Pressure Fighter",
+    aggressionBias: 0.08,       // More aggressive — constant pressure
+    clinchWeight: 2,            // Extra clinch exchanges in pool
+    bodyDamageBonus: 0.15,      // More body damage
+    description: "Relentless pressure. Knees, elbows, body attacks. Breaks opponents down."
+  },
+  Wrestler: {
+    style: "Chain Wrestler",
+    aggressionBias: 0.10,       // Aggressive takedown pursuit
+    tdWeight: 2,                // Extra takedown attempts
+    topControlBonus: 0.10,      // Better position maintenance
+    description: "Chain takedowns. Relentless pressure against the cage. Ground control."
+  },
+  "BJJ Specialist": {
+    style: "Guard Player",
+    sweepWeight: 2,             // Extra sweep attempts
+    subWeight: 1,               // Extra submission attempts
+    bottomGameBonus: 0.10,      // Better from bottom position
+    description: "Dangerous from every position. Guard attacks, sweeps, submissions. Never safe."
+  },
+  "All-Rounder": {
+    style: "Adaptive Fighter",
+    adaptabilityBonus: 0.055,   // Effective attributes in every phase (P0 #7)
+    description: "No single style. Adapts to opponent. Complete martial artist."
+  },
+};
+
 export function getArchetypeBehavior(fighter) {
-  const arch = fighter?.archetype;
-  if (!arch) return {};
-
-  const behaviors = {
-    Boxer: {
-      style: "Distance Manager",
-      aggressionBias: -0.05,      // Slightly less aggressive — picks shots
-      tdDefBonus: 0.10,           // Better takedown defense
-      strikeWeight: 2,            // Extra striking exchanges in pool
-      description: "Controls distance with jabs and footwork. Patient, technical striker."
-    },
-    "Muay Thai": {
-      style: "Pressure Fighter",
-      aggressionBias: 0.08,       // More aggressive — constant pressure
-      clinchWeight: 2,            // Extra clinch exchanges in pool
-      bodyDamageBonus: 0.15,      // More body damage
-      description: "Relentless pressure. Knees, elbows, body attacks. Breaks opponents down."
-    },
-    Wrestler: {
-      style: "Chain Wrestler",
-      aggressionBias: 0.10,       // Aggressive takedown pursuit
-      tdWeight: 2,                // Extra takedown attempts
-      topControlBonus: 0.10,      // Better position maintenance
-      description: "Chain takedowns. Relentless pressure against the cage. Ground control."
-    },
-    "BJJ Specialist": {
-      style: "Guard Player",
-      sweepWeight: 2,             // Extra sweep attempts
-      subWeight: 1,               // Extra submission attempts
-      bottomGameBonus: 0.10,      // Better from bottom position
-      description: "Dangerous from every position. Guard attacks, sweeps, submissions. Never safe."
-    },
-    "All-Rounder": {
-      style: "Adaptive Fighter",
-      adaptabilityBonus: 0.05,    // Slight bonus to all actions
-      description: "No single style. Adapts to opponent. Complete martial artist."
-    },
-  };
-
-  return behaviors[arch] || {};
+  return behaviors[fighter?.archetype] || {};
 }
 
 // ── ARCHETYPE EVOLUTION (age-based identity shifts) ──

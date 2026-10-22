@@ -15,11 +15,14 @@ describe('Regression — Fight Engine (seed=12345)', () => {
     const A = prepFighter(fighterA)
     const B = prepFighter(fighterB)
     const result = simRound(1, A, B, 100, 100, 'Balanced', 'neutral', 0)
-    // Deterministic output — if this fails, cut mechanism may have changed
+    // P0 #7 makes this mismatch end in a submission. Replaying the same seed
+    // must reproduce the entire result, including damage and commentary.
     expect(result.winner).toBe('A')
     expect(result.scoreA).toBeGreaterThan(0)
     expect(result.scoreB).toBeGreaterThan(0)
-    expect(result.finish).toBeNull()
+    expect(result.finish).toEqual({ by: 'A', how: 'Submission' })
+    useSeed(12345)
+    expect(simRound(1, A, B, 100, 100, 'Balanced', 'neutral', 0)).toEqual(result)
   })
 
   it('produces deterministic damage at seed 12345', () => {

@@ -26,7 +26,7 @@ export function resolveGround(exType, A, B, stA, stB, position, matchup, subProg
 
 function resolveGNP(A, B, isTopA, gType, matchup, position, comm, exMin, exSec) {
   const g = GROUND[gType] || GROUND.guard;
-  const gnpMult = g.topGNP + (matchup.aGNP || 0) + (matchup.bGNP || 0);
+  const gnpMult = g.topGNP + ((isTopA ? matchup.aGNP : matchup.bGNP) || 0);
   const dmg = R(CFG.GNP_DMG_MIN, CFG.GNP_DMG_MAX) * gnpMult;
   const attacker = isTopA ? A : B;
   const result = {
@@ -69,10 +69,10 @@ function resolveSubmission(A, B, stA, stB, isTopA, gType, _subProgress, SUB_THRE
   }
 
   const posBonus = gType === "backMount" ? CFG.BACK_MOUNT_BONUS : gType === "mount" ? CFG.MOUNT_BONUS : gType === "sideControl" ? CFG.SIDE_CONTROL_BONUS : CFG.GUARD_BONUS;
-  const subMod = (matchup.aSub || 0) + (matchup.bSub || 0);
+  const subMod = (isTopA ? matchup.aSub : matchup.bSub) || 0;
   const adv = clamp(
-    (effAttr(attacker, "bjj", attackerSta, {}) * 0.8 + effAttr(attacker, "strength", attackerSta, {}) * 0.2 + posBonus + subMod * CFG.SUB_MOD_SCALE)
-    - (effAttr(defender, "bjj", defenderSta, {}) * 0.5 + effAttr(defender, "fightIQ", defenderSta, {}) * 0.25),
+    (effAttr(attacker, "bjj", attackerSta, {}) * 0.8 + effAttr(attacker, "strength", attackerSta, {}) * 0.2 + posBonus + 12 + subMod * CFG.SUB_MOD_SCALE)
+    - (effAttr(defender, "bjj", defenderSta, {}) * 0.75 + effAttr(defender, "fightIQ", defenderSta, {}) * 0.25),
     CFG.SUB_ADV_MIN, CFG.SUB_ADV_MAX
   );
   subProgress += adv;
@@ -89,7 +89,8 @@ function resolveSubmission(A, B, stA, stB, isTopA, gType, _subProgress, SUB_THRE
   const result = {
     dmgA: 0, dmgB: 0, bodyDmgA: 0, bodyDmgB: 0, legDmgA: 0, legDmgB: 0,
     landA: 0, landB: 0,
-    ptsA: !finish && attacker === A ? 5 : 0, ptsB: !finish && attacker === B ? 5 : 0,
+    ptsA: !finish && attacker === A ? Math.round(clamp(adv, 0, CFG.SUB_ATTEMPT_POINTS)) : 0,
+    ptsB: !finish && attacker === B ? Math.round(clamp(adv, 0, CFG.SUB_ATTEMPT_POINTS)) : 0,
     momDelta: !finish ? (attacker === A ? 2 : -2) : 0,
     newPosition: null, finish,
     subProgress, bjjGuardProgress,
@@ -122,7 +123,7 @@ function resolveSubmission(A, B, stA, stB, isTopA, gType, _subProgress, SUB_THRE
 
 function resolveSweep(A, B, isTopA, position, matchup, comm, exMin, exSec) {
   const sweeper = isTopA ? B : A;
-  const sweepMod = (matchup.aSweep || 0) + (matchup.bSweep || 0);
+  const sweepMod = (isTopA ? matchup.bSweep : matchup.aSweep) || 0;
   if (random() < CFG.SWEEP_BASE_CHANCE + sweepMod) {
     comm.both(exMin, exSec + 5, `${sweeper.name} sweeps! Position reversed!`);
     return {
