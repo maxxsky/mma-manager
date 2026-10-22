@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, P1 #8–#15 dan #18 selesai (16 dari 63 item). P0 seluruhnya sudah masuk `master` GitHub; sembilan item P1 masih commit lokal bertumpuk, checkout terakhir `fix/achievement-context` (`66c5e4e`). Rincian validasi ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7 dan P1 #8–#18 selesai (18 dari 63 item). Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -313,11 +313,35 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Kode: `achievements.js`, `fights/commitResult.js`, `reducer/contract.js`, `FightNight.jsx`, `App.jsx`, service baru `app/src/services/fightCompletion.js`, tes baru `fight-achievements.test.js` / `fight-night-achievements.test.js`, tambahan `game-state-hook.test.js`.
   - Masih terbuka: Fight Night statistik/FOTN/timestamp **#16**, kesesuaian narasi **#17**, lalu #19–#25. Tidak ada push/merge; sembilan commit P1 masih lokal dan `.claude/` tidak disertakan.
 
+- **22 Oktober 2026: P1 #16 selesai.** Commit `d9033c8` di branch `fix/fight-night-stats` (dari `fix/achievement-context`, `66c5e4e`).
+  - STR/TD Fight Night dan layar hasil menjumlahkan log seluruh ronde. TD dihitung pada setiap takedown berhasil, bukan dari posisi akhir ronde. Nilai HP/stamina nol tidak lagi ditampilkan sebagai 100. Riwayat hasil menyimpan statistik dan bonus aktual.
+  - Modul murni `fight/report.js` menjadi sumber bersama untuk statistik dan Fight of the Night. Bonus $50.000 gross fighter diberikan untuk laga selesai minimal ronde 3, total landed >40 dengan masing-masing >=15, kedua sisi pernah memenangkan ronde, dan selisih total kartu juri <=2. Draw atau data ronde tidak lengkap tidak mendapat bonus. Bonus bisa didapat saat menang maupun kalah.
+  - Perhitungan purse yang sama dipakai UI dan commit: bonus masuk gross fighter, lalu bagian manajer masuk kas camp (contoh cut 20% memberi tambahan $10.000). Penalti catchweight hanya memotong show/win bonus; FOTN tetap utuh. Baris bonus tidak muncul jika tidak diberikan.
+  - Komentar memakai timestamp numerik yang diurutkan stabil dan dibatasi 0:00–5:00; exchange pertama mulai setelah pengantar/corner. Tick mode membaca tickLog dan kembali ke corner saat ronde belum menghasilkan finish. Knockdown tanpa finish tidak mengakhiri laga; submission finish memproses hasil; pemeriksaan dokter menahan timer corner.
+  - Tambahan 11 tes mencakup pembayaran/render menang-kalah, catchweight, tanpa bonus semu, akumulasi ronde, alur tick, nilai nol, serta 200 ronde nyata untuk jumlah TD dan urutan waktu. Validasi saat commit: **793 test aplikasi / 50 file**, build Vite, harness fight **137.000 fight / 39 band** lulus. Penyortiran timestamp dioptimalkan ke angka setelah run awal mengalami timeout; suite penuh diulang dan lulus tanpa menaikkan timeout.
+  - Kode: `fight.js`, `fight/commentary.js`, modul baru `fight/report.js`, `fight/purse.js`, `fights/commitResult.js`, `narrative.js`, `FightNight.jsx`, komponen `Scoreboard.jsx` / `ResultScreen.jsx`, tes baru `fight-reporting.test.js` dan tambahan `fight-night-achievements.test.js`.
+  - Batas: FOTN ditentukan per laga; belum ada pemilihan satu laga terbaik dari kartu event berisi banyak laga. Hasil legacy tanpa roundLogs tidak diberi bonus retroaktif. Tuning ekonomi keseluruhan tetap #39. Tidak ada push/merge.
+
+- **22 Oktober 2026: P1 #17 selesai.** Commit `6ef0f24` di branch `fix/fight-narrative-evidence` (dari `fix/fight-night-stats`).
+  - Investigasi **2.000 fight seeded** menemukan **19** narasi pembuka yang menunjuk pengendali berlawanan dengan pemenang kedua ronde awal. Contoh seed **217**: pemain kalah landed 17–29 dan 11–19 tetapi menang skor ronde 41–39 dan 72–33; narasi lama mengklaim lawan mengendalikan pembuka. Kini narasi menyebut pemain mengambil ronde awal meski mendaratkan lebih sedikit pukulan.
+  - Pengendali awal, turning point, comeback, beatdown, dan keputusan ketat memakai pemenang/skor ronde dari aturan juri. Comeback memerlukan ketertinggalan kartu sebelum finish dan berlaku untuk kedua sisi. Kemenangan kartu 3–0 tidak otomatis disebut razor-close hanya karena raw points berdekatan. Teks finish menyebut pemenang aktual tanpa mengarang tekanan atau detail penghentian.
+  - Engine mencatat jumlah upaya submission tiap sisi secara terstruktur. Signature submission clinic memerlukan >=3 upaya dari satu pihak, bukan kecocokan kata submission pada komentar skill yang gagal. Metadata tambahan tidak mengubah RNG atau fisika fight.
+  - Booking menyimpan playerRank. Huge upset memerlukan bukti posisi pemain dibanding lawan top 3; booking legacy tanpa peringkat tidak mengarang upset. Final-Round Finish hanya muncul pada ronde terakhir jadwal aktual dan metode finish yang dikenal. Perebutan gelar menampilkan And New; pertahanan menampilkan And Still, dengan konteks menang/kalah yang sesuai.
+  - Tambahan **11 tes** mencakup seed 217, comeback dua sisi, skor juri, submission nyata/stall, ranking booking, gelar/render EN-ID, dan pemeriksaan narasi pada **2.000 fight seeded** tanpa mengubah RNG. Fixture tes lama diperjelas agar menggambarkan hasil yang konsisten.
+  - Validasi akhir kedua item: **804 test aplikasi / 51 file lulus** pada source final, build Vite lulus, harness fight **137.000 fight / 39 band** lulus (mirror 49,6%; side swap 49,9%; gap terbesar 2,0pp), harness dunia **480 minggu × 5 seed** lulus semua band (save maksimum 129 KB), diff bersih. Peringatan bundle >500 KB tetap ada. Backend tidak diubah; tes server tidak diulang karena PostgreSQL lokal sebelumnya tidak tersedia.
+  - Kode: `narrative.js`, `fight.js`, `fight/resolve-ground.js`, `reducer/fight.js`, `ResultScreen.jsx`, `i18n/index.js`, tes baru `narrative-evidence.test.js`, dan penyesuaian `narrative.test.js`. Data legacy tanpa jumlah submission terstruktur tidak diberi signature clinic berdasarkan teks saja.
+  - **Lokasi kerja terbaru:** `C:\Users\maxgu\Documents\mma manager\mma-manager-fight-night`, native Git worktree yang dibuat dari `66c5e4e` karena checkout utama sempat berganti oleh sesi lain saat dibaca. Dua commit ini ada di worktree tersebut; lanjutkan dari `fix/fight-narrative-evidence`, bukan mengasumsikan checkout utama sudah memuatnya. Checkout utama terakhir teramati tetap `fix/achievement-context` / `66c5e4e`; `.claude/` tidak disentuh. Sebelas commit P1 masih lokal, tidak ada push/merge. Dua item yang diminta selesai; berikutnya #19 dan #20 bila user memberi instruksi baru.
+
+- **22 Oktober 2026: integrasi seluruh P1 selesai (#8–#18).** User mengizinkan push dan merge semua perbaikan yang belum masuk GitHub. Merge commit `f672cbc` menggabungkan sebelas commit dari `fix/fight-narrative-evidence` ke `master` `be0cdd1` tanpa konflik; dokumen audit yang sudah ada di master dipertahankan.
+  - Validasi pada hasil merge: **804 test aplikasi / 51 file**, build Vite, harness fight **137.000 fight / 39 band**, dan harness dunia **480 minggu × 5 seed** lulus. Peringatan ukuran bundle tetap ada; server lokal tidak diulang, CI menyediakan PostgreSQL.
+  - Scope push: `master` serta sebelas branch P1 (#12, #13, #14, #8, #9, #10, #11, #18, #15, #16, #17), tanpa force push. Dokumen prioritas di `docs/audit/` disinkronkan. Status CI GitHub diperiksa setelah push; lihat run commit terbaru pada GitHub Actions. Tidak ada item baru yang dikerjakan.
+  - Worktree terbaru `mma-manager-fight-night` kini checkout `master`. Checkout utama `mma-manager` tetap berada di branch pencapaian yang lama; jangan berasumsi working tree itu otomatis berisi integrasi terbaru. `.claude/` tidak disentuh.
+
 ## Urutan kerja yang disarankan
 
-1. P0 #1–#7 selesai dan sudah di master; P1 #8–#15 dan #18 selesai dalam commit lokal. Integrasikan commit P1 bila user meminta push/merge.
-2. Berikutnya P1 #16–#17: statistik/FOTN/timestamp Fight Night, lalu kesesuaian narasi. Atribut lawan ranked #18 dan pencapaian #15 sudah selesai.
-3. P1 lainnya: #19–#25. P5 #53–#54 (keamanan kecil) bisa disisipkan lebih awal.
+1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`.
+2. Berikutnya P1 #19 (angka laporan scouting), lalu #20 (perburuan rival). Ujung kode terbaru ada di worktree `mma-manager-fight-night`, branch `master` (merge `f672cbc` ditambah sinkronisasi dokumen).
+3. P1 lainnya: #21–#25. P5 #53–#54 (keamanan kecil) bisa disisipkan lebih awal.
 4. Mainkan beberapa jam setelah bug state utama selesai; tandai temuan yang sudah terbantu dan yang masih bisa direproduksi.
 5. Mainkan beberapa jam. Putuskan P2 dan daftar pangkas.
 6. P3, lalu P4, lalu P6.
