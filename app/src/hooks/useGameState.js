@@ -5,6 +5,7 @@ import { checkAchievements } from "@ironfist/engine/achievements.js";
 import { ACHIEVEMENTS } from "@ironfist/engine/data.js";
 import { tick } from "@ironfist/engine/state.js";
 import { reducer } from "@ironfist/engine/reducer.js";
+import { snapshot } from "@ironfist/engine/rng.js";
 
 export function useGameState(g, setGOrig, saveSlot) {
   const [activeFight, setActiveFight] = useState(null);
@@ -17,10 +18,11 @@ export function useGameState(g, setGOrig, saveSlot) {
   // Cloned state setter with auto-save throttle
   const up = (fn) => setGOrig((old) => {
     if (!old.roster) console.error('UP OLD CORRUPTED', Object.keys(old));
-    const clean = Object.assign({}, old);
-    delete clean._undoStack;
-    delete clean._redoStack;
-    const n = JSON.parse(JSON.stringify(clean));
+    const n = snapshot(old);
+    // Snapshots stay immutable; copy the stack arrays without serializing
+    // twenty complete saves on every UI update.
+    if (old._undoStack) n._undoStack = [...old._undoStack];
+    if (old._redoStack) n._redoStack = [...old._redoStack];
     fn(n);
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
