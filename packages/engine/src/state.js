@@ -26,6 +26,7 @@ import { tickSettlement } from "./tick/settlement.js";
 import { tickYearly } from "./tick/yearly.js";
 import { tickWeightChange } from "./tick/weight-change.js";
 import { tickOutsideOffers } from "./tick/outside-offers.js";
+import { checkPromises } from "./promises.js";
 import { worldTick } from "./world.js";
 import { processEventSystem, pushInboxEvent } from "./events.js";
 import { trackCoachCareer, trackSponsorRelations } from "./identity.js";
@@ -94,8 +95,9 @@ export function tick(g) {
   // Phase 6: Weight class changes
   tickWeightChange(g);
 
-  // Phase 7: Outside offers to unhappy fighters
+  // Phase 7: Outside offers to unhappy fighters; promises kept or broken
   tickOutsideOffers(g);
+  checkPromises(g);
 
   // Phase 8: World simulation — returns events, deliver to inbox
   const worldEvents = worldTick(g);

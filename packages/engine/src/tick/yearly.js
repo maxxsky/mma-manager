@@ -39,7 +39,7 @@ export function tickYearly(g) {
         title: `🗣️ ${f.name} — minta fight lagi`,
         body: `${f.name} sudah ${Math.floor(weeksSinceFight / 4)} bulan tanpa fight. Dia resah dan siap bertarung.`,
         choices: [
-          { label: "Janji cari fight (morale +3)", fightPromise: f.id },
+          { label: "Janji cari fight dalam 12 minggu (morale +3; diingkari: morale −10, loyalty −8)", fightPromise: f.id },
           { label: "Sabar — timing belum tepat", moraleTo: { id: f.id, amt: -3 } },
         ],
       });
@@ -55,7 +55,7 @@ export function tickYearly(g) {
         title: `😤 ${f.name} — komplain fasilitas`,
         body: `${f.name} mengeluh ${FAC_LABEL[weak[0]]} (level ${weak[1]}) kurang memadai. Dia minta upgrade.`,
         choices: [
-          { label: "Janji upgrade (morale +4)", upgradePromise: { fighterId: f.id, fac: weak[0] } },
+          { label: "Janji upgrade dalam 24 minggu (morale +4; diingkari: morale −8, loyalty −6)", upgradePromise: { fighterId: f.id, fac: weak[0] } },
           { label: "Bilang bersabar dulu", moraleTo: { id: f.id, amt: -4 } },
         ],
       });

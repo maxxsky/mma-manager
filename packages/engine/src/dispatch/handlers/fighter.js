@@ -5,6 +5,7 @@ import { recordRetirement } from "../../world/history.js";
 import { avgSkill } from "../../fighter.js";
 import { checkHallOfFame } from "../../dynasty.js";
 import { pushInboxEvent, onFightComplaintIgnored } from "../../events.js";
+import { makePromise } from "../../promises.js";
 
 export function registerFighterHandlers(register) {
   register("release", ({ g, c }) => {
@@ -116,14 +117,23 @@ export function registerFighterHandlers(register) {
     g.log.unshift(`💰 ${f.name} dipertahankan.`);
   });
 
+  // Promises are recorded with a deadline (promises.js): kept pays a little,
+  // broken costs morale and loyalty.
   register("fightPromise", ({ g, c }) => {
     const f = g.roster.find((x) => x.id === c.fightPromise);
-    if (f) f.morale = clamp(f.morale + 3, 0, 100);
+    if (!f) return;
+    f.morale = clamp(f.morale + 3, 0, 100);
+    const p = makePromise(g, f, "fight");
+    if (p) g.log.unshift(`📝 Janji ke ${f.name}: fight sebelum minggu ${p.dueWeek}.`);
   });
 
   register("upgradePromise", ({ g, c }) => {
     const f = g.roster.find((x) => x.id === c.upgradePromise?.fighterId);
-    if (f) f.morale = clamp(f.morale + 4, 0, 100);
+    if (!f) return;
+    f.morale = clamp(f.morale + 4, 0, 100);
+    const fac = c.upgradePromise.fac;
+    const p = makePromise(g, f, "upgrade", { fac, levelAt: g.facilities?.[fac] || 0 });
+    if (p) g.log.unshift(`📝 Janji ke ${f.name}: upgrade fasilitas sebelum minggu ${p.dueWeek}.`);
   });
 
   register("applyTrainingRec", ({ g, c }) => {

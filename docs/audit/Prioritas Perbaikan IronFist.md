@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#30, dan P5 #53–#54 selesai (32 dari 63 item). #19–#30 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#31, dan P5 #53–#54 selesai (33 dari 63 item). #19–#31 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -61,7 +61,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | 28 | Relasi antar fighter | FI2 | Buang dulu kecuali ada rencana event yang mengubah relasi. **Selesai: dibuang** |
 | 29 | Kepribadian coach Motivator dan Player's Coach | CA3 | Implementasikan sesuai deskripsi. **Selesai** |
 | 30 | Staf Cutman dan Nutritionist | CA2 | Cutman mengurangi cut; Nutritionist digabung ke weight cut (setelah #6). **Selesai** |
-| 31 | Janji ke fighter | FI5 | Catat janji dan beri akibat kalau diingkari |
+| 31 | Janji ke fighter | FI5 | Catat janji dan beri akibat kalau diingkari. **Selesai** |
 | 32 | Event chemistry | FI8 | Opsi gratis diberi kelemahan, atau opsi berbiaya diberi hasil lebih besar |
 | 33 | Pinjaman dan penjualan darurat | EK4 | Pinjaman baru perlu kalau ekonomi sudah ketat (setelah P3). Penjualan darurat jual aset nyata |
 | 34 | Mentor | FI6 | Perbesar dan tampilkan, atau buang |
@@ -437,6 +437,12 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Cutman sekarang merawat cut di jeda antar ronde: `simRound` mengurangi cut sebanyak `ceil(skill / 3)` poin (skill 2–3: 1, 4–6: 2, 7–9: 3) di akhir tiap ronde yang tidak berakhir finish dan bukan ronde terakhir, *sebelum* pemeriksaan dokter. Berlaku di Fight Night (`cutmanSkillA` dari staf) dan `runFight` headless. Ada komentar "cutman closes the cut". Tanpa RNG. Bonus chin yang sudah ada (bagian "knockdown" dari deskripsi) dipertahankan.
   - **Temuan baru untuk P3:** cut hampir tidak pernah terjadi. Dari 8.000 fight engine (corner neutral), rata-rata tingkat cut di akhir ronde 0,13 (dokter memeriksa di ≥6) dan doctor stoppage 0,01%. Cut hanya berpengaruh lewat pemeriksaan dokter dan pilihan corner AI, jadi seluruh sistem cut (doctor stoppage, corner "target cut"/"stop bleed", cutman) praktis tidak berefek sampai frekuensi cut dituning. Dengan cutman skill 9, rata-rata cut di akhir ronde turun dari 0,13 ke 0,02.
   - Validasi: test baru `cutman.test.js` (3 test). `npm test` root: **799 test app + 28 test server lulus**. Build, harness dunia, dan harness fight lulus.
+
+- **22 Oktober 2026: P2 #31 selesai — janji ke fighter.**
+  - Modul baru `promises.js`. "Janji cari fight" mencatat janji dengan tenggat 12 minggu; "Janji upgrade" mencatat fasilitas dan levelnya dengan tenggat 24 minggu. Morale +3/+4 saat berjanji tetap ada. Satu janji terbuka per jenis per fighter.
+  - Dicek tiap minggu (`checkPromises` di `tick()`). Ditepati (fighter dapat booking atau fight baru; fasilitas yang dijanjikan naik level): morale +2. Lewat tenggat: fight −10 morale −8 loyalty, upgrade −8 morale −6 loyalty, plus pesan inbox. Label pilihan menyebut tenggat dan akibatnya.
+  - Angka akibat adalah pilihan awal; bisa dituning di P3.
+  - Validasi: test baru `promises.test.js` (6 test lewat jalur pilihan inbox). `npm test` root: **805 test app + 28 test server lulus**. Build dan harness dunia lulus.
 
 ## Urutan kerja yang disarankan
 
