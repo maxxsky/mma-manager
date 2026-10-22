@@ -61,19 +61,71 @@ export function autoGamePlan(fighter, opponent) {
   return "Balanced";
 }
 
+// ── AI CORNER ──
+// Corner instruction for a fighter the player does not control. Uses the same
+// options the player gets, picked from the fight state. No randomness, so it
+// does not shift the fight's RNG sequence.
+//   rnd: the round about to start. momOwn: momentum from this fighter's side
+//   (positive = this fighter has it).
+export function aiCorner({ rnd, totalRounds = 3, staOwn = 100, staOpp = 100, cutOwn = 0, cutOpp = 0, momOwn = 0, plan } = {}) {
+  if (cutOwn >= 4) return "stop_bleed";
+  if (cutOpp >= 4) return "target_cut";
+  if (staOwn < 35) return "save";
+  if (rnd === totalRounds && rnd > 1 && momOwn < 0) return "empty_tank";
+  if (plan === "Finish It") return "go";
+  if (plan === "Survive & Outpoint") return "save";
+  if (staOwn > staOpp + 15) return "go";
+  return "neutral";
+}
+
+// ── SIDE MODIFIERS ──
+// Every plan and corner effect is applied through these, for both sides.
+
+// Output multiplier from a corner instruction.
+function cornerAgg(corner) {
+  if (corner === "go" || corner === "target_cut") return CFG.CORNER_GO_MULT;
+  if (corner === "save" || corner === "stop_bleed") return CFG.CORNER_SAVE_MULT;
+  if (corner === "empty_tank") return CFG.CORNER_EMPTY_TANK_MULT;
+  return 1;
+}
+
+// Momentum is stored from A's side. Pass -mom to get B's multiplier.
+function momentumMult(m) {
+  return clamp(1 + (m > 0 ? m * CFG.MOMENTUM_DIVISOR_POS : m * CFG.MOMENTUM_DIVISOR_NEG), CFG.MOMENTUM_MULT_MIN, CFG.MOMENTUM_MULT_MAX);
+}
+
+// Going for the finish makes knockdowns likelier in both directions:
+// a fighter who opens up also leaves openings.
+function finishRisk(plan, corner) {
+  return (plan === "Finish It" ? 1.5 : 1) * (corner === "empty_tank" ? 1.5 : 1);
+}
+
+function staminaDrain(f, plan, corner, agg, legMod, bodyMult) {
+  return R(CFG.STA_DRAIN_MIN, CFG.STA_DRAIN_MAX) * agg
+    * (plan === "Finish It" ? 1.3 : 1) * (plan === "Survive & Outpoint" ? 0.75 : 1)
+    * (corner === "save" || corner === "stop_bleed" ? CFG.CORNER_SAVE_DRAIN : corner === "clinch" ? CFG.CORNER_CLINCH_DRAIN : 1)
+    * (55 / clamp(f.attrs.cardio * legMod, CFG.CARDIO_DIVISOR_MIN, CFG.CARDIO_DIVISOR_MAX)) * bodyMult;
+}
+
 // ── MAIN FIGHT ROUND ──
-export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA = 0, cutB = 0) {
+// planA/cornerA: side A's choices (the player in Fight Night).
+// opts.planB/opts.cornerB: side B's choices. When left out, B gets
+// autoGamePlan and aiCorner, so the opponent never fights without a plan.
+// opts.totalRounds: used by aiCorner to spot the final round (default 3).
+export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA = 0, cutB = 0, opts = {}) {
   const comm = createCommentary();
   let dmgA = 0, dmgB = 0, bodyDmgA = 0, bodyDmgB = 0, legDmgA = 0, legDmgB = 0;
   let ptsA = 0, ptsB = 0, finish = null, knockdown = null;
   let landA = 0, landB = 0;
   let position = STANDING;
   let mom = momentum || 0;
-  const agg = cornerA === "go" || cornerA === "target_cut" ? CFG.CORNER_GO_MULT
-    : cornerA === "save" || cornerA === "stop_bleed" ? CFG.CORNER_SAVE_MULT
-    : cornerA === "empty_tank" ? CFG.CORNER_EMPTY_TANK_MULT
-    : cornerA === "clinch" ? 1.0
-    : 1;
+  const planB = opts.planB ?? autoGamePlan(B, A);
+  const cornerB = opts.cornerB ?? aiCorner({
+    rnd, totalRounds: opts.totalRounds ?? 3,
+    staOwn: stB, staOpp: stA, cutOwn: cutB, cutOpp: cutA, momOwn: -mom, plan: planB,
+  });
+  const aggA = cornerAgg(cornerA);
+  const aggB = cornerAgg(cornerB);
   const expMult = explosiveMult(A, rnd);
   const cautMult = cautiousMult(A);
   const matchup = matchupMods(A, B);
@@ -100,6 +152,15 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
   else if (cornerA === "clinch") comm.tickOnly(0, 30, `Corner: "Clinch and recover, ${A.name}! Take a round off to breathe."`);
   else if (cornerA === "empty_tank") comm.tickOnly(0, 30, `Corner: "Empty the tank, ${A.name}! Leave it all in there!"`);
 
+  // Opponent's corner, so the player can read what the other side is doing
+  if (cornerB === "go") comm.tickOnly(0, 35, `${B.name}'s corner wants more pressure.`);
+  else if (cornerB === "save") comm.tickOnly(0, 35, `${B.name}'s corner tells him to slow down and conserve.`);
+  else if (cornerB === "body") comm.tickOnly(0, 35, `${B.name}'s corner: "Go to the body!"`);
+  else if (cornerB === "target_cut") comm.tickOnly(0, 35, `${B.name}'s corner points at ${A.name}'s cut.`);
+  else if (cornerB === "stop_bleed") comm.tickOnly(0, 35, `${B.name}'s corner works on the cut — he'll fight safer.`);
+  else if (cornerB === "clinch") comm.tickOnly(0, 35, `${B.name}'s corner: "Tie him up and breathe."`);
+  else if (cornerB === "empty_tank") comm.tickOnly(0, 35, `${B.name}'s corner: "Everything you've got, this round!"`);
+
   const nEx = RI(CFG.EXCHANGES_PER_ROUND.min, CFG.EXCHANGES_PER_ROUND.max);
   for (let ex = 0; ex < nEx; ex++) {
     if (finish) break;
@@ -110,10 +171,10 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
     const exMin = Math.floor(totalExSec / 60);
     const exSec = totalExSec % 60;
 
-    const exType = pickExchange(position, A, B, planA);
+    const exType = pickExchange(position, A, B, planA, planB);
     let exDmgA = 0, exDmgB = 0; // damage dari exchange INI SAJA (bukan kumulatif round)
 
-    const momMult = clamp(1 + (mom > 0 ? mom * CFG.MOMENTUM_DIVISOR_POS : mom * CFG.MOMENTUM_DIVISOR_NEG), CFG.MOMENTUM_MULT_MIN, CFG.MOMENTUM_MULT_MAX);
+    const side = { cornerA, cornerB, aggA, aggB, momMultA: momentumMult(mom), momMultB: momentumMult(-mom) };
     const phase = ex < CFG.EARLY_EXCHANGES ? CFG.PHASE_EARLY : ex >= nEx - 2 ? CFG.PHASE_LATE : CFG.PHASE_MID;
 
     // ── STRIKING ──
@@ -121,7 +182,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
       const archMsgs = archetypeCommentary(A, B, exType, matchup);
       archMsgs.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
       const pow = exType === "power" ? CFG.POWER_SHOT_MULT : 1;
-      const result = clampDamage(resolveStriking(exType, A, B, stA, stB, cornerA, agg, phase, momMult, pow, matchup, expMult, ptsA, ptsB, legDmgA, legDmgB, comm, exMin, exSec));
+      const result = clampDamage(resolveStriking(exType, A, B, stA, stB, side, phase, pow, matchup, expMult, ptsA, ptsB, legDmgA, legDmgB, comm, exMin, exSec));
       exDmgA = result.dmgA; exDmgB = result.dmgB;
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
@@ -144,7 +205,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
     } else if (exType === "clinch") {
       const archMsgs2 = archetypeCommentary(A, B, exType, matchup);
       archMsgs2.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
-      const result = clampDamage(resolveClinch(exType, A, B, stA, stB, agg, matchup, comm, exMin, exSec));
+      const result = clampDamage(resolveClinch(exType, A, B, stA, stB, side, matchup, comm, exMin, exSec));
       exDmgA = result.dmgA; exDmgB = result.dmgB;
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
@@ -161,7 +222,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
     } else if (exType === "td" || exType === "tdB") {
       const archMsgs3 = archetypeCommentary(A, B, exType, matchup);
       archMsgs3.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
-      const result = clampDamage(resolveTakedown(exType, A, B, stA, stB, planA, cornerA, matchup, comm, exMin, exSec));
+      const result = clampDamage(resolveTakedown(exType, A, B, stA, stB, { planA, planB, cornerA, cornerB }, matchup, comm, exMin, exSec));
       exDmgA = result.dmgA; exDmgB = result.dmgB;
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
@@ -194,17 +255,19 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
     const isOnGround = position.type !== "standing";
     const aOnTop = isOnGround && position.top === "A";
     const bOnTop = isOnGround && position.top === "B";
-    if (!finish && !knockdown && (exDmgA > CFG.KD_EXCHANGE_THRESHOLD || exDmgB > CFG.KD_EXCHANGE_THRESHOLD)) {
+    // Equal damage means neither fighter is clearly hurt. Clinch damage is a
+    // whole number, so ties are common; picking B on a tie gave A an edge.
+    if (!finish && !knockdown && exDmgA !== exDmgB && (exDmgA > CFG.KD_EXCHANGE_THRESHOLD || exDmgB > CFG.KD_EXCHANGE_THRESHOLD)) {
       const kdTarget = exDmgA > exDmgB ? A : B;
       const isTargetA = kdTarget === A;
       if ((isTargetA && aOnTop) || (!isTargetA && bOnTop)) {
         // Stunned but controlling — no KD
       } else {
         const chin = effAttr(kdTarget, "chin", isTargetA ? stA : stB);
-        const attackerStr = effAttr(isTargetA ? B : A, "strength", isTargetA ? stB : stA) * (1 + (isTargetA ? (matchup.bStrike || 0) : 0));
+        const attackerStr = effAttr(isTargetA ? B : A, "strength", isTargetA ? stB : stA) * (1 + ((isTargetA ? matchup.bStrike : matchup.aStrike) || 0));
         const exDmg = isTargetA ? exDmgA : exDmgB;
         const cumDmg = isTargetA ? dmgA : dmgB;
-        const kdChance = clamp((exDmg - CFG.KD_EXCHANGE_THRESHOLD) / chin * CFG.KD_CHIN_MULT + (attackerStr - 40) * CFG.KD_STR_MULT + cumDmg * CFG.KD_FATIGUE_MULT, 0, CFG.KD_CHANCE_MAX) * (planA === "Finish It" ? 1.5 : 1) * (cornerA === "empty_tank" ? 1.5 : 1) * cautMult;
+        const kdChance = clamp((exDmg - CFG.KD_EXCHANGE_THRESHOLD) / chin * CFG.KD_CHIN_MULT + (attackerStr - 40) * CFG.KD_STR_MULT + cumDmg * CFG.KD_FATIGUE_MULT, 0, CFG.KD_CHANCE_MAX) * finishRisk(planA, cornerA) * finishRisk(planB, cornerB) * cautMult;
         if (random() < kdChance) {
           knockdown = { fighter: isTargetA ? "A" : "B", name: kdTarget.name };
           comm.both(exMin + 1, 0, `${kdTarget.name} IS DOWN! He's hurt bad!`);
@@ -224,8 +287,11 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
 
     // ── CUT CHECK — striking exchanges only ──
     if (!finish && (exType === "strike" || exType === "power")) {
-      const cutChanceB = cornerA === "target_cut" ? CFG.CUT_CHANCE_PER_HIT * CFG.CUT_TARGET_MULT : CFG.CUT_CHANCE_PER_HIT;
-      const cutChanceA = cornerA === "stop_bleed" ? CFG.CUT_CHANCE_PER_HIT * CFG.CUT_PROTECT_MULT : CFG.CUT_CHANCE_PER_HIT;
+      const cutChance = (attackerCorner, defenderCorner) => CFG.CUT_CHANCE_PER_HIT
+        * (attackerCorner === "target_cut" ? CFG.CUT_TARGET_MULT : 1)
+        * (defenderCorner === "stop_bleed" ? CFG.CUT_PROTECT_MULT : 1);
+      const cutChanceB = cutChance(cornerA, cornerB);
+      const cutChanceA = cutChance(cornerB, cornerA);
       if (exDmgB > CFG.CUT_EXCHANGE_THRESHOLD && random() < cutChanceB) cutB += CFG.CUT_SEVERITY_PER_HIT;
       if (exDmgA > CFG.CUT_EXCHANGE_THRESHOLD && random() < cutChanceA) cutA += CFG.CUT_SEVERITY_PER_HIT;
     }
@@ -255,14 +321,17 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
   const legModA = clamp(1 - (legDmgA || 0) * CFG.LEG_DMG_MULTIPLIER, CFG.LEG_MOD_MIN, 1);
   const legModB = clamp(1 - (legDmgB || 0) * CFG.LEG_DMG_MULTIPLIER, CFG.LEG_MOD_MIN, 1);
 
-  const drainA = R(CFG.STA_DRAIN_MIN, CFG.STA_DRAIN_MAX) * agg * (planA === "Finish It" ? 1.3 : 1) * (planA === "Survive & Outpoint" ? 0.75 : 1) *
-    (cornerA === "save" || cornerA === "stop_bleed" ? CFG.CORNER_SAVE_DRAIN : cornerA === "clinch" ? CFG.CORNER_CLINCH_DRAIN : 1) * (55 / clamp(A.attrs.cardio * legModA, CFG.CARDIO_DIVISOR_MIN, CFG.CARDIO_DIVISOR_MAX)) * bodyMultA;
-  const drainB = R(CFG.STA_DRAIN_MIN, CFG.STA_DRAIN_MAX) * (55 / clamp(B.attrs.cardio * legModB, CFG.CARDIO_DIVISOR_MIN, CFG.CARDIO_DIVISOR_MAX)) * bodyMultB;
+  const drainA = staminaDrain(A, planA, cornerA, aggA, legModA, bodyMultA);
+  const drainB = staminaDrain(B, planB, cornerB, aggB, legModB, bodyMultB);
 
   // Clinch penalty: sacrifice round points for stamina recovery
   if (cornerA === "clinch") ptsA = Math.max(0, ptsA - 2);
+  if (cornerB === "clinch") ptsB = Math.max(0, ptsB - 2);
 
-  mom = clamp(Math.round(mom * CFG.MOMENTUM_DECAY), CFG.MOMENTUM_MIN, CFG.MOMENTUM_MAX);
+  // Round half away from zero so decay treats both sides the same
+  // (Math.round alone rounds -2.5 to -2 but 2.5 to 3).
+  const decayed = mom * CFG.MOMENTUM_DECAY;
+  mom = clamp(Math.sign(decayed) * Math.round(Math.abs(decayed)), CFG.MOMENTUM_MIN, CFG.MOMENTUM_MAX);
 
   return {
     log: comm.summaryLog, tickLog: comm.tickLog,
@@ -275,6 +344,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
     tdB: position.type !== "standing" && position.top === "B" ? 1 : 0,
     momentum: mom,
     cutA, cutB,
+    planB, cornerB,
     duringRound: rnd,
     winner: finish ? finish.by : (ptsA >= ptsB ? "A" : "B"),
   };
@@ -286,8 +356,16 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
 // non-interactive contexts (AI vs AI, bulk sim, replay).
 // Set global RNG ke seed yang dikasih, jalanin semua ronde, return hasil.
 // cornerPolicy(roundResult, roundNumber, state) → "go"|"save"|"body"
-export function runFight(A, B, plan, cornerPolicy, seed, totalRounds) {
+// opts.planB: B's game plan (default autoGamePlan(B, A)).
+// opts.cornerPolicyB: same shape as cornerPolicy, state seen from A's side
+// (default aiCorner from B's point of view).
+export function runFight(A, B, plan, cornerPolicy, seed, totalRounds, opts = {}) {
   setRNG(mulberry32(seed));
+  const planB = opts.planB ?? autoGamePlan(B, A);
+  const cornerPolicyB = opts.cornerPolicyB ?? ((_res, r, st) => aiCorner({
+    rnd: r, totalRounds, staOwn: st.staB, staOpp: st.staA,
+    cutOwn: st.cutB, cutOpp: st.cutA, momOwn: -st.momentum, plan: planB,
+  }));
 
   let staA = 100, staB = 100, mom = 0;
   let cutA = 0, cutB = 0;
@@ -296,8 +374,10 @@ export function runFight(A, B, plan, cornerPolicy, seed, totalRounds) {
   let winner = null, how = null, finalRound = totalRounds;
 
   for (let r = 1; r <= totalRounds; r++) {
-    const corner = r === 1 ? "go" : cornerPolicy(null, r, { staA, staB, momentum: mom, totalDmgA, totalDmgB, cutA, cutB });
-    const res = simRound(r, A, B, staA, staB, plan, corner, mom, cutA, cutB);
+    const st = { staA, staB, momentum: mom, totalDmgA, totalDmgB, cutA, cutB };
+    const corner = r === 1 ? "go" : cornerPolicy(null, r, st);
+    const cornerB = cornerPolicyB(null, r, st);
+    const res = simRound(r, A, B, staA, staB, plan, corner, mom, cutA, cutB, { planB, cornerB, totalRounds });
 
     staA = res.staA; staB = res.staB;
     mom = res.momentum;

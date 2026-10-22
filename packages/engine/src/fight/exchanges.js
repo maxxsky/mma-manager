@@ -14,7 +14,7 @@ export const EXCHANGES = {
   advance: { pos: ["ground"],                  label: "Position advance" },
 };
 
-export function pickExchange(pos, A, B, planA) {
+export function pickExchange(pos, A, B, planA, planB) {
   const pool = [];
   const isGround = pos && pos.type && pos.type !== "standing";
   const groundType = isGround ? pos.type : null;
@@ -25,7 +25,7 @@ export function pickExchange(pos, A, B, planA) {
     pool.push("power");
     pool.push("clinch", "clinch");
     const tdWeightA = A.attrs.wrestling > 55 || planA === "Take It Down" ? 4 : 1;
-    const tdWeightB = B.attrs.wrestling > 55 ? 4 : 1;
+    const tdWeightB = B.attrs.wrestling > 55 || planB === "Take It Down" ? 4 : 1;
         // Archetype expression: add behavior-weighted entries
     for (let i = 0; i < (behaviorA.strikeWeight || 0); i++) pool.push("strike");
     for (let i = 0; i < (behaviorB.strikeWeight || 0); i++) pool.push("strike");

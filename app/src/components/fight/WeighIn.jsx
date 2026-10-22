@@ -4,7 +4,7 @@ import { T, ARCH_COLOR } from "../../ui/theme.jsx";
 import { t } from "../../i18n/index.js";
 import { GAME_PLANS } from "@ironfist/engine/data.js";
 
-export default function WeighIn({ fighter, opp, cutInfo, cutPct, missedWeight, weighinIssue, setWeighinIssue, plan, setPlan, viewMode, setViewMode, onStart, ca, cb }) {
+export default function WeighIn({ fighter, opp, cutInfo, cutPct, missedWeight, weighinIssue, setWeighinIssue, plan, setPlan, oppPlan, viewMode, setViewMode, onStart, ca, cb }) {
   const limit = fighter.natWeight || 155; // fallback
   return (
     <>
@@ -34,6 +34,11 @@ export default function WeighIn({ fighter, opp, cutInfo, cutPct, missedWeight, w
       {/* Game Plan */}
       <Panel>
         <Eyebrow color={T.ember}>{t("WEIGH.gamePlan")}</Eyebrow>
+        {oppPlan && (
+          <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt2, marginBottom: 10 }}>
+            {t("WEIGH.oppPlan").replace("{0}", opp.name)} <b style={{ color: cb || T.txt }}>{oppPlan}</b>
+          </div>
+        )}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
           {Object.entries(GAME_PLANS).map(([k, d]) => (
             <button key={k} className="chip" onClick={() => setPlan(k)} style={{

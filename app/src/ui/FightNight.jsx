@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { clamp, random } from "@ironfist/engine/rng.js";
 import { ARCH_COLOR } from "@ironfist/engine/data.js";
-import { simRound } from "@ironfist/engine/fight.js";
+import { simRound, autoGamePlan } from "@ironfist/engine/fight.js";
 import { scoreDecision } from "@ironfist/engine/fight/scoring.js";
 import { commitFightResult } from "@ironfist/engine/fights/commitResult.js";
 import { useFightSeed } from "../hooks/useFightSeed.js";
@@ -58,11 +58,14 @@ export default function FightNight({ fighter, done, staff }) {
   // Hooks
   useFightSeed(fighter.id, fighter.booked.seed);
   const { A, B, cutInfo, cutPct, missedWeight } = useFightPrep(fighter, opp, attitude, staff);
+  // The opponent picks a game plan from the matchup. Its corner is picked
+  // each round inside simRound (aiCorner) from the fight state.
+  const oppPlan = autoGamePlan(B, A);
 
   // Run round
   const runRound = (rn, st0, corner) => {
     const cA = corner;
-    const res = simRound(rn, A, B, st0?.staA ?? 100, st0?.staB ?? 100, plan || "Keep It Standing", cA, st0?.momentum ?? 0, st0?.cutA ?? 0, st0?.cutB ?? 0);
+    const res = simRound(rn, A, B, st0?.staA ?? 100, st0?.staB ?? 100, plan || "Keep It Standing", cA, st0?.momentum ?? 0, st0?.cutA ?? 0, st0?.cutB ?? 0, { planB: oppPlan, totalRounds });
     setRoundLog(res);
     // Keep every round for the judges. Indexed by round so a repeated call
     // for the same round replaces it instead of adding a duplicate.
@@ -191,7 +194,7 @@ export default function FightNight({ fighter, done, staff }) {
 
         {/* Stage content */}
         {stage === "staredown" && <Staredown fighter={fighter} attitude={attitude} setAttitude={setAttitude} onContinue={() => setStage("weighin")} />}
-        {stage === "weighin" && <WeighIn fighter={fighter} opp={opp} cutInfo={cutInfo} cutPct={cutPct} missedWeight={missedWeight} weighinIssue={weighinIssue} setWeighinIssue={setWeighinIssue} plan={plan} setPlan={setPlan} viewMode={viewMode} setViewMode={setViewMode} onStart={startFight} ca={ca} cb={cb} />}
+        {stage === "weighin" && <WeighIn fighter={fighter} opp={opp} cutInfo={cutInfo} cutPct={cutPct} missedWeight={missedWeight} weighinIssue={weighinIssue} setWeighinIssue={setWeighinIssue} plan={plan} setPlan={setPlan} oppPlan={oppPlan} viewMode={viewMode} setViewMode={setViewMode} onStart={startFight} ca={ca} cb={cb} />}
         {stage === "entrance" && <Entrance fighter={fighter} opp={opp} ca={ca} cb={cb} />}
         {stage === "round" && roundLog && <RoundView rnd={rnd} roundLog={roundLog} viewMode={viewMode} tickIdx={tickIdx} displayLog={displayLog} onEndRound={() => { setStage("corner"); setTimer(60); }} onSeeFinish={() => { setStage(roundLog.finish.how === "KO/TKO" ? "knockdown" : "result"); if (roundLog.finish.how !== "KO/TKO") processResult(); }} hasFinish={!!roundLog.finish} />}
         {stage === "corner" && !docCheck && <Corner rnd={rnd} totalRounds={totalRounds} timer={timer} state={state} runRound={runRound} processResult={processResult} />}

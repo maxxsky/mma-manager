@@ -5,12 +5,12 @@ import { effAttr } from "../fight.js";
 import { muayThaiMult, muayThaiDmg } from "./trait-effects.js";
 import { CLINCH_TEMPLATES } from "./commentary.js";
 
-export function resolveClinch(exType, A, B, stA, stB, agg, matchup, comm, exMin, exSec) {
+// side: { aggA, aggB } — corner output multiplier for each fighter.
+export function resolveClinch(exType, A, B, stA, stB, side, matchup, comm, exMin, exSec) {
   const isThaiA = muayThaiMult(A) > 1;
   const isThaiB = muayThaiMult(B) > 1;
-  const clinchModA = (matchup.aClinch || 0);
-  const outA = effAttr(A, "striking", stA, {}) * agg * muayThaiMult(A) * (1 + clinchModA);
-  const outB = effAttr(B, "striking", stB, {}) * muayThaiMult(B) * (1 + (matchup.bClinch || 0));
+  const outA = effAttr(A, "striking", stA, {}) * side.aggA * muayThaiMult(A) * (1 + (matchup.aClinch || 0));
+  const outB = effAttr(B, "striking", stB, {}) * side.aggB * muayThaiMult(B) * (1 + (matchup.bClinch || 0));
   const la = Math.round(outA * R(CFG.CLINCH_STRIKE_MIN, CFG.CLINCH_STRIKE_MAX));
   const lb = Math.round(outB * R(CFG.CLINCH_STRIKE_MIN, CFG.CLINCH_STRIKE_MAX));
   const dmgB = la * muayThaiDmg(A);

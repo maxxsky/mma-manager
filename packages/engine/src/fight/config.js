@@ -66,10 +66,10 @@ export const SUB_MOD_SCALE = 30;
 export const POWER_SHOT_MULT = 1.5;
 export const LEG_DMG_DEF_MULT = 0.003;
 export const DEF_MIN_CLAMP = 0.70;
-export const STRIKE_LAND_MIN_A = 3;
-export const STRIKE_LAND_MAX_A = 7;
-export const STRIKE_LAND_MIN_B = 2;
-export const STRIKE_LAND_MAX_B = 6;
+// Same range for both sides. It used to be 3-7 for A (the player) and 2-6
+// for B, which handed A about 25% more strikes. 2.5-6.5 keeps the old average.
+export const STRIKE_LAND_MIN = 2.5;
+export const STRIKE_LAND_MAX = 6.5;
 export const STR_MULT = 50;
 export const HIT_VAR_MIN = 0.8;
 export const HIT_VAR_MAX = 1.3;

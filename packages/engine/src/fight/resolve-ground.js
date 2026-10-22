@@ -20,7 +20,7 @@ export function resolveGround(exType, A, B, stA, stB, position, matchup, subProg
     case "advance":
       return resolveAdvance(A, B, isTopA, gType, position, comm, exMin, exSec);
     case "scramble":
-      return resolveScramble(comm, exMin, exSec);
+      return resolveScramble(isTopA, comm, exMin, exSec);
   }
 }
 
@@ -165,13 +165,17 @@ function resolveAdvance(A, B, isTopA, gType, position, comm, exMin, exSec) {
   }
 }
 
-function resolveScramble(comm, exMin, exSec) {
+// Momentum goes to whoever gains from the scramble: the bottom fighter when
+// both stand up, the top fighter when it stalls. (It used to lean toward A
+// either way.)
+function resolveScramble(isTopA, comm, exMin, exSec) {
+  const toA = (v) => (isTopA ? -v : v); // v is from the bottom fighter's side
   if (random() < CFG.SCRAMBLE_UP_CHANCE) {
     comm.bothS(exMin, exSec, SCRAMBLE_UP_TEMPLATES);
     return {
       dmgA: 0, dmgB: 0, bodyDmgA: 0, bodyDmgB: 0, legDmgA: 0, legDmgB: 0,
       landA: 0, landB: 0, ptsA: 0, ptsB: 0,
-      momDelta: Math.round(R(-2, 5)),
+      momDelta: toA(Math.round(R(-2, 5))),
       newPosition: { type: "standing", top: null },
       finish: null, subProgress: null, bjjGuardProgress: null,
     };
@@ -179,7 +183,7 @@ function resolveScramble(comm, exMin, exSec) {
     comm.bothS(exMin, exSec, SCRAMBLE_STALL_TEMPLATES);
     return {
       dmgA: 0, dmgB: 0, bodyDmgA: 0, bodyDmgB: 0, legDmgA: 0, legDmgB: 0,
-      landA: 0, landB: 0, ptsA: 0, ptsB: 0, momDelta: -2,
+      landA: 0, landB: 0, ptsA: 0, ptsB: 0, momDelta: toA(-2),
       newPosition: null, finish: null, subProgress: null, bjjGuardProgress: null,
     };
   }
