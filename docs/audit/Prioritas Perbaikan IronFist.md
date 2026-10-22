@@ -400,9 +400,8 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 ## Urutan kerja yang disarankan
 
 1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`. P1 #19–#25 selesai di branch `claude/quirky-mccarthy-7jogso` (#21: rival camp dibuang). Seluruh P1 selesai.
-2. Berikutnya: merge branch ke master, lalu langkah 4–5 (main beberapa jam, putuskan P2). P5 #53–#54 bisa disisipkan.
-3. P1 lainnya: #21–#25. P5 #53–#54 (keamanan kecil) bisa disisipkan lebih awal.
-4. Mainkan beberapa jam setelah bug state utama selesai; tandai temuan yang sudah terbantu dan yang masih bisa direproduksi.
-5. Mainkan beberapa jam. Putuskan P2 dan daftar pangkas.
-6. P3, lalu P4, lalu P6.
-7. Backend (#55–#58) setelah Fase 1 terasa proper dan ada playtester.
+2. Berikutnya: merge branch ke master, lalu langkah 3–4 (main beberapa jam, putuskan P2). P5 #53–#54 bisa disisipkan.
+3. Mainkan beberapa jam setelah bug state utama selesai; tandai temuan yang sudah terbantu dan yang masih bisa direproduksi.
+4. Putuskan P2 dan daftar pangkas.
+5. P3, lalu P4, lalu P6.
+6. Backend (#55–#58) setelah Fase 1 terasa proper dan ada playtester.
