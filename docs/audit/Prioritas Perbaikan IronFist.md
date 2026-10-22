@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, seluruh P2 #26–#37, P3 #40, #41, #43–#45, dan P5 #53–#54 selesai (44 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#37, #40, #41, #43–#45, dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, seluruh P2 #26–#37, P3 #40–#45, dan P5 #53–#54 selesai (45 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#37, #40–#45, dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -77,7 +77,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | 39 | Ekonomi late game: kurangi banjir uang dan reputasi; prestise sekitar 50 di tahun ke-10. Ukur ulang setelah bug sabuk (#8) dan sponsor (#12) diperbaiki | EK1 |
 | 40 | Grade scout tidak otomatis S hanya karena reputasi tinggi. **Selesai** | CA1 |
 | 41 | Intensitas Hard: gain lebih tinggi atau risiko lebih rendah sampai layak dipilih. **Selesai** | FI1 |
-| 42 | Kurangi atau tampilkan pengali training yang tidak terlihat | FI1 |
+| 42 | Kurangi atau tampilkan pengali training yang tidak terlihat. **Selesai: dikurangi (#28, #34) dan ditampilkan** | FI1 |
 | 43 | Pergantian juara AI lebih jarang. **Selesai** | DU7 |
 | 44 | Ambang Hall of Fame lebih tinggi. **Selesai** | SV5 |
 | 45 | Event: kurangi "Division Shake-up", hilangkan dobel dengan "New Champion", tambah variasi template. **Selesai** | DU9 |
@@ -519,6 +519,12 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Hard baru: gain 1,5×, cedera 0,035, overtraining +12. 12 minggu: gain +41% dibanding Medium, cedera 1,6×, cedera permanen setara Medium (1,7%). 48 minggu tanpa jeda: gain tetap di bawah Medium (12,5 vs 14,0) dengan cedera ~7× dan cedera permanen 10,7% vs 4,7%. Hard menjadi pilihan jangka pendek yang harus diselingi jeda.
   - Harness ekonomi: ketiga seed bertahan 20 tahun (seed 3222 sebelumnya bangkrut di minggu 56). Penyebab pastinya belum diverifikasi.
   - Validasi: test baru `training-intensity.test.js` (2 test; test 12 minggu gagal di angka lama dengan rasio gain 1,01). `npm test` root: **841 test app + 28 test server lulus**. Harness dunia lulus.
+
+- **22 Oktober 2026: P3 #42 selesai — pengali training ditampilkan.**
+  - Dua pengali sudah dibuang sebelumnya (relasi #28, mentor #34). Sisanya punya dasar yang bisa dipahami pemain (intensitas, usia, overtraining, trait, morale, chemistry camp, partner sparring, perhatian coach, coach, fasilitas & tier camp), jadi ditampilkan, bukan dibuang.
+  - Fungsi engine murni baru `trainingFactors(g, f)` di `tick/training.js` menjadi satu sumber angka. `tickTraining` membaca darinya dengan urutan perkalian yang sama. Bukti: hash state simulasi 240 minggu × 3 seed identik sebelum dan sesudah.
+  - Detail fighter menampilkan panel "Faktor training minggu ini": tiap faktor dengan nilainya (hijau di atas 1, merah di bawah 1), angka gabungan, dan catatan bahwa gain melambat dekat ceiling. Coach dan fasilitas di panel adalah rata-rata atas atribut program; di simulasi tetap per atribut. Teks EN/ID ditambahkan.
+  - Validasi: test baru `training-factors.test.js` (2 test). `npm test` root: **843 test app + 28 test server lulus**. Build, harness dunia, dan smoke test lulus. Skrip browser membuka detail fighter dari Roster dan menemukan panelnya tanpa error console.
 
 ## Urutan kerja yang disarankan
 

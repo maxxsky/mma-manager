@@ -18,9 +18,36 @@ function calcSparringMult(f, g) {
   return clamp(1 + best * 0.1, 0.9, 1.15);
 }
 
+/**
+ * Every multiplier on a fighter's training gain this week, by name (P3 #42:
+ * eleven stacked multipliers were invisible). tickTraining reads its numbers
+ * from here, so the screen and the simulation cannot disagree. Coach and
+ * facility are per attribute in the simulation; `coach`/`facility` here are
+ * their average over the program's attributes, for display.
+ */
+export function trainingFactors(g, f) {
+  const t = f.booked && f.booked.weeksLeft <= 2 ? TRAINING.fightcamp : (TRAINING[f.training?.type] || TRAINING.conditioning);
+  const inten = INTENSITY[f.training?.intensity] || INTENSITY.Medium;
+  const activeFighters = g.roster.filter(x => !x.injury && x.training?.type !== "recovery").length;
+  const availableCoaches = g.coaches.filter(c => !c.freeUntil || g.week > c.freeUntil).length;
+  const avg = (fn) => t.gains.reduce((s, k) => s + fn(g, [k]), 0) / Math.max(t.gains.length, 1);
+  return {
+    program: t,
+    intensity: inten.mult,
+    age: f.age <= 21 ? 1.3 : f.age <= 26 ? 1.15 : f.age <= 30 ? 1.0 : f.age <= 33 ? 0.90 : f.age <= 36 ? 0.75 : 0.55,
+    overtraining: f.overtraining < 25 ? 1 : f.overtraining < 50 ? 0.9 : f.overtraining < 75 ? 0.75 : 0.5,
+    trait: f.traits?.includes("Natural Talent") ? 1.15 : 1,
+    morale: f.morale >= 75 ? 1.1 : f.morale < 40 ? 0.85 : 1,
+    chemistry: g.chemistry >= 80 ? 1.15 : g.chemistry < 40 ? 0.9 : 1,
+    sparring: calcSparringMult(f, g),
+    attention: activeFighters > 0 ? clamp(availableCoaches / Math.max(activeFighters, 1), 0.7, 1.0) : 1.0,
+    coach: avg(coachBonus),
+    facility: avg(facBonus),
+  };
+}
+
 export function tickTraining(g) {
   if (!g || !g.roster) return;
-  const chemMult = g.chemistry >= 80 ? 1.15 : g.chemistry < 40 ? 0.9 : 1;
 
   // Motivator: morale recovers 20% faster for fighters coming off a loss (P2 #29).
   const hasMotivator = g.coaches.some((c) => c.personality === "Motivator");
@@ -64,20 +91,13 @@ export function tickTraining(g) {
     const inten = INTENSITY[f.training.intensity] || INTENSITY.Medium;
     g.cash -= t.cost;
 
-    // Training attention constraint
-    const activeFighters = g.roster.filter(x => !x.injury && x.training?.type !== "recovery").length;
-    const availableCoaches = g.coaches.filter(c => !c.freeUntil || g.week > c.freeUntil).length;
-    const attentionMult = activeFighters > 0 ? clamp(availableCoaches / Math.max(activeFighters, 1), 0.7, 1.0) : 1.0;
-
     if (f.training.type === "recovery" && !f.booked) {
       f.overtraining = clamp(f.overtraining - 30, 0, 100);
       f.morale = clamp(f.morale + 4, 0, 100);
     } else {
-      const ageMult = f.age <= 21 ? 1.3 : f.age <= 26 ? 1.15 : f.age <= 30 ? 1.0 : f.age <= 33 ? 0.90 : f.age <= 36 ? 0.75 : 0.55;
-      const otMult = f.overtraining < 25 ? 1 : f.overtraining < 50 ? 0.9 : f.overtraining < 75 ? 0.75 : 0.5;
-      const traitMult = f.traits?.includes("Natural Talent") ? 1.15 : 1;
-      const moraleMult = f.morale >= 75 ? 1.1 : f.morale < 40 ? 0.85 : 1;
-      const sparringMult = calcSparringMult(f, g);
+      const fx = trainingFactors(g, f);
+      const ageMult = fx.age, otMult = fx.overtraining, traitMult = fx.trait, moraleMult = fx.morale;
+      const sparringMult = fx.sparring, chemMult = fx.chemistry, attentionMult = fx.attention;
 
       let totalGain = 0;
       let bestGain = 0;

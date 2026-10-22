@@ -6,6 +6,7 @@ import { reducer } from "@ironfist/engine/reducer.js";
 import { getStoryTags, getLifecyclePhase } from "@ironfist/engine/career.js";
 import { generateFighterNickname } from "@ironfist/engine/identity.js";
 import { getPublicOpinion } from "@ironfist/engine/publicOpinion.js";
+import { trainingFactors } from "@ironfist/engine/tick/training.js";
 import { getTrainingCycle, getCoachRecommendation, getDevelopmentPhilosophy, getTrainingIdentity, saveLastTraining } from "@ironfist/engine/training-philosophy.js";
 import { getCoachArchetypeSynergy, getFightStyleSummary, getArchetypeBehavior } from "@ironfist/engine/archetype-expression.js";
 import { T, Panel, Eyebrow, Tag, Btn, Ovr, Mono, AttrTele, Meter, OctaRadar, Icon, ICONS, heat } from "./theme.jsx";
@@ -395,6 +396,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
               </div>
             </div>
           </div>
+          <TrainingFactors g={g} f={f} />
         </Panel>
 
         {/* fight history table full width */}
@@ -490,6 +492,32 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
           );
         })()}
       </div>
+    </div>
+  );
+}
+
+// Every multiplier on this week's training gain (P3 #42), from the same
+// engine function the simulation uses.
+const FX_KEYS = ["intensity", "age", "overtraining", "trait", "morale", "chemistry", "sparring", "attention", "coach", "facility"];
+export function TrainingFactors({ g, f }) {
+  if (f.injury || f.training?.type === "recovery") return null;
+  const fx = trainingFactors(g, f);
+  const total = FX_KEYS.reduce((p, k) => p * fx[k], 1);
+  const color = (v) => (v > 1.001 ? T.pos : v < 0.999 ? T.neg : T.txt3);
+  return (
+    <div style={{ marginTop: 14, borderTop: `1px solid ${T.line}44`, paddingTop: 10 }}>
+      <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: T.txt3, marginBottom: 8 }}>
+        {t("TRAINFX.header")} · {t("TRAINFX.total")} <span style={{ color: color(total), fontFamily: T.mono }}>×{total.toFixed(2)}</span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "4px 12px", fontSize: 11 }}>
+        {FX_KEYS.map((k) => (
+          <div key={k} style={{ display: "flex", justifyContent: "space-between", color: T.txt2 }}>
+            <span>{t(`TRAINFX.${k}`)}</span>
+            <span style={{ fontFamily: T.mono, color: color(fx[k]) }}>×{fx[k].toFixed(2)}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 10, color: T.txt3, marginTop: 6 }}>{t("TRAINFX.note")}</div>
     </div>
   );
 }
