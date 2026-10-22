@@ -74,7 +74,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | # | Perbaikan | Temuan |
 |---|---|---|
 | 38 | Gabungkan angka status camp (Reputasi, Prestise, Legacy, Tier, Identitas Dinasti) jadi 1–2 | EK1 |
-| 39 | Ekonomi late game: kurangi banjir uang dan reputasi; prestise sekitar 50 di tahun ke-10. Ukur ulang setelah bug sabuk (#8) dan sponsor (#12) diperbaiki | EK1 |
+| 39 | Ekonomi late game: kurangi banjir uang dan reputasi; prestise sekitar 50 di tahun ke-10. Ukur ulang setelah bug sabuk (#8) dan sponsor (#12) diperbaiki. **Dianalisis, ditahan — butuh target dan keputusan (lihat log)** | EK1 |
 | 40 | Grade scout tidak otomatis S hanya karena reputasi tinggi. **Selesai** | CA1 |
 | 41 | Intensitas Hard: gain lebih tinggi atau risiko lebih rendah sampai layak dipilih. **Selesai** | FI1 |
 | 42 | Kurangi atau tampilkan pengali training yang tidak terlihat. **Selesai: dikurangi (#28, #34) dan ditampilkan** | FI1 |
@@ -525,6 +525,13 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Fungsi engine murni baru `trainingFactors(g, f)` di `tick/training.js` menjadi satu sumber angka. `tickTraining` membaca darinya dengan urutan perkalian yang sama. Bukti: hash state simulasi 240 minggu × 3 seed identik sebelum dan sesudah.
   - Detail fighter menampilkan panel "Faktor training minggu ini": tiap faktor dengan nilainya (hijau di atas 1, merah di bawah 1), angka gabungan, dan catatan bahwa gain melambat dekat ceiling. Coach dan fasilitas di panel adalah rata-rata atas atribut program; di simulasi tetap per atribut. Teks EN/ID ditambahkan.
   - Validasi: test baru `training-factors.test.js` (2 test). `npm test` root: **843 test app + 28 test server lulus**. Build, harness dunia, dan smoke test lulus. Skrip browser membuka detail fighter dari Roster dan menemukan panelnya tanpa error console.
+
+- **22 Oktober 2026: P3 #39 dianalisis, perubahan ditahan.**
+  - Kondisi sekarang (harness ekonomi, 3 seed × 20 tahun): reputasi camp 90–100 di tahun 2–4; kas jutaan di tahun 10–12 dan $2–25 juta di tahun 20; prestise di tahun 10 sekitar 18–32 (target desain sekitar 50; dulu tergelembung bug DU1).
+  - Pemecahan aliran kas per tahun (seed 500): sumber terbesar late game adalah **purse fight Premier** (bagian camp $2,3 juta di tahun 10, $9,8 juta di tahun 20), lalu sponsor fighter dari popularitas ($0,6–1,7 juta per tahun). Membership stabil sekitar $1 juta per tahun.
+  - **Akar masalah:** tier purse di `tick/fight-offers.js` hanya ditentukan reputasi camp dan jumlah menang fighter. Premier ($150–350 ribu + bonus menang yang sama) untuk reputasi ≥80 dan ≥8 menang, tanpa melihat ranking fighter. Karena reputasi camp mencapai 90–100 dalam beberapa tahun, fighter unranked pun rutin dapat purse kelas dunia. Reputasi naik +7 per kemenangan apa pun tier-nya.
+  - **Yang dicoba (semua dikembalikan):** (1) Premier hanya untuk fighter top 5 atau pemegang sabuk Major/Premier, dan Major hanya untuk fighter ber-ranking: ketiga seed bangkrut, karena biaya late game (`supportPerFighter = 600 + tier × 2.200`, upkeep tier) memang disetel untuk menyerap banjir Premier. (2) Ditambah biaya per tier 1.200: kas akhir $0,2–6 juta, satu seed bangkrut di minggu 892. Dengan 800: kembali ke $1–10 juta. (3) Reputasi per kemenangan berdasarkan tier sejak awal: semua seed bangkrut di tahun 1–2, karena pemasukan awal (sponsor dasar, membership) bergantung pada reputasi. (4) +7 sampai reputasi 50, lalu berdasarkan tier: satu seed $7 juta, dua bangkrut di tahun 8–10.
+  - **Kesimpulan:** hasilnya sangat bergantung pada perilaku bot harness, yang terus memperbesar roster dan membeli tier tanpa menghitung untung-rugi. Tanpa target yang jelas (kas ideal di tahun 10/20, kapan reputasi boleh mencapai 100) dan bot yang bermain lebih masuk akal, angka yang dipilih di sini belum tentu benar di permainan sungguhan. **Usulan langkah:** tetapkan target; perbaiki bot harness (melepas fighter yang merugi, tidak menambah roster di luar kemampuan); lalu terapkan gating Premier berdasarkan ranking bersama penyesuaian biaya per tier dan kurva reputasi, diukur terhadap target itu. Pinjaman (#33) sebaiknya diputuskan bersamaan.
 
 ## Urutan kerja yang disarankan
 
