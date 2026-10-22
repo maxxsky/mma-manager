@@ -5,9 +5,10 @@ import { rankedAIContenders } from "../rankings.js";
 
 export function tickRankings(g) {
   if (!g || !g.divisions) return;
-  // AI ranking jitter
+  // Monthly ranking noise has no directional drift. The previous -8..12 roll
+  // added two points per settlement on average, pushing everyone to the cap.
   Object.values(g.divisions).forEach((d) =>
-    d.list.forEach((c) => { c.points = clamp(c.points + RI(-8, 12), 5, 120); })
+    d.list.forEach((c) => { c.points = clamp(c.points + RI(-8, 8), 5, 120); })
   );
 
   // AI fighter rotation every 48 weeks
