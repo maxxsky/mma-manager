@@ -7,6 +7,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { clamp, random } from "@ironfist/engine/rng.js";
 import { ARCH_COLOR } from "@ironfist/engine/data.js";
 import { simRound } from "@ironfist/engine/fight.js";
+import { scoreDecision } from "@ironfist/engine/fight/scoring.js";
 import { commitFightResult } from "@ironfist/engine/fights/commitResult.js";
 import { useFightSeed } from "../hooks/useFightSeed.js";
 import { useFightPrep } from "../hooks/useFightPrep.js";
@@ -41,6 +42,7 @@ export default function FightNight({ fighter, done, staff }) {
   const [rnd, setRnd] = useState(1);
   const [state, setState] = useState(null);
   const [roundLog, setRoundLog] = useState(null);
+  const [roundLogs, setRoundLogs] = useState([]);
   const [tickIdx, setTickIdx] = useState(0);
   const [timer, setTimer] = useState(60);
   const [cutA, setCutA] = useState(0);
@@ -62,6 +64,9 @@ export default function FightNight({ fighter, done, staff }) {
     const cA = corner;
     const res = simRound(rn, A, B, st0?.staA ?? 100, st0?.staB ?? 100, plan || "Keep It Standing", cA, st0?.momentum ?? 0, st0?.cutA ?? 0, st0?.cutB ?? 0);
     setRoundLog(res);
+    // Keep every round for the judges. Indexed by round so a repeated call
+    // for the same round replaces it instead of adding a duplicate.
+    setRoundLogs((prev) => { const next = prev.slice(0, rn - 1); next[rn - 1] = res; return next; });
     const prevDmgA = st0?.totalDmgA || 0;
     const prevDmgB = st0?.totalDmgB || 0;
     const totalDmgA = prevDmgA + res.dmgA;
@@ -107,10 +112,15 @@ export default function FightNight({ fighter, done, staff }) {
   const processResult = () => {
     if (!roundLog) return;
     const res = roundLog;
-    const won = res.winner === "A";
-    const how = res.finish ? res.finish.how : "Decision";
-    const r = res.finish ? res.finish.duringRound : totalRounds;
-    setResult({ won, how, r, totalDmgA: state?.totalDmgA || 0, totalDmgB: state?.totalDmgB || 0, attitude });
+    if (res.finish) {
+      const won = res.finish.by === "A";
+      setResult({ won, how: res.finish.how, r: res.duringRound ?? rnd, totalDmgA: state?.totalDmgA || 0, totalDmgB: state?.totalDmgB || 0, attitude });
+    } else {
+      // Decision: judges score every round, not just the last one.
+      const scorecard = scoreDecision(roundLogs.length ? roundLogs : [res]);
+      const won = scorecard.winner === "A";
+      setResult({ won, how: "Decision", r: totalRounds, totalDmgA: state?.totalDmgA || 0, totalDmgB: state?.totalDmgB || 0, attitude, scorecard });
+    }
     setStage("result");
   };
 
@@ -187,7 +197,7 @@ export default function FightNight({ fighter, done, staff }) {
         {stage === "corner" && !docCheck && <Corner rnd={rnd} totalRounds={totalRounds} timer={timer} state={state} runRound={runRound} processResult={processResult} />}
         {stage === "corner" && docCheck && <DoctorCheck fighter={fighter} opp={opp} cutA={cutA} cutB={cutB} onContinue={() => { setDocCheck(false); setStage("corner"); }} onRetire={() => { const isPlayerCut = cutA >= 6; setResult({ won: !isPlayerCut, how: "Doctor Stoppage", r: rnd }); setStage("result"); }} />}
         {stage === "knockdown" && <Knockdown roundLog={roundLog} rnd={rnd} onSeeResult={() => { processResult(); }} />}
-        {stage === "result" && result && <ResultScreen fighter={fighter} opp={opp} roundLog={roundLog} result={result} totalRounds={totalRounds} onCommit={commitResult} />}
+        {stage === "result" && result && <ResultScreen fighter={fighter} opp={opp} roundLog={roundLog} roundLogs={roundLogs} result={result} totalRounds={totalRounds} onCommit={commitResult} />}
       </div>
     </div>
   );

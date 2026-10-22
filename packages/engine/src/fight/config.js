@@ -143,3 +143,10 @@ export const PHASE_EARLY = 0.7;
 export const PHASE_MID = 0.6;
 export const PHASE_LATE = 0.5;
 export const EARLY_EXCHANGES = 2;
+
+// Judges' scoring (10-point must system)
+// A round becomes 10-8 only when the round winner knocked the loser down AND
+// scored at least this many times the loser's points. Knockdowns happen in
+// about 30% of rounds, so a knockdown alone would make 10-8 far too common;
+// with this rule about 6-7% of decision rounds are 10-8.
+export const SCORE_10_8_POINT_RATIO = 2;

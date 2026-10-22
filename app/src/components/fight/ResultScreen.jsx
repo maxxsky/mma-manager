@@ -5,9 +5,12 @@ import { t } from "../../i18n/index.js";
 import { fmt$ } from "@ironfist/engine/rng.js";
 import { generateFightNarrative, detectSignatureMoments } from "@ironfist/engine/narrative.js";
 
-export default function ResultScreen({ fighter, opp, roundLog, result, totalRounds, onCommit }) {
-  const narrative = generateFightNarrative(fighter, opp, [roundLog].filter(Boolean), result);
-  const moments = detectSignatureMoments(fighter, [roundLog].filter(Boolean), result);
+export default function ResultScreen({ fighter, opp, roundLog, roundLogs, result, totalRounds, onCommit }) {
+  // The story and moments read the whole fight, not just the final round.
+  const logs = roundLogs?.length ? roundLogs : [roundLog].filter(Boolean);
+  const narrative = generateFightNarrative(fighter, opp, logs, result);
+  const moments = detectSignatureMoments(fighter, logs, result);
+  const sc = result.scorecard;
   const stars = '⭐'.repeat(narrative.rating || 3);
   const show = fighter.booked?.show || 0;
   const winBonus = result.won ? (fighter.booked?.winBonus || 0) : 0;
@@ -18,6 +21,12 @@ export default function ResultScreen({ fighter, opp, roundLog, result, totalRoun
       <div style={{ fontFamily: T.body, fontSize: 15, color: T.txt, marginTop: 16 }}>
         <b>{fighter.name}</b> {result.won ? t("RESULT.wins") : t("RESULT.loses")} via <b>{t("RESULT.how." + result.how.replace(/[/ ]/g, ''))}</b> · Round {result.r}
       </div>
+      {sc && (
+        <div style={{ fontFamily: T.mono, fontSize: 12.5, color: T.txt2, marginTop: 8 }}>
+          {t("RESULT.scorecard")}: <b style={{ color: T.txt }}>{sc.totalA}–{sc.totalB}</b>
+          {" "}({sc.rounds.map((r) => `${r.a}-${r.b}`).join(", ")})
+        </div>
+      )}
       {fighter.booked.title && result.won && (
         <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 17, letterSpacing: 1.5, textTransform: "uppercase", color: T.gold, marginTop: 8 }}>{t("RESULT.andStill").replace("{0}", fighter.weightClass)}</div>
       )}

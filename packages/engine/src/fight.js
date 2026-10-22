@@ -22,6 +22,7 @@ import { resolveStriking } from "./fight/resolve-striking.js";
 import { resolveClinch } from "./fight/resolve-clinch.js";
 import { resolveTakedown } from "./fight/resolve-takedown.js";
 import { resolveGround } from "./fight/resolve-ground.js";
+import { scoreDecision } from "./fight/scoring.js";
 
 // ── DAMAGE SAFETY CLAMP ──
 // Resolver returns secara struktural harusnya selalu >= 0, tapi ini safety net
@@ -328,13 +329,14 @@ export function runFight(A, B, plan, cornerPolicy, seed, totalRounds) {
     }
   }
 
+  let scorecard = null;
   if (!winner) {
-    const last = roundLogs[roundLogs.length - 1];
-    winner = last.winner;
+    scorecard = scoreDecision(roundLogs);
+    winner = scorecard.winner;
     how = "Decision";
   }
 
-  return { winner, how, round: finalRound, totalDmgA, totalDmgB, roundLogs };
+  return { winner, how, round: finalRound, totalDmgA, totalDmgB, roundLogs, scorecard };
 }
 
 // ── PREP FIGHTER ──
