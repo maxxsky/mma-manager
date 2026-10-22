@@ -57,7 +57,7 @@ export default function FightNight({ fighter, done, staff }) {
 
   // Hooks
   useFightSeed(fighter.id, fighter.booked.seed);
-  const { A, B, cutInfo, cutPct, missedWeight } = useFightPrep(fighter, opp, attitude, staff);
+  const { A, B, cutInfo, oppCutInfo, cutPct, missedWeight, limit } = useFightPrep(fighter, opp, attitude, staff);
   // The opponent picks a game plan from the matchup. Its corner is picked
   // each round inside simRound (aiCorner) from the fight state.
   const oppPlan = autoGamePlan(B, A);
@@ -65,7 +65,7 @@ export default function FightNight({ fighter, done, staff }) {
   // Run round
   const runRound = (rn, st0, corner) => {
     const cA = corner;
-    const res = simRound(rn, A, B, st0?.staA ?? 100, st0?.staB ?? 100, plan || "Keep It Standing", cA, st0?.momentum ?? 0, st0?.cutA ?? 0, st0?.cutB ?? 0, { planB: oppPlan, totalRounds });
+    const res = simRound(rn, A, B, st0?.staA ?? cutInfo.staminaCap, st0?.staB ?? oppCutInfo.staminaCap, plan || "Keep It Standing", cA, st0?.momentum ?? 0, st0?.cutA ?? 0, st0?.cutB ?? 0, { planB: oppPlan, totalRounds, nutritionistSkillA: staff?.nutritionist?.skill });
     setRoundLog(res);
     // Keep every round for the judges. Indexed by round so a repeated call
     // for the same round replaces it instead of adding a duplicate.
@@ -91,13 +91,20 @@ export default function FightNight({ fighter, done, staff }) {
   };
 
   const startFight = () => {
+    if (missedWeight && !weighinIssue) return;
     if (weighinIssue === "cancelled") {
-      done((g2) => { g2.log.unshift("🚫 Fight dibatalkan. Rep -4."); g2.rep = clamp(g2.rep - 4, 2, 100); });
+      done((g2) => {
+        g2.log.unshift("🚫 Fight dibatalkan. Rep -4.");
+        g2.rep = clamp(g2.rep - 4, 2, 100);
+        const f = g2.roster?.find((x) => x.id === fighter.id);
+        if (f) f.booked = null;
+      });
       return;
     }
+    if (!plan) return;
     setStage("entrance");
     const initMomentum = fighter.booked?.pressChoice === "trashTalk" ? 5 : 0;
-    const initState = initMomentum > 0 ? { momentum: initMomentum } : null;
+    const initState = { momentum: initMomentum, staA: cutInfo.staminaCap, staB: oppCutInfo.staminaCap };
     // No corner instruction before round 1: the corner only talks between rounds.
     setTimeout(() => runRound(1, initState, "neutral"), 500);
   };
@@ -131,7 +138,7 @@ export default function FightNight({ fighter, done, staff }) {
 
   const commitResult = () => {
     if (!result) { done((g) => {}); return; }
-    done((g) => { commitFightResult(g, fighter, result); });
+    done((g) => { commitFightResult(g, fighter, { ...result, weighinIssue }); });
   };
 
   // Corner countdown timer
@@ -196,13 +203,13 @@ export default function FightNight({ fighter, done, staff }) {
 
         {/* Stage content */}
         {stage === "staredown" && <Staredown fighter={fighter} attitude={attitude} setAttitude={setAttitude} onContinue={() => setStage("weighin")} />}
-        {stage === "weighin" && <WeighIn fighter={fighter} opp={opp} cutInfo={cutInfo} cutPct={cutPct} missedWeight={missedWeight} weighinIssue={weighinIssue} setWeighinIssue={setWeighinIssue} plan={plan} setPlan={setPlan} oppPlan={oppPlan} viewMode={viewMode} setViewMode={setViewMode} onStart={startFight} ca={ca} cb={cb} />}
+        {stage === "weighin" && <WeighIn fighter={fighter} opp={opp} limit={limit} cutInfo={cutInfo} oppCutInfo={oppCutInfo} cutPct={cutPct} missedWeight={missedWeight} weighinIssue={weighinIssue} setWeighinIssue={setWeighinIssue} plan={plan} setPlan={setPlan} oppPlan={oppPlan} viewMode={viewMode} setViewMode={setViewMode} onStart={startFight} ca={ca} cb={cb} />}
         {stage === "entrance" && <Entrance fighter={fighter} opp={opp} ca={ca} cb={cb} />}
         {stage === "round" && roundLog && <RoundView rnd={rnd} roundLog={roundLog} viewMode={viewMode} tickIdx={tickIdx} displayLog={displayLog} onEndRound={() => { setStage("corner"); setTimer(60); }} onSeeFinish={() => { setStage(roundLog.finish.how === "KO/TKO" ? "knockdown" : "result"); if (roundLog.finish.how !== "KO/TKO") processResult(); }} hasFinish={!!roundLog.finish} />}
         {stage === "corner" && !docCheck && <Corner rnd={rnd} totalRounds={totalRounds} timer={timer} state={state} runRound={runRound} processResult={processResult} />}
         {stage === "corner" && docCheck && <DoctorCheck fighter={fighter} opp={opp} cutA={cutA} cutB={cutB} onContinue={() => { setDocCheck(false); setStage("corner"); }} onRetire={() => { const isPlayerCut = cutA >= 6; setResult({ won: !isPlayerCut, how: "Doctor Stoppage", r: rnd }); setStage("result"); }} />}
         {stage === "knockdown" && <Knockdown roundLog={roundLog} rnd={rnd} onSeeResult={() => { processResult(); }} />}
-        {stage === "result" && result && <ResultScreen fighter={fighter} opp={opp} roundLog={roundLog} roundLogs={roundLogs} result={result} totalRounds={totalRounds} onCommit={commitResult} />}
+        {stage === "result" && result && <ResultScreen fighter={fighter} opp={opp} roundLog={roundLog} roundLogs={roundLogs} result={{ ...result, weighinIssue }} totalRounds={totalRounds} onCommit={commitResult} />}
       </div>
     </div>
   );

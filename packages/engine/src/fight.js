@@ -23,6 +23,7 @@ import { resolveClinch } from "./fight/resolve-clinch.js";
 import { resolveTakedown } from "./fight/resolve-takedown.js";
 import { resolveGround } from "./fight/resolve-ground.js";
 import { scoreDecision } from "./fight/scoring.js";
+import { weightCutInfo } from "./fight/weight-cut.js";
 
 // ── DAMAGE SAFETY CLAMP ──
 // Resolver returns secara struktural harusnya selalu >= 0, tapi ini safety net
@@ -114,7 +115,14 @@ function staminaDrain(f, plan, corner, legMod, bodyMult) {
 // opts.planB/opts.cornerB: side B's choices. When left out, B gets
 // autoGamePlan and aiCorner, so the opponent never fights without a plan.
 // opts.totalRounds: used by aiCorner to spot the final round (default 3).
+// opts.nutritionistSkillA/B: optional staff mitigation of each side's cut.
 export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA = 0, cutB = 0, opts = {}) {
+  const capA = weightCutInfo(A, opts.nutritionistSkillA).staminaCap;
+  const capB = weightCutInfo(B, opts.nutritionistSkillB).staminaCap;
+  // Clamp before resolving any exchanges: the cut affects output from the
+  // first bell. Never subtract the penalty again on subsequent rounds.
+  stA = clamp(stA, CFG.STA_MIN, capA);
+  stB = clamp(stB, CFG.STA_MIN, capB);
   const comm = createCommentary();
   let dmgA = 0, dmgB = 0, bodyDmgA = 0, bodyDmgB = 0, legDmgA = 0, legDmgB = 0;
   let ptsA = 0, ptsB = 0, finish = null, knockdown = null;
@@ -356,8 +364,8 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
   return {
     log: comm.summaryLog, tickLog: comm.tickLog,
     dmgA, dmgB, bodyDmgA, bodyDmgB, legDmgA, legDmgB,
-    staA: clamp(stA - drainA, CFG.STA_MIN, CFG.STA_MAX),
-    staB: clamp(stB - drainB, CFG.STA_MIN, CFG.STA_MAX),
+    staA: clamp(stA - drainA, CFG.STA_MIN, capA),
+    staB: clamp(stB - drainB, CFG.STA_MIN, capB),
     scoreA: ptsA, scoreB: ptsB,
     finish, knockdown, landA, landB,
     tdA: position.type !== "standing" && position.top === "A" ? 1 : 0,
@@ -388,7 +396,9 @@ export function runFight(A, B, plan, cornerPolicy, seed, totalRounds, opts = {})
     cutOwn: st.cutB, cutOpp: st.cutA, momOwn: -st.momentum, plan: planB,
   }));
 
-  let staA = 100, staB = 100, mom = 0;
+  let staA = weightCutInfo(A, opts.nutritionistSkillA).staminaCap;
+  let staB = weightCutInfo(B, opts.nutritionistSkillB).staminaCap;
+  let mom = 0;
   let cutA = 0, cutB = 0;
   let totalDmgA = 0, totalDmgB = 0;
   const roundLogs = [];
@@ -398,7 +408,10 @@ export function runFight(A, B, plan, cornerPolicy, seed, totalRounds, opts = {})
     const st = { staA, staB, momentum: mom, totalDmgA, totalDmgB, cutA, cutB };
     const corner = cornerPolicy(null, r, st);
     const cornerB = cornerPolicyB(null, r, st);
-    const res = simRound(r, A, B, staA, staB, plan, corner, mom, cutA, cutB, { planB, cornerB, totalRounds });
+    const res = simRound(r, A, B, staA, staB, plan, corner, mom, cutA, cutB, {
+      planB, cornerB, totalRounds,
+      nutritionistSkillA: opts.nutritionistSkillA, nutritionistSkillB: opts.nutritionistSkillB,
+    });
 
     staA = res.staA; staB = res.staB;
     mom = res.momentum;

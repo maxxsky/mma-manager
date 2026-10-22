@@ -4,6 +4,7 @@ import { T } from "../../ui/theme.jsx";
 import { t } from "../../i18n/index.js";
 import { fmt$ } from "@ironfist/engine/rng.js";
 import { generateFightNarrative, detectSignatureMoments } from "@ironfist/engine/narrative.js";
+import { fightPurse } from "@ironfist/engine/fight/purse.js";
 
 export default function ResultScreen({ fighter, opp, roundLog, roundLogs, result, totalRounds, onCommit }) {
   // The story and moments read the whole fight, not just the final round.
@@ -12,8 +13,7 @@ export default function ResultScreen({ fighter, opp, roundLog, roundLogs, result
   const moments = detectSignatureMoments(fighter, logs, result);
   const sc = result.scorecard;
   const stars = '⭐'.repeat(narrative.rating || 3);
-  const show = fighter.booked?.show || 0;
-  const winBonus = result.won ? (fighter.booked?.winBonus || 0) : 0;
+  const { show, winBonus, forfeit, purse } = fightPurse(fighter.booked, result);
 
   return (
     <Panel style={{ textAlign: "center", padding: "36px 24px", border: `1px solid ${result.won ? T.gold : T.neg}55` }}>
@@ -48,7 +48,9 @@ export default function ResultScreen({ fighter, opp, roundLog, roundLogs, result
       {/* Purse breakdown */}
       <div style={{ display: "inline-grid", gridTemplateColumns: "auto auto", gap: "6px 24px", margin: "20px 0", padding: "14px 22px", background: T.bg, borderRadius: T.r, textAlign: "left" }}>
         {(() => {
-          const items = [[t("RESULT.showMoney"), fmt$(show)], [t("RESULT.winBonus"), fmt$(winBonus)], [t("RESULT.campCut"), fmt$(Math.round(((fighter.contract?.managerCut || 0.18) * (show + winBonus))))]];
+          const items = [[t("RESULT.showMoney"), fmt$(show)], [t("RESULT.winBonus"), fmt$(winBonus)]];
+          if (forfeit > 0) items.push([t("WEIGH.catchweight"), `−${fmt$(forfeit)}`]);
+          items.push([t("RESULT.campCut"), fmt$(Math.round((fighter.contract?.managerCut || 0.18) * purse))]);
           const titleTier = fighter.booked?.titleTier;
           if (titleTier === "Major" || titleTier === "Premier") {
             const oppPop = typeof opp?.popularity === "number" ? opp.popularity : (opp?.level ? Math.round(opp.level * 60) : 30);
