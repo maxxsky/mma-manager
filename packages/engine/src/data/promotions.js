@@ -2,12 +2,24 @@
 // Shape matches SPONSOR_BRANDS pattern: array of objects, flat, data-only.
 import { random } from "../rng.js";
 
+// Each personality has a real effect on the offers it makes (P2 #35, DU8);
+// applied once in promotionOfferTerms() when the promotion is attached.
 const PERSONALITIES = {
-  talentFocused: { id: "talentFocused", label: "Talent Focused", desc: "Prefers top-15 contenders" },
-  grassroots:    { id: "grassroots",    label: "Grassroots",    desc: "Builds prospects, favors unranked fighters" },
-  highRoller:    { id: "highRoller",    label: "High Roller",  desc: "Big purses, fast expectation" },
-  oldSchool:     { id: "oldSchool",     label: "Old School",   desc: "Wants champions fighting regularly" },
+  talentFocused: { id: "talentFocused", label: "Talent Focused", desc: "Prefers top-15 contenders: purse +10% for ranked fighters" },
+  grassroots:    { id: "grassroots",    label: "Grassroots",    desc: "Builds prospects: purse +10% for unranked fighters" },
+  highRoller:    { id: "highRoller",    label: "High Roller",  desc: "Big purses (+20%), fast expectation: offers expire in 2 weeks" },
+  oldSchool:     { id: "oldSchool",     label: "Old School",   desc: "Wants champions fighting regularly: purse +10% for belt holders" },
 };
+
+/** Purse multiplier and expiry for an offer from this promotion. ctx: { ranked, champion }. */
+export function promotionOfferTerms(promotion, ctx = {}) {
+  const id = promotion?.personality?.id;
+  if (id === "highRoller") return { purseMult: 1.2, expires: 2 };
+  if (id === "grassroots" && !ctx.ranked) return { purseMult: 1.1 };
+  if (id === "talentFocused" && ctx.ranked) return { purseMult: 1.1 };
+  if (id === "oldSchool" && ctx.champion) return { purseMult: 1.1 };
+  return { purseMult: 1 };
+}
 
 export const PROMOTIONS = [
   // Local

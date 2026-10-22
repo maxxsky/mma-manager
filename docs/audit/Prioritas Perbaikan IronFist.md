@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#34, dan P5 #53–#54 selesai (36 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#34 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#35, dan P5 #53–#54 selesai (37 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#35 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -65,7 +65,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | 32 | Event chemistry | FI8 | Opsi gratis diberi kelemahan, atau opsi berbiaya diberi hasil lebih besar. **Selesai** |
 | 33 | Pinjaman dan penjualan darurat | EK4 | Pinjaman baru perlu kalau ekonomi sudah ketat (setelah P3). Penjualan darurat jual aset nyata. **Penjualan darurat selesai; pinjaman masih ditunda** |
 | 34 | Mentor | FI6 | Perbesar dan tampilkan, atau buang. **Selesai: dibuang** |
-| 35 | Kepribadian promotor | DU8 | Beri efek nyata (purse, tipe lawan) atau buang |
+| 35 | Kepribadian promotor | DU8 | Beri efek nyata (purse, tipe lawan) atau buang. **Selesai: diberi efek purse** |
 | 36 | Trait Injury Prone | FI4 | Bisa didapat, atau hapus pengecekannya |
 | 37 | `SET_SPONSOR` lama | EK5 | Hapus |
 
@@ -471,6 +471,12 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Event cerita "veteran membimbing rookie" (chemistry +4, `events/generators/rebuilding.js`) tetap ada karena terpisah dari pengali ini.
   - Efek: gain training turun paling banyak 3% untuk camp yang punya veteran. Tanpa RNG; harness dunia lulus.
   - Validasi: test di `removed-systems.test.js`. `npm test` root: **823 test app + 28 test server lulus**. Build lulus.
+
+- **22 Oktober 2026: P2 #35 selesai — kepribadian promotor diberi efek.**
+  - Sebelumnya kepribadian hanya sedikit memengaruhi promotor mana yang dipasang ke tawaran. Sekarang `promotionOfferTerms` menerapkan efek sekali, saat promotor dipasang ke tawaran fight: High Roller purse +20% dan tawaran kedaluwarsa dalam 2 minggu (kecuali mandatory defense); Grassroots +10% untuk fighter unranked; Talent Focused +10% untuk fighter ber-ranking; Old School +10% untuk pemegang sabuk. Deskripsi kepribadian menyebut efeknya, dan Inbox menampilkan catatan purse.
+  - Pemasangan promotor di akhir tick dan untuk mandatory defense sekarang meneruskan fighter, rank, dan streak. Sebelumnya konteksnya kosong, sehingga pembobotan Grassroots selalu aktif.
+  - Efek "tipe lawan" dari saran tidak dikerjakan; efek purse dipilih karena sederhana dan langsung terlihat.
+  - Validasi: test baru `promoter-personality.test.js` (3 test). `npm test` root: **826 test app + 28 test server lulus**. Build dan harness dunia lulus; harness ekonomi sama seperti sebelumnya (500 dan 1861 bertahan, 3222 bangkrut minggu 56).
 
 ## Urutan kerja yang disarankan
 

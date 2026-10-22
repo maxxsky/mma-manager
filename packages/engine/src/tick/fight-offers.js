@@ -5,7 +5,7 @@ import { genFighter, avgSkill } from "../fighter.js";
 import { worldOpponent, championFighter } from "../world/fighter-profile.js";
 import { championAt } from "../championships.js";
 import { rankOf, stripTitle, divisionRankings, rankedAIContenders } from "../rankings.js";
-import { pickPromotion } from "../data/promotions.js";
+import { pickPromotion, promotionOfferTerms } from "../data/promotions.js";
 
 // Skill thresholds for each rung of the title ladder.
 //
@@ -23,23 +23,27 @@ export const SKILL_GATE = {
   premier: 70,
 };
 
-// Helper: attach promotion to an offer object based on its tier
+// Helper: attach promotion to an offer object based on its tier, then apply
+// that promotion's personality to the offer terms (P2 #35).
 function attachPromotion(offer, tier, g, ctx) {
   // If fighter has an active exclusivity contract, force that promotion
   const fighter = ctx?.fighter;
-  if (fighter?.promotionContract?.fightsLeft > 0) {
-    const forced = g.promotions?.find((p) => p.id === fighter.promotionContract.promotionId);
-    if (forced) {
-      offer.promotionId = forced.id;
-      offer.promotionName = forced.name;
-      return;
-    }
+  const forced = fighter?.promotionContract?.fightsLeft > 0
+    && g.promotions?.find((p) => p.id === fighter.promotionContract.promotionId);
+  const prom = forced || pickPromotion(tier, ctx);
+  if (!prom) return;
+  offer.promotionId = prom.id;
+  offer.promotionName = prom.name;
+  if (!offer.opponent) return; // not a fight offer
+  const div = fighter && g.divisions?.[fighter.weightClass];
+  const champion = !!div && [div.champ, ...Object.values(div.tierChamps || {})].some((c) => c?.player && c.fighterId === fighter.id);
+  const terms = promotionOfferTerms(prom, { ranked: fighter ? rankOf(g, fighter) != null : false, champion });
+  if (terms.purseMult !== 1) {
+    offer.show = Math.round(offer.show * terms.purseMult);
+    offer.winBonus = Math.round(offer.winBonus * terms.purseMult);
+    offer.promotionNote = `${prom.personality.label}: purse +${Math.round((terms.purseMult - 1) * 100)}%`;
   }
-  const prom = pickPromotion(tier, ctx);
-  if (prom) {
-    offer.promotionId = prom.id;
-    offer.promotionName = prom.name;
-  }
+  if (terms.expires != null && offer.expires != null && !offer.defense) offer.expires = Math.min(offer.expires, terms.expires);
 }
 
 export function tickFightOffers(g) {
@@ -109,7 +113,7 @@ export function tickFightOffers(g) {
         titleTier: "Major",
         weeks: 0,
       });
-      attachPromotion(g.inbox[1], "Major", g, { r: rankOf(g, f), streakW: f.streakW, streakL: f.streakL });
+      attachPromotion(g.inbox[1], "Major", g, { fighter: f, r: rankOf(g, f), streakW: f.streakW, streakL: f.streakL });
       g.log.unshift(
         `🛡️ Mandatory defense untuk ${f.name} tiba — tolak atau biarkan expire = title dicopot.`,
       );
@@ -333,7 +337,8 @@ export function tickFightOffers(g) {
   // Attach promotion to any offer that doesn't have one yet
   g.inbox.forEach((m) => {
     if (m.type === "offer" && !m.promotionId) {
-      const ctx = { fighter: g.roster?.find((x) => x.id === m.fighterId) };
+      const fighter = g.roster?.find((x) => x.id === m.fighterId);
+      const ctx = { fighter, r: fighter ? rankOf(g, fighter) : null, streakW: fighter?.streakW, streakL: fighter?.streakL };
       attachPromotion(m, m.tier, g, ctx);
     }
   });
