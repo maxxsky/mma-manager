@@ -129,6 +129,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
   let ptsA = 0, ptsB = 0, finish = null, knockdown = null;
   let landA = 0, landB = 0;
   let tdA = 0, tdB = 0;
+  let subAttemptsA = 0, subAttemptsB = 0;
   // Strikes landed standing (striking and clinch), for "Work the body".
   let standLandA = 0, standLandB = 0;
   let position = STANDING;
@@ -241,6 +242,10 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
       const result = clampDamage(resolveTakedown(exType, A, B, stA, stB, { planA, planB, cornerA, cornerB }, matchup, comm, exMin, exSec));
       if (result.newPosition?.type !== "standing" && result.newPosition?.top === "A") tdA++;
       if (result.newPosition?.type !== "standing" && result.newPosition?.top === "B") tdB++;
+      if (result.finish?.how === "Submission") {
+        if (result.finish.by === "A") subAttemptsA++;
+        else subAttemptsB++;
+      }
       exDmgA = result.dmgA; exDmgB = result.dmgB;
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
@@ -256,6 +261,8 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
       const archMsgs4 = archetypeCommentary(A, B, exType, matchup);
       archMsgs4.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
       const result = clampDamage(resolveGround(exType, A, B, stA, stB, position, matchup, subProgress, bjjGuardProgress, SUB_THRESHOLD, comm, exMin, exSec));
+      subAttemptsA += result.subAttemptsA || 0;
+      subAttemptsB += result.subAttemptsB || 0;
       exDmgA = result.dmgA; exDmgB = result.dmgB;
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
@@ -372,7 +379,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
     staB: clamp(stB - drainB, CFG.STA_MIN, capB),
     scoreA: ptsA, scoreB: ptsB,
     finish, knockdown, landA, landB,
-    tdA, tdB,
+    tdA, tdB, subAttemptsA, subAttemptsB,
     momentum: mom,
     cutA, cutB,
     planB, cornerB,

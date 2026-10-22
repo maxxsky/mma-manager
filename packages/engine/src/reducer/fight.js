@@ -17,6 +17,7 @@ export function reduceFight(g, action) {
           tier: action.tier, title: action.title,
           titleTier: action.titleTier, defense: action.defense,
           oppRank: action.oppRank, contenderId: action.contenderId,
+          playerRank: rankOf(g, nf),
           seed: Math.floor(random() * 2**31),
         };
         g.inbox = g.inbox.filter((x) => x.id !== action.messageId);
@@ -63,6 +64,7 @@ export function reduceFight(g, action) {
           tier: action.tier, title: action.title,
           titleTier: action.titleTier, defense: action.defense,
           oppRank: action.oppRank, contenderId: action.contenderId,
+          playerRank: rankOf(g, nf2),
           seed: Math.floor(random() * 2**31),
         };
         g.inbox = g.inbox.filter((x) => x.id !== action.messageId);

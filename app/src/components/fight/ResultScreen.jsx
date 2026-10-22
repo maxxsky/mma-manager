@@ -3,7 +3,7 @@ import { Panel, Btn, Tag } from "../../ui/theme.jsx";
 import { T } from "../../ui/theme.jsx";
 import { t } from "../../i18n/index.js";
 import { fmt$ } from "@ironfist/engine/rng.js";
-import { generateFightNarrative, detectSignatureMoments } from "@ironfist/engine/narrative.js";
+import { generateFightNarrative, detectSignatureMoments, isTitleDefense } from "@ironfist/engine/narrative.js";
 import { fightTotals } from "@ironfist/engine/fight/report.js";
 import { fightPurse } from "@ironfist/engine/fight/purse.js";
 
@@ -30,7 +30,7 @@ export default function ResultScreen({ fighter, opp, roundLog, roundLogs, result
         </div>
       )}
       {fighter.booked.title && result.won && (
-        <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 17, letterSpacing: 1.5, textTransform: "uppercase", color: T.gold, marginTop: 8 }}>{t("RESULT.andStill").replace("{0}", fighter.weightClass)}</div>
+        <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 17, letterSpacing: 1.5, textTransform: "uppercase", color: T.gold, marginTop: 8 }}>{t(isTitleDefense(fighter) ? "RESULT.andStill" : "RESULT.andNew").replace("{0}", fighter.weightClass)}</div>
       )}
 
       <div style={{ marginTop: 12, fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>
@@ -57,7 +57,6 @@ export default function ResultScreen({ fighter, opp, roundLog, roundLogs, result
         {(() => {
           const items = [[t("RESULT.showMoney"), fmt$(show)], [t("RESULT.winBonus"), fmt$(winBonus)]];
           if (forfeit > 0) items.push([t("WEIGH.catchweight"), `−${fmt$(forfeit)}`]);
-          items.push([t("RESULT.campCut"), fmt$(Math.round((fighter.contract?.managerCut || 0.18) * purse))]);
           const titleTier = fighter.booked?.titleTier;
           if (titleTier === "Major" || titleTier === "Premier") {
             const oppPop = typeof opp?.popularity === "number" ? opp.popularity : (opp?.level ? Math.round(opp.level * 60) : 30);
@@ -65,6 +64,7 @@ export default function ResultScreen({ fighter, opp, roundLog, roundLogs, result
             items.push([t("RESULT.ppvRevenue"), fmt$(ppv)]);
           }
           if (fightNight > 0) items.push([t("RESULT.fightNight"), fmt$(fightNight)]);
+          items.push([t("RESULT.campCut"), fmt$(Math.round((fighter.contract?.managerCut || 0.18) * purse))]);
           return items.map(([l, v], i, arr) => (
             <div key={l} style={{ display: "contents" }}>
               <span style={{ fontFamily: T.body, fontSize: 12, color: i === arr.length - 1 ? T.txt : T.txt3, fontWeight: i === arr.length - 1 ? 700 : 400 }}>{l}</span>
