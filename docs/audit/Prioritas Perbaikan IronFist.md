@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26, dan P5 #53–#54 selesai (28 dari 63 item). #19–#26 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#27, dan P5 #53–#54 selesai (29 dari 63 item). #19–#27 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -57,7 +57,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | # | Sistem | Temuan | Saran |
 |---|---|---|---|
 | 26 | Ambisi Paycheck, Legacy, Family Man, Star Power | FI3 | Implementasikan; logikanya sederhana. `fightsThisYear` harus bertambah. **Selesai: diimplementasikan** |
-| 27 | Kontrak: counter-offer terbalik; logika negosiasi di UI | EK3 | Perbaiki arah counter-offer, pindahkan logika ke engine, ukur 7 tuas lalu buang yang tidak terasa |
+| 27 | Kontrak: counter-offer terbalik; logika negosiasi di UI | EK3 | Perbaiki arah counter-offer, pindahkan logika ke engine, ukur 7 tuas lalu buang yang tidak terasa. **Selesai** |
 | 28 | Relasi antar fighter | FI2 | Buang dulu kecuali ada rencana event yang mengubah relasi |
 | 29 | Kepribadian coach Motivator dan Player's Coach | CA3 | Implementasikan sesuai deskripsi |
 | 30 | Staf Cutman dan Nutritionist | CA2 | Cutman mengurangi cut; Nutritionist digabung ke weight cut (setelah #6) |
@@ -412,6 +412,13 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Paycheck: morale +3 tiap fight. Legacy: morale +5 saat mengalahkan lawan ber-ranking atau juara (`booking.oppRank` tidak null). Family Man: morale −10 untuk tiap fight di atas 3 per tahun. Star Power: kenaikan bersih popularitas dari fight ×1,5 (penurunan tidak diperbesar). Angka-angka ini pilihan awal sesuai deskripsi ambisi; bisa dituning di P3.
   - Test baru `ambitions.test.js` (5 test, semuanya gagal di kode lama). Satu fixture lama di `rankings.test.js` dikunci ke ambisi Grinder, karena fighter acaknya ternyata Paycheck dan sekarang mendapat +3 morale.
   - Validasi: `npm test` dari root dengan PostgreSQL lokal: **781 test app + 28 test server lulus**. Build, harness dunia, dan harness fight lulus, diff bersih.
+
+- **22 Oktober 2026: P2 #27 selesai — negosiasi kontrak.**
+  - `managerCut` adalah bagian camp dari purse, jadi fighter dan agen ingin nilainya rendah. Rumus peluang terima sudah benar (cut di atas `cutFloor` agen diberi penalti), tapi counter-offer menaikkan cut (`max(floor, cut + 1..3)`), dan cek "tawaran lemah" menganggap cut di *bawah* floor sebagai lemah. Keduanya terbalik. Sekarang counter menurunkan cut 1–3 poin menuju floor (tidak pernah di atas tawaran), dan tawaran lemah = cut di atas floor atau bonus di bawah 85% asking (khusus tanda tangan baru).
+  - Logika pindah dari `NegotiateModal.jsx` ke modul engine baru `contracts/negotiation.js`. Reducer baru: `NEGOTIATE_CONTRACT` (validasi + roll), `ACCEPT_COUNTER_OFFER` (menandatangani counter yang disimpan engine, bukan angka dari UI), `CLEAR_NEGOTIATION`. Tawaran di-snap ke opsi layar. Engine menolak tanpa roll kalau roster penuh atau kas kurang. Roll sekarang ikut checkpoint RNG reducer; sebelumnya UI memanggil `random()` langsung. `SIGN_CONTRACT` tetap ada untuk test dan pemanggil internal.
+  - Tuas diukur dari kode: exclusivity (−8), rematch (−4), dan biaya medis (−3/−6) tidak dibaca di bagian mana pun dari game, jadi hanya menurunkan peluang terima. Ketiganya dihapus beserta 22 baris i18n. Yang dipertahankan karena berefek nyata: bonus (kas), cut (purse camp), jumlah fight dan durasi (masa kontrak), equity (bagian sponsor fighter). Contoh agen Standard: cut 25% vs 18% −29 poin, bonus 2× asking +22, 8 vs 2 fight +8, equity 20% +30.
+  - Layar counter tidak lagi menampilkan "estimasi diterima" palsu (dulu 80–97%, padahal menerima counter selalu berhasil).
+  - Validasi: test baru `negotiation.test.js` (11 test). `npm test` dari root: **792 test app + 28 test server lulus**. Build, harness dunia, smoke test browser lulus. Skrip browser tambahan menguji tanda tangan dan counter di game sungguhan: counter atas tawaran 25% menjadi 22%, kontrak tersimpan, `negotiation` bersih setelah modal ditutup, tanpa error console.
 
 ## Urutan kerja yang disarankan
 

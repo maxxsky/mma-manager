@@ -183,8 +183,10 @@ export default function App() {
       {nego && (
         <NegotiateModal
           fighter={nego.fighter} mode={nego.mode} cash={g.cash}
-          onClose={() => setNego(null)}
-          onCommit={(deal) => dispatch({ type: "SIGN_CONTRACT", mode: nego.mode, prospectId: nego.prospectId, fighterId: nego.fighter?.id, deal })}
+          rosterCap={tier.rosterCap} rosterSize={g.roster.length} negotiation={g.negotiation}
+          onNegotiate={(offer) => dispatch({ type: "NEGOTIATE_CONTRACT", mode: nego.mode, prospectId: nego.prospectId, fighterId: nego.fighterId || nego.fighter?.id, offer })}
+          onAcceptCounter={() => dispatch({ type: "ACCEPT_COUNTER_OFFER" })}
+          onClose={() => { setNego(null); if (g.negotiation) dispatch({ type: "CLEAR_NEGOTIATION" }); }}
         />
       )}
 
