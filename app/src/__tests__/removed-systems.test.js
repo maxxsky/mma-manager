@@ -15,3 +15,10 @@ describe('P2 #28 — fighter-to-fighter relationships removed', () => {
     expect(engine.getRel).toBeUndefined()
   })
 })
+
+describe('P2 #34 — passive mentor training bonus removed', () => {
+  it('career.js no longer exports a mentor multiplier', async () => {
+    const career = await import('@ironfist/engine/career.js')
+    expect(career.calcMentorBonus).toBeUndefined()
+  })
+})

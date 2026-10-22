@@ -2,7 +2,6 @@
 import { clamp, R, RI, random, pick, fmt$, uid } from "../rng.js";
 import { ATTRS, ATTR_LABEL, TRAINING, INTENSITY, CAMP_TIERS, SPARRING_MATCH } from "../data.js";
 import { coachBonus, facBonus } from "../economy.js";
-import { calcMentorBonus } from "../career.js";
 import { pushInboxEvent } from "../events.js";
 import { MOTIVATOR_RECOVERY_MULT } from "../ambitions.js";
 
@@ -78,7 +77,6 @@ export function tickTraining(g) {
       const traitMult = f.traits?.includes("Natural Talent") ? 1.15 : 1;
       const moraleMult = f.morale >= 75 ? 1.1 : f.morale < 40 ? 0.85 : 1;
       const sparringMult = calcSparringMult(f, g);
-      const mentorMult = calcMentorBonus(g, f);
 
       let totalGain = 0;
       let bestGain = 0;
@@ -88,7 +86,7 @@ export function tickTraining(g) {
         const prog = f.attrs[k] / cap;
         const capMult = f.traits?.includes("Grinder") ? 0.9 : prog < 0.7 ? 1 : prog < 0.9 ? 0.6 : 0.3;
         const gain = R(0.5, 1.4) * inten.mult * ageMult * otMult * traitMult * moraleMult * capMult
-          * chemMult * coachBonus(g, [k]) * facBonus(g, [k]) * mentorMult * sparringMult * attentionMult;
+          * chemMult * coachBonus(g, [k]) * facBonus(g, [k]) * sparringMult * attentionMult;
         f.attrs[k] = clamp(f.attrs[k] + gain, 5, cap);
         totalGain += gain;
         if (gain > bestGain) { bestGain = gain; bestAttr = k; }

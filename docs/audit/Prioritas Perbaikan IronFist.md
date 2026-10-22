@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#33, dan P5 #53–#54 selesai (35 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#33 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#34, dan P5 #53–#54 selesai (36 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#34 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -64,7 +64,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | 31 | Janji ke fighter | FI5 | Catat janji dan beri akibat kalau diingkari. **Selesai** |
 | 32 | Event chemistry | FI8 | Opsi gratis diberi kelemahan, atau opsi berbiaya diberi hasil lebih besar. **Selesai** |
 | 33 | Pinjaman dan penjualan darurat | EK4 | Pinjaman baru perlu kalau ekonomi sudah ketat (setelah P3). Penjualan darurat jual aset nyata. **Penjualan darurat selesai; pinjaman masih ditunda** |
-| 34 | Mentor | FI6 | Perbesar dan tampilkan, atau buang |
+| 34 | Mentor | FI6 | Perbesar dan tampilkan, atau buang. **Selesai: dibuang** |
 | 35 | Kepribadian promotor | DU8 | Beri efek nyata (purse, tipe lawan) atau buang |
 | 36 | Trait Injury Prone | FI4 | Bisa didapat, atau hapus pengecekannya |
 | 37 | `SET_SPONSOR` lama | EK5 | Hapus |
@@ -465,6 +465,12 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - **Akibat yang perlu diketahui:** camp yang kesulitan dengan fasilitas masih level 1 kini benar-benar bisa bangkrut di tahun pertama. Sebelumnya uang gratis yang bisa diulang menutupinya. Di harness ekonomi: seed 3222 (camp yang terus kalah, reputasi 2–11, semua fasilitas level 1) bangkrut di minggu 57; dulu bertahan sekitar 7 tahun. **Saran untuk P3:** pinjaman dengan bunga sebagai jaring pengaman awal game, atau tinjau ulang pemasukan camp tier 0.
   - Harness ekonomi: pemain skrip tidak lagi membeli upgrade tier camp dengan uang terakhir (buffer sama dengan fasilitas, $60.000). Dengan itu seed 500 dan 1861 bertahan 20 tahun; 3222 bangkrut seperti dijelaskan di atas.
   - Validasi: test baru `emergency-sale.test.js` (3 test). `npm test` root: **822 test app + 28 test server lulus**. Build dan harness dunia lulus.
+
+- **22 Oktober 2026: P2 #34 selesai — pengali mentor dibuang.**
+  - `calcMentorBonus` memberi +1% per veteran, maksimal +3%, ke semua gain training secara otomatis dan tanpa tampilan. Syaratnya sangat longgar (usia 30+ atau 15+ fight, dan lebih senior dari trainee). Daftar pangkas di review menyarankan mempertahankan pengali yang dikontrol pemain dan membuang atau menampilkan sisanya. Karena mentor tidak dikontrol pemain dan efeknya nyaris tak terasa, pengalinya dihapus.
+  - Event cerita "veteran membimbing rookie" (chemistry +4, `events/generators/rebuilding.js`) tetap ada karena terpisah dari pengali ini.
+  - Efek: gain training turun paling banyak 3% untuk camp yang punya veteran. Tanpa RNG; harness dunia lulus.
+  - Validasi: test di `removed-systems.test.js`. `npm test` root: **823 test app + 28 test server lulus**. Build lulus.
 
 ## Urutan kerja yang disarankan
 

@@ -3,7 +3,6 @@
 //   Non-invasive simulation extension. Zero combat/economy impact.
 // ============================================================
 
-import { clamp } from "./rng.js";
 import { queueDelayedEvent } from "./events.js";
 import { AGE_YOUNG, AGE_PEAK_LOW, AGE_VETERAN, AGE_OLD } from "./fight/config.js";
 
@@ -241,31 +240,6 @@ export function getStoryTags(f) {
   }
 
   return tags;
-}
-
-// ── MENTOR SYSTEM ──
-
-export function calcMentorBonus(g, trainee) {
-  if (!g.roster || g.roster.length < 2) return 1.0;
-
-  let bonus = 0;
-  g.roster.forEach((mentor) => {
-    if (mentor.id === trainee.id) return;
-    // Mentor criteria: age 30+ or 15+ fights, not injured, not booked for fight this week
-    const totalFights = (mentor.record?.w || 0) + (mentor.record?.l || 0);
-    const isVeteran = (mentor.age >= 30 || totalFights >= 15);
-    const isAvailable = !mentor.injury && (!mentor.booked || mentor.booked.weeksLeft > 2);
-    // Trainee should be younger/less experienced
-    const traineeFights = (trainee.record?.w || 0) + (trainee.record?.l || 0);
-    const isMentoring = trainee.age < mentor.age || traineeFights < totalFights;
-
-    if (isVeteran && isAvailable && isMentoring) {
-      // Small bonus: 1% per mentor, max 3% total
-      bonus += 0.01;
-    }
-  });
-
-  return clamp(1 + Math.min(bonus, 0.03), 1, 1.03);
 }
 
 // ── RIVALRY EVOLUTION ──
