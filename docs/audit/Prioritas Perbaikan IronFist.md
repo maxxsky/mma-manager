@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, seluruh P2 #26–#37, P3 #40, #43–#45, dan P5 #53–#54 selesai (43 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#37, #40, #43–#45, dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, seluruh P2 #26–#37, P3 #40, #41, #43–#45, dan P5 #53–#54 selesai (44 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#37, #40, #41, #43–#45, dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -76,7 +76,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | 38 | Gabungkan angka status camp (Reputasi, Prestise, Legacy, Tier, Identitas Dinasti) jadi 1–2 | EK1 |
 | 39 | Ekonomi late game: kurangi banjir uang dan reputasi; prestise sekitar 50 di tahun ke-10. Ukur ulang setelah bug sabuk (#8) dan sponsor (#12) diperbaiki | EK1 |
 | 40 | Grade scout tidak otomatis S hanya karena reputasi tinggi. **Selesai** | CA1 |
-| 41 | Intensitas Hard: gain lebih tinggi atau risiko lebih rendah sampai layak dipilih | FI1 |
+| 41 | Intensitas Hard: gain lebih tinggi atau risiko lebih rendah sampai layak dipilih. **Selesai** | FI1 |
 | 42 | Kurangi atau tampilkan pengali training yang tidak terlihat | FI1 |
 | 43 | Pergantian juara AI lebih jarang. **Selesai** | DU7 |
 | 44 | Ambang Hall of Fame lebih tinggi. **Selesai** | SV5 |
@@ -513,6 +513,12 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Total pesan baru per tahun di simulasi yang sama: 100 → 87.
   - Satu test lama (`event-narrative-generators.test.js`) mengunci perilaku lama ("no repeat risk"); diganti test yang memastikan world news tidak lagi mengumumkan pergantian juara.
   - Validasi: test baru `world-news.test.js`. `npm test` root: **839 test app + 28 test server lulus**. Build lulus.
+
+- **22 Oktober 2026: P3 #41 selesai — intensitas Hard.**
+  - Diukur: satu fighter usia 24, atribut 40 dengan ceiling 90, latihan sparring terus-menerus, 300 seed. Hard lama (gain 1,4×, cedera 0,08/minggu, overtraining +16): 12 minggu hanya +6% gain dibanding Medium dengan cedera ~5× lipat dan cedera permanen 4,7% vs 1,7%; 48 minggu gain jauh di bawah Medium (8,1 vs 14,0 per atribut) dengan 26 minggu cedera.
+  - Hard baru: gain 1,5×, cedera 0,035, overtraining +12. 12 minggu: gain +41% dibanding Medium, cedera 1,6×, cedera permanen setara Medium (1,7%). 48 minggu tanpa jeda: gain tetap di bawah Medium (12,5 vs 14,0) dengan cedera ~7× dan cedera permanen 10,7% vs 4,7%. Hard menjadi pilihan jangka pendek yang harus diselingi jeda.
+  - Harness ekonomi: ketiga seed bertahan 20 tahun (seed 3222 sebelumnya bangkrut di minggu 56). Penyebab pastinya belum diverifikasi.
+  - Validasi: test baru `training-intensity.test.js` (2 test; test 12 minggu gagal di angka lama dengan rasio gain 1,01). `npm test` root: **841 test app + 28 test server lulus**. Harness dunia lulus.
 
 ## Urutan kerja yang disarankan
 
