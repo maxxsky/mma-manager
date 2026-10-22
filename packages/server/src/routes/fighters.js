@@ -4,25 +4,44 @@ import crypto from "crypto";
 import { requireAuth } from "../middleware/auth.js";
 import { genFighter } from "@ironfist/engine/fighter.js";
 import { random, setRNG, mulberry32 } from "@ironfist/engine/rng.js";
+import { CAMP_TIERS } from "@ironfist/engine/data.js";
 
 const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 export const fighterRouter = Router();
+
+// Same caps as single-player camp tiers (engine data/camp.js).
+export function rosterCapFor(campTier) {
+  return (CAMP_TIERS[campTier] || CAMP_TIERS[0]).rosterCap;
+}
 fighterRouter.use(requireAuth);
 
 // ── POST /api/fighters — generate + add fighter to roster ──
 fighterRouter.post("/", async (req, res) => {
+  // One transaction with the camp row locked, so parallel requests cannot
+  // push the roster past its cap (P5 #54, BE5: creation used to be unlimited).
+  const client = await pool.connect();
   try {
-    // Get user's camp
-    const campResult = await pool.query(
-      "SELECT id FROM camps WHERE user_id = $1",
+    await client.query("BEGIN");
+    const campResult = await client.query(
+      "SELECT id, camp_tier FROM camps WHERE user_id = $1 FOR UPDATE",
       [req.userId]
     );
     if (campResult.rows.length === 0) {
+      await client.query("ROLLBACK");
       return res.status(404).json({ error: "User has no camp" });
     }
     const campId = campResult.rows[0].id;
+    const rosterCap = rosterCapFor(campResult.rows[0].camp_tier);
+    const countResult = await client.query(
+      "SELECT COUNT(*)::int AS n FROM fighters WHERE camp_id = $1", // the server has no release/retire flow yet
+      [campId]
+    );
+    if (countResult.rows[0].n >= rosterCap) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: `Roster full (${rosterCap} fighters for this camp tier)`, rosterCap });
+    }
 
     // Generate fighter with seeded engine call
     // Level range 0.35-0.6 matches genTalentEntry() in talentPool.js
@@ -33,7 +52,7 @@ fighterRouter.post("/", async (req, res) => {
     const f = genFighter(level);
 
     // Map genFighter() fields to DB columns
-    const result = await pool.query(
+    const result = await client.query(
       `INSERT INTO fighters (
         camp_id, name, archetype, region, age,
         attrs, skills, morale, stamina, overtraining,
@@ -82,10 +101,14 @@ fighterRouter.post("/", async (req, res) => {
       ]
     );
 
+    await client.query("COMMIT");
     res.status(201).json({ fighter: result.rows[0] });
   } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
     console.error("Create fighter error:", err.message);
     res.status(500).json({ error: "Internal server error" });
+  } finally {
+    client.release();
   }
 });
 

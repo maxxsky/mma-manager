@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7 dan seluruh P1 #8–#25 selesai (25 dari 63 item). #19–#25 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, dan P5 #53–#54 selesai (27 dari 63 item). #19–#25 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -397,10 +397,19 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Validasi: test baru `promoter-activity.test.js` (4 test; test decay gagal di kode lama), **776 test aplikasi / 55 file lulus**, harness dunia (panjang log 30) dan harness fight lulus, smoke test browser lulus, diff bersih.
   - Masih terbuka (bagian lain DU8, di luar #25): layar Promotor menyebut relasi menentukan peluang bertarung, padahal peluang tawaran tetap 35% per minggu. Relasi juga turun di tier yang belum bisa dijangkau (misalnya Premier untuk camp baru). Kepribadian promotor masuk P2 #35.
 
+- **22 Oktober 2026: integrasi P1 #19–#25 ke `master`.** Atas izin user, `master` di-fast-forward ke `927e0da` tanpa PR. CI untuk hash yang sama di branch sukses, termasuk test server PostgreSQL: https://github.com/maxxsky/mma-manager/actions/runs/39805450400.
+
+- **22 Oktober 2026: P5 #53 dan #54 selesai.** Branch `claude/quirky-mccarthy-7jogso`.
+  - **#53:** `getJwtSecret()` tidak lagi punya secret cadangan. Server menolak start kalau `JWT_SECRET` kosong, apa pun `NODE_ENV`-nya, juga kalau isinya placeholder (nilai `.env.example` atau secret lama di kode) atau lebih pendek dari 32 karakter. Pesan error menyertakan perintah untuk membuat secret acak. Konfigurasi vitest server mengisi secret khusus test, jadi CI tetap jalan.
+  - **#54:** modul baru `packages/server/src/validation.js`. Register: username 3–32 karakter (huruf, angka, `_ . -`), email berformat `x@y.z` maksimal 254 karakter, password 8 karakter sampai 72 byte (batas bcrypt), semua harus string. Login menolak field yang bukan string sebelum query. `POST /api/fighters` sekarang dibatasi `rosterCap` tier camp (data `CAMP_TIERS` engine, sama dengan single-player). Cek dan insert berjalan dalam satu transaksi dengan baris camp dikunci (`FOR UPDATE`), jadi request paralel tidak bisa melewati batas. Roster penuh → 409.
+  - Fixture test server lama disesuaikan (password `"x"`/`"pass"` dan username 1–2 karakter tidak lagi valid).
+  - Validasi: test server dijalankan di PostgreSQL 16 lokal. **28 test server lulus** (22 lama, 6 baru; keenam test baru gagal di kode lama), termasuk 10 request paralel ke camp dengan batas 4. `npm test` dari root: 776 test app + 28 test server lulus, diff bersih.
+  - Batas: pembuatan fighter di server masih gratis. Server belum punya alur melepas atau pensiun fighter, jadi semua fighter di camp dihitung ke batas roster. Email tidak dinormalisasi (huruf besar/kecil tetap dibedakan, sama seperti sebelumnya).
+
 ## Urutan kerja yang disarankan
 
 1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`. P1 #19–#25 selesai di branch `claude/quirky-mccarthy-7jogso` (#21: rival camp dibuang). Seluruh P1 selesai.
-2. Berikutnya: merge branch ke master, lalu langkah 3–4 (main beberapa jam, putuskan P2). P5 #53–#54 bisa disisipkan.
+2. P1 #19–#25 sudah di `master` (`927e0da`). P5 #53–#54 selesai di branch. Berikutnya langkah 3–4 (main beberapa jam, putuskan P2).
 3. Mainkan beberapa jam setelah bug state utama selesai; tandai temuan yang sudah terbantu dan yang masih bisa direproduksi.
 4. Putuskan P2 dan daftar pangkas.
 5. P3, lalu P4, lalu P6.

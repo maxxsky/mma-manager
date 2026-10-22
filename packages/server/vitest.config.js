@@ -5,6 +5,8 @@ export default defineConfig({
   test: {
     include: ["src/tests/**/*.test.js"],
     testTimeout: 30000,
+    // The server refuses to start without a real JWT secret (config.js).
+    env: { JWT_SECRET: "test-only-secret-0123456789abcdefghijklmnopqrstuvwxyz" },
     hookTimeout: 30000,
     // NOTE: DATABASE_URL is NOT set here — helpers.js sets it dynamically
     // before importing the app, so both db.js and server modules use the

@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeAll, beforeEach } from "vitest";
 import { setupTestApp } from "./helpers.js";
 import { setupTestDb, cleanTestDb, getTestPool } from "./db.js";
+// Not imported from routes/fighters.js: that module creates its DB pool on
+// import, before setupTestApp() has set DATABASE_URL.
+import { CAMP_TIERS } from "@ironfist/engine/data.js";
 
 let request, pool;
 
@@ -27,38 +30,59 @@ describe("Auth", () => {
   });
 
   it("POST /api/auth/register — duplicate email → 409", async () => {
-    await request("POST", "/api/auth/register", { username: "a", email: "dup@test.com", password: "x" });
-    const res = await request("POST", "/api/auth/register", { username: "b", email: "dup@test.com", password: "x" });
+    await request("POST", "/api/auth/register", { username: "alice", email: "dup@test.com", password: "password1" });
+    const res = await request("POST", "/api/auth/register", { username: "bobby", email: "dup@test.com", password: "password1" });
     expect(res.status).toBe(409);
     expect(res.body.error).toMatch(/email/);
   });
 
   it("POST /api/auth/register — duplicate username → 409", async () => {
-    await request("POST", "/api/auth/register", { username: "dup", email: "a@test.com", password: "x" });
-    const res = await request("POST", "/api/auth/register", { username: "dup", email: "b@test.com", password: "x" });
+    await request("POST", "/api/auth/register", { username: "dup", email: "a@test.com", password: "password1" });
+    const res = await request("POST", "/api/auth/register", { username: "dup", email: "b@test.com", password: "password1" });
     expect(res.status).toBe(409);
     expect(res.body.error).toMatch(/username/);
   });
 
   it("POST /api/auth/login — valid credentials return JWT", async () => {
-    await request("POST", "/api/auth/register", { username: "u", email: "u@test.com", password: "pass123" });
-    const res = await request("POST", "/api/auth/login", { email: "u@test.com", password: "pass123" });
+    await request("POST", "/api/auth/register", { username: "user1", email: "u@test.com", password: "pass12345" });
+    const res = await request("POST", "/api/auth/login", { email: "u@test.com", password: "pass12345" });
     expect(res.status).toBe(200);
     expect(res.body.token).toBeTruthy();
-    expect(res.body.user.username).toBe("u");
+    expect(res.body.user.username).toBe("user1");
   });
 
   it("POST /api/auth/login — wrong password → 401", async () => {
-    await request("POST", "/api/auth/register", { username: "u", email: "u@test.com", password: "pass123" });
+    await request("POST", "/api/auth/register", { username: "user1", email: "u@test.com", password: "pass12345" });
     const res = await request("POST", "/api/auth/login", { email: "u@test.com", password: "wrong" });
     expect(res.status).toBe(401);
+  });
+
+  it("POST /api/auth/register — rejects short password, bad email, bad username (P5 #54)", async () => {
+    const reg = (body) => request("POST", "/api/auth/register", body);
+    const ok = { username: "valid_user", email: "valid@test.com", password: "longenough" };
+    expect((await reg({ ...ok, password: "short" })).status).toBe(400);
+    expect((await reg({ ...ok, password: "x".repeat(73) })).status).toBe(400);
+    expect((await reg({ ...ok, email: "not-an-email" })).status).toBe(400);
+    expect((await reg({ ...ok, email: "a@b" })).status).toBe(400);
+    expect((await reg({ ...ok, username: "ab" })).status).toBe(400);
+    expect((await reg({ ...ok, username: "has space" })).status).toBe(400);
+    expect((await reg({ ...ok, password: 12345678 })).status).toBe(400);
+    expect((await reg(undefined)).status).toBe(400);
+    const users = await pool.query("SELECT COUNT(*)::int AS n FROM users");
+    expect(users.rows[0].n).toBe(0);
+    expect((await reg(ok)).status).toBe(201);
+  });
+
+  it("POST /api/auth/login — non-string fields → 400", async () => {
+    const res = await request("POST", "/api/auth/login", { email: { $ne: "" }, password: "password1" });
+    expect(res.status).toBe(400);
   });
 });
 
 // ── HELPERS ───────────────────────────────────────────────────
 async function asUser(username) {
-  await request("POST", "/api/auth/register", { username, email: `${username}@test.com`, password: "pass" });
-  const login = await request("POST", "/api/auth/login", { email: `${username}@test.com`, password: "pass" });
+  await request("POST", "/api/auth/register", { username: `user_${username}`, email: `${username}@test.com`, password: "password1" });
+  const login = await request("POST", "/api/auth/login", { email: `${username}@test.com`, password: "password1" });
   return { token: login.body.token, id: login.body.user.id, headers: { Authorization: `Bearer ${login.body.token}` } };
 }
 
@@ -120,6 +144,21 @@ describe("Fighters", () => {
     const attrKeys = Object.keys(res.body.fighter.attrs);
     expect(attrKeys.length).toBeGreaterThanOrEqual(8);
     expect(attrKeys).toEqual(expect.arrayContaining(CORE_ATTRS));
+  });
+
+  it("POST /api/fighters — stops at the camp tier roster cap, also under parallel requests (P5 #54)", async () => {
+    const user = await asUser("cap");
+    await request("POST", "/api/camp", { name: "Gym" }, auth(user.token));
+    const cap = CAMP_TIERS[0].rosterCap;
+    const results = await Promise.all(
+      Array.from({ length: cap + 3 }, () => request("POST", "/api/fighters", null, auth(user.token)))
+    );
+    expect(results.filter((r) => r.status === 201)).toHaveLength(cap);
+    const full = results.filter((r) => r.status === 409);
+    expect(full).toHaveLength(3);
+    expect(full[0].body.rosterCap).toBe(cap);
+    const list = await request("GET", "/api/fighters", null, auth(user.token));
+    expect(list.body.fighters).toHaveLength(cap);
   });
 
   it("GET /api/fighters — scoped to user's camp", async () => {

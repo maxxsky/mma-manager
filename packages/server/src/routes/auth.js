@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import pg from "pg";
 import rateLimit from "express-rate-limit";
 import { getJwtSecret } from "../config.js";
+import { validateRegistration, validateLogin } from "../validation.js";
 
 const { Pool } = pg;
 
@@ -28,12 +29,10 @@ const authLimiter = process.env.NODE_ENV === "test"
 
 authRouter.post("/register", authLimiter, async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password } = req.body || {};
 
-    // Validate required fields
-    if (!username || !email || !password) {
-      return res.status(400).json({ error: "username, email, and password are required" });
-    }
+    const invalid = validateRegistration(req.body || {});
+    if (invalid) return res.status(400).json({ error: invalid });
 
     // Hash password
     const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
@@ -62,11 +61,10 @@ authRouter.post("/register", authLimiter, async (req, res) => {
 // ── POST /api/auth/login ─────────────────────────────────────
 authRouter.post("/login", authLimiter, async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
 
-    if (!email || !password) {
-      return res.status(400).json({ error: "email and password are required" });
-    }
+    const invalid = validateLogin(req.body || {});
+    if (invalid) return res.status(400).json({ error: invalid });
 
     // Find user by email
     const result = await pool.query(
