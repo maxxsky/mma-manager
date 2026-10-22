@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, seluruh P2 #26–#37, P3 #40, dan P5 #53–#54 selesai (40 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#37, #40, dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, seluruh P2 #26–#37, P3 #40 dan #43, dan P5 #53–#54 selesai (41 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#37, #40, #43, dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -78,7 +78,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | 40 | Grade scout tidak otomatis S hanya karena reputasi tinggi. **Selesai** | CA1 |
 | 41 | Intensitas Hard: gain lebih tinggi atau risiko lebih rendah sampai layak dipilih | FI1 |
 | 42 | Kurangi atau tampilkan pengali training yang tidak terlihat | FI1 |
-| 43 | Pergantian juara AI lebih jarang | DU7 |
+| 43 | Pergantian juara AI lebih jarang. **Selesai** | DU7 |
 | 44 | Ambang Hall of Fame lebih tinggi | SV5 |
 | 45 | Event: kurangi "Division Shake-up", hilangkan dobel dengan "New Champion", tambah variasi template | DU9 |
 
@@ -492,6 +492,13 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Modul baru `scouting.js`: daftar metode (biaya, level, batas grade), cek blokir (roster penuh, kas kurang, Diamond terkunci), dan `runScout` yang membuat prospek, laporan, dan alasan pindah untuk Diamond. Reducer `SCOUT` hanya menerima `methodId` dan filter. Sebelumnya `App.jsx` membuat fighter, laporan, grade, dan biaya lalu mengirimnya apa adanya, dengan roll RNG di luar reducer.
   - **Temuan, belum dikerjakan:** deskripsi tier "Elite MMA Factory" menjanjikan "Scout otomatis per bulan", tapi tidak ada kode yang menjalankannya.
   - Validasi: test baru `scouting.test.js` (5 test). `npm test` root: **834 test app + 28 test server lulus**. Build, harness dunia, 2 run smoke test, dan skrip browser Scout → Negosiasi lulus tanpa error console.
+
+- **22 Oktober 2026: P3 #43 selesai — juara AI lebih jarang berganti.**
+  - Pengukuran awal (5 seed × 480 minggu): 0,54 pergantian juara Major per divisi per tahun; 3,0 dari 8 divisi berganti juara dalam 8 bulan pertama; hampir semuanya dari kekalahan title defense (213 dari 800 defense, sekitar 27%). Pensiun juara hanya 4 kasus.
+  - Peluang kalah saat defense tetap `dasar × (skill penantang / skill juara)`, tapi dasar diturunkan 0,25 → 0,15 dan rentang 10–50% → 5–35%.
+  - Sesudah: 0,32 pergantian per divisi per tahun (masa jabatan rata-rata sekitar 3 tahun), 1,8 dari 8 divisi dalam 8 bulan pertama. Test statistik (40 seed × 5 defense): laju kalah per defense harus 10–22%; kode lama 24,75%.
+  - Catatan: kedelapan divisi masih melakukan defense di minggu yang sama (tiap 24 minggu), jadi pergantian tetap cenderung berkelompok. Belum diubah.
+  - Validasi: test baru `ai-title-defense.test.js` (2 test). `npm test` root: **836 test app + 28 test server lulus**. Harness dunia lulus.
 
 ## Urutan kerja yang disarankan
 

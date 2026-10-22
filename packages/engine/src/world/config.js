@@ -9,9 +9,12 @@ export const MAX_FIGHTER_AGE = 40;    // forced retirement age
 export const RETIREMENT_AGE = 38;     // retirement check starts
 export const RETIREMENT_CHANCE = 0.3; // yearly retirement probability
 
-export const UPSET_BASE_CHANCE = 0.25; // base chance of title change
-export const UPSET_MAX = 0.5;
-export const UPSET_MIN = 0.1;
+// Chance an AI champion loses a defense = base × (contender skill / champion
+// skill), clamped. Was 0.25 / 0.10–0.50: 27% of defenses lost, 3 of 8
+// divisions changed champion in the first 8 months (P3 #43, DU7).
+export const UPSET_BASE_CHANCE = 0.15;
+export const UPSET_MAX = 0.35;
+export const UPSET_MIN = 0.05;
 
 export const STREAK_THRESHOLD = 5;    // win streak for news event
 export const STREAK_MAX = 8;
