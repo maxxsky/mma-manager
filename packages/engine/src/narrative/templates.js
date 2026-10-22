@@ -67,10 +67,6 @@ export const TEMPLATES = {
     `${fighter.name} is on a ${fighter.streakW}-fight win streak — the longest active streak in ${fighter.weightClass}.`,
 
   // World news
-  divisionShakeup: (tc) => ({
-    title: `📰 ${tc.division} Shake-up`,
-    body: `${tc.newChamp} defeated ${tc.oldChamp} to claim the ${tc.division} championship. A new era begins in this division.`,
-  }),
   risingStar: (c) => ({
     title: `🌟 Rising Star: ${c.name}`,
     body: `At just ${c.age}, ${c.name} has cracked the top 3. Scouts are calling this fighter a future champion.`,

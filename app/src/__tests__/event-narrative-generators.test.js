@@ -413,13 +413,14 @@ describe("narrative/generators — Dedup & Spam Audit", () => {
       expect(repeatStar).toBe(true);
     });
 
-    it("processes recent title changes (week-filtered, no repeat risk)", () => {
+    it("does not announce title changes (world.js does, once) — P3 #45", () => {
+      // The old "Division Shake-up" story re-fired for every week of the
+      // 4-week window once the player dismissed it: ~5x per title change.
       const ctx = {
         recentTitleChanges: [{ week: 50, division: "LW", newChamp: "X", oldChamp: "Y" }],
         divisions: { LW: { list: [] } },
       };
-      const events = generateWorldNews(ctx);
-      expect(events.length).toBeGreaterThanOrEqual(1);
+      expect(generateWorldNews(ctx)).toEqual([]);
     });
   });
 });

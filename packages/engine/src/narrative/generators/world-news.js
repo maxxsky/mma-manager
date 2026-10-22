@@ -1,14 +1,11 @@
-// World news generator — title changes, prospect breakthroughs
+// World news generator — prospect breakthroughs. Title changes are announced
+// once by world.js; the "Division Shake-up" story here repeated each change
+// every week for a month (P3 #45).
 import { divisionRankings } from "../../rankings.js";
 import { TEMPLATES } from "../templates.js";
 
 export function generateWorldNews(ctx) {
   const events = [];
-
-  // Title changes in world
-  ctx.recentTitleChanges.forEach(tc => {
-    events.push(TEMPLATES.divisionShakeup(tc));
-  });
 
   // Prospect breakthroughs
   Object.keys(ctx.divisions).forEach(wc => {

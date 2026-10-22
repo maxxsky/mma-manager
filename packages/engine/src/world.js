@@ -48,6 +48,25 @@ export function ageAIFighters(g) {
 
 // ── AI TITLE DEFENSES ──
 
+// Several wordings per world story (P3 #45, DU9: ~50 templates for ~1,600
+// messages in five years). Picked from week + division, not RNG, so the world
+// simulation does not shift.
+const NEW_CHAMP_NEWS = [
+  (d) => ({ title: `👑 New ${d.wc} Champion!`, body: `${d.winner} defeats ${d.loser} to become the new ${d.wc} champion!` }),
+  (d) => ({ title: `👑 ${d.wc}: the belt changes hands`, body: `${d.loser}'s reign is over. ${d.winner} takes the ${d.wc} title.` }),
+  (d) => ({ title: `👑 Upset in ${d.wc}`, body: `${d.winner} dethrones ${d.loser}. A new era starts in the ${d.wc} division.` }),
+  (d) => ({ title: `👑 ${d.winner} is ${d.wc} champion`, body: `${d.winner} beat ${d.loser} for the ${d.wc} belt. Contenders will be lining up.` }),
+];
+const DEFENSE_NEWS = [
+  (d) => ({ title: `🛡️ ${d.wc}: ${d.champ} defends`, body: `${d.champ} successfully defends the ${d.wc} title against ${d.challenger}.` }),
+  (d) => ({ title: `🛡️ ${d.champ} keeps the ${d.wc} belt`, body: `${d.challenger} came up short. ${d.champ} is still the ${d.wc} champion.` }),
+  (d) => ({ title: `🛡️ ${d.wc} title stays put`, body: `${d.champ} turns back ${d.challenger} and holds on to the ${d.wc} title.` }),
+];
+const WC_INDEX = { Flyweight: 0, Bantamweight: 1, Featherweight: 2, Lightweight: 3, Welterweight: 4, Middleweight: 5, "Light Heavyweight": 6, Heavyweight: 7 };
+function worldNewsVariant(variants, week, wc, data) {
+  return variants[((week / TICK_TITLE_DEFENSE | 0) + (WC_INDEX[wc] ?? 0)) % variants.length](data);
+}
+
 export function simulateAITitleDefenses(g) {
   if (g.week % TICK_TITLE_DEFENSE !== 0) return [];
   const events = [];
@@ -92,10 +111,7 @@ export function simulateAITitleDefenses(g) {
       d.champ = aiChampion(contender, wc);
       recordTitleChange(g, g.week, wc, contender.name, oldChamp);
 
-      events.push({
-        title: `👑 New ${wc} Champion!`,
-        body: `${contender.name} defeats ${oldChamp} to become the new ${wc} champion!`,
-      });
+      events.push(worldNewsVariant(NEW_CHAMP_NEWS, g.week, wc, { wc, winner: contender.name, loser: oldChamp }));
 
       // Former champ drops in rankings
       const oldIdx = d.list.findIndex((c) => c.name === oldChamp);
@@ -106,10 +122,7 @@ export function simulateAITitleDefenses(g) {
         former.points = Math.round(clamp(contender.points - RI(10, 20), POINTS_MIN, POINTS_MAX));
       }
     } else {
-      events.push({
-        title: `🛡️ ${wc}: ${champ.name} defends`,
-        body: `${champ.name} successfully defends the ${wc} title against ${contender.name}.`,
-      });
+      events.push(worldNewsVariant(DEFENSE_NEWS, g.week, wc, { wc, champ: champ.name, challenger: contender.name }));
     }
   });
 

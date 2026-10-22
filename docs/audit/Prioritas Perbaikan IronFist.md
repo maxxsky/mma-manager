@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, seluruh P2 #26–#37, P3 #40, #43, #44, dan P5 #53–#54 selesai (42 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#37, #40, #43, #44, dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, seluruh P2 #26–#37, P3 #40, #43–#45, dan P5 #53–#54 selesai (43 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#37, #40, #43–#45, dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -80,7 +80,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | 42 | Kurangi atau tampilkan pengali training yang tidak terlihat | FI1 |
 | 43 | Pergantian juara AI lebih jarang. **Selesai** | DU7 |
 | 44 | Ambang Hall of Fame lebih tinggi. **Selesai** | SV5 |
-| 45 | Event: kurangi "Division Shake-up", hilangkan dobel dengan "New Champion", tambah variasi template | DU9 |
+| 45 | Event: kurangi "Division Shake-up", hilangkan dobel dengan "New Champion", tambah variasi template. **Selesai** | DU9 |
 
 ## P4 — UI, bahasa, aksesibilitas
 
@@ -505,6 +505,14 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Sekarang: hanya sabuk tertinggi yang dihitung, berdasarkan tier (Premier 50, Major 40, Minor 25, National/Interim 15, Regional atau nama lama lain 8). Bonus gelar pertama dihapus (hitungan ganda). Ambang 80 (`HALL_OF_FAME_THRESHOLD`). Highlight "World Champion" yang dulu muncul untuk gelar pertama apa pun diganti nama sabuk tertinggi yang sebenarnya.
   - Contoh: 10 menang + Regional = 28 (tidak lolos); juara Major 15-3 dengan 3 defense = 85; juara National 22 menang dengan 5 defense = 84.
   - Validasi: dua test baru dan empat fixture lama disesuaikan di `dynasty.test.js`. `npm test` root: **838 test app + 28 test server lulus**. Harness dunia lulus.
+
+- **22 Oktober 2026: P3 #45 selesai — berita pergantian juara.**
+  - Penyebab "Division Shake-up" berulang: generator world news membaca semua pergantian juara dalam 4 minggu terakhir setiap minggu, dan deduplikasinya hanya terhadap isi inbox saat itu. Begitu pemain menutup pesannya, pesan yang sama muncul lagi minggu berikutnya. `world.js` juga sudah mengirim "New Champion" untuk kejadian yang sama.
+  - Diukur dengan pemain simulasi yang menutup pesan informasi tiap minggu (3 seed × 5 tahun): "Shake-up" 12,3 per tahun, sedangkan pergantian juara AI hanya 2,5 per tahun. Di test 5 tahun, kode lama menghasilkan 54 pesan untuk 9 pergantian.
+  - Story "Shake-up" dihapus dari world news (template ikut dihapus). Pergantian juara diumumkan sekali oleh `world.js`. Berita juara baru diberi 4 variasi kalimat, berita defense 3 variasi, dipilih dari minggu dan divisi (tanpa RNG, jadi simulasi dunia tidak bergeser).
+  - Total pesan baru per tahun di simulasi yang sama: 100 → 87.
+  - Satu test lama (`event-narrative-generators.test.js`) mengunci perilaku lama ("no repeat risk"); diganti test yang memastikan world news tidak lagi mengumumkan pergantian juara.
+  - Validasi: test baru `world-news.test.js`. `npm test` root: **839 test app + 28 test server lulus**. Build lulus.
 
 ## Urutan kerja yang disarankan
 
