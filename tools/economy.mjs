@@ -90,13 +90,7 @@ function acceptOffers(g) {
     if (m.type !== "offer") continue;
     const f = g.roster.find((x) => x.id === m.fighterId);
     if (!f || f.booked || f.injury) continue;
-    reducer(g, {
-      type: "ACCEPT_FIGHT",
-      fighterId: m.fighterId, opponent: m.opponent, weeks: m.weeks,
-      show: m.show, winBonus: m.winBonus, tier: m.tier, title: m.title,
-      titleTier: m.titleTier, defense: m.defense, oppRank: m.oppRank,
-      contenderId: m.contenderId, messageId: m.id,
-    });
+    reducer(g, { type: "ACCEPT_FIGHT", messageId: m.id });
   }
 }
 

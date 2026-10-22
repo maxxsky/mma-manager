@@ -451,7 +451,14 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - **Cemburu:** "Beri perhatian khusus" tetap chem +3 (yang kini benar-benar diterapkan) dan morale +6 untuk yang cemburu, tapi fighter bintang −4 morale. `moraleTo` menerima satu atau beberapa target.
   - Validasi: test baru `event-choices.test.js` (7 test; 6 gagal di kode lama). `npm test` root: **812 test app + 28 test server lulus**. Build dan harness dunia lulus. Harness ekonomi berjalan; hasil seed bergeser karena biaya dan efek pilihan sekarang benar-benar diterapkan.
   - Smoke test browser: 12 run, 11 lulus. Satu run (yang pertama) gagal dengan "2 problem(s)", tapi detailnya tidak tersimpan, sehingga penyebabnya belum diketahui. Game di-seed dari jam, jadi tiap run berbeda. Perlu diawasi; kalau muncul lagi, simpan log lengkapnya.
-  - **Temuan, belum dikerjakan:** tombol "Counter" tawaran fight di `Inbox.jsx` me-roll `random()` di UI dan mengirim purse hasil hitungan UI ke `COUNTER_FIGHT`. `ACCEPT_FIGHT` juga mengambil nilai tawaran dari UI. Polanya sama dengan negosiasi kontrak (#27).
+  - Temuan tawaran fight dikerjakan di entri berikutnya.
+
+- **22 Oktober 2026: tawaran fight dibooking dari pesan inbox (temuan saat #32).**
+  - `ACCEPT_FIGHT`, `COUNTER_FIGHT`, dan `REJECT_FIGHT` sekarang hanya menerima `messageId` dan membaca semua syarat dari pesan tawaran. Sebelumnya UI menyusun booking sendiri dan **membuang `promotionId` dan `isMainEvent`**. Akibatnya hitungan fight per promotor tidak pernah naik, kontrak eksklusif promotor (butuh ≥2 fight) tidak pernah ditawarkan, sisa fight kontrak eksklusif tidak pernah berkurang, dan narasi "main event" tidak pernah muncul.
+  - Counter: roll dilakukan engine (`counterChance` = relasi tier + 20, dibatasi 10–90%; purse ×`1,15 + relasi/200`). Tombol menampilkan peluangnya. Counter ditolak = tawaran batal, seperti sebelumnya. Reject mencopot gelar berdasarkan tawaran (`defense`), bukan flag dari UI.
+  - **Bug lanjutan yang tersingkap:** tawaran kontrak eksklusif juga ber-`type: "offer"`. UI merendernya sebagai tawaran fight (Accept/Counter/Reject, bukan "Terima/Tolak"), dan menerimanya membuat booking tanpa lawan yang tidak pernah selesai. Harness ekonomi terkena ini: begitu kontrak eksklusif mulai muncul, ketiga seed bangkrut karena fighter tertahan booking rusak. Sekarang pesan itu ber-`type: "event"` dengan pilihannya sendiri, tetap kedaluwarsa dalam 6 minggu, dan reducer fight menolak pesan tanpa lawan. Save lama dimigrasikan.
+  - Harness ekonomi (960 minggu × 3 seed): ketiga seed bertahan 20 tahun. Sebelum perbaikan ini dua bertahan dan satu bangkrut. Kas akhir lebih besar karena bonus purse promotor kini berjalan; ekonomi akhir game memang sudah tercatat terlalu longgar (P3 #39).
+  - Validasi: test baru `fight-offer-actions.test.js` (7 test). Tiga test lama disesuaikan agar memakai pesan tawaran. `npm test` root: **819 test app + 28 test server lulus**. Build, harness dunia, dan 3 run smoke test browser lulus.
 
 ## Urutan kerja yang disarankan
 

@@ -2,7 +2,7 @@ import { fmt$ } from "@ironfist/engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
 import { t } from "../i18n/index.js";
-import { random } from "@ironfist/engine/rng.js";
+import { counterChance, counterBoost } from "@ironfist/engine/reducer/fight.js";
 
 /* =============================================================================
    INBOX — Ironfist Edition
@@ -173,47 +173,23 @@ export default function Inbox({ g, dispatch, setTab }) {
                 <Btn
                   sm
                   color={T.pos}
-                  onClick={() => dispatch({
-                    type: "ACCEPT_FIGHT", fighterId: m.fighterId, opponent: m.opponent,
-                    weeks: m.weeks, show: m.show, winBonus: m.winBonus, tier: m.tier,
-                    title: m.title, titleTier: m.titleTier, defense: m.defense,
-                    oppRank: m.oppRank, contenderId: m.contenderId, messageId: m.id,
-                  })}
+                  onClick={() => dispatch({ type: "ACCEPT_FIGHT", messageId: m.id })}
                 >
                   {t("UI.accept")}
                 </Btn>
                 <Btn
                   sm
                   color={T.gold}
-                  onClick={() => {
-                    const rel = (g.promoterRel && g.promoterRel[m.tier]) || 30;
-                    const counterChance = Math.max(10, Math.min(90, rel + 20));
-                    if (random() * 100 < counterChance) {
-                      const boosted = Math.round(m.show * (1.15 + rel / 200));
-                      dispatch({
-                        type: "COUNTER_FIGHT", fighterId: m.fighterId, opponent: m.opponent,
-                        weeks: m.weeks, boosted, boostedWin: Math.round(m.winBonus * (1.15 + rel / 200)),
-                        tier: m.tier, title: m.title, titleTier: m.titleTier, defense: m.defense,
-                        oppRank: m.oppRank, contenderId: m.contenderId, messageId: m.id, rel,
-                      });
-                    } else {
-                      dispatch({
-                        type: "REJECT_FIGHT", fighterId: m.fighterId, tier: m.tier,
-                        messageId: m.id, stripTitle: m.defense, titleTier: m.titleTier,
-                      });
-                    }
-                  }}
+                  onClick={() => dispatch({ type: "COUNTER_FIGHT", messageId: m.id })}
+                  title={`+${Math.round((counterBoost(g.promoterRel?.[m.tier] ?? 30) - 1) * 100)}% purse; ditolak = tawaran batal`}
                 >
-                  Counter
+                  Counter ({counterChance(g, m.tier)}%)
                 </Btn>
                 <Btn
                   sm
                   color={T.txt3}
                   ghost
-                  onClick={() => dispatch({
-                    type: "REJECT_FIGHT", fighterId: m.fighterId, tier: m.tier,
-                    messageId: m.id, stripTitle: m.defense, titleTier: m.titleTier,
-                  })}
+                  onClick={() => dispatch({ type: "REJECT_FIGHT", messageId: m.id })}
                 >
                   {t("UI.reject")}
                 </Btn>

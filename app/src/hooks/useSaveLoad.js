@@ -74,6 +74,8 @@ export function useSaveLoad(setG) {
           migrateChampionships(s);
           migrateWorldProfiles(s);
           migrateRemovedRivalCamps(s);
+          // Exclusive promotion contract offers are events with choices, not fight offers.
+          (s.inbox || []).forEach((m) => { if (m.promotionContractOffer && m.type === "offer") m.type = "event"; });
           // Division champ field defaults
           Object.values(s.divisions || {}).forEach((d) => {
             if (d.champ) {

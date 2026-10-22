@@ -340,7 +340,7 @@ export function tickFightOffers(g) {
 
   // Inbox expiry: offers, investors, sponsors
   g.inbox = g.inbox.filter((m) => {
-    if (m.type !== "offer" && m.type !== "investor" && m.type !== "sponsor") return true;
+    if (m.type !== "offer" && m.type !== "investor" && m.type !== "sponsor" && !m.promotionContractOffer) return true;
     m.expires--;
     if (m.expires <= 0 && m.defense) stripTitle(g, m.fighterId);
     return m.expires > 0;

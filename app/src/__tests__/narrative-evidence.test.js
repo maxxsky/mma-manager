@@ -90,7 +90,10 @@ describe('narrative claims from fight evidence', () => {
     const g = createTestGame()
     const f = g.roster[0]
     f.rankPoints = 0
-    reduceFight(g, { type, fighterId: f.id, opponent: B, tier: 'Local', oppRank: 2, rel: 30 })
+    g.inbox.unshift({ id: 'offer-1', type: 'offer', fighterId: f.id, opponent: B, tier: 'Local', oppRank: 2, show: 1000, winBonus: 500, weeks: 4 })
+    setRNG(() => 0) // a counter is accepted
+    reduceFight(g, { type, messageId: 'offer-1' })
+    resetRNG()
     expect(f.booked).toHaveProperty('playerRank', null)
   })
 

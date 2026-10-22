@@ -277,8 +277,10 @@ export function tickSettlement(g) {
     if (eligiblePromo && !g.inbox.some((m) => m.promotionContractOffer === eligiblePromo.id && m.fighterId === f.id)) {
       const fights = RI(3, 5);
       const bonus = 0.15 + RI(0, 10) * 0.01;
+      // An "event" with its own accept/decline choices, not a fight "offer":
+      // as an offer it was rendered and booked like a fight with no opponent.
       g.inbox.unshift({
-        id: uid(), type: "offer", fighterId: f.id, expires: 6,
+        id: uid(), type: "event", fighterId: f.id, expires: 6,
         promotionContractOffer: eligiblePromo.id,
         promotionName: eligiblePromo.name,
         tier: eligiblePromo.tier,
