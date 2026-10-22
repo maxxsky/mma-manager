@@ -3,6 +3,9 @@ import { clamp, pick, fmt$, uid, random } from "../rng.js";
 import { CAMP_TIERS } from "../data.js";
 import { COACH_SALARY_CEILING } from "../economy.js";
 
+// Team-activity cost, scaled by the camp tier's roster cap.
+export const campBondingCost = (g) => (CAMP_TIERS[g.campTier || 0]?.rosterCap || 4) * 750;
+
 export function tickChemistry(g) {
   if (!g || !g.roster) return true;
   // ---------- chemistry events ----------
@@ -18,13 +21,16 @@ export function tickChemistry(g) {
       const gambleUp = highChem ? 8 : 6;
       const gambleDown = highChem ? -4 : -8;
       const gambleLabel = highChem ? "Biarkan — chemistry kuat, risiko rendah" : "Biarkan — bisa akur (+6) atau makin parah (-8)";
+      // Mediation is the strongest fix, so it costs money (P2 #32: it used to be
+      // free and strictly better than separating the schedules).
+      const mediationCost = Math.round(campBondingCost(g) * 0.5);
       g.inbox.unshift({
         id: uid(), type: "event", title: "Konflik sparring",
         body: `${fa.name} dan ${fb.name} clash saat sparring — suasana camp tegang.${highChem ? " Tapi chemistry camp solid — mungkin reda sendiri." : ""}`,
         choices: [
-          { label: "Pisahkan jadwal", chem: 2 },
+          { label: "Pisahkan jadwal (+2)", chem: 2 },
           { label: gambleLabel, gamble: [gambleUp, gambleDown] },
-          { label: "Mediasi", chem: 5 },
+          { label: `Mediasi (${fmt$(mediationCost)}, +5)`, chem: 5, cash: -mediationCost },
         ],
       });
     } else if (roll < 0.45 && coachTarget) {
@@ -58,7 +64,8 @@ export function tickChemistry(g) {
         id: uid(), type: "event", title: `${jealous.name} cemburu`,
         body: `${jealous.name} melihat ${bigger.name} dapat lebih banyak sorotan. Dia merasa tidak dihargai.`,
         choices: [
-          { label: "Beri perhatian khusus", chem: 3, moraleTo: { id: jealous.id, amt: 6 } },
+          // Attention is finite: the star feels the shift (P2 #32).
+          { label: `Beri perhatian khusus (+3; morale ${jealous.name} +6, ${bigger.name} −4)`, chem: 3, moraleTo: [{ id: jealous.id, amt: 6 }, { id: bigger.id, amt: -4 }] },
           { label: "Acuhkan — hasil gak pasti (+2 atau -6)", gamble: [2, -6] },
         ],
       });
@@ -74,7 +81,7 @@ export function tickChemistry(g) {
       });
     } else {
       // Team bonding cost scales with camp tier
-      const tierCost = (CAMP_TIERS[g.campTier || 0]?.rosterCap || 4) * 750;
+      const tierCost = campBondingCost(g);
       g.inbox.unshift({
         id: uid(), type: "event", title: "Team bonding",
         body: `${fa.name} dan ${fb.name} akur akhir-akhir ini. ${pick(["Mereka pergi makan bersama", "Mereka latihan bareng di luar jadwal", "Mereka saling support di sesi sparring"])}.`,

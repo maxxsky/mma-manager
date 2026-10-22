@@ -28,8 +28,13 @@ export function reduceUI(g, action) {
     case "INBOX_EVENT": {
       const m = g.inbox.find((x) => x.id === action.messageId);
       if (!m) break;
+      // Use the choice stored on the message, not whatever the caller sends.
+      const choice = Number.isInteger(action.choiceIndex) && m.choices?.[action.choiceIndex]
+        || m.choices?.find((c) => c.label === action.choice?.label)
+        || (m.choices?.length ? null : action.choice);
+      if (!choice) break;
       g.inbox = g.inbox.filter((x) => x.id !== action.messageId);
-      dispatchEvent(g, action);
+      dispatchEvent(g, action, choice);
       break;
     }
   }

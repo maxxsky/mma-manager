@@ -78,10 +78,14 @@ export function registerFighterHandlers(register) {
     onFightComplaintIgnored(g, f);
   });
 
+  // One { id, amt } or a list of them.
   register("moraleTo", ({ g, c }) => {
-    if (!c.moraleTo) return;
-    const f = g.roster.find((x) => x.id === c.moraleTo.id);
-    if (f) { f.morale = clamp(f.morale + c.moraleTo.amt, 0, 100); g.log.unshift("💰 Bonus retensi — morale " + f.name + " naik."); }
+    [].concat(c.moraleTo || []).forEach(({ id, amt }) => {
+      const f = g.roster.find((x) => x.id === id);
+      if (!f || !amt) return;
+      f.morale = clamp(f.morale + amt, 0, 100);
+      g.log.unshift(`${amt > 0 ? "🙂" : "😕"} Morale ${f.name} ${amt > 0 ? "+" : ""}${amt}.`);
+    });
   });
 
   register("letGo", ({ g, c }) => {

@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#31, dan P5 #53–#54 selesai (33 dari 63 item). #19–#31 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#32, dan P5 #53–#54 selesai (34 dari 63 item). #19–#32 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -62,7 +62,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | 29 | Kepribadian coach Motivator dan Player's Coach | CA3 | Implementasikan sesuai deskripsi. **Selesai** |
 | 30 | Staf Cutman dan Nutritionist | CA2 | Cutman mengurangi cut; Nutritionist digabung ke weight cut (setelah #6). **Selesai** |
 | 31 | Janji ke fighter | FI5 | Catat janji dan beri akibat kalau diingkari. **Selesai** |
-| 32 | Event chemistry | FI8 | Opsi gratis diberi kelemahan, atau opsi berbiaya diberi hasil lebih besar |
+| 32 | Event chemistry | FI8 | Opsi gratis diberi kelemahan, atau opsi berbiaya diberi hasil lebih besar. **Selesai** |
 | 33 | Pinjaman dan penjualan darurat | EK4 | Pinjaman baru perlu kalau ekonomi sudah ketat (setelah P3). Penjualan darurat jual aset nyata |
 | 34 | Mentor | FI6 | Perbesar dan tampilkan, atau buang |
 | 35 | Kepribadian promotor | DU8 | Beri efek nyata (purse, tipe lawan) atau buang |
@@ -443,6 +443,15 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Dicek tiap minggu (`checkPromises` di `tick()`). Ditepati (fighter dapat booking atau fight baru; fasilitas yang dijanjikan naik level): morale +2. Lewat tenggat: fight −10 morale −8 loyalty, upgrade −8 morale −6 loyalty, plus pesan inbox. Label pilihan menyebut tenggat dan akibatnya.
   - Angka akibat adalah pilihan awal; bisa dituning di P3.
   - Validasi: test baru `promises.test.js` (6 test lewat jalur pilihan inbox). `npm test` root: **805 test app + 28 test server lulus**. Build dan harness dunia lulus.
+
+- **22 Oktober 2026: P2 #32 selesai — event chemistry, plus bug dispatch pilihan inbox.**
+  - **Bug baru, lebih besar dari #32:** `dispatchEvent` hanya menjalankan handler *pertama* yang cocok dengan kunci pilihan, lalu berhenti. Pilihan dengan lebih dari satu efek kehilangan sisanya. Pemetaan menemukan 18 pilihan terdampak, misalnya: "Bonus retensi $X" (morale +30) dan "Minta maaf + bonus ($3.000)" menaikkan morale **tanpa memotong kas**; "Pesta besar ($5.000, chemistry +8)" dan "Kasih bonus kegiatan tim" **memotong kas tanpa menaikkan chemistry**; semua `chem` pada pilihan yang juga punya `moraleTo`, `complaint`, `coachResignChance`, atau `viralPop` tidak pernah diterapkan. Sekarang semua handler yang cocok dijalankan berurutan, lalu `chem`/`gamble`.
+  - Roll gamble dilakukan engine dengan RNG reducer bila `gambleRoll` tidak diberikan. UI tidak lagi memanggil `random()`. `INBOX_EVENT` memakai pilihan yang tersimpan di pesan (berdasarkan `choiceIndex`, lalu label), bukan objek yang dikirim UI.
+  - **Konflik sparring:** "Mediasi" (+5) sekarang berbiaya separuh biaya kegiatan tim (`rosterCap × 750 / 2`: $1.500 di Local Gym sampai $9.000 di tier tertinggi). "Pisahkan jadwal" (+2) tetap gratis. Label menyebut angkanya.
+  - **Cemburu:** "Beri perhatian khusus" tetap chem +3 (yang kini benar-benar diterapkan) dan morale +6 untuk yang cemburu, tapi fighter bintang −4 morale. `moraleTo` menerima satu atau beberapa target.
+  - Validasi: test baru `event-choices.test.js` (7 test; 6 gagal di kode lama). `npm test` root: **812 test app + 28 test server lulus**. Build dan harness dunia lulus. Harness ekonomi berjalan; hasil seed bergeser karena biaya dan efek pilihan sekarang benar-benar diterapkan.
+  - Smoke test browser: 12 run, 11 lulus. Satu run (yang pertama) gagal dengan "2 problem(s)", tapi detailnya tidak tersimpan, sehingga penyebabnya belum diketahui. Game di-seed dari jam, jadi tiap run berbeda. Perlu diawasi; kalau muncul lagi, simpan log lengkapnya.
+  - **Temuan, belum dikerjakan:** tombol "Counter" tawaran fight di `Inbox.jsx` me-roll `random()` di UI dan mengirim purse hasil hitungan UI ke `COUNTER_FIGHT`. `ACCEPT_FIGHT` juga mengambil nilai tawaran dari UI. Polanya sama dengan negosiasi kontrak (#27).
 
 ## Urutan kerja yang disarankan
 

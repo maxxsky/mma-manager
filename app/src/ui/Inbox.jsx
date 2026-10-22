@@ -366,7 +366,7 @@ export default function Inbox({ g, dispatch, setTab }) {
                       }
                       dispatch({
                         type: "INBOX_EVENT", choiceIndex: i, messageId: m.id,
-                        choice: c, gambleRoll: c.gamble ? random() : null,
+                        choice: c,
                       });
                     }}
                   >
