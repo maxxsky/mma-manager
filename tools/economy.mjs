@@ -187,7 +187,11 @@ function spend(g) {
   if (g.cash > BUFFER * 3 && g.coachMarket?.length) {
     reducer(g, { type: "HIRE_COACH", coachId: g.coachMarket[0].id });
   }
-  reducer(g, { type: "UPGRADE_TIER" });
+  // Same buffer for the camp tier: buying it with the last dollar used to sink
+  // early camps, which only survived because the bankruptcy prompt handed out
+  // free cash (removed in P2 #33).
+  const next = CAMP_TIERS[(g.campTier || 0) + 1];
+  if (next && g.cash - next.cost >= BUFFER) reducer(g, { type: "UPGRADE_TIER" });
 }
 
 // Prospect intake, bucketed by era. This is the only direct read on whether

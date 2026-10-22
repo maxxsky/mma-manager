@@ -18,6 +18,7 @@
 import { uid } from "./rng.js";
 import { BANKRUPT_THRESHOLD, BANKRUPTCY_GRACE_WEEKS, CASH_WARNING_THRESHOLD, CASH_WARNING_RESET_BUFFER, LOG_MAX } from "./reducer/constants.js";
 import { fmt$ } from "./rng.js";
+import { planEmergencySale } from "./finance.js";
 import { createEconomy, createCamp, createRoster, createCoaches, createWorld } from "./builders.js";
 import { tickTraining } from "./tick/training.js";
 import { tickChemistry } from "./tick/chemistry.js";
@@ -129,7 +130,12 @@ export function tick(g) {
         title: "🚨 Camp di Ambang Bangkrut",
         body: `Kas ${fmt$(g.cash)} — di bawah batas. ${BANKRUPTCY_GRACE_WEEKS} minggu buat benerin sebelum camp resmi tutup.`,
         choices: [
-          { label: "Potong biaya darurat (jual aset, chemistry -10)", emergencyCostCut: true },
+          ...(() => {
+            const plan = planEmergencySale(g);
+            return plan.sales.length
+              ? [{ label: `Jual fasilitas darurat (${plan.sales.length} level, +${fmt$(plan.total)}, chemistry -10)`, emergencyCostCut: true }]
+              : [];
+          })(),
           { label: "Coba pulihkan sendiri", chem: 0 },
         ],
       });

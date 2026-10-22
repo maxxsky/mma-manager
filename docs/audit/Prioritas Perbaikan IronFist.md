@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#32, dan P5 #53–#54 selesai (34 dari 63 item). #19–#32 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#33, dan P5 #53–#54 selesai (35 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#33 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -63,7 +63,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | 30 | Staf Cutman dan Nutritionist | CA2 | Cutman mengurangi cut; Nutritionist digabung ke weight cut (setelah #6). **Selesai** |
 | 31 | Janji ke fighter | FI5 | Catat janji dan beri akibat kalau diingkari. **Selesai** |
 | 32 | Event chemistry | FI8 | Opsi gratis diberi kelemahan, atau opsi berbiaya diberi hasil lebih besar. **Selesai** |
-| 33 | Pinjaman dan penjualan darurat | EK4 | Pinjaman baru perlu kalau ekonomi sudah ketat (setelah P3). Penjualan darurat jual aset nyata |
+| 33 | Pinjaman dan penjualan darurat | EK4 | Pinjaman baru perlu kalau ekonomi sudah ketat (setelah P3). Penjualan darurat jual aset nyata. **Penjualan darurat selesai; pinjaman masih ditunda** |
 | 34 | Mentor | FI6 | Perbesar dan tampilkan, atau buang |
 | 35 | Kepribadian promotor | DU8 | Beri efek nyata (purse, tipe lawan) atau buang |
 | 36 | Trait Injury Prone | FI4 | Bisa didapat, atau hapus pengecekannya |
@@ -459,6 +459,12 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - **Bug lanjutan yang tersingkap:** tawaran kontrak eksklusif juga ber-`type: "offer"`. UI merendernya sebagai tawaran fight (Accept/Counter/Reject, bukan "Terima/Tolak"), dan menerimanya membuat booking tanpa lawan yang tidak pernah selesai. Harness ekonomi terkena ini: begitu kontrak eksklusif mulai muncul, ketiga seed bangkrut karena fighter tertahan booking rusak. Sekarang pesan itu ber-`type: "event"` dengan pilihannya sendiri, tetap kedaluwarsa dalam 6 minggu, dan reducer fight menolak pesan tanpa lawan. Save lama dimigrasikan.
   - Harness ekonomi (960 minggu × 3 seed): ketiga seed bertahan 20 tahun. Sebelum perbaikan ini dua bertahan dan satu bangkrut. Kas akhir lebih besar karena bonus purse promotor kini berjalan; ekonomi akhir game memang sudah tercatat terlalu longgar (P3 #39).
   - Validasi: test baru `fight-offer-actions.test.js` (7 test). Tiga test lama disesuaikan agar memakai pesan tawaran. `npm test` root: **819 test app + 28 test server lulus**. Build, harness dunia, dan 3 run smoke test browser lulus.
+
+- **22 Oktober 2026: P2 #33 (bagian penjualan darurat) selesai.** Pinjaman tetap ditunda ke P3 sesuai saran.
+  - Pilihan "Potong biaya darurat" di event ambang bangkrut dulu memberi +$25.000 tanpa menjual apa pun, dan bisa diulang setiap kali kas jatuh di bawah batas. Sekarang `applyEmergencySale` (`finance.js`) menjual level fasilitas sungguhan, mulai dari yang tertinggi, masing-masing seharga 50% biaya pembangunannya, sampai kas kembali di atas batas bangkrut + $10.000 atau semua fasilitas di level 1. Label menyebut jumlah level dan uangnya. Kalau tidak ada yang bisa dijual, pilihan itu tidak muncul.
+  - **Akibat yang perlu diketahui:** camp yang kesulitan dengan fasilitas masih level 1 kini benar-benar bisa bangkrut di tahun pertama. Sebelumnya uang gratis yang bisa diulang menutupinya. Di harness ekonomi: seed 3222 (camp yang terus kalah, reputasi 2–11, semua fasilitas level 1) bangkrut di minggu 57; dulu bertahan sekitar 7 tahun. **Saran untuk P3:** pinjaman dengan bunga sebagai jaring pengaman awal game, atau tinjau ulang pemasukan camp tier 0.
+  - Harness ekonomi: pemain skrip tidak lagi membeli upgrade tier camp dengan uang terakhir (buffer sama dengan fasilitas, $60.000). Dengan itu seed 500 dan 1861 bertahan 20 tahun; 3222 bangkrut seperti dijelaskan di atas.
+  - Validasi: test baru `emergency-sale.test.js` (3 test). `npm test` root: **822 test app + 28 test server lulus**. Build dan harness dunia lulus.
 
 ## Urutan kerja yang disarankan
 

@@ -1,5 +1,7 @@
 // General handlers — viral popularity, cash, openExtend (UI-only)
-import { clamp } from "../../rng.js";
+import { clamp, fmt$ } from "../../rng.js";
+import { FAC_LABEL } from "../../data.js";
+import { applyEmergencySale } from "../../finance.js";
 
 export function registerGeneralHandlers(register) {
   register("openExtend", () => {
@@ -16,8 +18,13 @@ export function registerGeneralHandlers(register) {
   });
 
   register("emergencyCostCut", ({ g }) => {
-    g.cash += 25000;
+    const { sales, total } = applyEmergencySale(g);
+    if (!sales.length) {
+      g.log.unshift("💸 Tidak ada aset yang bisa dijual — semua fasilitas sudah level 1.");
+      return;
+    }
     g.chemistry = clamp(g.chemistry - 10, 0, 100);
-    g.log.unshift("💸 Jual aset darurat: +$25,000, chemistry -10.");
+    const sold = sales.map((s) => `${FAC_LABEL[s.fac] || s.fac} L${s.fromLevel}→${s.fromLevel - 1}`).join(", ");
+    g.log.unshift(`💸 Jual aset darurat: ${sold}. +${fmt$(total)}, chemistry -10.`);
   });
 }
