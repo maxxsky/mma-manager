@@ -44,3 +44,8 @@ export const CASH_WARNING_RESET_BUFFER = 5000; // hysteresis, biar gak flapping
 
 // Coach
 export const DEFAULT_COACH_CAP = 5;
+
+// Log lines kept in state. One cap for the game and the harnesses: it used to
+// be 30 in the UI and 200 in the engine, so anything reading the log behaved
+// differently between them.
+export const LOG_MAX = 30;

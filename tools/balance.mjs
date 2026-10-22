@@ -16,6 +16,7 @@
 //   node tools/balance.mjs 960 3      # 20 years, 3 seeds
 
 import { newGame, tick, setRNG, mulberry32 } from "../packages/engine/src/index.js";
+import { LOG_MAX } from "../packages/engine/src/reducer/constants.js";
 
 // A camp that never books a fight has no income, so an untouched simulation
 // goes bankrupt within a few years and the run ends long before the horizon we
@@ -62,8 +63,8 @@ const BANDS = [
   {
     key: "logLen",
     label: "Log length",
-    max: 200,
-    reason: "The log is explicitly capped at 200. Exceeding it means the cap was bypassed.",
+    max: LOG_MAX,
+    reason: `The log is explicitly capped at ${LOG_MAX} (LOG_MAX), the same cap the game uses. Exceeding it means the cap was bypassed.`,
   },
   {
     key: "worldFightersMin",

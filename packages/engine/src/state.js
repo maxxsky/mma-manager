@@ -16,7 +16,7 @@
 //   tick/outside-offers.js — other camps approach unhappy fighters
 
 import { uid } from "./rng.js";
-import { BANKRUPT_THRESHOLD, BANKRUPTCY_GRACE_WEEKS, CASH_WARNING_THRESHOLD, CASH_WARNING_RESET_BUFFER } from "./reducer/constants.js";
+import { BANKRUPT_THRESHOLD, BANKRUPTCY_GRACE_WEEKS, CASH_WARNING_THRESHOLD, CASH_WARNING_RESET_BUFFER, LOG_MAX } from "./reducer/constants.js";
 import { fmt$ } from "./rng.js";
 import { createEconomy, createCamp, createRoster, createCoaches, createWorld } from "./builders.js";
 import { tickTraining } from "./tick/training.js";
@@ -118,7 +118,7 @@ export function tick(g) {
   // Final state checks
   checkCashWarning(g);
   // Cap log to prevent unbounded memory growth
-  if (g.log && g.log.length > 200) g.log = g.log.slice(0, 200);
+  if (g.log && g.log.length > LOG_MAX) g.log = g.log.slice(0, LOG_MAX);
   if (g.cash < BANKRUPT_THRESHOLD) {
     if (g.bankruptcyGraceWeeksLeft == null) {
       g.bankruptcyGraceWeeksLeft = BANKRUPTCY_GRACE_WEEKS;

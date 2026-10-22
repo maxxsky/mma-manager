@@ -3,18 +3,14 @@ import React from "react";
 import { T, Panel, Eyebrow, Tag } from "./theme.jsx";
 import { t } from "../i18n/index.js";
 import { PROMO_TIERS } from "@ironfist/engine/data/promo-tiers.js";
+import { promoterTierActive } from "@ironfist/engine/promoter-activity.js";
 
 export default function Promoters({ g }) {
   const rel = g.promoterRel || {};
   const promos = g.promotions || [];
 
-  // Check if any fighter fought at a given tier in the last 12 weeks
-  // Mirrors settlement.js decay logic: g.log contains tier references
-  const hasRecentActivity = (tier) => {
-    return g.roster?.some((f) =>
-      f.lastFightWeek && g.week - f.lastFightWeek <= 12 && g.log?.some((l) => l.includes(tier))
-    ) ?? false;
-  };
+  // Same check settlement.js uses for relation decay
+  const hasRecentActivity = (tier) => promoterTierActive(g, tier);
 
   // Group promoters by tier (same order as PROMO_TIERS)
   const byTier = {};

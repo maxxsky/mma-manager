@@ -49,7 +49,7 @@ export function useGameState(g, setGOrig, saveSlot) {
 
   // Weekly advance
   const advance = () => {
-    up((n) => { tick(n); if (n.log) n.log = n.log.slice(0, 30);
+    up((n) => { tick(n); // tick() caps the log at LOG_MAX
       const newly = checkAchievements(n);
       // Surface achievement unlocks in weekly summary
       const achieveNames = newly && newly.length > 0

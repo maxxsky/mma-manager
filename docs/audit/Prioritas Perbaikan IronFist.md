@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7 dan P1 #8–#24 selesai (24 dari 63 item). #19–#24 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7 dan seluruh P1 #8–#25 selesai (25 dari 63 item). #19–#25 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -391,10 +391,16 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Validasi: test tambahan di `fight-injury.test.js` (level 1, 2, 4; gagal di kode lama), **772 test aplikasi lulus**, diff bersih.
   - Catatan: reducer `RESOLVE_INJURY_CHOICE` memakai `physioCost` dari action (UI meneruskan angka dari pesan inbox buatan engine). Belum diubah.
 
+- **22 Oktober 2026: P1 #25 selesai.** Branch `claude/quirky-mccarthy-7jogso`.
+  - Decay relasi promotor tidak lagi mencocokkan teks log. Sebelumnya: kalau ada fighter mana pun yang fight dalam 12 minggu terakhir *dan* ada baris log yang memuat nama tier (misalnya "Local Amateur Circuit" dari scouting), tier itu dianggap aktif. Sekarang modul baru `promoter-activity.js` (`promoterTierActive`) menganggap tier aktif kalau ada fight di tier itu dalam 12 minggu terakhir (`fightHistory[].tier`/`week`) atau booking aktif di tier itu. Settlement dan layar Promotor memakai fungsi yang sama.
+  - Batas log disatukan: konstanta `LOG_MAX = 30` di `reducer/constants.js` dipakai `tick()`. Pemotongan terpisah di `useGameState` dihapus. Sebelumnya UI memotong ke 30 dan engine ke 200, jadi harness berperilaku berbeda dari game. 30 dipilih karena itu nilai yang selama ini berlaku di game asli. Band harness dunia mengikuti `LOG_MAX`.
+  - Validasi: test baru `promoter-activity.test.js` (4 test; test decay gagal di kode lama), **776 test aplikasi / 55 file lulus**, harness dunia (panjang log 30) dan harness fight lulus, smoke test browser lulus, diff bersih.
+  - Masih terbuka (bagian lain DU8, di luar #25): layar Promotor menyebut relasi menentukan peluang bertarung, padahal peluang tawaran tetap 35% per minggu. Relasi juga turun di tier yang belum bisa dijangkau (misalnya Premier untuk camp baru). Kepribadian promotor masuk P2 #35.
+
 ## Urutan kerja yang disarankan
 
-1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`. P1 #19–#24 selesai di branch `claude/quirky-mccarthy-7jogso` (#21: rival camp dibuang).
-2. Berikutnya P1 #25.
+1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`. P1 #19–#25 selesai di branch `claude/quirky-mccarthy-7jogso` (#21: rival camp dibuang). Seluruh P1 selesai.
+2. Berikutnya: merge branch ke master, lalu langkah 4–5 (main beberapa jam, putuskan P2). P5 #53–#54 bisa disisipkan.
 3. P1 lainnya: #21–#25. P5 #53–#54 (keamanan kecil) bisa disisipkan lebih awal.
 4. Mainkan beberapa jam setelah bug state utama selesai; tandai temuan yang sudah terbantu dan yang masih bisa direproduksi.
 5. Mainkan beberapa jam. Putuskan P2 dan daftar pangkas.

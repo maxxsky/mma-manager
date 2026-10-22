@@ -9,6 +9,7 @@ import { pushInboxEvent } from "../events.js";
 import { rollAddTalent, rollDiscoverTalent, pushTalentDiscoveryEvent } from "../talentPool.js";
 import { getTrainingCycle, getDevelopmentPhilosophy } from "../training-philosophy.js";
 import { genStaffCandidate } from "../data/staff.js";
+import { promoterTierActive } from "../promoter-activity.js";
 
 // Inbox retention thresholds, in in-game weeks. INBOX_MAX is the backstop that
 // bounds growth no matter what new message shapes get added later.
@@ -78,9 +79,8 @@ export function tickSettlement(g) {
   if (g.promoterRel) {
     const tiers = ["Local", "Regional", "National", "Major", "Premier"];
     tiers.forEach((t) => {
-      // Decay: lose 1-2 points if no fight in this tier for 12+ weeks
-      const hasRecentFight = g.roster.some((f) => f.lastFightWeek && g.week - f.lastFightWeek <= 12 && g.log.some((l) => l.includes(t)));
-      if (!hasRecentFight && g.promoterRel[t] > 15) {
+      // Decay: lose 1-2 points if no fight booked or fought in this tier for 12+ weeks
+      if (!promoterTierActive(g, t) && g.promoterRel[t] > 15) {
         g.promoterRel[t] = clamp(g.promoterRel[t] - RI(1, 2), 5, 100);
       }
     });
