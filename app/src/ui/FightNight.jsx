@@ -64,7 +64,7 @@ export default function FightNight({ fighter, done, staff }) {
   // Run round
   const runRound = (rn, st0, corner) => {
     const cA = corner;
-    const res = simRound(rn, A, B, st0?.staA ?? cutInfo.staminaCap, st0?.staB ?? oppCutInfo.staminaCap, plan || "Keep It Standing", cA, st0?.momentum ?? 0, st0?.cutA ?? 0, st0?.cutB ?? 0, { planB: oppPlan, totalRounds, nutritionistSkillA: staff?.nutritionist?.skill });
+    const res = simRound(rn, A, B, st0?.staA ?? cutInfo.staminaCap, st0?.staB ?? oppCutInfo.staminaCap, plan || "Keep It Standing", cA, st0?.momentum ?? 0, st0?.cutA ?? 0, st0?.cutB ?? 0, { planB: oppPlan, totalRounds, nutritionistSkillA: staff?.nutritionist?.skill, cutmanSkillA: staff?.cutman?.skill });
     setRoundLog(res);
     // Keep every round for the judges. Indexed by round so a repeated call
     // for the same round replaces it instead of adding a duplicate.

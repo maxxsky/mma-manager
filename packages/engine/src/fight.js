@@ -117,6 +117,10 @@ function staminaDrain(f, plan, corner, legMod, bodyMult) {
 // autoGamePlan and aiCorner, so the opponent never fights without a plan.
 // opts.totalRounds: used by aiCorner to spot the final round (default 3).
 // opts.nutritionistSkillA/B: optional staff mitigation of each side's cut.
+export function cutmanTreat(cut, skill) {
+  return skill > 0 ? Math.max(0, cut - Math.ceil(skill / CFG.CUTMAN_SKILL_PER_POINT)) : cut;
+}
+
 export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA = 0, cutB = 0, opts = {}) {
   const capA = weightCutInfo(A, opts.nutritionistSkillA).staminaCap;
   const capB = weightCutInfo(B, opts.nutritionistSkillB).staminaCap;
@@ -372,6 +376,15 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
   const decayed = mom * CFG.MOMENTUM_DECAY;
   mom = clamp(Math.sign(decayed) * Math.round(Math.abs(decayed)), CFG.MOMENTUM_MIN, CFG.MOMENTUM_MAX);
 
+  // Cutman works the cut in the break, before the doctor looks at it (P2 #30).
+  if (!finish && rnd < (opts.totalRounds ?? 3)) {
+    const treatedA = cutmanTreat(cutA, opts.cutmanSkillA);
+    const treatedB = cutmanTreat(cutB, opts.cutmanSkillB);
+    if (treatedA < cutA) comm.both(5, 0, `${A.name}'s cutman closes the cut in the corner.`);
+    if (treatedB < cutB) comm.both(5, 0, `${B.name}'s cutman closes the cut in the corner.`);
+    cutA = treatedA; cutB = treatedB;
+  }
+
   return {
     ...comm.ordered(),
     dmgA, dmgB, bodyDmgA, bodyDmgB, legDmgA, legDmgB,
@@ -421,6 +434,7 @@ export function runFight(A, B, plan, cornerPolicy, seed, totalRounds, opts = {})
     const res = simRound(r, A, B, staA, staB, plan, corner, mom, cutA, cutB, {
       planB, cornerB, totalRounds,
       nutritionistSkillA: opts.nutritionistSkillA, nutritionistSkillB: opts.nutritionistSkillB,
+      cutmanSkillA: opts.cutmanSkillA, cutmanSkillB: opts.cutmanSkillB,
     });
 
     staA = res.staA; staB = res.staB;

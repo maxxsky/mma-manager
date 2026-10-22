@@ -63,6 +63,9 @@ export const CORNER_BODY_STA_PER_LAND = 0.55;
 export const CORNER_CLINCH_POINT_COST = 2;
 export const CUT_TARGET_MULT = 1.5;
 export const CUT_PROTECT_MULT = 0.5;
+// Cutman (staff, P2 #30): cut points closed in each break = ceil(skill / 3),
+// so skill 2-3 closes 1, 4-6 closes 2, 7-9 closes 3.
+export const CUTMAN_SKILL_PER_POINT = 3;
 
 // Submissions
 export const SUB_THRESHOLD_BASE = 75;
