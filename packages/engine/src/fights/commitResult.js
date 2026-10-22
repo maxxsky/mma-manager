@@ -6,6 +6,7 @@ import { TITLE_CELEBRATION_DELAY_WEEKS, TITLE_SPONSOR_DELAY_WEEKS } from "../eve
 import { TITLE_NAMES, titleTier, championAt, setChampion, removeChampion } from "../championships.js";
 import { avgSkill } from "../fighter.js";
 import { FIGHT_INJURY_CHANCE, FIGHT_INJURY_TIERS, FIGHT_INJURY_LABELS } from "../data.js";
+import { fightTotals } from "../fight/report.js";
 import { fightPurse } from "../fight/purse.js";
 import { aiChampion } from "../world/fighter-profile.js";
 import { isKnockout, koWinStreak } from "../achievements.js";
@@ -24,10 +25,12 @@ export function commitFightResult(g, fighter, result) {
   f.koStreak = result.won && !result.draw && isKnockout(result.how) ? previousKOStreak + 1 : 0;
 
   // ── Purse payout (show money always, win bonus only on win) ──
-  const { purse, forfeit } = fightPurse(booking, result);
+  const { purse, forfeit, fightNight } = fightPurse(booking, result);
+  const reporting = result.roundLogs?.length ? { stats: fightTotals(result.roundLogs), fightNightBonus: fightNight } : {};
   const campCut = Math.round((f.contract?.managerCut || 0.18) * purse);
   g.cash = (g.cash || 0) + campCut;
   if (forfeit > 0) g.log.unshift(`⚖️ Catchweight: purse ${f.name} dipotong 30% (${fmt$(forfeit)}).`);
+  if (fightNight > 0) g.log.unshift(`⭐ Fight of the Night: ${f.name} mendapat bonus ${fmt$(fightNight)} (termasuk dalam bagian camp).`);
 
   // ── PPV revenue (title fights only) ──
   if (booking?.titleTier === "Major" || booking?.titleTier === "Premier") {
@@ -115,7 +118,7 @@ export function commitFightResult(g, fighter, result) {
 
     const oppName = booking?.opponent?.name || "Unknown";
     if (!f.fightHistory) f.fightHistory = [];
-    f.fightHistory.push({ result: "W", opponent: oppName, method: result.how, round: result.r, tier: booking?.tier || "Local", week: g.week });
+    f.fightHistory.push({ result: "W", opponent: oppName, method: result.how, round: result.r, tier: booking?.tier || "Local", week: g.week, ...reporting });
     if (f.fightHistory.length > 30) f.fightHistory.shift();
     const careerEvents = processFightResult(f, g, { won: true, how: result.how });
     const rivalryEvents = processRivalry(f, { name: oppName }, g);
@@ -228,7 +231,7 @@ export function commitFightResult(g, fighter, result) {
 
     const oppName = booking?.opponent?.name || "Unknown";
     if (!f.fightHistory) f.fightHistory = [];
-    f.fightHistory.push({ result: "L", opponent: oppName, method: result.how, round: result.r, tier: booking?.tier || "Local", week: g.week });
+    f.fightHistory.push({ result: "L", opponent: oppName, method: result.how, round: result.r, tier: booking?.tier || "Local", week: g.week, ...reporting });
     if (f.fightHistory.length > 30) f.fightHistory.shift();
     const careerEvents = processFightResult(f, g, { won: false, how: result.how });
     updateRivalryResult({ name: oppName, rivalries: {} }, f, g);

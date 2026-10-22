@@ -7,6 +7,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { clamp, random } from "@ironfist/engine/rng.js";
 import { ARCH_COLOR } from "@ironfist/engine/data.js";
 import { simRound, autoGamePlan } from "@ironfist/engine/fight.js";
+import { fightTotals } from "@ironfist/engine/fight/report.js";
 import { scoreDecision } from "@ironfist/engine/fight/scoring.js";
 import { commitFightResult } from "@ironfist/engine/fights/commitResult.js";
 import { useFightSeed } from "../hooks/useFightSeed.js";
@@ -50,10 +51,7 @@ export default function FightNight({ fighter, done, staff }) {
   const [docCheck, setDocCheck] = useState(false);
   const [weighinIssue, setWeighinIssue] = useState(null);
   const [result, setResult] = useState(null);
-  const [totalLandA, setTotalLandA] = useState(0);
-  const [totalLandB, setTotalLandB] = useState(0);
-  const [totalTdA, setTotalTdA] = useState(0);
-  const [totalTdB, setTotalTdB] = useState(0);
+  const { landA: totalLandA, landB: totalLandB, tdA: totalTdA, tdB: totalTdB } = fightTotals(roundLogs);
   const committed = useRef(false);
 
   // Hooks
@@ -141,20 +139,20 @@ export default function FightNight({ fighter, done, staff }) {
     if (!result) { done((g) => {}); return; }
     if (committed.current) return;
     committed.current = true;
-    done((g) => commitFightResult(g, fighter, { ...result, weighinIssue }), { fightResult: result });
+    done((g) => commitFightResult(g, fighter, { ...result, weighinIssue, roundLogs }), { fightResult: result });
   };
 
   // Corner countdown timer
   useEffect(() => {
-    if (stage !== "corner") return;
+    if (stage !== "corner" || docCheck) return;
     const iv = setInterval(() => setTimer((t) => { if (t <= 1) { nextRound(); return 0; } return t - 1; }), 1000);
     return () => clearInterval(iv);
-  }, [stage, rnd]);
+  }, [stage, rnd, docCheck]);
 
   // Tick auto-advance
   useEffect(() => {
     if (viewMode !== "tick" || stage !== "round" || !roundLog) return;
-    const displayLog = roundLog.log || [];
+    const displayLog = roundLog.tickLog || roundLog.log || [];
     if (tickIdx >= displayLog.length) return;
     const iv = setInterval(() => setTickIdx((p) => p + 1), 1200);
     return () => clearInterval(iv);
@@ -163,21 +161,22 @@ export default function FightNight({ fighter, done, staff }) {
   // Tick finish detection
   useEffect(() => {
     if (!roundLog || viewMode !== "tick" || stage !== "round" || !state) return;
-    const displayLog = roundLog.log || [];
+    const displayLog = roundLog.tickLog || roundLog.log || [];
     if (tickIdx >= displayLog.length) {
       if (roundLog.finish) {
-        setStage(roundLog.finish.how === "KO/TKO" ? "knockdown" : "result");
+        if (roundLog.finish.how === "KO/TKO") setStage("knockdown");
+        else processResult();
       } else if (roundLog.knockdown) {
         setStage("knockdown");
       } else {
-        setStage("result");
+        setStage("corner"); setTimer(60);
       }
     }
   }, [tickIdx]);
 
   const stepIdx = stage === "staredown" ? 0 : stage === "weighin" || stage === "entrance" ? 1 : stage === "result" ? 3 : 2;
   const inFight = IN_FIGHT.has(stage);
-  const displayLog = roundLog?.log || [];
+  const displayLog = (viewMode === "tick" ? roundLog?.tickLog : roundLog?.log) || roundLog?.log || [];
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 60, overflowY: "auto",
@@ -211,8 +210,8 @@ export default function FightNight({ fighter, done, staff }) {
         {stage === "round" && roundLog && <RoundView rnd={rnd} roundLog={roundLog} viewMode={viewMode} tickIdx={tickIdx} displayLog={displayLog} onEndRound={() => { setStage("corner"); setTimer(60); }} onSeeFinish={() => { setStage(roundLog.finish.how === "KO/TKO" ? "knockdown" : "result"); if (roundLog.finish.how !== "KO/TKO") processResult(); }} hasFinish={!!roundLog.finish} />}
         {stage === "corner" && !docCheck && <Corner rnd={rnd} totalRounds={totalRounds} timer={timer} state={state} runRound={runRound} processResult={processResult} />}
         {stage === "corner" && docCheck && <DoctorCheck fighter={fighter} opp={opp} cutA={cutA} cutB={cutB} onContinue={() => { setDocCheck(false); setStage("corner"); }} onRetire={() => { const isPlayerCut = cutA >= 6; setResult({ won: !isPlayerCut, how: "Doctor Stoppage", r: rnd }); setStage("result"); }} />}
-        {stage === "knockdown" && <Knockdown roundLog={roundLog} rnd={rnd} onSeeResult={() => { processResult(); }} />}
-        {stage === "result" && result && <ResultScreen fighter={fighter} opp={opp} roundLog={roundLog} roundLogs={roundLogs} result={{ ...result, weighinIssue }} totalRounds={totalRounds} onCommit={commitResult} />}
+        {stage === "knockdown" && <Knockdown roundLog={roundLog} rnd={rnd} onSeeResult={() => { if (roundLog.finish) processResult(); else { setStage("corner"); setTimer(60); } }} />}
+        {stage === "result" && result && <ResultScreen fighter={fighter} opp={opp} roundLog={roundLog} roundLogs={roundLogs} result={{ ...result, weighinIssue, roundLogs }} totalRounds={totalRounds} onCommit={commitResult} />}
       </div>
     </div>
   );

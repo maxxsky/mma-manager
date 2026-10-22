@@ -3,6 +3,8 @@
 //   No random selection. Everything driven by actual fight events.
 // ============================================================
 
+import { fightNightBonus } from "./fight/report.js";
+
 // ── FIGHT NARRATIVE ──
 
 export function generateFightNarrative(fighter, opponent, roundLogs, result) {
@@ -122,11 +124,8 @@ export function detectSignatureMoments(fighter, roundLogs, result) {
   const how = result.how;
   const won = result.won;
 
-  // Fight of the Night: close, high-action, 4+ rounds
-  if (rnd >= 3 && totalLand > 40 && Math.abs(
-    roundLogs.reduce((s,l) => s + (l.scoreA||0), 0) - 
-    roundLogs.reduce((s,l) => s + (l.scoreB||0), 0)
-  ) < 15) {
+  // Same eligibility as the actual purse payout.
+  if (fightNightBonus(roundLogs, result) > 0) {
     moments.push({ id: "fotn", label: "⭐ Fight of the Night", icon: "🏆" });
   }
 

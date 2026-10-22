@@ -128,6 +128,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
   let dmgA = 0, dmgB = 0, bodyDmgA = 0, bodyDmgB = 0, legDmgA = 0, legDmgB = 0;
   let ptsA = 0, ptsB = 0, finish = null, knockdown = null;
   let landA = 0, landB = 0;
+  let tdA = 0, tdB = 0;
   // Strikes landed standing (striking and clinch), for "Work the body".
   let standLandA = 0, standLandB = 0;
   let position = STANDING;
@@ -180,7 +181,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
     // Satu nilai waktu kontinu (bukan 2 skala terpisah yang gak nyambung),
     // biar progresi antar-exchange rata & gak collision. 270 detik (4.5 menit)
     // sengaja disisain buffer sebelum bel wasit di menit ke-5.
-    const totalExSec = Math.floor((ex * CFG.ROUND_COMMENTARY_SECONDS) / nEx);
+    const totalExSec = 40 + Math.floor((ex * (CFG.ROUND_COMMENTARY_SECONDS - 40)) / nEx);
     const exMin = Math.floor(totalExSec / 60);
     const exSec = totalExSec % 60;
 
@@ -238,6 +239,8 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
       const archMsgs3 = archetypeCommentary(A, B, exType, matchup);
       archMsgs3.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
       const result = clampDamage(resolveTakedown(exType, A, B, stA, stB, { planA, planB, cornerA, cornerB }, matchup, comm, exMin, exSec));
+      if (result.newPosition?.type !== "standing" && result.newPosition?.top === "A") tdA++;
+      if (result.newPosition?.type !== "standing" && result.newPosition?.top === "B") tdB++;
       exDmgA = result.dmgA; exDmgB = result.dmgB;
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
@@ -335,7 +338,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
   }
 
   // ── TRAIT COMMENTARY ──
-  const traitMsgs = traitCommentary(null, A, B, rnd, dmgA, dmgB, landA);
+  const traitMsgs = finish ? [] : traitCommentary(null, A, B, rnd, dmgA, dmgB, landA);
   traitMsgs.forEach((msg) => {
     if (msg.includes("iron chin")) comm.both(3, 10, msg);
     else if (msg.includes("glass jaw")) comm.both(3, 40, msg);
@@ -363,14 +366,13 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
   mom = clamp(Math.sign(decayed) * Math.round(Math.abs(decayed)), CFG.MOMENTUM_MIN, CFG.MOMENTUM_MAX);
 
   return {
-    log: comm.summaryLog, tickLog: comm.tickLog,
+    ...comm.ordered(),
     dmgA, dmgB, bodyDmgA, bodyDmgB, legDmgA, legDmgB,
     staA: clamp(stA - drainA, CFG.STA_MIN, capA),
     staB: clamp(stB - drainB, CFG.STA_MIN, capB),
     scoreA: ptsA, scoreB: ptsB,
     finish, knockdown, landA, landB,
-    tdA: position.type !== "standing" && position.top === "A" ? 1 : 0,
-    tdB: position.type !== "standing" && position.top === "B" ? 1 : 0,
+    tdA, tdB,
     momentum: mom,
     cutA, cutB,
     planB, cornerB,

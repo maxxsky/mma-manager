@@ -4,6 +4,7 @@ import { T } from "../../ui/theme.jsx";
 import { t } from "../../i18n/index.js";
 import { fmt$ } from "@ironfist/engine/rng.js";
 import { generateFightNarrative, detectSignatureMoments } from "@ironfist/engine/narrative.js";
+import { fightTotals } from "@ironfist/engine/fight/report.js";
 import { fightPurse } from "@ironfist/engine/fight/purse.js";
 
 export default function ResultScreen({ fighter, opp, roundLog, roundLogs, result, totalRounds, onCommit }) {
@@ -13,7 +14,8 @@ export default function ResultScreen({ fighter, opp, roundLog, roundLogs, result
   const moments = detectSignatureMoments(fighter, logs, result);
   const sc = result.scorecard;
   const stars = '⭐'.repeat(narrative.rating || 3);
-  const { show, winBonus, forfeit, purse } = fightPurse(fighter.booked, result);
+  const { show, winBonus, forfeit, purse, fightNight } = fightPurse(fighter.booked, { ...result, roundLogs: logs });
+  const totals = fightTotals(logs);
 
   return (
     <Panel style={{ textAlign: "center", padding: "36px 24px", border: `1px solid ${result.won ? T.gold : T.neg}55` }}>
@@ -30,6 +32,11 @@ export default function ResultScreen({ fighter, opp, roundLog, roundLogs, result
       {fighter.booked.title && result.won && (
         <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 17, letterSpacing: 1.5, textTransform: "uppercase", color: T.gold, marginTop: 8 }}>{t("RESULT.andStill").replace("{0}", fighter.weightClass)}</div>
       )}
+
+      <div style={{ marginTop: 12, fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>
+        <div>{fighter.name}: {t("SCORE.str")} {totals.landA} · {t("SCORE.td")} {totals.tdA}</div>
+        <div>{opp.name}: {t("SCORE.str")} {totals.landB} · {t("SCORE.td")} {totals.tdB}</div>
+      </div>
 
       {/* Fight Narrative */}
       <div style={{ marginTop: 12 }}>
@@ -57,7 +64,7 @@ export default function ResultScreen({ fighter, opp, roundLog, roundLogs, result
             const ppv = Math.round((fighter.popularity + oppPop) * 200 * (titleTier === "Premier" ? 1.5 : 1));
             items.push([t("RESULT.ppvRevenue"), fmt$(ppv)]);
           }
-          items.push([t("RESULT.fightNight"), result.won ? "$50K" : "—"]);
+          if (fightNight > 0) items.push([t("RESULT.fightNight"), fmt$(fightNight)]);
           return items.map(([l, v], i, arr) => (
             <div key={l} style={{ display: "contents" }}>
               <span style={{ fontFamily: T.body, fontSize: 12, color: i === arr.length - 1 ? T.txt : T.txt3, fontWeight: i === arr.length - 1 ? 700 : 400 }}>{l}</span>
