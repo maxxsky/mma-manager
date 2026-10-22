@@ -22,3 +22,14 @@ describe('P2 #34 — passive mentor training bonus removed', () => {
     expect(career.calcMentorBonus).toBeUndefined()
   })
 })
+
+describe('P2 #37 — legacy SET_SPONSOR removed', () => {
+  it('the action no longer writes the old single-sponsor field', async () => {
+    const { reducer } = await import('@ironfist/engine/reducer.js')
+    setRNG(mulberry32(4))
+    const g = newGame()
+    resetRNG()
+    reducer(g, { type: 'SET_SPONSOR', brand: 'Anything', rate: 999 })
+    expect(g.sponsor).toBeUndefined()
+  })
+})

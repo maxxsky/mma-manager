@@ -3,7 +3,7 @@
 // Mutates `g` in place for performance (not a Redux-style immutable reducer).
 //
 // Domain reducers (engine/reducer/):
-//   camp.js     — UPGRADE_FACILITY, UPGRADE_TIER, SET_SPONSOR, TERMINATE_SPONSOR
+//   camp.js     — UPGRADE_FACILITY, UPGRADE_TIER, TERMINATE_SPONSOR
 //   fighter.js  — SET_TRAINING, CLASS_CHANGE, COUNTER_POACH, TALK_POACH, DISMISS_PROSPECT
 //   coach.js    — HIRE_COACH, FIRE_COACH
 //   contract.js — NEGOTIATE_CONTRACT, ACCEPT_COUNTER_OFFER, CLEAR_NEGOTIATION, SIGN_CONTRACT

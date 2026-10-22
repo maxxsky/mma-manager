@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#36, dan P5 #53–#54 selesai (38 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#36 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, seluruh P2 #26–#37, dan P5 #53–#54 selesai (39 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#37 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -67,7 +67,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | 34 | Mentor | FI6 | Perbesar dan tampilkan, atau buang. **Selesai: dibuang** |
 | 35 | Kepribadian promotor | DU8 | Beri efek nyata (purse, tipe lawan) atau buang. **Selesai: diberi efek purse** |
 | 36 | Trait Injury Prone | FI4 | Bisa didapat, atau hapus pengecekannya. **Selesai: bisa didapat dari cedera mana pun** |
-| 37 | `SET_SPONSOR` lama | EK5 | Hapus |
+| 37 | `SET_SPONSOR` lama | EK5 | Hapus. **Selesai** |
 
 ## P3 — Balancing (setelah P0 dan P1)
 
@@ -483,6 +483,9 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - `checkInjuryProne` (`fights/injury.js`) dipanggil setelah cedera latihan maupun cedera fight. Ambang tetap 4 (`INJURY_PRONE_SERIOUS_INJURIES`). Efeknya ×2 risiko di latihan dan, sejak #22, di fight.
   - Trait ini tidak ada di tabel deskripsi `TRAITS`, jadi tooltip-nya kosong. Ditambahkan tabel `ACQUIRED_TRAITS` (trait yang didapat selama karier, tidak di-roll saat fighter dibuat), dipakai tooltip di detail fighter.
   - Validasi: test baru `injury-prone.test.js` (2 test; test cedera fight gagal di kode lama). `npm test` root: **828 test app + 28 test server lulus**. Build dan harness dunia lulus.
+
+- **22 Oktober 2026: P2 #37 selesai — `SET_SPONSOR` lama dihapus.** Aksi ini tidak dipanggil dari mana pun dan menulis ke field lama `g.sponsor` (sistem sponsor sekarang memakai `g.sponsors`, dan save lama sudah dimigrasikan). Test di `removed-systems.test.js`. `npm test` root: 829 test app + 28 test server lulus.
+- **Seluruh P2 selesai** (dengan #33 bagian pinjaman ditunda ke P3). Berikutnya P3 (balancing).
 
 ## Urutan kerja yang disarankan
 

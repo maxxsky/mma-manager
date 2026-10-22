@@ -1,6 +1,6 @@
 // Camp domain — facility upgrades, tier advancement, sponsors
-import { clamp, fmt$ } from "../rng.js";
-import { CAMP_TIERS, SPONSOR_BRANDS } from "../data.js";
+import { clamp } from "../rng.js";
+import { CAMP_TIERS } from "../data.js";
 import { facilityCost } from "../economy.js";
 import { CHEM_BOOST_UPGRADE, TEAM_BONDING_COST, TEAM_BONDING_CHEM, TEAM_BONDING_COOLDOWN } from "./constants.js";
 import { INVESTMENTS } from "../data/investments.js";
@@ -41,14 +41,6 @@ export function reduceCamp(g, action) {
           g.rep = clamp(g.rep + 8, 0, 100);
           g.log.unshift(`🏗️ Camp upgrade ke TIER ${next + 1}: ${t.name}!`);
         }
-      }
-      break;
-    }
-    case "SET_SPONSOR": {
-      const brand = SPONSOR_BRANDS.find((b) => b.name === action.brand);
-      if (brand) {
-        g.sponsor = { brand: action.brand, rate: action.rate || brand.baseRate, type: brand.type };
-        g.log.unshift(`📢 ${action.brand} jadi sponsor camp — ${fmt$(action.rate || brand.baseRate)}/bln.`);
       }
       break;
     }
