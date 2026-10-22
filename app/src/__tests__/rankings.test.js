@@ -130,6 +130,7 @@ describe('Task 58 — Staredown attitude effects (N1)', () => {
   it('Trash talk loser: morale -8, rep -5, clamped', () => {
     useSeed(42)
     const g = createTestGame()
+    g.coaches.forEach((c) => { c.personality = 'Technician' }) // Player's Coach would scale popularity
     const f = g.roster[0]
     f.morale = 50
     f.ambition = 'Grinder' // no fight-time ambition effect (Paycheck would add morale)
@@ -152,6 +153,7 @@ describe('Task 58 — Staredown attitude effects (N1)', () => {
   it('Respectful: popularity +2 regardless of win/loss', () => {
     useSeed(42)
     const g = createTestGame()
+    g.coaches.forEach((c) => { c.personality = 'Technician' }) // Player's Coach would scale popularity
     const f = g.roster[0]
     f.popularity = 30
 
@@ -173,6 +175,7 @@ describe('Task 58 — publicOpinion auto-connects (N2)', () => {
   it('popularity gain from attitude changes opinion label', () => {
     useSeed(42)
     const g = createTestGame()
+    g.coaches.forEach((c) => { c.personality = 'Technician' }) // Player's Coach would scale popularity
     const f = g.roster[0]
     // Start at pop=55, streakW=2 → Solid Pro (neutral)
     f.popularity = 55

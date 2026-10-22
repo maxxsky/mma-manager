@@ -4,6 +4,7 @@ import { ATTRS, ATTR_LABEL, TRAINING, INTENSITY, CAMP_TIERS, SPARRING_MATCH } fr
 import { coachBonus, facBonus } from "../economy.js";
 import { calcMentorBonus } from "../career.js";
 import { pushInboxEvent } from "../events.js";
+import { MOTIVATOR_RECOVERY_MULT } from "../ambitions.js";
 
 function calcSparringMult(f, g) {
   if (!g.roster || g.roster.length <= 1) return 1;
@@ -21,10 +22,13 @@ export function tickTraining(g) {
   if (!g || !g.roster) return;
   const chemMult = g.chemistry >= 80 ? 1.15 : g.chemistry < 40 ? 0.9 : 1;
 
+  // Motivator: morale recovers 20% faster for fighters coming off a loss (P2 #29).
+  const hasMotivator = g.coaches.some((c) => c.personality === "Motivator");
   g.roster.forEach((f) => {
     // Morale drift toward 60
     if (!f.injury && !f.booked) {
-      f.morale = clamp(f.morale + (f.morale < 60 ? 2 : f.morale > 60 ? -2 : 0), 0, 100);
+      const up = 2 * (hasMotivator && (f.streakL || 0) > 0 ? MOTIVATOR_RECOVERY_MULT : 1);
+      f.morale = clamp(f.morale + (f.morale < 60 ? up : f.morale > 60 ? -2 : 0), 0, 100);
     }
 
     // Injury recovery

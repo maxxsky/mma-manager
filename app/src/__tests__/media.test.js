@@ -18,6 +18,7 @@ describe('Trash Talk — commitResult effect', () => {
   it('trash talk on win — popularity +5 on top of win bonus (commitResult line ~113)', () => {
     useSeed(42)
     const g = createTestGame()
+    g.coaches.forEach((c) => { c.personality = 'Technician' }) // Player's Coach would scale popularity
     const f = g.roster[0]
     f.popularity = 30 // set known baseline
 
@@ -35,6 +36,7 @@ describe('Trash Talk — commitResult effect', () => {
   it('trash talk on loss — popularity -5 (commitResult line ~165)', () => {
     useSeed(42)
     const g = createTestGame()
+    g.coaches.forEach((c) => { c.personality = 'Technician' }) // Player's Coach would scale popularity
     const f = g.roster[0]
     f.popularity = 50
 
@@ -51,6 +53,7 @@ describe('Trash Talk — commitResult effect', () => {
   it('trash talk win adds +5 regardless of win pop bonus size', () => {
     useSeed(42)
     const g = createTestGame()
+    g.coaches.forEach((c) => { c.personality = 'Technician' }) // Player's Coach would scale popularity
     const f = g.roster[0]
     f.popularity = 30
     f.traits = ['Crowd Favorite'] // win bonus is now popBase * 2
@@ -69,6 +72,7 @@ describe('Trash Talk — commitResult effect', () => {
   it('no trash talk — no extra popularity effect', () => {
     useSeed(42)
     const g = createTestGame()
+    g.coaches.forEach((c) => { c.personality = 'Technician' }) // Player's Coach would scale popularity
     const f = g.roster[0]
     f.popularity = 30
 

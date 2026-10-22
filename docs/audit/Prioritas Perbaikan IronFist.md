@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#28, dan P5 #53–#54 selesai (30 dari 63 item). #19–#28 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#29, dan P5 #53–#54 selesai (31 dari 63 item). #19–#29 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -59,7 +59,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | 26 | Ambisi Paycheck, Legacy, Family Man, Star Power | FI3 | Implementasikan; logikanya sederhana. `fightsThisYear` harus bertambah. **Selesai: diimplementasikan** |
 | 27 | Kontrak: counter-offer terbalik; logika negosiasi di UI | EK3 | Perbaiki arah counter-offer, pindahkan logika ke engine, ukur 7 tuas lalu buang yang tidak terasa. **Selesai** |
 | 28 | Relasi antar fighter | FI2 | Buang dulu kecuali ada rencana event yang mengubah relasi. **Selesai: dibuang** |
-| 29 | Kepribadian coach Motivator dan Player's Coach | CA3 | Implementasikan sesuai deskripsi |
+| 29 | Kepribadian coach Motivator dan Player's Coach | CA3 | Implementasikan sesuai deskripsi. **Selesai** |
 | 30 | Staf Cutman dan Nutritionist | CA2 | Cutman mengurangi cut; Nutritionist digabung ke weight cut (setelah #6) |
 | 31 | Janji ke fighter | FI5 | Catat janji dan beri akibat kalau diingkari |
 | 32 | Event chemistry | FI8 | Opsi gratis diberi kelemahan, atau opsi berbiaya diberi hasil lebih besar |
@@ -425,6 +425,13 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Bukti tidak ada perubahan perilaku: simulasi 240 minggu × 3 seed menghasilkan hash state (roster, divisi, kas, reputasi, judul inbox) yang identik sebelum dan sesudah.
   - Tidak terpengaruh: kecocokan sparring (`calcSparringMult`) dan rivalitas personal (`f.rivalries`).
   - Validasi: test baru di `removed-systems.test.js`. `npm test` root: **793 test app + 28 test server lulus**. Build dan harness dunia lulus.
+
+- **22 Oktober 2026: P2 #29 selesai — kepribadian coach.**
+  - Motivator ("pemulihan morale +20% setelah kalah"): pemulihan morale mingguan menuju 60 naik dari +2 ke +2,4 untuk fighter yang fight terakhirnya kalah (`streakL > 0`). Sebelumnya tidak ada efek; Motivator hanya dipakai di teks rekomendasi dan gelar karier coach.
+  - Player's Coach ("popularity gain +15%"): kenaikan bersih popularitas dari fight ×1,15, bertumpuk dengan Star Power (×1,5). Logika Star Power dan Player's Coach disatukan di `ambitions.js`. Chemistry +2/bulan sudah ada sebelumnya. Bonus penemuan talenta (+20% peluang, sudah ada di `talentPool.js` tapi tidak disebut) dipertahankan dan ditambahkan ke deskripsi.
+  - Efek Motivator kecil (sekitar +0,4 morale per minggu); angkanya mengikuti deskripsi apa adanya dan bisa dituning di P3.
+  - Fixture test lama: `createTestGame` ternyata punya coach Player's Coach. Tujuh test yang menghitung popularitas secara persis (`media.test.js`, `rankings.test.js`) dikunci ke coach Technician.
+  - Validasi: test baru `coach-personalities.test.js` (3 test, gagal di kode lama). `npm test` root: **796 test app + 28 test server lulus**. Build dan harness dunia lulus.
 
 ## Urutan kerja yang disarankan
 
