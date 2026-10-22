@@ -71,3 +71,20 @@ it('repairs a legacy lower-tier champion through the actual load hook', () => {
   expect(migrated.tierChamps.National.fighterId).toBe(f.id)
   expect(loaded.roster[0].titles).toEqual(['National Champion'])
 })
+
+it('hydrates world profiles once through the load hook and keeps accepted fight attributes', () => {
+  const legacy = newGame()
+  const f = legacy.roster[0]
+  const target = legacy.divisions[f.weightClass].list[2]
+  delete target.attrs; delete target.traits
+  f.booked = { seed: 42, contenderId: target.id, opponent: {
+    ...structuredClone(f), id: target.id, name: target.name, booked: null,
+  } }
+  localStorage.setItem('mma-manager-save-v4-slot1', JSON.stringify(legacy))
+  const loaded = loadWithMigrations()
+  const actual = loaded.divisions[f.weightClass].list.find(c => c.id === target.id)
+  expect(actual.attrs).toEqual(f.attrs)
+  expect(actual.archetype).toBe(f.archetype)
+  localStorage.setItem('mma-manager-save-v4-slot1', JSON.stringify(loaded))
+  expect(loadWithMigrations()).toEqual(loaded)
+})

@@ -129,31 +129,16 @@ describe('Camp marking — maintainDivisions', () => {
     useSeed(42)
     const g = createTestGame()
 
-    // Track all fighters with campId before any replacements
-    const beforeCamps = new Set()
-    Object.values(g.divisions).forEach((div) => {
-      div.list.forEach((f) => {
-        if (f.campId) beforeCamps.add(f.id)
-      })
-    })
-
-    // Run multiple ticks at yearly boundaries
-    // tick() increments g.week first, so set week to (multiple - 1)
+    // Exercise the population factory directly. A long passive camp run can
+    // stop early or retire every marked fighter before its final snapshot.
+    const newFighters = []
     for (let i = 0; i < 10; i++) {
-      g.week = i * TICK_YEARLY + TICK_YEARLY - 1
-      tick(g)
+      g.week = (i + 1) * TICK_YEARLY
+      Object.values(g.divisions).forEach(div => { div.list = []; div.champ = null })
+      maintainDivisions(g)
+      newFighters.push(...Object.values(g.divisions).flatMap(div => div.list))
     }
-
-    // Collect all fighters after ticks
-    const afterFighters = []
-    Object.values(g.divisions).forEach((div) => {
-      div.list.forEach((f) => {
-        afterFighters.push(f)
-      })
-    })
-
-    const newFighters = afterFighters.filter((f) => !beforeCamps.has(f.id))
-    const newMarked = newFighters.filter((f) => f.campId != null)
+    const newMarked = newFighters.filter(f => f.campId != null)
 
     // At least some replacements should exist
     expect(newFighters.length).toBeGreaterThan(0)
@@ -322,7 +307,7 @@ describe('Task 54 — Championship Contender event (R2)', () => {
     tick(g)
 
     const champEvent = g.inbox.find((m) =>
-      m.title?.includes('Championship Contender')
+      m.title?.includes('Championship Contender') && m.title.includes(camp.name) && m.body?.includes('Lightweight')
     )
     expect(champEvent).toBeDefined()
     expect(champEvent.title).toContain(camp.name)

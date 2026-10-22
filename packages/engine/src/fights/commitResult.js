@@ -7,6 +7,7 @@ import { TITLE_NAMES, titleTier, championAt, setChampion, removeChampion } from 
 import { avgSkill } from "../fighter.js";
 import { FIGHT_INJURY_CHANCE, FIGHT_INJURY_TIERS, FIGHT_INJURY_LABELS } from "../data.js";
 import { fightPurse } from "../fight/purse.js";
+import { aiChampion } from "../world/fighter-profile.js";
 
 /** Commit fight result to game state. Called from FightNight done() callback. */
 export function commitFightResult(g, fighter, result) {
@@ -203,7 +204,7 @@ export function commitFightResult(g, fighter, result) {
       const opponent = booking?.opponent;
       if (opponent) {
         const player = g.roster.find(x => x.id !== f.id && (x.id === opponent.id || x.name === opponent.name));
-        setChampion(div, contestedTier, { name: opponent.name, player: !!player,
+        setChampion(div, contestedTier, { ...(player ? {} : aiChampion(opponent, f.weightClass)), name: opponent.name, player: !!player,
           fighterId: player?.id || null, tier: contestedTier, level: opponent.level,
           age: opponent.age, campId: opponent.campId || null, campName: opponent.campName || null,
           wonWeek: g.week, lastDefenseWeek: g.week, titleDefenses: 0 });

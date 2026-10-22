@@ -5,7 +5,8 @@
 // ============================================================
 
 import { R, RI, clamp, random, pick } from "./rng.js";
-import { createAIFighter, createVeteranFighter } from "./world/ai-fighter.js";
+import { createAIFighter } from "./world/ai-fighter.js";
+import { aiChampion, changeWorldLevel } from "./world/fighter-profile.js";
 import { recordTitleChange, recordRetirement } from "./world/history.js";
 import { rankOf, divisionRankings, rankedAIContenders } from "./rankings.js";
 import { RIVAL_TRAITS } from "./data.js";
@@ -76,11 +77,11 @@ export function ageAIFighters(g) {
       c.age++;
 
       if (c.age <= PEAK_AGE && !c.peaked) {
-        c.level = clamp(c.level + R(0.015, 0.04), SKILL_MIN, SKILL_MAX);
+        changeWorldLevel(c, clamp(c.level + R(0.015, 0.04), SKILL_MIN, SKILL_MAX));
         c.points = clamp(c.points + RI(2, 8), POINTS_MIN, POINTS_MAX);
       } else if (c.age >= DECLINE_AGE) {
         c.peaked = true;
-        c.level = clamp(c.level - R(0.01, 0.03), SKILL_MIN, SKILL_MAX);
+        changeWorldLevel(c, clamp(c.level - R(0.01, 0.03), SKILL_MIN, SKILL_MAX));
         c.points = clamp(c.points - RI(2, 8), POINTS_MIN, POINTS_MAX);
       }
     });
@@ -113,7 +114,7 @@ export function simulateAITitleDefenses(g) {
       if (uniqueCandidates.length < 2) return;
       const winner = uniqueCandidates[0];
       const loser = uniqueCandidates[1];
-      d.champ = { name: winner.name, player: false, age: winner.age || RI(27, 33), campId: winner.campId || null, campName: winner.campName || null };
+      d.champ = aiChampion(winner, wc);
       events.push({
         title: `👑 New ${wc} Champion!`,
         body: `${winner.name} defeats ${loser.name} to win the vacant ${wc} title!`,
@@ -134,7 +135,7 @@ export function simulateAITitleDefenses(g) {
 
     if (random() < changeChance) {
       const oldChamp = champ.name;
-      d.champ = { name: contender.name, player: false, age: contender.age || RI(27, 33), campId: contender.campId || null, campName: contender.campName || null };
+      d.champ = aiChampion(contender, wc);
       recordTitleChange(g, g.week, wc, contender.name, oldChamp);
 
       events.push({
@@ -146,13 +147,9 @@ export function simulateAITitleDefenses(g) {
       const oldIdx = d.list.findIndex((c) => c.name === oldChamp);
       const oldRank = divisionRankings(g, wc).find(c => c.fighter.name === oldChamp)?.rank;
       if (oldIdx >= 0 && oldRank != null && oldRank <= 10) {
-        d.list.splice(oldIdx, 1);
-        d.list.push(createVeteranFighter({
-          name: oldChamp,
-          points: Math.round(clamp(contender.points - RI(10, 20), POINTS_MIN, POINTS_MAX)),
-          level: clamp(champ.level - 0.1, SKILL_MIN, SKILL_MAX),
-          age: champ.age || 33,
-        }));
+        // Keep the same fighter ID and combat profile when a reign ends.
+        const former = d.list[oldIdx];
+        former.points = Math.round(clamp(contender.points - RI(10, 20), POINTS_MIN, POINTS_MAX));
       }
     } else {
       events.push({
@@ -260,7 +257,7 @@ export function maintainDivisions(g) {
     if (!d.list) return;
     // Ensure minimum division size
     while (d.list.length < MIN_DIVISION_SIZE) {
-      const f = createAIFighter();
+      const f = createAIFighter({ weightClass: wc });
       maybeAssignCamp(g, f);
       d.list.push(f);
     }
@@ -287,7 +284,7 @@ export function maintainDivisions(g) {
       if (d.list.length > 0) {
         const newChamp = rankedAIContenders(g, wc)[0]?.fighter;
         if (!newChamp) return;
-        d.champ = { name: newChamp.name, player: false, age: newChamp.age || 30, campId: newChamp.campId || null, campName: newChamp.campName || null };
+        d.champ = aiChampion(newChamp, wc);
         events.push({
           title: `👑 New ${wc} Champion`,
           body: `${newChamp.name} is the new ${wc} champion after the title was vacated.`,

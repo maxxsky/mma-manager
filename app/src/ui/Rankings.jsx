@@ -35,7 +35,7 @@ export default function Rankings({ g, t }) {
   const champ = div.champ;
   const combined = divisionRankings(g, selDiv).map(({ fighter: f, player, points }) => ({
     name: f.name, archetype: f.archetype, points, record: f.record, player,
-    ovr: Math.round(player ? avgSkill(f) : f.level * 60),
+    ovr: f.attrs ? avgSkill(f) : Math.round(f.level * 60),
     streak: player ? f.streakL || 0 : null,
     change: player ? f.lastRankChange || 0 : null,
     fighterId: player ? f.id : undefined,
@@ -61,7 +61,7 @@ export default function Rankings({ g, t }) {
           name: c.name,
           arch: c.archetype,
           wc: "",
-          skill: c.level * 60,
+          skill: c.attrs ? avgSkill(c) : c.level * 60,
           record: c.record?.w || 0,
         })
       );

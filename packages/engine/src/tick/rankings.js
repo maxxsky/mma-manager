@@ -1,6 +1,7 @@
 // Rankings domain — AI movement, rotation, player rank decay
 import { RI, clamp, R, uid } from "../rng.js";
 import { genFighter } from "../fighter.js";
+import { ensureWorldProfile } from "../world/fighter-profile.js";
 import { rankedAIContenders } from "../rankings.js";
 
 export function tickRankings(g) {
@@ -31,9 +32,11 @@ export function tickRankings(g) {
         const nf = genFighter(lvl);
         d.list.push({
           id: uid(), name: nf.name, archetype: nf.archetype,
+          attrs: nf.attrs, traits: nf.traits, region: nf.region, age: nf.age,
           points: Math.round(R(10, 25)), level: lvl,
           record: { w: RI(0, 3), l: RI(0, 2), ko: 0, sub: 0, dec: 0 },
         });
+        ensureWorldProfile(d.list[d.list.length - 1], wc);
       }
       g.log.unshift(`🔄 Divisi — ${retireCount} fighter pensiun diganti prospect baru. (${retiredNames})`);
     });
