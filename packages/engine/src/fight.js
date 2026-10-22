@@ -81,12 +81,10 @@ export function aiCorner({ rnd, totalRounds = 3, staOwn = 100, staOpp = 100, cut
 // ── SIDE MODIFIERS ──
 // Every plan and corner effect is applied through these, for both sides.
 
-// Output multiplier from a corner instruction.
-function cornerAgg(corner) {
-  if (corner === "go" || corner === "target_cut") return CFG.CORNER_GO_MULT;
-  if (corner === "save" || corner === "stop_bleed") return CFG.CORNER_SAVE_MULT;
-  if (corner === "empty_tank") return CFG.CORNER_EMPTY_TANK_MULT;
-  return 1;
+// Effects of a corner instruction (see CORNER_EFFECTS in fight/config.js).
+// Unknown or missing instructions count as "neutral".
+export function cornerEffects(corner) {
+  return CFG.CORNER_EFFECTS[corner] || CFG.CORNER_EFFECTS.neutral;
 }
 
 // Momentum is stored from A's side. Pass -mom to get B's multiplier.
@@ -96,15 +94,19 @@ function momentumMult(m) {
 
 // Going for the finish makes knockdowns likelier in both directions:
 // a fighter who opens up also leaves openings.
-function finishRisk(plan, corner) {
-  return (plan === "Finish It" ? 1.5 : 1) * (corner === "empty_tank" ? 1.5 : 1);
+function finishRisk(plan) {
+  return plan === "Finish It" ? 1.5 : 1;
 }
 
-function staminaDrain(f, plan, corner, agg, legMod, bodyMult) {
-  return R(CFG.STA_DRAIN_MIN, CFG.STA_DRAIN_MAX) * agg
+// Cardio factor for stamina loss: low cardio and damaged legs lose more.
+function cardioFactor(f, legMod) {
+  return 55 / clamp(f.attrs.cardio * legMod, CFG.CARDIO_DIVISOR_MIN, CFG.CARDIO_DIVISOR_MAX);
+}
+
+function staminaDrain(f, plan, corner, legMod, bodyMult) {
+  return R(CFG.STA_DRAIN_MIN, CFG.STA_DRAIN_MAX) * cornerEffects(corner).drain
     * (plan === "Finish It" ? 1.3 : 1) * (plan === "Survive & Outpoint" ? 0.75 : 1)
-    * (corner === "save" || corner === "stop_bleed" ? CFG.CORNER_SAVE_DRAIN : corner === "clinch" ? CFG.CORNER_CLINCH_DRAIN : 1)
-    * (55 / clamp(f.attrs.cardio * legMod, CFG.CARDIO_DIVISOR_MIN, CFG.CARDIO_DIVISOR_MAX)) * bodyMult;
+    * cardioFactor(f, legMod) * bodyMult;
 }
 
 // ── MAIN FIGHT ROUND ──
@@ -117,6 +119,8 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
   let dmgA = 0, dmgB = 0, bodyDmgA = 0, bodyDmgB = 0, legDmgA = 0, legDmgB = 0;
   let ptsA = 0, ptsB = 0, finish = null, knockdown = null;
   let landA = 0, landB = 0;
+  // Strikes landed standing (striking and clinch), for "Work the body".
+  let standLandA = 0, standLandB = 0;
   let position = STANDING;
   let mom = momentum || 0;
   const planB = opts.planB ?? autoGamePlan(B, A);
@@ -124,8 +128,8 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
     rnd, totalRounds: opts.totalRounds ?? 3,
     staOwn: stB, staOpp: stA, cutOwn: cutB, cutOpp: cutA, momOwn: -mom, plan: planB,
   });
-  const aggA = cornerAgg(cornerA);
-  const aggB = cornerAgg(cornerB);
+  const effA = cornerEffects(cornerA);
+  const effB = cornerEffects(cornerB);
   const expMultA = explosiveMult(A, rnd);
   const expMultB = explosiveMult(B, rnd);
   const matchup = matchupMods(A, B);
@@ -174,7 +178,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
     const exType = pickExchange(position, A, B, planA, planB);
     let exDmgA = 0, exDmgB = 0; // damage dari exchange INI SAJA (bukan kumulatif round)
 
-    const side = { cornerA, cornerB, aggA, aggB, momMultA: momentumMult(mom), momMultB: momentumMult(-mom), expMultA, expMultB };
+    const side = { cornerA, cornerB, aggA: effA.out, aggB: effB.out, exposedA: effA.exposed, exposedB: effB.exposed, momMultA: momentumMult(mom), momMultB: momentumMult(-mom), expMultA, expMultB };
     const phase = ex < CFG.EARLY_EXCHANGES ? CFG.PHASE_EARLY : ex >= nEx - 2 ? CFG.PHASE_LATE : CFG.PHASE_MID;
 
     // ── STRIKING ──
@@ -188,6 +192,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
       legDmgA += result.legDmgA; legDmgB += result.legDmgB;
       landA += result.landA; landB += result.landB;
+      standLandA += result.landA; standLandB += result.landB;
       ptsA += result.ptsA; ptsB += result.ptsB;
       mom += result.momDelta;
 
@@ -211,6 +216,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
       legDmgA += result.legDmgA; legDmgB += result.legDmgB;
       landA += result.landA; landB += result.landB;
+      standLandA += result.landA; standLandB += result.landB;
       ptsA += result.ptsA; ptsB += result.ptsB;
       mom += result.momDelta;
       if (result.newPosition) position = result.newPosition;
@@ -268,7 +274,10 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
         const attackerStr = effAttr(attacker, "strength", isTargetA ? stB : stA) * (1 + ((isTargetA ? matchup.bStrike : matchup.aStrike) || 0));
         const exDmg = isTargetA ? exDmgA : exDmgB;
         const cumDmg = isTargetA ? dmgA : dmgB;
-        const kdChance = clamp((exDmg - CFG.KD_EXCHANGE_THRESHOLD) / chin * CFG.KD_CHIN_MULT + (attackerStr - 40) * CFG.KD_STR_MULT + cumDmg * CFG.KD_FATIGUE_MULT, 0, CFG.KD_CHANCE_MAX) * finishRisk(planA, cornerA) * finishRisk(planB, cornerB)
+        const kdChance = clamp((exDmg - CFG.KD_EXCHANGE_THRESHOLD) / chin * CFG.KD_CHIN_MULT + (attackerStr - 40) * CFG.KD_STR_MULT + cumDmg * CFG.KD_FATIGUE_MULT, 0, CFG.KD_CHANCE_MAX) * finishRisk(planA) * finishRisk(planB)
+          // The attacker's corner sets how hard he goes for the knockdown
+          // (body work rarely drops anyone).
+          * (isTargetA ? effB : effA).kd
           // Cautious lowers the fighter's own finishing power, not the risk of being finished.
           * cautiousMult(attacker);
         if (random() < kdChance) {
@@ -300,6 +309,16 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
     }
   }
 
+  // "Work the body": every strike that lands takes extra stamina from the
+  // opponent. Stamina carries over, so this pays off in later rounds.
+  // Computed here (no RNG) so the commentary line comes before the bell.
+  const legModA = clamp(1 - (legDmgA || 0) * CFG.LEG_DMG_MULTIPLIER, CFG.LEG_MOD_MIN, 1);
+  const legModB = clamp(1 - (legDmgB || 0) * CFG.LEG_DMG_MULTIPLIER, CFG.LEG_MOD_MIN, 1);
+  const bodyDrainA = cornerB === "body" ? standLandB * CFG.CORNER_BODY_STA_PER_LAND * cardioFactor(A, legModA) : 0;
+  const bodyDrainB = cornerA === "body" ? standLandA * CFG.CORNER_BODY_STA_PER_LAND * cardioFactor(B, legModB) : 0;
+  if (!finish && bodyDrainB >= 3) comm.both(4, 45, `${B.name} is breathing hard — the body work is adding up.`);
+  if (!finish && bodyDrainA >= 3) comm.both(4, 45, `${A.name} is breathing hard — the body work is adding up.`);
+
   // ── ROUND END ──
   if (!finish) {
     comm.tickOnly(4, 50, `Final seconds — ${A.name} looking for a home run.`);
@@ -321,15 +340,13 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
   // ── DAMAGE EFFECTS ──
   const bodyMultA = 1 + (bodyDmgA || 0) * CFG.BODY_DMG_MULTIPLIER;
   const bodyMultB = 1 + (bodyDmgB || 0) * CFG.BODY_DMG_MULTIPLIER;
-  const legModA = clamp(1 - (legDmgA || 0) * CFG.LEG_DMG_MULTIPLIER, CFG.LEG_MOD_MIN, 1);
-  const legModB = clamp(1 - (legDmgB || 0) * CFG.LEG_DMG_MULTIPLIER, CFG.LEG_MOD_MIN, 1);
 
-  const drainA = staminaDrain(A, planA, cornerA, aggA, legModA, bodyMultA);
-  const drainB = staminaDrain(B, planB, cornerB, aggB, legModB, bodyMultB);
+  const drainA = staminaDrain(A, planA, cornerA, legModA, bodyMultA) + bodyDrainA;
+  const drainB = staminaDrain(B, planB, cornerB, legModB, bodyMultB) + bodyDrainB;
 
   // Clinch penalty: sacrifice round points for stamina recovery
-  if (cornerA === "clinch") ptsA = Math.max(0, ptsA - 2);
-  if (cornerB === "clinch") ptsB = Math.max(0, ptsB - 2);
+  if (cornerA === "clinch") ptsA = Math.max(0, ptsA - CFG.CORNER_CLINCH_POINT_COST);
+  if (cornerB === "clinch") ptsB = Math.max(0, ptsB - CFG.CORNER_CLINCH_POINT_COST);
 
   // Round half away from zero so decay treats both sides the same
   // (Math.round alone rounds -2.5 to -2 but 2.5 to 3).
@@ -358,7 +375,8 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
 // Pure simulation — no React, no UI. Replaces FightNight.jsx loop for
 // non-interactive contexts (AI vs AI, bulk sim, replay).
 // Set global RNG ke seed yang dikasih, jalanin semua ronde, return hasil.
-// cornerPolicy(roundResult, roundNumber, state) → "go"|"save"|"body"
+// cornerPolicy(roundResult, roundNumber, state) → a corner key ("neutral",
+// "go", "save", "body", ...). Called for every round, round 1 included.
 // opts.planB: B's game plan (default autoGamePlan(B, A)).
 // opts.cornerPolicyB: same shape as cornerPolicy, state seen from A's side
 // (default aiCorner from B's point of view).
@@ -378,7 +396,7 @@ export function runFight(A, B, plan, cornerPolicy, seed, totalRounds, opts = {})
 
   for (let r = 1; r <= totalRounds; r++) {
     const st = { staA, staB, momentum: mom, totalDmgA, totalDmgB, cutA, cutB };
-    const corner = r === 1 ? "go" : cornerPolicy(null, r, st);
+    const corner = cornerPolicy(null, r, st);
     const cornerB = cornerPolicyB(null, r, st);
     const res = simRound(r, A, B, staA, staB, plan, corner, mom, cutA, cutB, { planB, cornerB, totalRounds });
 

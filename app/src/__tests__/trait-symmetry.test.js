@@ -78,14 +78,16 @@ describe('Cautious', () => {
   const ARCHS = ['Boxer', 'Muay Thai', 'Wrestler', 'BJJ Specialist', 'All-Rounder']
 
   // KO wins for each side over fixed seeds, identical fighters except traits.
-  function koCounts(traitsA, traitsB, perArch = 300) {
+  // KOs are rare (about 9% of fights), so the sample has to be large for a
+  // 5% margin to sit outside the noise.
+  function koCounts(traitsA, traitsB, perArch = 1000) {
     let koA = 0, koB = 0
     for (const arch of ARCHS) {
       const A = fighter('A', traitsA, arch)
       const B = fighter('B', traitsB, arch)
       for (let i = 0; i < perArch; i++) {
         const r = runFight(A, B, 'Balanced', () => 'neutral', 7919 * i + 31, 3,
-          { planB: 'Balanced', cornerPolicyB: (_r, rnd) => (rnd === 1 ? 'go' : 'neutral') })
+          { planB: 'Balanced', cornerPolicyB: () => 'neutral' })
         if (r.how === 'KO/TKO') r.winner === 'A' ? koA++ : koB++
       }
     }

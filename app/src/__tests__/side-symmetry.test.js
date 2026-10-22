@@ -22,9 +22,7 @@ function mirrorWinShare(plan, corner, perArch = 400) {
   for (const arch of ARCHS) {
     const [A, B] = pair(arch)
     for (let i = 0; i < perArch; i++) {
-      // runFight forces "go" for A in round 1, so B mirrors that.
-      const policyB = (_r, rnd) => (rnd === 1 ? 'go' : corner)
-      const r = runFight(A, B, plan, () => corner, 10007 * i + 13, 3, { planB: plan, cornerPolicyB: policyB })
+      const r = runFight(A, B, plan, () => corner, 10007 * i + 13, 3, { planB: plan, cornerPolicyB: () => corner })
       if (r.winner === 'A') winsA++
       total++
     }
@@ -67,12 +65,19 @@ describe('side B plan and corner have effects', () => {
       .toBeGreaterThan(round({ planB: 'Finish It', cornerB: 'neutral' }).staB)
   })
 
-  it('a "clinch" corner costs side B round points', () => {
-    const base = round({ planB: 'Balanced', cornerB: 'neutral' })
-    const clinch = round({ planB: 'Balanced', cornerB: 'clinch' })
-    expect(clinch.cornerB).toBe('clinch')
-    // Same seed and same output multiplier, so only the clinch penalty differs.
-    expect(clinch.scoreB).toBe(Math.max(0, base.scoreB - 2))
+  it('a "clinch" corner costs side B round points and saves stamina', () => {
+    let ptsN = 0, ptsC = 0, staN = 0, staC = 0
+    for (let s = 1; s <= 200; s++) {
+      setRNG(mulberry32(s))
+      const base = simRound(2, A, B, 80, 80, 'Balanced', 'neutral', 0, 0, 0, { planB: 'Balanced', cornerB: 'neutral' })
+      setRNG(mulberry32(s))
+      const clinch = simRound(2, A, B, 80, 80, 'Balanced', 'neutral', 0, 0, 0, { planB: 'Balanced', cornerB: 'clinch' })
+      expect(clinch.cornerB).toBe('clinch')
+      ptsN += base.scoreB; ptsC += clinch.scoreB
+      staN += base.staB; staC += clinch.staB
+    }
+    expect(ptsC).toBeLessThan(ptsN * 0.85)
+    expect(staC).toBeGreaterThan(staN)
   })
 
   it('defaults to autoGamePlan and an AI corner when B choices are left out', () => {

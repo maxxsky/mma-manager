@@ -98,7 +98,8 @@ export default function FightNight({ fighter, done, staff }) {
     setStage("entrance");
     const initMomentum = fighter.booked?.pressChoice === "trashTalk" ? 5 : 0;
     const initState = initMomentum > 0 ? { momentum: initMomentum } : null;
-    setTimeout(() => runRound(1, initState, "go"), 500);
+    // No corner instruction before round 1: the corner only talks between rounds.
+    setTimeout(() => runRound(1, initState, "neutral"), 500);
   };
 
   const nextRound = () => {
@@ -109,7 +110,8 @@ export default function FightNight({ fighter, done, staff }) {
     if ((cutA >= 6 || cutB >= 6) && nr <= totalRounds && !docCheck && random() < 0.3) {
       setDocCheck(true); setStage("corner"); setTimer(60); return;
     }
-    runRound(nr, state, "go");
+    // Corner timer ran out without a pick: no instruction this round.
+    runRound(nr, state, "neutral");
   };
 
   const processResult = () => {

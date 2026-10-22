@@ -34,13 +34,33 @@ export const CUT_EXCHANGE_THRESHOLD = 4;  // per-exchange damage minimum untuk e
 export const CUT_CHANCE_PER_HIT = 0.12;   // peluang dasar kena cut per exchange
 export const CUT_SEVERITY_PER_HIT = 1;    // akumulasi cut per hit
 
-// Corner instruction multipliers
-export const CORNER_GO_MULT = 1.25;
-export const CORNER_SAVE_MULT = 0.80;
-export const CORNER_SAVE_DRAIN = 0.70;
-export const CORNER_BODY_MULT = 0.7;
-export const CORNER_EMPTY_TANK_MULT = 1.50;
-export const CORNER_CLINCH_DRAIN = 0.50;
+// Corner instructions. Every option gives something and costs something.
+//   out:     own striking and clinch output.
+//   exposed: strikes the opponent lands on this fighter. Pressing forward
+//            opens you up; fighting safe tightens your guard.
+//   drain:   own stamina drain this round. Stamina carries into later rounds
+//            and scales every attribute, so a high drain is paid back later.
+//   kd:      own chance to knock the opponent down.
+// "neutral" is the baseline: no instruction (round 1, or the corner timer ran out).
+export const CORNER_EFFECTS = {
+  neutral:    { out: 1.00, exposed: 1.00, drain: 1.00, kd: 1.00 },
+  go:         { out: 1.20, exposed: 1.16, drain: 1.40, kd: 1.15 },
+  save:       { out: 0.80, exposed: 0.85, drain: 0.55, kd: 0.85 },
+  body:       { out: 0.85, exposed: 1.00, drain: 1.00, kd: 0.60 },
+  target_cut: { out: 1.10, exposed: 1.10, drain: 1.20, kd: 1.00 },
+  stop_bleed: { out: 0.85, exposed: 0.85, drain: 0.70, kd: 0.85 },
+  clinch:     { out: 0.80, exposed: 0.80, drain: 0.50, kd: 0.70 },
+  empty_tank: { out: 1.35, exposed: 1.35, drain: 1.50, kd: 1.40 },
+};
+// "Work the body": share of striking damage that goes to the body and legs.
+export const CORNER_BODY_SHARE = 0.7;
+export const CORNER_BODY_LEG_SHARE = 0.5;
+// "Work the body": extra stamina the opponent loses per strike landed this
+// round (striking and clinch), scaled by the opponent's cardio like normal
+// drain. This is the late payoff: the lost stamina stays for the rest of the fight.
+export const CORNER_BODY_STA_PER_LAND = 0.25;
+// "Clinch and recover": round points given up for the stamina saved.
+export const CORNER_CLINCH_POINT_COST = 2;
 export const CUT_TARGET_MULT = 1.5;
 export const CUT_PROTECT_MULT = 0.5;
 
