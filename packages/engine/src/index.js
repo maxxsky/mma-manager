@@ -11,7 +11,7 @@ export { scoreRound, scoreDecision } from "./fight/scoring.js";
 export { newGame, tick } from "./state.js";
 export { reducer } from "./reducer.js";
 export { genDivisions, divisionRankings, rankedAIContenders, rankOf, vacateTitle, stripTitle, initPromoterRel } from "./rankings.js";
-export { genRivalCamp } from "./rivals.js";
+export { genRivalCamp, poachTerms } from "./rivals.js";
 export { facilityCost, coachBonus, facBonus } from "./economy.js";
 export { checkAchievements } from "./achievements.js";
 export { relKey, getRel, addRel } from "./relationships.js";

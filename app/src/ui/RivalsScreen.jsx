@@ -2,10 +2,10 @@ import { fmt$ } from "@ironfist/engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
 import { t } from "../i18n/index.js";
-import { ARCH_COLOR, RIVAL_TRAITS, CAMP_TIERS } from "@ironfist/engine/data.js";
+import { ARCH_COLOR, RIVAL_TRAITS } from "@ironfist/engine/data.js";
 import { getCampLifecycleLabel } from "@ironfist/engine/shadow-ai.js";
 import { avgSkill, tierOf } from "@ironfist/engine/fighter.js";
-import { clamp } from "@ironfist/engine/rng.js";
+import { poachTerms } from "@ironfist/engine/rivals.js";
 
 /* =============================================================================
    RIVALS SCREEN — Ironfist Edition
@@ -67,8 +67,6 @@ function RivalCard({ rc, g, dispatch }) {
 
   // Poachable targets
   const poachTargets = rc.fighters.filter((f) => !f.injury && !f.booked);
-  const tier = CAMP_TIERS[g.campTier || 0];
-  const rosterCap = tier ? tier.rosterCap : 8;
 
   return (
     <Panel style={{ marginBottom: 14, borderColor: accentColor }}>
@@ -260,17 +258,7 @@ function RivalCard({ rc, g, dispatch }) {
           poachTargets
             .sort((a, b) => avgSkill(b) - avgSkill(a))
             .map((target) => {
-              const cost = Math.round(
-                target.asking * 1.8 * (1 + rc.rivalry / 100)
-              );
-              const failCost = Math.round(cost * 0.2);
-              const successChance = clamp(
-                55 - rc.rivalry * 0.4 - Math.round(avgSkill(target) - 50) * 0.3,
-                10,
-                85
-              );
-              const canAfford = g.cash >= cost;
-              const hasSpace = g.roster.length < rosterCap;
+              const { cost, failCost, successChance, blocked } = poachTerms(g, rc, target);
 
               return (
                 <div
@@ -313,14 +301,14 @@ function RivalCard({ rc, g, dispatch }) {
                   <Btn
                     sm
                     color={T.ember}
-                    disabled={!canAfford || !hasSpace}
+                    disabled={!!blocked}
                     onClick={() =>
-                      dispatch({ type: "POACH_FIGHTER", rivalId: rc.id, targetId: target.id, cost, failCost, successChance })
+                      dispatch({ type: "POACH_FIGHTER", rivalId: rc.id, targetId: target.id })
                     }
                     title={
-                      !hasSpace
+                      blocked === "rosterFull"
                         ? t("RIVAL.tooltip.rosterFull")
-                        : !canAfford
+                        : blocked === "cash"
                           ? t("RIVAL.tooltip.need").replace("{0}", fmt$(cost))
                           : t("RIVAL.tooltip.detail").replace("{0}", fmt$(cost)).replace("{1}", fmt$(failCost)).replace("{2}", Math.round(successChance))
                     }

@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7 dan P1 #8–#19 selesai (19 dari 63 item). #19 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7 dan P1 #8–#20 selesai (20 dari 63 item). #19–#20 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -346,10 +346,21 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Kode: `packages/engine/src/fighter.js` (`makeReport`, `reportAttrValue`, `reportOvr` baru), `index.js`, `app/src/ui/Scout.jsx`.
   - Masih terbuka (bagian lain CA1, belum masuk #19): grade scout ditentukan reputasi saja, dan reputasi mentok 100 di tahun 2–4, jadi semua laporan cepat menjadi grade S. Ini masalah balancing (P3).
 
+- **22 Oktober 2026: P1 #20 selesai.** Branch `claude/quirky-mccarthy-7jogso`.
+  - Fungsi baru `poachTerms(g, rival, target)` di `packages/engine/src/rivals.js` menjadi satu sumber harga, biaya gagal, peluang, dan alasan blokir. Layar Rivals dan reducer `POACH_FIGHTER` sama-sama memakainya. Reducer tidak lagi membaca `cost`, `failCost`, atau `successChance` dari action.
+  - Harga: `300 × (OVR − 30)^1,5 × (1 + rivalry/100)`, dari OVR sekarang. `asking` saat fighter dibuat tidak dipakai lagi. Biaya gagal tetap 20% harga.
+  - Peluang: `60 − rivalry × 0,4 − (OVR − 50) × 2 + selisih reputasi × 0,15` (selisih dibatasi ±10), lalu dibatasi 5–85%. Sebelumnya peluang hanya turun 0,3 poin per OVR.
+  - Contoh review (OVR 66, rivalry 0, reputasi sama): sebelumnya sekitar $2.003 dengan peluang 50%, sekarang **$64.800 dengan peluang 28%** (gagal −$12.960). OVR 50: $26.833, peluang 60%. OVR 80: $106.066, peluang 5%.
+  - Reducer menolak tanpa memotong kas dan tanpa roll RNG kalau roster penuh (batas `CAMP_TIERS`), kas kurang, atau target cedera/sudah dijadwalkan. Penolakan dicatat di log.
+  - Angka harga dan peluang adalah pilihan balancing awal, dipatok kira-kira ke biaya Diamond in the Rough dan kas pemain di harness ekonomi (sekitar $14.000–37.000 di tahun pertama). Bisa dituning lagi di P3.
+  - Validasi: test baru `poach.test.js` (9 test; 4 test reducer gagal di reducer lama), dua test lama di `reducer.test.js` disesuaikan agar tidak bergantung pada angka dari action. **819 test aplikasi / 53 file lulus**, build Vite lulus, harness dunia 480 minggu × 5 seed lulus, diff bersih.
+  - Kode: `rivals.js`, `index.js`, `reducer/fighter.js`, `app/src/ui/RivalsScreen.jsx`.
+  - Masih terbuka: AI rival yang mencoba membajak fighter pemain (`tick/rivals.js`) masih memakai `asking`. Itu bagian dari #21.
+
 ## Urutan kerja yang disarankan
 
-1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`. P1 #19 selesai di branch `claude/quirky-mccarthy-7jogso`.
-2. Berikutnya P1 #20 (perburuan rival).
+1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`. P1 #19–#20 selesai di branch `claude/quirky-mccarthy-7jogso`.
+2. Berikutnya P1 #21 (satu sistem rival camp; ukuran B, butuh keputusan desain), lalu #22–#25.
 3. P1 lainnya: #21–#25. P5 #53–#54 (keamanan kecil) bisa disisipkan lebih awal.
 4. Mainkan beberapa jam setelah bug state utama selesai; tandai temuan yang sudah terbantu dan yang masih bisa direproduksi.
 5. Mainkan beberapa jam. Putuskan P2 dan daftar pangkas.
