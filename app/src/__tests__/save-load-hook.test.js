@@ -56,3 +56,18 @@ it('repeats old-save migrations and subsequent weeks identically across reloads'
   expect(second).toEqual(first)
   expect(getWorldRNGState()).toEqual(rngAfter)
 })
+
+it('repairs a legacy lower-tier champion through the actual load hook', () => {
+  const legacy = newGame()
+  const f = legacy.roster[0]
+  const div = legacy.divisions[f.weightClass]
+  delete div.tierChamps
+  f.titles = ['National Champion']
+  div.champ = { name: f.name, player: true, fighterId: f.id, wonWeek: 1 }
+  localStorage.setItem('mma-manager-save-v4-slot1', JSON.stringify(legacy))
+  const loaded = loadWithMigrations()
+  const migrated = loaded.divisions[f.weightClass]
+  expect(migrated.champ).toBeNull()
+  expect(migrated.tierChamps.National.fighterId).toBe(f.id)
+  expect(loaded.roster[0].titles).toEqual(['National Champion'])
+})

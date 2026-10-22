@@ -1,3 +1,12 @@
+> **Koreksi implementasi — 22 Oktober 2026 (P1 #8).** Bagian lama di bawah adalah arsip desain satu sabuk. Aturan berikut menggantikan pernyataan “no title tiers” dan non-goal multiple tiers.
+>
+> - `division.champ` hanya untuk **Major World Champion**, yang tampil sebagai juara divisi dan mengikuti mandatory defense 24/32 minggu serta era dunia.
+> - `division.tierChamps[tier]` menyimpan pemegang **Regional, National, Minor, Premier, Interim** secara terpisah. Menang/bertahan/kalah di tier tersebut tidak mengubah juara atau era Major. Premier adalah sabuk terpisah di atas Major; Interim tidak menggantikan juara Major yang cedera.
+> - Setiap slot mencatat fighter, minggu merebut/bertahan, dan jumlah defense pada reign itu. `reignHistory` menyimpan `tier`. Label `titles[]` mencerminkan sabuk aktif; riwayat karier tetap tersimpan setelah kalah/melepas.
+> - Hanya sabuk yang dipertandingkan berpindah saat juara kalah. Menang laga non-gelar tidak memindahkan sabuk. Strip/reject/expiry mandatory Major hanya mencopot Major. Melepas/keluar/pensiun/pindah kelas membersihkan slot terkait tanpa menyentuh pemegang lain.
+> - Save lama dimigrasikan sekali: juara divisi pemain tanpa label Major dipindah ke slot tier yang sesuai, dan sabuk Major dikosongkan. Identitas juara AI yang tertimpa bug tidak dapat direkonstruksi. Label tier lama dipertahankan dan direkonsiliasi ke slot terpisah. Migrasi tidak memakai RNG.
+> - Mandatory otomatis dan simulasi AI tetap khusus Major; tier lain berpindah pada hasil laga gelar. Perluasan kalender defense AI per tier bukan bagian perbaikan ini.
+
 # Championship System Specification
 
 > **Purpose:** Merancang sistem Championship yang konsisten dengan Knowledge Library dan implementasi game saat ini.

@@ -3,7 +3,7 @@ import { clamp, RI, uid, random, pick, fmt$ } from "../rng.js";
 import { processFightResult, processRivalry, updateRivalryResult, processTitleChange } from "../career.js";
 import { queueDelayedEvent, pushInboxEvent } from "../events.js";
 import { TITLE_CELEBRATION_DELAY_WEEKS, TITLE_SPONSOR_DELAY_WEEKS } from "../events/config.js";
-import { recordEra } from "../world/history.js";
+import { TITLE_NAMES, titleTier, championAt, setChampion, removeChampion } from "../championships.js";
 import { avgSkill } from "../fighter.js";
 import { FIGHT_INJURY_CHANCE, FIGHT_INJURY_TIERS, FIGHT_INJURY_LABELS } from "../data.js";
 import { fightPurse } from "../fight/purse.js";
@@ -13,24 +13,30 @@ export function commitFightResult(g, fighter, result) {
   const f = g.roster?.find((x) => x.id === fighter.id);
   if (!f) return;
 
+  const booking = fighter.booked;
+  const contestedTier = titleTier(booking);
+  const div = g.divisions?.[f.weightClass];
+  const previousChamp = championAt(div, contestedTier);
+  const defending = !!previousChamp?.player && previousChamp.fighterId === f.id;
+
   // ── Purse payout (show money always, win bonus only on win) ──
-  const { purse, forfeit } = fightPurse(fighter.booked, result);
+  const { purse, forfeit } = fightPurse(booking, result);
   const campCut = Math.round((f.contract?.managerCut || 0.18) * purse);
   g.cash = (g.cash || 0) + campCut;
   if (forfeit > 0) g.log.unshift(`⚖️ Catchweight: purse ${f.name} dipotong 30% (${fmt$(forfeit)}).`);
 
   // ── PPV revenue (title fights only) ──
-  if (fighter.booked?.titleTier === "Major" || fighter.booked?.titleTier === "Premier") {
-    const opp = fighter.booked?.opponent;
+  if (booking?.titleTier === "Major" || booking?.titleTier === "Premier") {
+    const opp = booking?.opponent;
     const oppPop = typeof opp?.popularity === "number" ? opp.popularity : (opp?.level ? Math.round(opp.level * 60) : 30);
-    const ppvRevenue = Math.round((f.popularity + oppPop) * 200 * (fighter.booked.titleTier === "Premier" ? 1.5 : 1));
+    const ppvRevenue = Math.round((f.popularity + oppPop) * 200 * (booking.titleTier === "Premier" ? 1.5 : 1));
     g.cash = (g.cash || 0) + ppvRevenue;
   }
 
   f.booked = null;
 
   // ── Promotion tracking ──
-  const promId = fighter.booked?.promotionId;
+  const promId = booking?.promotionId;
   if (promId) {
     if (!f.promotionFightCounts) f.promotionFightCounts = {};
     f.promotionFightCounts[promId] = (f.promotionFightCounts[promId] || 0) + 1;
@@ -63,11 +69,11 @@ export function commitFightResult(g, fighter, result) {
     // a jump — so a fighter who keeps beating real opposition climbs into the
     // rankings within a handful of fights rather than never.
     const TIER_POINTS = { Local: 3, Regional: 6, National: 10, Major: 16, Premier: 24 };
-    let rp = TIER_POINTS[fighter.booked?.tier] ?? 5;
+    let rp = TIER_POINTS[booking?.tier] ?? 5;
     if (result.how !== "Decision") rp = Math.round(rp * 1.3);
-    if (fighter.booked?.title) rp = Math.round(rp * 1.6);
+    if (booking?.title) rp = Math.round(rp * 1.6);
     // Beating a ranked contender is worth more than beating an unknown.
-    const oppRank = fighter.booked?.oppRank;
+    const oppRank = booking?.oppRank;
     if (oppRank != null && oppRank > 0 && oppRank <= 5) rp = Math.round(rp * 1.4);
     f.rankPoints = clamp((f.rankPoints || 0) + rp, 0, 99);
 
@@ -78,61 +84,40 @@ export function commitFightResult(g, fighter, result) {
     f.popularity = clamp(f.popularity + popBase * crowdMult + showboatBonus, 0, 100);
     g.rep = clamp(g.rep + 7, 0, 100);
 
-    if (fighter.booked?.title) {
-      // Award the belt that was actually contested. This used to hand out
-      // "Major World Champion" for every title win regardless of tier, so the
-      // ladder could never record that a Regional or National belt had been
-      // taken — and those are exactly the belts the next rung checks for.
-      const TITLE_NAME = {
-        Regional: "Regional Champion",
-        National: "National Champion",
-        Minor: "Minor World Champion",
-        Major: "Major World Champion",
-        Premier: "Premier World Champion",
-      };
-      const wonTitle = TITLE_NAME[fighter.booked?.titleTier] || "Major World Champion";
-      if (!f.titles.includes(wonTitle)) f.titles.push(wonTitle);
-      const div = g.divisions?.[f.weightClass];
-      if (div) {
-        const wasAlreadyChamp = div.champ?.fighterId === f.id;
-        if (wasAlreadyChamp) {
-          // Defense — update in-place, preserve wonWeek
-          div.champ.titleDefenses = (div.champ.titleDefenses || 0) + 1;
-          // ── Era progression: start on 3rd defense, update thereafter ──
-          if (div.champ.titleDefenses === 3 && !div.era) {
+    if (contestedTier && div) {
+      if (defending) {
+        previousChamp.titleDefenses = (previousChamp.titleDefenses || 0) + 1;
+        previousChamp.lastDefenseWeek = g.week;
+        if (contestedTier === "Major") {
+          if (previousChamp.titleDefenses === 3 && !div.era) {
             div.era = { championName: f.name, startedWeek: g.week, defenses: 3 };
-          } else if (div.era) {
-            div.era.defenses = div.champ.titleDefenses;
-          }
-          div.champ.lastDefenseWeek = g.week;
-          if (!div.champ.promotionId) div.champ.promotionId = fighter.booked?.promotionId || null;
-          g.log.unshift(`🛡️ ${f.name} berhasil pertahankan gelar ${f.weightClass}.`);
-        } else {
-          // ── Era ends if active (previous champion loses title) ──
-          if (div.era) {
-            g.inbox.unshift({ id: uid(), type: "world", severity: "major", title: `The ${div.era.championName} Era Ends`, body: `${div.era.championName}'s era of dominance in ${f.weightClass} has come to an end after ${div.era.defenses} title defenses.` });
-            recordEra(g, div.era.championName, f.weightClass, div.era.startedWeek, g.week, div.era.defenses);
-            div.era = null;
-          }
-          // New reign — create fresh champ object
-          div.champ = { name: f.name, player: true, fighterId: f.id, wonWeek: g.week, lastDefenseWeek: g.week, titleDefenses: 0, promotionId: fighter.booked?.promotionId || null, campId: null, campName: null };
-          if (!f.reignHistory) f.reignHistory = [];
-          f.reignHistory.push({ wonWeek: g.week, weightClass: f.weightClass });
+          } else if (div.era) div.era.defenses = previousChamp.titleDefenses;
         }
+        g.log.unshift(`🛡️ ${f.name} berhasil pertahankan gelar ${contestedTier} ${f.weightClass}.`);
+      } else {
+        removeChampion(g, f.weightClass, contestedTier);
+        setChampion(div, contestedTier, { name: f.name, player: true, fighterId: f.id,
+          tier: contestedTier, wonWeek: g.week, lastDefenseWeek: g.week, titleDefenses: 0,
+          promotionId: booking?.promotionId || null, campId: null, campName: null });
+        if (!f.reignHistory) f.reignHistory = [];
+        f.reignHistory.push({ wonWeek: g.week, weightClass: f.weightClass, tier: contestedTier });
       }
+      if (!f.titles) f.titles = [];
+      if (!f.titles.includes(TITLE_NAMES[contestedTier])) f.titles.push(TITLE_NAMES[contestedTier]);
+      if (contestedTier === "Major") removeChampion(g, f.weightClass, "Interim");
     }
-    g.legacy = (g.legacy || 0) + (fighter.booked?.title ? 2000 : 600);
+    g.legacy = (g.legacy || 0) + (booking?.title ? 2000 : 600);
     g.log.unshift(`🏆 ${f.name} menang via ${result.how} R${result.r}!`);
 
-    const oppName = fighter.booked?.opponent?.name || "Unknown";
+    const oppName = booking?.opponent?.name || "Unknown";
     if (!f.fightHistory) f.fightHistory = [];
-    f.fightHistory.push({ result: "W", opponent: oppName, method: result.how, round: result.r, tier: fighter.booked?.tier || "Local", week: g.week });
+    f.fightHistory.push({ result: "W", opponent: oppName, method: result.how, round: result.r, tier: booking?.tier || "Local", week: g.week });
     if (f.fightHistory.length > 30) f.fightHistory.shift();
     const careerEvents = processFightResult(f, g, { won: true, how: result.how });
     const rivalryEvents = processRivalry(f, { name: oppName }, g);
     updateRivalryResult(f, { name: oppName, rivalries: {} }, g);
-    if (fighter.booked?.title) {
-      const titleAction = f.titleDefenses ? "defense" : "won";
+    if (contestedTier) {
+      const titleAction = defending ? "defense" : "won";
       const titleEvents = processTitleChange(f, g, titleAction);
       careerEvents.push(...titleEvents);
 
@@ -160,18 +145,18 @@ export function commitFightResult(g, fighter, result) {
       pushInboxEvent(g, { type: "event", title: ev.title, body: ev.body, choices: [{ label: "OK", chem: 0 }] });
     });
 
-    if (fighter.booked?.oppRank != null && fighter.booked.oppRank <= 5) {
+    if (booking?.oppRank != null && booking.oppRank <= 5) {
       f.giantKills = (f.giantKills || 0) + 1;
     }
 
     // ── Trash talk resolution ──
-    if (fighter.booked?.pressChoice === "trashTalk") {
+    if (booking?.pressChoice === "trashTalk") {
       f.popularity = clamp((f.popularity || 0) + 5, 0, 100);
       g.log.unshift("💬 " + f.name + " trash talk berhasil! Popularity +5.");
     }
 
     // ── Rivalry nudge: beating a camp-affiliated fighter ──
-    const oppData = fighter.booked?.opponent;
+    const oppData = booking?.opponent;
     if (oppData?.campId && g.rivals) {
       const camp = g.rivals.find((r) => r.id === oppData.campId);
       if (camp) {
@@ -182,7 +167,7 @@ export function commitFightResult(g, fighter, result) {
     }
 
     // ── Fan reactions ──
-    const opp = fighter.booked?.opponent;
+    const opp = booking?.opponent;
     const totalDmg = (result.totalDmgA || 0) + (result.totalDmgB || 0);
     if (opp) {
       // Upset: player fighter has significantly lower skill but still won
@@ -213,6 +198,18 @@ export function commitFightResult(g, fighter, result) {
       }
     }
   } else {
+    if (contestedTier && div && defending) {
+      removeChampion(g, f.weightClass, contestedTier);
+      const opponent = booking?.opponent;
+      if (opponent) {
+        const player = g.roster.find(x => x.id !== f.id && (x.id === opponent.id || x.name === opponent.name));
+        setChampion(div, contestedTier, { name: opponent.name, player: !!player,
+          fighterId: player?.id || null, tier: contestedTier, level: opponent.level,
+          age: opponent.age, campId: opponent.campId || null, campName: opponent.campName || null,
+          wonWeek: g.week, lastDefenseWeek: g.week, titleDefenses: 0 });
+        if (player && !player.titles.includes(TITLE_NAMES[contestedTier])) player.titles.push(TITLE_NAMES[contestedTier]);
+      }
+    }
     f.record.l++; f.streakL = (f.streakL || 0) + 1; f.streakW = 0;
     // A loss costs ground but never wipes a career out; the weekly decay in
     // tick/rankings.js already handles fighters who stop competing.
@@ -225,9 +222,9 @@ export function commitFightResult(g, fighter, result) {
     g.chemistry = clamp(g.chemistry - 2, 0, 100);
     g.log.unshift(`❌ ${f.name} kalah via ${result.how} R${result.r}.`);
 
-    const oppName = fighter.booked?.opponent?.name || "Unknown";
+    const oppName = booking?.opponent?.name || "Unknown";
     if (!f.fightHistory) f.fightHistory = [];
-    f.fightHistory.push({ result: "L", opponent: oppName, method: result.how, round: result.r, tier: fighter.booked?.tier || "Local", week: g.week });
+    f.fightHistory.push({ result: "L", opponent: oppName, method: result.how, round: result.r, tier: booking?.tier || "Local", week: g.week });
     if (f.fightHistory.length > 30) f.fightHistory.shift();
     const careerEvents = processFightResult(f, g, { won: false, how: result.how });
     updateRivalryResult({ name: oppName, rivalries: {} }, f, g);
@@ -236,7 +233,7 @@ export function commitFightResult(g, fighter, result) {
     });
 
     // ── Trash talk backfires on loss ──
-    if (fighter.booked?.pressChoice === "trashTalk") {
+    if (booking?.pressChoice === "trashTalk") {
       f.popularity = clamp((f.popularity || 0) - 5, 0, 100);
       g.log.unshift("💬 " + f.name + " trash talk backfires! Popularity -5.");
     }

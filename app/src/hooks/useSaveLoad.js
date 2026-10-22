@@ -1,4 +1,5 @@
 // Save/load hook — game persistence, slot management, migration
+import { migrateChampionships } from "@ironfist/engine/championships.js";
 import { useState, useEffect } from "react";
 import { getActiveSlot, setActiveSlot, loadGame, deleteGame, getSlotInfo } from "../services/saveService.js";
 import { backupSave } from "@ironfist/engine/polish.js";
@@ -70,6 +71,7 @@ export function useSaveLoad(setG) {
             if (f.booked && f.booked.seed == null) f.booked.seed = RI(0, 2**31 - 1);
             if (f.lastReviewedPhase === undefined) f.lastReviewedPhase = getTrainingCycle(f).phase;
           });
+          migrateChampionships(s);
           // Division champ field defaults
           Object.values(s.divisions || {}).forEach((d) => {
             if (d.champ) {

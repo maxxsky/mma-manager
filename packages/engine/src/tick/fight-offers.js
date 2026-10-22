@@ -2,6 +2,7 @@
 import { R, RI, clamp, uid, random } from "../rng.js";
 import { WEIGHTS } from "../data.js";
 import { genFighter, avgSkill } from "../fighter.js";
+import { championAt } from "../championships.js";
 import { rankOf, stripTitle } from "../rankings.js";
 import { pickPromotion } from "../data/promotions.js";
 
@@ -112,8 +113,8 @@ export function tickFightOffers(g) {
       g.log.unshift(
         `🛡️ Mandatory defense untuk ${f.name} tiba — tolak atau biarkan expire = title dicopot.`,
       );
+      return;
     }
-    return;
     }
 
     // FTUE: guarantee fight offer in first 2 weeks
@@ -178,7 +179,7 @@ export function tickFightOffers(g) {
 
       if (
         rep >= 80 && r != null && r <= 3 && sk >= SKILL_GATE.premier &&
-        has("Major World Champion") && random() < 0.25
+        has("Major World Champion") && !has("Premier World Champion") && random() < 0.25
       ) {
         titleTier = "Premier";
         titleReason = `rank #${r} + juara Major + rep ${Math.round(rep)} + skill ${Math.round(sk)}`;
@@ -254,10 +255,12 @@ export function tickFightOffers(g) {
       }
 
       let opp, oppRank = null, contenderId = null;
-      if (titleTier === "Major" && div && div.champ) {
+      const titleHolder = titleTier && championAt(div, titleTier);
+      if (titleHolder && titleHolder.fighterId !== f.id) {
         const worldYear = Math.floor(g.week / 48);
         const aiScale = worldYear > 5 ? clamp(1.45 + (worldYear - 5) * 0.02, 1.45, 1.7) : 1.45;
-        opp = genFighter(aiScale); opp.name = div.champ.name; oppRank = 0;
+        opp = genFighter(aiScale); opp.name = titleHolder.name; oppRank = 0;
+        opp.campId = titleHolder.campId || null; opp.campName = titleHolder.campName || null;
       } else if (div && (r != null || (f.record.w >= 2 && rep >= 20 && random() < 0.35))) {
         const c = div.list[oppIdx];
         if (c) {

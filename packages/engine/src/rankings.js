@@ -2,7 +2,7 @@ import { R, RI, clamp, pick, random, uid } from "./rng.js";
 import { WEIGHTS, RIVAL_TRAITS } from "./data.js";
 import { genFighter } from "./fighter.js";
 import { genBio } from "./fighter.js";
-import { recordEra } from "./world/history.js";
+import { TITLE_NAMES, championAt, removeChampion } from "./championships.js";
 
 // ── Archetype → RIVAL_TRAITS spec mapping ──
 const ARCH_TO_SPEC = {
@@ -98,7 +98,7 @@ export function genDivisions(rivals = []) {
     if (rivals.length > 0) {
       assignCampMarkings(list, rivals);
     }
-    d[w.name] = { champ: { name: list[0].name, player: false, fighterId: null }, list };
+    d[w.name] = { champ: { name: list[0].name, player: false, fighterId: null }, tierChamps: {}, list };
   });
   return d;
 }
@@ -110,28 +110,29 @@ export function rankOf(g, f) {
   return better < 15 ? better + 1 : null;
 }
 
-export function vacateTitle(g, f) {
-  const div = g.divisions && g.divisions[f.weightClass];
-  if (div && div.champ && div.champ.player && div.champ.fighterId === f.id) {
-    // ── Era ends if active ──
-    if (div.era) {
-      g.inbox.unshift({ id: uid(), type: "world", severity: "major", title: `The ${div.era.championName} Era Ends`, body: `${div.era.championName}'s era of dominance in ${f.weightClass} has come to an end after ${div.era.defenses} title defenses.` });
-      recordEra(g, div.era.championName, f.weightClass, div.era.startedWeek, g.week, div.era.defenses);
-      div.era = null;
-    }
-    div.champ = null;
-    g.log.unshift(`👑 Title ${f.weightClass} kosong — akan diperebutkan.`);
-  }
+export function vacateTitle(g, f, tier = null) {
+  // Scan all divisions: callers may already have changed f.weightClass.
+  Object.entries(g.divisions || {}).forEach(([wc, div]) => {
+    const tiers = tier ? [tier] : Object.keys(TITLE_NAMES);
+    tiers.forEach(t => {
+      const champ = championAt(div, t);
+      if (champ?.player && champ.fighterId === f.id) {
+        removeChampion(g, wc, t);
+        g.log.unshift(`👑 Title ${t} ${wc} kosong — akan diperebutkan.`);
+      }
+    });
+  });
 }
 
-export function stripTitle(g, fighterId) {
-  const f = g.roster.find((x) => x.id === fighterId);
+export function stripTitle(g, fighterId, tier = "Major") {
+  const f = g.roster.find(x => x.id === fighterId);
   if (!f) return;
-  vacateTitle(g, f);
-  f.titles = f.titles.filter((t) => t !== "Major World Champion");
+  const champ = championAt(g.divisions?.[f.weightClass], tier);
+  if (!champ?.player || champ.fighterId !== f.id) return;
+  vacateTitle(g, f, tier);
   f.morale = clamp(f.morale - 15, 0, 100);
   g.rep = clamp(g.rep - 5, 0, 100);
-  g.log.unshift(`🚨 ${f.name} dicopot dari title (mandatory defense diabaikan). Rep -5.`);
+  g.log.unshift(`🚨 ${f.name} dicopot dari title ${tier} (mandatory defense diabaikan). Rep -5.`);
 }
 
 // ---------- promoter relationship ----------
