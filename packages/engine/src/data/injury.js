@@ -6,21 +6,33 @@
 // buat berarti pas kejadian, bukan tiap fight.
 
 // ── Base injury chance per outcome ──
-// how keys: KO, TKO, Submission, Decision
-// Doctor Stoppage maps to TKO chance
+// how keys: KO, Doctor, Submission, Decision. The fight engine has a single
+// "KO/TKO" finish (a knockdown that ends the fight); there is no separate
+// referee stoppage, so there is no TKO key.
 export const FIGHT_INJURY_CHANCE = {
   loser_KO: 0.35,           // KO'd — 35%
-  loser_TKO: 0.28,          // TKO'd — 28%
   loser_Doctor: 0.25,       // Doctor stoppage — 25%
   loser_Submission: 0.18,   // Submitted — 18%
   loser_Decision: 0.06,     // Lost decision — 6%
 
   winner_KO: 0.06,          // Won by KO — throw hard punches, risk too
-  winner_TKO: 0.04,         // Won by TKO
   winner_Doctor: 0.03,      // Won via doctor stoppage
   winner_Submission: 0.03,  // Won by submission
   winner_Decision: 0.01,    // Won by decision — clean fight, low risk
 };
+
+// ── Damage scaling ──
+// The base chance applies at typical damage for that outcome. Reference values
+// are the median damage taken per outcome, measured on 6,000 engine fights
+// (OVR 36/51/66, 3 and 5 rounds). Doctor stoppages are rare; 50 is a guess.
+// Multiplier = 0.5 + 0.5 × (damage / reference), clamped to 0.5–2.0, so an
+// untouched fighter carries half the risk and a beaten-up one up to double.
+export const FIGHT_INJURY_DMG_REF = {
+  loser_KO: 40, loser_Doctor: 50, loser_Submission: 20, loser_Decision: 66,
+  winner_KO: 25, winner_Doctor: 50, winner_Submission: 23, winner_Decision: 44,
+};
+export const FIGHT_INJURY_DMG_MULT_MIN = 0.5;
+export const FIGHT_INJURY_DMG_MULT_MAX = 2.0;
 
 // ── Severity tier roll thresholds & ranges ──
 // Same {tier, totalCost, weeksMin, weeksMax, label} shape as training injuries
@@ -44,7 +56,7 @@ export const FIGHT_INJURY_LABELS = {
     "Cedera Bahu (KO/TKO)",
     "Memar Dalam (KO/TKO)",
   ],
-  "Doctor Stoppage": [
+  Doctor: [
     "Luka Robek Wajah (Doctor Stoppage)",
     "Cedera Alis (Doctor Stoppage)",
     "Hematoma (Doctor Stoppage)",

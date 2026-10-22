@@ -5,7 +5,8 @@ import { queueDelayedEvent, pushInboxEvent } from "../events.js";
 import { TITLE_CELEBRATION_DELAY_WEEKS, TITLE_SPONSOR_DELAY_WEEKS } from "../events/config.js";
 import { TITLE_NAMES, titleTier, championAt, setChampion, removeChampion } from "../championships.js";
 import { avgSkill } from "../fighter.js";
-import { FIGHT_INJURY_CHANCE, FIGHT_INJURY_TIERS, FIGHT_INJURY_LABELS } from "../data.js";
+import { FIGHT_INJURY_TIERS, FIGHT_INJURY_LABELS } from "../data.js";
+import { fightInjuryChance, fightInjuryHowKey } from "./injury.js";
 import { fightTotals } from "../fight/report.js";
 import { fightPurse } from "../fight/purse.js";
 import { aiChampion } from "../world/fighter-profile.js";
@@ -252,15 +253,11 @@ export function commitFightResult(g, fighter, result) {
   f.lastFightWeek = g.week;
 
   // ── Fight → injury roll ──
-  // Roll injury chance for THIS fighter based on outcome + finish method.
-  // Losers always carry higher risk; finishes (KO/Sub) more dangerous than Decision.
-  // Uses seeded random() per CONSTRAINTS.md — fully deterministic.
-  const howKey = result.how === "Doctor Stoppage" ? "Doctor"
-    : result.how === "KO/TKO" ? "KO"
-    : result.how;
-  const chanceKey = (result.won ? "winner_" : "loser_") + howKey;
-  const baseChance = FIGHT_INJURY_CHANCE[chanceKey];
-  if (baseChance != null && random() < baseChance) {
+  // Chance depends on outcome, damage taken, medical facility and traits
+  // (fights/injury.js). Uses seeded random() per CONSTRAINTS.md — deterministic.
+  const howKey = fightInjuryHowKey(result.how);
+  const { chance: injuryChance } = fightInjuryChance(g, f, result);
+  if (injuryChance > 0 && random() < injuryChance) {
     // Determine severity tier
     const sevRoll = random();
     let tier = null;

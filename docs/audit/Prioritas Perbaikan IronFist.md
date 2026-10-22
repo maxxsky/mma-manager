@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7 dan P1 #8–#21 selesai (21 dari 63 item). #19–#21 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7 dan P1 #8–#22 selesai (22 dari 63 item). #19–#22 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -368,10 +368,23 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Test: `shadow-ai.test.js` dan `poach.test.js` dihapus. Test camp di `rankings.test.js`, `fight.test.js`, `media.test.js`, `invariants.test.js`, dan `reducer.test.js` dihapus atau diganti. Test baru `outside-offers.test.js` (7 test) dan blok baru di `rankings.test.js`: tidak ada camp atau tag setelah 10 tahun simulasi, gelar pemain tanpa field camp, grudge dari rivalitas personal tetap 1,25×. Satu test lama di `prestige.test.js` diperbaiki: `newGame()` dipanggil sesudah seed sehingga hanya satu sisi yang menghabiskan RNG; sebelumnya lulus karena kebetulan.
   - Validasi: **762 test aplikasi / 52 file lulus**, build Vite lulus, harness dunia 480 minggu × 5 seed lulus, harness fight lulus, smoke test browser (Chromium, 30 minggu, satu fight penuh, semua tab) lulus tanpa error console, diff bersih.
 
+- **22 Oktober 2026: P1 #22 selesai.** Branch `claude/quirky-mccarthy-7jogso`.
+  - Peluang cedera fight dihitung di modul murni baru `fights/injury.js` (`fightInjuryChance`), dipakai `commitResult`.
+  - **Damage:** peluang dasar per hasil berlaku pada damage tipikal hasil itu. Pengali `0,5 + 0,5 × damage/referensi`, dibatasi 0,5–2,0. Referensi adalah median damage yang diterima per hasil, diukur dari 6.000 fight engine (OVR 36/51/66, 3 dan 5 ronde). Contoh: kalah KO median 40; p10 11, p90 97. Hasil tanpa angka damage (save lama) memakai peluang dasar.
+  - **Fasilitas medis:** pengali `1 − (level − 1) × 0,05`, sama dengan cedera latihan. Level 5 = −20%.
+  - **Trait:** Cautious ×0,85 dan Injury Prone ×2, sama dengan cedera latihan. Catatan P0 #3 menyerahkan Cautious ke item ini.
+  - **TKO:** engine hanya punya satu finish "KO/TKO", yaitu knockdown yang langsung mengakhiri fight. Tidak ada penghentian wasit terpisah, jadi entri `TKO` (28%) adalah konfigurasi mati dan dihapus. KO/TKO memakai peluang KO.
+  - **Doctor stoppage:** key label `"Doctor Stoppage"` diganti `Doctor`, sesuai key yang dipakai kode. Sebelumnya label cedera jatuh ke daftar Decision.
+  - Fight Night sekarang mengirim damage dan `attitude` untuk hasil Doctor Stoppage. Sebelumnya keduanya hilang, jadi efek sikap staredown juga terlewat pada hasil ini.
+  - Rata-rata peluang cedera per fighter per fight, fasilitas medis level 1, 6.000 fight: **5,60% → 6,02%**. Kenaikan kecil karena distribusi damage condong ke kanan. Dengan fasilitas medis level 2 ke atas, angkanya turun di bawah nilai lama.
+  - Validasi: test baru `fight-injury.test.js` (6 test; 2 test roll gagal di kode lama), **768 test aplikasi / 53 file lulus**, build Vite, harness dunia, dan harness fight lulus, diff bersih.
+  - Kode: `fights/injury.js` (baru), `fights/commitResult.js`, `data/injury.js`, `data.js`, `app/src/ui/FightNight.jsx`.
+  - Masih terbuka: cedera fight tingkat 3 ("Berat") belum memberi kerusakan permanen seperti cedera latihan "Career-Threatening". Temuan baru: cedera latihan itu menampilkan pesan "Karirnya telah berakhir", padahal fighter tetap di roster dan hanya kehilangan 3–8 poin satu atribut. Teks dan perilakunya perlu disamakan; belum dikerjakan. Diskon medis untuk biaya physio di `commitResult` tetap item #24.
+
 ## Urutan kerja yang disarankan
 
-1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`. P1 #19–#21 selesai di branch `claude/quirky-mccarthy-7jogso` (#21: rival camp dibuang).
-2. Berikutnya P1 #22 (cedera fight), lalu #23–#25.
+1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`. P1 #19–#22 selesai di branch `claude/quirky-mccarthy-7jogso` (#21: rival camp dibuang).
+2. Berikutnya P1 #23–#25.
 3. P1 lainnya: #21–#25. P5 #53–#54 (keamanan kecil) bisa disisipkan lebih awal.
 4. Mainkan beberapa jam setelah bug state utama selesai; tandai temuan yang sudah terbantu dan yang masih bisa direproduksi.
 5. Mainkan beberapa jam. Putuskan P2 dan daftar pangkas.

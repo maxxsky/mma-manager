@@ -12,7 +12,7 @@ export { PROMO_TIERS } from "./data/promo-tiers.js";
 export { CAMP_TIERS, FAC_LABEL, SPARRING_MATCH, MEMBER_FEE } from "./data/camp.js";
 export { SPONSOR_BRANDS, SPONSOR_TERMS } from "./data/sponsors.js";
 export { PROMOTIONS, pickPromotion, getPromotionsData } from "./data/promotions.js";
-export { FIGHT_INJURY_CHANCE, FIGHT_INJURY_TIERS, FIGHT_INJURY_LABELS } from "./data/injury.js";
+export { FIGHT_INJURY_CHANCE, FIGHT_INJURY_TIERS, FIGHT_INJURY_LABELS, FIGHT_INJURY_DMG_REF, FIGHT_INJURY_DMG_MULT_MIN, FIGHT_INJURY_DMG_MULT_MAX } from "./data/injury.js";
 // ACHIEVEMENTS is defined here to avoid circular imports with achievements.js
 export const ACHIEVEMENTS = [
   { id: "first_win", title: "First Blood", desc: "Win your first fight", icon: "🩸" },
