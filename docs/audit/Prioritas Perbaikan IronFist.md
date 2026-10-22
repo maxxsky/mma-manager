@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#27, dan P5 #53–#54 selesai (29 dari 63 item). #19–#27 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26–#28, dan P5 #53–#54 selesai (30 dari 63 item). #19–#28 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -58,7 +58,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 |---|---|---|---|
 | 26 | Ambisi Paycheck, Legacy, Family Man, Star Power | FI3 | Implementasikan; logikanya sederhana. `fightsThisYear` harus bertambah. **Selesai: diimplementasikan** |
 | 27 | Kontrak: counter-offer terbalik; logika negosiasi di UI | EK3 | Perbaiki arah counter-offer, pindahkan logika ke engine, ukur 7 tuas lalu buang yang tidak terasa. **Selesai** |
-| 28 | Relasi antar fighter | FI2 | Buang dulu kecuali ada rencana event yang mengubah relasi |
+| 28 | Relasi antar fighter | FI2 | Buang dulu kecuali ada rencana event yang mengubah relasi. **Selesai: dibuang** |
 | 29 | Kepribadian coach Motivator dan Player's Coach | CA3 | Implementasikan sesuai deskripsi |
 | 30 | Staf Cutman dan Nutritionist | CA2 | Cutman mengurangi cut; Nutritionist digabung ke weight cut (setelah #6) |
 | 31 | Janji ke fighter | FI5 | Catat janji dan beri akibat kalau diingkari |
@@ -419,6 +419,12 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Tuas diukur dari kode: exclusivity (−8), rematch (−4), dan biaya medis (−3/−6) tidak dibaca di bagian mana pun dari game, jadi hanya menurunkan peluang terima. Ketiganya dihapus beserta 22 baris i18n. Yang dipertahankan karena berefek nyata: bonus (kas), cut (purse camp), jumlah fight dan durasi (masa kontrak), equity (bagian sponsor fighter). Contoh agen Standard: cut 25% vs 18% −29 poin, bonus 2× asking +22, 8 vs 2 fight +8, equity 20% +30.
   - Layar counter tidak lagi menampilkan "estimasi diterima" palsu (dulu 80–97%, padahal menerima counter selalu berhasil).
   - Validasi: test baru `negotiation.test.js` (11 test). `npm test` dari root: **792 test app + 28 test server lulus**. Build, harness dunia, smoke test browser lulus. Skrip browser tambahan menguji tanda tangan dan counter di game sungguhan: counter atas tawaran 25% menjadi 22%, kontrak tersimpan, `negotiation` bersih setelah modal ditutup, tanpa error console.
+
+- **22 Oktober 2026: P2 #28 selesai — relasi antar fighter dibuang.** Sesuai saran (tidak ada rencana event yang mengubah relasi).
+  - `addRel()` tidak pernah dipanggil, jadi semua relasi 0 dan pengali training `relMult` selalu 1. Dihapus: `relationships.js`, export `relKey/getRel/addRel`, `g.relationships` di game baru, `relMult` di training, dan decay relasi di tick chemistry. Save lama: `relationships` dihapus saat load.
+  - Bukti tidak ada perubahan perilaku: simulasi 240 minggu × 3 seed menghasilkan hash state (roster, divisi, kas, reputasi, judul inbox) yang identik sebelum dan sesudah.
+  - Tidak terpengaruh: kecocokan sparring (`calcSparringMult`) dan rivalitas personal (`f.rivalries`).
+  - Validasi: test baru di `removed-systems.test.js`. `npm test` root: **793 test app + 28 test server lulus**. Build dan harness dunia lulus.
 
 ## Urutan kerja yang disarankan
 

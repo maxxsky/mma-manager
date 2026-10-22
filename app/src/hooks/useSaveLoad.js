@@ -39,7 +39,7 @@ export function useSaveLoad(setG) {
           if (!s.promotions) s.promotions = getPromotionsData();
           if (!s.talentPool) s.talentPool = [];
           if (s.campTier == null) s.campTier = 0;
-          if (!s.relationships) s.relationships = {};
+          delete s.relationships; // fighter-to-fighter relations removed (P2 #28): never changed from 0
           if (!s.investments) s.investments = {};
           if (!s.staff) s.staff = {};
           if (!s.staffMarket) s.staffMarket = { cutman: [], nutritionist: [], sportsPsych: [] };

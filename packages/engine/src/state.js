@@ -6,7 +6,7 @@
 //   - Final state checks (log cap, game over)
 //
 // Domain logic lives in dedicated tick modules:
-//   tick/chemistry.js    — camp events, fighter relationships
+//   tick/chemistry.js    — camp events
 //   tick/training.js     — fighter growth, overtraining, injury
 //   tick/fight-offers.js — matchmaking, inbox expiry, prospect decay
 //   tick/settlement.js   — monthly finances, coach growth, fighter requests
@@ -79,7 +79,7 @@ export function tick(g) {
   // Phase 1: Training
   tickTraining(g);
 
-  // Phase 2: Chemistry — camp events + relationships
+  // Phase 2: Chemistry — camp events
   if (!tickChemistry(g)) return;
 
   // Phase 3: Fight offers — matchmaking + expiry

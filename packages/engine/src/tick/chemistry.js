@@ -1,4 +1,4 @@
-// Chemistry domain — camp events, fighter relationships
+// Chemistry domain — camp events
 import { clamp, pick, fmt$, uid, random } from "../rng.js";
 import { CAMP_TIERS } from "../data.js";
 import { COACH_SALARY_CEILING } from "../economy.js";
@@ -84,16 +84,6 @@ export function tickChemistry(g) {
         ],
       });
     }
-  }
-
-  // ---------- fighter relationships ----------
-  if (g.relationships) {
-    const keys = Object.keys(g.relationships);
-    keys.forEach((k) => {
-      const v = g.relationships[k];
-      if (v > 0) g.relationships[k] = clamp(v - 0.3, -100, 100);
-      else if (v < 0) g.relationships[k] = clamp(v + 0.2, -100, 100);
-    });
   }
 
   return true;

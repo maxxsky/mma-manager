@@ -13,5 +13,4 @@ export { reducer } from "./reducer.js";
 export { genDivisions, divisionRankings, rankedAIContenders, rankOf, vacateTitle, stripTitle, initPromoterRel } from "./rankings.js";
 export { facilityCost, coachBonus, facBonus } from "./economy.js";
 export { checkAchievements } from "./achievements.js";
-export { relKey, getRel, addRel } from "./relationships.js";
 export { monthlyBurn, monthlyIn } from "./finance.js";

@@ -9,7 +9,6 @@ export function createEconomy() {
     rep: 8,
     chemistry: 60,
     sponsors: [],
-    relationships: {},
   };
 }
 
