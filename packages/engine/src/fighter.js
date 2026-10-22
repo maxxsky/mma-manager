@@ -163,9 +163,13 @@ export function scoutGrade(rep) {
 export function makeReport(f, grade) {
   const err = { C: 12, B: 10, A: 5, S: 0 }[grade];
   const est = {};
+  const estVal = {};
   ATTRS.forEach((k) => {
-    if (grade === "C" && (k === "chin" || k === "fightIQ")) est[k] = "?";
-    else est[k] = gradeOf(clamp(f.attrs[k] + RI(-err, err), 10, 99));
+    if (grade === "C" && (k === "chin" || k === "fightIQ")) { est[k] = "?"; estVal[k] = null; }
+    else {
+      estVal[k] = clamp(f.attrs[k] + RI(-err, err), 10, 99);
+      est[k] = gradeOf(estVal[k]);
+    }
   });
   const potAvg = ATTRS.reduce((s, k) => s + f.ceilings[k], 0) / ATTRS.length;
   const pot = grade === "C" ? "?" : "⭐".repeat(clamp(Math.round(potAvg / 20), 1, 5));
@@ -182,5 +186,22 @@ export function makeReport(f, grade) {
     for (const k of ATTRS) { if (f.ceilings[k] > bestVal) { bestVal = f.ceilings[k]; best = k; } }
     return best ? { attr: best, val: Math.round(bestVal) } : null;
   })() : null;
-  return { est, pot, traits, ambition: ambitionHint, bestCeiling };
+  return { est, estVal, pot, traits, ambition: ambitionHint, bestCeiling };
+}
+
+// Midpoint per letter grade, for reports saved before estVal existed.
+const GRADE_MID = { "A+": 90, A: 80, "B+": 70, B: 60, "C+": 50, C: 40, D: 28 };
+
+// Scouted value of one attribute as the player sees it; null when hidden.
+export function reportAttrValue(report, k) {
+  const v = report?.estVal?.[k];
+  if (typeof v === "number") return v;
+  return GRADE_MID[report?.est?.[k]] ?? null;
+}
+
+// OVR from the scout report only (known attributes), never the true attrs.
+export function reportOvr(report) {
+  const vals = ATTRS.map((k) => reportAttrValue(report, k)).filter((v) => v != null);
+  if (!vals.length) return null;
+  return Math.round(vals.reduce((s, v) => s + v, 0) / vals.length);
 }

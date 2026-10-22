@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7 dan P1 #8–#18 selesai (18 dari 63 item). Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7 dan P1 #8–#19 selesai (19 dari 63 item). #19 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -337,10 +337,19 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Scope push: `master` serta sebelas branch P1 (#12, #13, #14, #8, #9, #10, #11, #18, #15, #16, #17), tanpa force push. Dokumen prioritas di `docs/audit/` disinkronkan. Status CI GitHub diperiksa setelah push; lihat run commit terbaru pada GitHub Actions. Tidak ada item baru yang dikerjakan.
   - Worktree terbaru `mma-manager-fight-night` kini checkout `master`. Checkout utama `mma-manager` tetap berada di branch pencapaian yang lama; jangan berasumsi working tree itu otomatis berisi integrasi terbaru. `.claude/` tidak disentuh.
 
+- **22 Oktober 2026: P1 #19 selesai.** Branch `claude/quirky-mccarthy-7jogso` (dari master `9b28d22`).
+  - `makeReport` sekarang juga menyimpan `estVal`, angka perkiraan scout per atribut (`null` kalau tersembunyi). Angka ini berasal dari roll yang sama dengan huruf grade, jadi pemakaian RNG tidak berubah.
+  - Layar Pencari menghitung OVR dari `estVal` (rata-rata atribut yang diketahui) dan mewarnai atribut dari angka yang sama. Atribut asli prospek tidak lagi dipakai di layar itu. Kalau semua atribut tersembunyi, OVR tampil "?".
+  - Prospek di save lama tanpa `estVal` memakai nilai tengah huruf grade (A+ 90, A 80, B+ 70, B 60, C+ 50, C 40, D 28).
+  - Modal negosiasi sudah dicek dan tidak menampilkan atribut atau OVR prospek.
+  - Validasi: test baru `scout-report.test.js` (6 test; 2 test render gagal di kode lama), **810 test aplikasi / 52 file lulus**, build Vite lulus, harness dunia 480 minggu × 5 seed lulus. Fight harness tidak diulang karena kode fight tidak berubah.
+  - Kode: `packages/engine/src/fighter.js` (`makeReport`, `reportAttrValue`, `reportOvr` baru), `index.js`, `app/src/ui/Scout.jsx`.
+  - Masih terbuka (bagian lain CA1, belum masuk #19): grade scout ditentukan reputasi saja, dan reputasi mentok 100 di tahun 2–4, jadi semua laporan cepat menjadi grade S. Ini masalah balancing (P3).
+
 ## Urutan kerja yang disarankan
 
-1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`.
-2. Berikutnya P1 #19 (angka laporan scouting), lalu #20 (perburuan rival). Ujung kode terbaru ada di worktree `mma-manager-fight-night`, branch `master` (merge `f672cbc` ditambah sinkronisasi dokumen).
+1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`. P1 #19 selesai di branch `claude/quirky-mccarthy-7jogso`.
+2. Berikutnya P1 #20 (perburuan rival).
 3. P1 lainnya: #21–#25. P5 #53–#54 (keamanan kecil) bisa disisipkan lebih awal.
 4. Mainkan beberapa jam setelah bug state utama selesai; tandai temuan yang sudah terbantu dan yang masih bisa direproduksi.
 5. Mainkan beberapa jam. Putuskan P2 dan daftar pangkas.

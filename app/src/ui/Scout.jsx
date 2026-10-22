@@ -7,7 +7,7 @@ import {
   ARCH_COLOR as DATA_ARCH_COLOR,
   AGENT_TYPES,
 } from "@ironfist/engine/data.js";
-import { scoutGrade } from "@ironfist/engine/fighter.js";
+import { scoutGrade, reportAttrValue, reportOvr } from "@ironfist/engine/fighter.js";
 import {
   T,
   Panel,
@@ -507,14 +507,11 @@ export default function Scout({
                       minWidth: 40,
                     }}
                   >
-                    <Ovr
-                      v={Math.round(
-                        ATTRS.reduce(
-                          (s, k) => s + p.fighter.attrs[k],
-                          0
-                        ) / ATTRS.length
-                      )}
-                    />
+                    {reportOvr(p.report) != null ? (
+                      <Ovr v={reportOvr(p.report)} />
+                    ) : (
+                      <span style={{ fontFamily: T.mono, color: T.txt3 }}>?</span>
+                    )}
                   </div>
                 </div>
 
@@ -582,6 +579,7 @@ export default function Scout({
                 >
                   {ATTRS.map((k) => {
                     const val = p.report.est[k];
+                    const scouted = reportAttrValue(p.report, k);
                     return (
                       <div
                         key={k}
@@ -610,11 +608,7 @@ export default function Scout({
                             fontSize: 14,
                             fontWeight: 700,
                             color:
-                              val === "?"
-                                ? T.txt3
-                                : heat(
-                                    p.fighter.attrs?.[k] || 50
-                                  ),
+                              scouted == null ? T.txt3 : heat(scouted),
                           }}
                         >
                           {val}
