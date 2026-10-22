@@ -2,7 +2,7 @@
 import { R, clamp, random } from "../rng.js";
 import * as CFG from "./config.js";
 import { effAttr } from "../fight.js";
-import { canGuillotine, cautiousMult } from "./trait-effects.js";
+import { canGuillotine } from "./trait-effects.js";
 
 // side: { planA, planB, cornerA, cornerB } — each fighter's game plan and
 // corner instruction. The shooter's plan and the defender's corner both count.

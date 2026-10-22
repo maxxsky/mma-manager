@@ -126,8 +126,8 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
   });
   const aggA = cornerAgg(cornerA);
   const aggB = cornerAgg(cornerB);
-  const expMult = explosiveMult(A, rnd);
-  const cautMult = cautiousMult(A);
+  const expMultA = explosiveMult(A, rnd);
+  const expMultB = explosiveMult(B, rnd);
   const matchup = matchupMods(A, B);
 
   let subProgress = 0;
@@ -174,7 +174,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
     const exType = pickExchange(position, A, B, planA, planB);
     let exDmgA = 0, exDmgB = 0; // damage dari exchange INI SAJA (bukan kumulatif round)
 
-    const side = { cornerA, cornerB, aggA, aggB, momMultA: momentumMult(mom), momMultB: momentumMult(-mom) };
+    const side = { cornerA, cornerB, aggA, aggB, momMultA: momentumMult(mom), momMultB: momentumMult(-mom), expMultA, expMultB };
     const phase = ex < CFG.EARLY_EXCHANGES ? CFG.PHASE_EARLY : ex >= nEx - 2 ? CFG.PHASE_LATE : CFG.PHASE_MID;
 
     // ── STRIKING ──
@@ -182,7 +182,7 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
       const archMsgs = archetypeCommentary(A, B, exType, matchup);
       archMsgs.forEach(m => comm.tickOnly(exMin, exSec + 12, m));
       const pow = exType === "power" ? CFG.POWER_SHOT_MULT : 1;
-      const result = clampDamage(resolveStriking(exType, A, B, stA, stB, side, phase, pow, matchup, expMult, ptsA, ptsB, legDmgA, legDmgB, comm, exMin, exSec));
+      const result = clampDamage(resolveStriking(exType, A, B, stA, stB, side, phase, pow, matchup, ptsA, ptsB, legDmgA, legDmgB, comm, exMin, exSec));
       exDmgA = result.dmgA; exDmgB = result.dmgB;
       dmgA += result.dmgA; dmgB += result.dmgB;
       bodyDmgA += result.bodyDmgA; bodyDmgB += result.bodyDmgB;
@@ -264,10 +264,13 @@ export function simRound(rnd, A, B, stA, stB, planA, cornerA, momentum = 0, cutA
         // Stunned but controlling — no KD
       } else {
         const chin = effAttr(kdTarget, "chin", isTargetA ? stA : stB);
-        const attackerStr = effAttr(isTargetA ? B : A, "strength", isTargetA ? stB : stA) * (1 + ((isTargetA ? matchup.bStrike : matchup.aStrike) || 0));
+        const attacker = isTargetA ? B : A;
+        const attackerStr = effAttr(attacker, "strength", isTargetA ? stB : stA) * (1 + ((isTargetA ? matchup.bStrike : matchup.aStrike) || 0));
         const exDmg = isTargetA ? exDmgA : exDmgB;
         const cumDmg = isTargetA ? dmgA : dmgB;
-        const kdChance = clamp((exDmg - CFG.KD_EXCHANGE_THRESHOLD) / chin * CFG.KD_CHIN_MULT + (attackerStr - 40) * CFG.KD_STR_MULT + cumDmg * CFG.KD_FATIGUE_MULT, 0, CFG.KD_CHANCE_MAX) * finishRisk(planA, cornerA) * finishRisk(planB, cornerB) * cautMult;
+        const kdChance = clamp((exDmg - CFG.KD_EXCHANGE_THRESHOLD) / chin * CFG.KD_CHIN_MULT + (attackerStr - 40) * CFG.KD_STR_MULT + cumDmg * CFG.KD_FATIGUE_MULT, 0, CFG.KD_CHANCE_MAX) * finishRisk(planA, cornerA) * finishRisk(planB, cornerB)
+          // Cautious lowers the fighter's own finishing power, not the risk of being finished.
+          * cautiousMult(attacker);
         if (random() < kdChance) {
           knockdown = { fighter: isTargetA ? "A" : "B", name: kdTarget.name };
           comm.both(exMin + 1, 0, `${kdTarget.name} IS DOWN! He's hurt bad!`);
