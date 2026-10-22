@@ -10,6 +10,7 @@
     "test": "npm test -w app -w packages/server",
     "smoke": "node tools/smoke.mjs",
     "balance": "node tools/balance.mjs",
+    "fight-balance": "node tools/fight-balance.mjs",
     "economy": "node tools/economy.mjs"
   },
   "type": "module"
