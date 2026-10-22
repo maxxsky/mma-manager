@@ -7,6 +7,7 @@ import { TITLE_NAMES, titleTier, championAt, setChampion, removeChampion } from 
 import { avgSkill } from "../fighter.js";
 import { FIGHT_INJURY_TIERS, FIGHT_INJURY_LABELS } from "../data.js";
 import { fightInjuryChance, fightInjuryHowKey, medicalInjuryMult } from "./injury.js";
+import { applyFightAmbition } from "../ambitions.js";
 import { fightTotals } from "../fight/report.js";
 import { fightPurse } from "../fight/purse.js";
 import { aiChampion } from "../world/fighter-profile.js";
@@ -22,6 +23,7 @@ export function commitFightResult(g, fighter, result) {
   const div = g.divisions?.[f.weightClass];
   const previousChamp = championAt(div, contestedTier);
   const defending = !!previousChamp?.player && previousChamp.fighterId === f.id;
+  const popBefore = f.popularity || 0;
   const previousKOStreak = Number.isInteger(f.koStreak) ? f.koStreak : koWinStreak(f);
   f.koStreak = result.won && !result.draw && isKnockout(result.how) ? previousKOStreak + 1 : 0;
 
@@ -248,6 +250,9 @@ export function commitFightResult(g, fighter, result) {
       g.rep = clamp((g.rep || 0) - 5, 2, 100);
     }
   }
+
+  // ── Ambitions (after every popularity change above) ──
+  applyFightAmbition(g, f, { won: !!result.won && !result.draw, oppRank: booking?.oppRank ?? null, popBefore });
 
   // ── Track last fight week ──
   f.lastFightWeek = g.week;

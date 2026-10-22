@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, dan P5 #53–#54 selesai (27 dari 63 item). #19–#25 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, P2 #26, dan P5 #53–#54 selesai (28 dari 63 item). #19–#26 dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -56,7 +56,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 
 | # | Sistem | Temuan | Saran |
 |---|---|---|---|
-| 26 | Ambisi Paycheck, Legacy, Family Man, Star Power | FI3 | Implementasikan; logikanya sederhana. `fightsThisYear` harus bertambah |
+| 26 | Ambisi Paycheck, Legacy, Family Man, Star Power | FI3 | Implementasikan; logikanya sederhana. `fightsThisYear` harus bertambah. **Selesai: diimplementasikan** |
 | 27 | Kontrak: counter-offer terbalik; logika negosiasi di UI | EK3 | Perbaiki arah counter-offer, pindahkan logika ke engine, ukur 7 tuas lalu buang yang tidak terasa |
 | 28 | Relasi antar fighter | FI2 | Buang dulu kecuali ada rencana event yang mengubah relasi |
 | 29 | Kepribadian coach Motivator dan Player's Coach | CA3 | Implementasikan sesuai deskripsi |
@@ -406,10 +406,17 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - Validasi: test server dijalankan di PostgreSQL 16 lokal. **28 test server lulus** (22 lama, 6 baru; keenam test baru gagal di kode lama), termasuk 10 request paralel ke camp dengan batas 4. `npm test` dari root: 776 test app + 28 test server lulus, diff bersih.
   - Batas: pembuatan fighter di server masih gratis. Server belum punya alur melepas atau pensiun fighter, jadi semua fighter di camp dihitung ke batas roster. Email tidak dinormalisasi (huruf besar/kecil tetap dibedakan, sama seperti sebelumnya).
 
+- **22 Oktober 2026: P2 #26 selesai — ambisi diimplementasikan.** Instruksi user: kerjakan perbaikan berikutnya tanpa menunggu playtest, ikuti saran dokumen, dan merge ke `master` tiap selesai.
+  - Modul baru `ambitions.js` (`applyFightAmbition`), dipanggil sekali per fight selesai di `commitResult`, setelah semua perubahan popularitas.
+  - `fightsThisYear` bertambah tiap fight selesai (menang atau kalah) dan tetap di-reset tahunan di `tick/yearly.js`. Sebelumnya tidak pernah bertambah.
+  - Paycheck: morale +3 tiap fight. Legacy: morale +5 saat mengalahkan lawan ber-ranking atau juara (`booking.oppRank` tidak null). Family Man: morale −10 untuk tiap fight di atas 3 per tahun. Star Power: kenaikan bersih popularitas dari fight ×1,5 (penurunan tidak diperbesar). Angka-angka ini pilihan awal sesuai deskripsi ambisi; bisa dituning di P3.
+  - Test baru `ambitions.test.js` (5 test, semuanya gagal di kode lama). Satu fixture lama di `rankings.test.js` dikunci ke ambisi Grinder, karena fighter acaknya ternyata Paycheck dan sekarang mendapat +3 morale.
+  - Validasi: `npm test` dari root dengan PostgreSQL lokal: **781 test app + 28 test server lulus**. Build, harness dunia, dan harness fight lulus, diff bersih.
+
 ## Urutan kerja yang disarankan
 
 1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`. P1 #19–#25 selesai di branch `claude/quirky-mccarthy-7jogso` (#21: rival camp dibuang). Seluruh P1 selesai.
-2. P1 #19–#25 sudah di `master` (`927e0da`). P5 #53–#54 selesai di branch. Berikutnya langkah 3–4 (main beberapa jam, putuskan P2).
+2. P1 #19–#25 sudah di `master` (`927e0da`). P5 #53–#54 juga sudah di `master`. Atas instruksi user, P2 dikerjakan tanpa menunggu playtest, mengikuti kolom saran; tiap item langsung di-merge ke `master`.
 3. Mainkan beberapa jam setelah bug state utama selesai; tandai temuan yang sudah terbantu dan yang masih bisa direproduksi.
 4. Putuskan P2 dan daftar pangkas.
 5. P3, lalu P4, lalu P6.

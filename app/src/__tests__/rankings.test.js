@@ -132,6 +132,7 @@ describe('Task 58 — Staredown attitude effects (N1)', () => {
     const g = createTestGame()
     const f = g.roster[0]
     f.morale = 50
+    f.ambition = 'Grinder' // no fight-time ambition effect (Paycheck would add morale)
     f.popularity = 30
     g.rep = 20
 

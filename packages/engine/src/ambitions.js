@@ -1,0 +1,33 @@
+// Fight-time ambition effects (P2 #26, FI3). The descriptions players see are
+// AMBITIONS in data/traits.js; these make Paycheck, Legacy, Family Man and the
+// popularity half of Star Power do what they say. Belt Chaser and the
+// low-popularity half of Star Power run monthly in tick/settlement.js; Grinder
+// in tick/training.js.
+import { clamp } from "./rng.js";
+
+export const PAYCHECK_MORALE = 3;          // every completed fight
+export const LEGACY_MORALE = 5;            // beating a ranked opponent or champion
+export const FAMILY_MAN_MAX_FIGHTS = 3;    // per year (fightsThisYear resets in tick/yearly.js)
+export const FAMILY_MAN_MORALE_PENALTY = 10; // each fight beyond the max
+export const STAR_POWER_POP_MULT = 1.5;    // on the fight's net popularity gain
+
+/** Call once per completed fight, after every other popularity change. */
+export function applyFightAmbition(g, f, { won, oppRank, popBefore }) {
+  f.fightsThisYear = (f.fightsThisYear || 0) + 1;
+
+  if (f.ambition === "Paycheck") {
+    f.morale = clamp(f.morale + PAYCHECK_MORALE, 0, 100);
+  }
+  if (f.ambition === "Legacy" && won && oppRank != null) {
+    f.morale = clamp(f.morale + LEGACY_MORALE, 0, 100);
+    g.log.unshift(`🏛️ ${f.name} mengalahkan lawan ber-ranking — legacy bertambah. Morale +${LEGACY_MORALE}.`);
+  }
+  if (f.ambition === "Family Man" && f.fightsThisYear > FAMILY_MAN_MAX_FIGHTS) {
+    f.morale = clamp(f.morale - FAMILY_MAN_MORALE_PENALTY, 0, 100);
+    g.log.unshift(`🏠 ${f.name} sudah ${f.fightsThisYear} fight tahun ini — terlalu jauh dari keluarga. Morale -${FAMILY_MAN_MORALE_PENALTY}.`);
+  }
+  if (f.ambition === "Star Power" && typeof popBefore === "number") {
+    const gain = f.popularity - popBefore;
+    if (gain > 0) f.popularity = clamp(popBefore + gain * STAR_POWER_POP_MULT, 0, 100);
+  }
+}
