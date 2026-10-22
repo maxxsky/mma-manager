@@ -33,11 +33,12 @@ if (!chromePath) {
   process.exit(2);
 }
 
-// Tabs are keyed by the aria-label the sidebar renders (an i18n key).
+// Tabs are keyed by the data-tab id the sidebar renders (aria-labels are
+// translated text, so they change with the language).
 const TABS = [
-  "UI.dashboard", "UI.roster", "UI.rankings", "UI.scout", "UI.inbox",
-  "UI.finance", "UI.promoters", "UI.facility",
-  "UI.achievements", "UI.dynasty", "UI.world",
+  "dashboard", "roster", "rank", "scout", "inbox",
+  "finance", "promoters", "mgmt",
+  "achievements", "dynasty", "world",
 ];
 
 // Console noise that is not a real failure.
@@ -211,9 +212,9 @@ try {
   // --- Pass 1: every tab renders -------------------------------------------
   for (const tab of TABS) {
     phase = `tab:${tab}`;
-    const sel = `[aria-label="${tab}"]`;
+    const sel = `[data-tab="${tab}"]`;
     const el = await page.$(sel);
-    if (!el) { note("missing", phase, `no nav item with aria-label="${tab}"`); continue; }
+    if (!el) { note("missing", phase, `no nav item with data-tab="${tab}"`); continue; }
     await el.click();
     await new Promise((r) => setTimeout(r, 400));
     const blank = await page.evaluate(() => document.body.innerText.trim().length < 40);
@@ -222,7 +223,7 @@ try {
   }
 
   // --- Pass 2: advance week after week --------------------------------------
-  await page.click('[aria-label="UI.dashboard"]');
+  await page.click('[data-tab="dashboard"]');
   await new Promise((r) => setTimeout(r, 300));
 
   for (let w = 1; w <= WEEKS; w++) {
@@ -257,14 +258,14 @@ try {
     }
 
     // Take any offer sitting in the inbox.
-    await page.click('[aria-label="UI.inbox"]');
+    await page.click('[data-tab="inbox"]');
     await new Promise((r) => setTimeout(r, 400));
     if (await clickByText(page, L.accept)) {
       await new Promise((r) => setTimeout(r, 400));
       console.log(`  accepted a fight offer (attempt ${attempt})`);
     }
 
-    await page.click('[aria-label="UI.dashboard"]');
+    await page.click('[data-tab="dashboard"]');
     await new Promise((r) => setTimeout(r, 300));
 
     const outcome = await playFight(page, setPhase);
@@ -289,7 +290,7 @@ try {
   // --- Pass 3: tabs again, now with a populated world -----------------------
   for (const tab of TABS) {
     phase = `tab-late:${tab}`;
-    const el = await page.$(`[aria-label="${tab}"]`);
+    const el = await page.$(`[data-tab="${tab}"]`);
     if (!el) continue;
     await el.click();
     await new Promise((r) => setTimeout(r, 400));

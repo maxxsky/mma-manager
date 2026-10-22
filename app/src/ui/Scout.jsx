@@ -93,7 +93,7 @@ export default function Scout({
               color: T.txt3,
             }}
           >
-            {t("UI.selectClass")}
+            {t("UI.styleFilter")}
           </span>
           <button
             onClick={() => setScoutFilterArch(null)}
@@ -159,7 +159,7 @@ export default function Scout({
               color: T.txt3,
             }}
           >
-            {t("UI.division")}:
+            {t("UI.selectClass")}
           </span>
           <button
             onClick={() => setScoutFilterWC(null)}

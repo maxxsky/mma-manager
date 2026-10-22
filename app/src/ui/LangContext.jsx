@@ -5,6 +5,8 @@ const LangContext = createContext();
 
 export function LangProvider({ children }) {
   const [lang, setLangState] = useState(getLang());
+  // Keep <html lang> in step with the UI language (screen readers, hyphenation).
+  useEffect(() => { document.documentElement.lang = lang; }, [lang]);
 
   const changeLang = (l) => {
     setLang(l);

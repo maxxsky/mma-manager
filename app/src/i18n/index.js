@@ -10,6 +10,7 @@ export function getLang() {
 
 export function setLang(l) {
   try { localStorage.setItem("mma-lang", l); } catch {}
+  if (typeof document !== "undefined") document.documentElement.lang = l;
 }
 
 const EN = {
@@ -102,7 +103,7 @@ const EN = {
   "UI.roster": "Roster",
   "UI.rosterCap": "Roster Cap", "UI.rosterFull": "Roster Full",
   "UI.runway": "Runway", "UI.salaryMo": "Salary/mo", "UI.scout": "Scout",
-  "UI.scoutNetwork": "Scouting Network", "UI.selectClass": "Weight Class:",
+  "UI.scoutNetwork": "Scouting Network", "UI.selectClass": "Weight Class:", "UI.styleFilter": "Style:",
   "UI.send": "Send", "UI.sendScout": "Send Scout",
   "UI.skip": "Skip to Result", "UI.specialty": "Specialty",
   "UI.staff": "Staff", "UI.staredown": "Staredown · Press Conference",
@@ -507,7 +508,7 @@ const ID = {
   "UI.roster": "Roster",
   "UI.rosterCap": "Kapasitas Roster", "UI.rosterFull": "Roster Penuh",
   "UI.runway": "Runway", "UI.salaryMo": "Gaji/bln", "UI.scout": "Pencari",
-  "UI.scoutNetwork": "Jaringan Pencari", "UI.selectClass": "Kelas Berat:",
+  "UI.scoutNetwork": "Jaringan Pencari", "UI.selectClass": "Kelas Berat:", "UI.styleFilter": "Gaya:",
   "UI.send": "Kirim", "UI.sendScout": "Kirim Pencari",
   "UI.skip": "Langsung Hasil", "UI.specialty": "Spesialisasi",
   "UI.staff": "Staf", "UI.staredown": "Staredown · Konferensi Pers",

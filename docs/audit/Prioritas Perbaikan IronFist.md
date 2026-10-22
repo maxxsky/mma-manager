@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, seluruh P2 #26–#37, P3 #40–#45, dan P5 #53–#54 selesai (45 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#37, #40–#45, dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, seluruh P2 #26–#37, P3 #40–#45 (kecuali #39), P4 #47, dan P5 #53–#54 selesai (45 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#37, #40–#45, #47, dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
 
 ## Prinsip urutan
 
@@ -87,7 +87,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | # | Perbaikan | Temuan | Ukuran |
 |---|---|---|---|
 | 46 | Putuskan bahasa game dulu (GDD "Hal yang belum diputuskan" poin 1), lalu terjemahkan sekitar 400 teks pesan engine, komentar fight, Dunia, Pencapaian, onboarding | UI1, FN4, PR3 | B |
-| 47 | Label bocor dan aksesibilitas: "UI.DIVISION", filter "Kelas Berat", 12 aria-label, `lang` di `app/index.html` | UI2 | K |
+| 47 | Label bocor dan aksesibilitas: "UI.DIVISION", filter "Kelas Berat", 12 aria-label, `lang` di `app/index.html`. **Selesai** | UI2 | K |
 | 48 | Label salah: judul Fasilitas, "Biaya Penempatan", Hot Streak, "Warisan Tertinggi $0", "Coach Basic ()", teks layar Promotor | UI3, DU8 | K |
 | 49 | Tips onboarding: Medical Room, sponsor, nama tombol "Maju Minggu" | UI4 | K |
 | 50 | Tombol Maju Minggu terlihat langsung di HP | UI5 | K |
@@ -532,6 +532,12 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - **Akar masalah:** tier purse di `tick/fight-offers.js` hanya ditentukan reputasi camp dan jumlah menang fighter. Premier ($150–350 ribu + bonus menang yang sama) untuk reputasi ≥80 dan ≥8 menang, tanpa melihat ranking fighter. Karena reputasi camp mencapai 90–100 dalam beberapa tahun, fighter unranked pun rutin dapat purse kelas dunia. Reputasi naik +7 per kemenangan apa pun tier-nya.
   - **Yang dicoba (semua dikembalikan):** (1) Premier hanya untuk fighter top 5 atau pemegang sabuk Major/Premier, dan Major hanya untuk fighter ber-ranking: ketiga seed bangkrut, karena biaya late game (`supportPerFighter = 600 + tier × 2.200`, upkeep tier) memang disetel untuk menyerap banjir Premier. (2) Ditambah biaya per tier 1.200: kas akhir $0,2–6 juta, satu seed bangkrut di minggu 892. Dengan 800: kembali ke $1–10 juta. (3) Reputasi per kemenangan berdasarkan tier sejak awal: semua seed bangkrut di tahun 1–2, karena pemasukan awal (sponsor dasar, membership) bergantung pada reputasi. (4) +7 sampai reputasi 50, lalu berdasarkan tier: satu seed $7 juta, dua bangkrut di tahun 8–10.
   - **Kesimpulan:** hasilnya sangat bergantung pada perilaku bot harness, yang terus memperbesar roster dan membeli tier tanpa menghitung untung-rugi. Tanpa target yang jelas (kas ideal di tahun 10/20, kapan reputasi boleh mencapai 100) dan bot yang bermain lebih masuk akal, angka yang dipilih di sini belum tentu benar di permainan sungguhan. **Usulan langkah:** tetapkan target; perbaiki bot harness (melepas fighter yang merugi, tidak menambah roster di luar kemampuan); lalu terapkan gating Premier berdasarkan ranking bersama penyesuaian biaya per tier dan kurva reputasi, diukur terhadap target itu. Pinjaman (#33) sebaiknya diputuskan bersamaan.
+
+- **22 Oktober 2026: P4 #47 selesai — label bocor dan aksesibilitas.**
+  - Layar Pencari: filter archetype berlabel "Gaya:"/"Style:" (dulu "Kelas Berat:"); filter divisi berlabel "Kelas Berat:"/"Weight Class:" (dulu key mentah "UI.DIVISION").
+  - Tombol navigasi sidebar: `aria-label` berisi teks terjemahan (dulu key mentah seperti "UI.dashboard"), plus `data-tab` sebagai pengenal tetap. Tombol ke-12 di temuan adalah tab Rivals yang sudah dihapus di #21. Smoke test sekarang mencari tab lewat `data-tab`.
+  - `app/index.html` memakai `lang="id"` (bahasa bawaan game). `lang` di elemen `<html>` ikut berubah saat bahasa diganti.
+  - Validasi: test baru `ui-labels.test.js` (3 test). `npm test` root: **846 test app + 28 test server lulus**. Build dan smoke test (11 tab) lulus.
 
 ## Urutan kerja yang disarankan
 

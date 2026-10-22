@@ -45,7 +45,7 @@ function SidebarContent({ view, setView, onAdvance, inboxCount }) {
           const on = active === k;
           return (
             <button key={k} className="nav-item" onClick={() => setView(k === "roster" ? "roster" : k)}
-              aria-label={label} aria-current={on ? "page" : undefined}
+              aria-label={t(label)} data-tab={k} aria-current={on ? "page" : undefined}
               style={{ display: "flex", alignItems: "center", gap: 11, width: "100%",
                 textAlign: "left", padding: "9px 12px", marginBottom: 2, borderRadius: T.r,
                 border: "none", background: on ? T.raised : "transparent", cursor: "pointer",
