@@ -7,7 +7,7 @@
 import { R, RI, clamp, random, pick } from "./rng.js";
 import { createAIFighter, createVeteranFighter } from "./world/ai-fighter.js";
 import { recordTitleChange, recordRetirement } from "./world/history.js";
-import { rankOf } from "./rankings.js";
+import { rankOf, divisionRankings, rankedAIContenders } from "./rankings.js";
 import { RIVAL_TRAITS } from "./data.js";
 import {
   TICK_YEARLY, TICK_TITLE_DEFENSE, TICK_MONTHLY, TICK_QUARTERLY,
@@ -106,7 +106,7 @@ export function simulateAITitleDefenses(g) {
       );
       if (playerEligible) return; // let player get the offer instead
       // No eligible player — AI resolves vacant title
-      const candidates = d.list?.filter((c) => c.level > 0.7) || [];
+      const candidates = rankedAIContenders(g, wc).map(c => c.fighter).filter(c => c.level > 0.7);
       if (candidates.length < 2) return;
       // Deduplicate by name to prevent same-name matchup
       const uniqueCandidates = candidates.filter((c, i, a) => a.findIndex(x => x.name === c.name) === i);
@@ -124,7 +124,7 @@ export function simulateAITitleDefenses(g) {
 
     const champ = d.champ;
     // Ensure contender is not the champion themselves
-    const contender = d.list.find(c => c.name !== champ.name);
+    const contender = rankedAIContenders(g, wc)[0]?.fighter;
     if (!contender) return;
 
     const champSkill = (champ.level || 1.2) * (1 - (champ.age > CHAMP_AGE_DECLINE ? 0.1 : 0));
@@ -144,7 +144,8 @@ export function simulateAITitleDefenses(g) {
 
       // Former champ drops in rankings
       const oldIdx = d.list.findIndex((c) => c.name === oldChamp);
-      if (oldIdx >= 0 && oldIdx < d.list.length - 5) {
+      const oldRank = divisionRankings(g, wc).find(c => c.fighter.name === oldChamp)?.rank;
+      if (oldIdx >= 0 && oldRank != null && oldRank <= 10) {
         d.list.splice(oldIdx, 1);
         d.list.push(createVeteranFighter({
           name: oldChamp,
@@ -198,7 +199,7 @@ export function generateWorldEvents(g) {
   if (g.week % TICK_QUARTERLY === 0) {
     Object.entries(g.divisions).forEach(([wc, d]) => {
       if (!d.champ || d.champ.player) return;
-      const top3 = d.list.slice(0, 3);
+      const top3 = divisionRankings(g, wc).filter(c => c.rank <= 3 && !c.player).map(c => c.fighter);
       top3.forEach((c) => {
         if (c.age <= BREAKTHROUGH_AGE && c.points >= BREAKTHROUGH_POINTS && !c._breakthroughNotified) {
           c._breakthroughNotified = true;
@@ -284,7 +285,8 @@ export function maintainDivisions(g) {
     // If champ retired and no player champ, promote #1
     if (!d.champ || (!d.champ.player && !d.list.some((c) => c.name === d.champ.name))) {
       if (d.list.length > 0) {
-        const newChamp = d.list[0];
+        const newChamp = rankedAIContenders(g, wc)[0]?.fighter;
+        if (!newChamp) return;
         d.champ = { name: newChamp.name, player: false, age: newChamp.age || 30, campId: newChamp.campId || null, campName: newChamp.campName || null };
         events.push({
           title: `👑 New ${wc} Champion`,

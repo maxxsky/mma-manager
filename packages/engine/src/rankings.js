@@ -103,11 +103,38 @@ export function genDivisions(rivals = []) {
   return d;
 }
 
+/** The shared order for UI, eligibility, matchmaking and world simulation.
+ * Returns references to fighters, without sorting/mutating the storage array.
+ * The Major champion is separate (rank 0). Ties: AI first, then stable ID/name.
+ */
+export function divisionRankings(g, weightClass) {
+  const div = g.divisions?.[weightClass];
+  if (!div) return [];
+  const roster = (g.roster || []).filter(f => f.weightClass === weightClass);
+  const playerNames = new Set(roster.map(f => f.name));
+  const entries = (div.list || [])
+    .filter(f => f.name !== div.champ?.name && !playerNames.has(f.name))
+    .map(fighter => ({ fighter, player: false, points: fighter.points || 0 }));
+  roster.filter(f => f.rankPoints > 0 && !(div.champ?.player && div.champ.fighterId === f.id))
+    .forEach(fighter => entries.push({ fighter, player: true, points: fighter.rankPoints }));
+  return entries.sort((a, b) => {
+    const byPoints = b.points - a.points || Number(a.player) - Number(b.player);
+    if (byPoints) return byPoints;
+    const keyA = String(a.fighter.id ?? a.fighter.name);
+    const keyB = String(b.fighter.id ?? b.fighter.name);
+    return keyA < keyB ? -1 : keyA > keyB ? 1 : 0;
+  }).map((entry, i) => ({ ...entry, rank: i + 1 }));
+}
+
+export function rankedAIContenders(g, weightClass) {
+  return divisionRankings(g, weightClass).filter(entry => !entry.player);
+}
+
 export function rankOf(g, f) {
-  const div = g.divisions && g.divisions[f.weightClass];
-  if (!div || !(f.rankPoints > 0)) return null;
-  const better = div.list.filter((c) => c.points > f.rankPoints).length;
-  return better < 15 ? better + 1 : null;
+  const div = g.divisions?.[f.weightClass];
+  if (div?.champ?.player && div.champ.fighterId === f.id) return 0;
+  const entry = divisionRankings(g, f.weightClass).find(entry => entry.player && entry.fighter.id === f.id);
+  return entry?.rank <= 15 ? entry.rank : null;
 }
 
 export function vacateTitle(g, f, tier = null) {

@@ -5,6 +5,7 @@
 //   Uses shadow-ai/ modules for config, state factory, history.
 // ============================================================
 
+import { divisionRankings } from "./rankings.js";
 import { R, RI, clamp, random } from "./rng.js";
 import { genFighter, genCoach } from "./fighter.js";
 import { createShadowState, assignPhilosophy, calculateRosterQuality } from "./shadow-ai/state.js";
@@ -145,15 +146,12 @@ function calculateRankingPerformance(camp, g) {
   let count = 0;
 
   Object.entries(g.divisions).forEach(([wc, div]) => {
-    div.list.forEach((fighter, idx) => {
+    const champ = div.champ;
+    if (champ?.campId === camp.id) { totalScore += 100; count++; }
+    divisionRankings(g, wc).filter(c => !c.player && c.rank <= 15).forEach(({ fighter, rank }) => {
       if (fighter.campId === camp.id) {
-        const rank = idx + 1; // 1-15
         // Linear: rank 1 ≈ 100, rank 15 ≈ 0
-        let score = Math.max(0, 100 - (rank - 1) * (100 / 14));
-        // Champion bonus: treat as rank 0 (above scale)
-        if (div.champ?.campId === camp.id && div.champ.name === fighter.name) {
-          score = 100;
-        }
+        const score = Math.max(0, 100 - (rank - 1) * (100 / 14));
         totalScore += score;
         count++;
       }

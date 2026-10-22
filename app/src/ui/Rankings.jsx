@@ -1,6 +1,7 @@
 import { fmt$ } from "@ironfist/engine/rng.js";
 import React, { useState, useEffect } from "react";
 import { WEIGHTS, ARCH_COLOR as DATA_ARCH_COLOR } from "@ironfist/engine/data.js";
+import { divisionRankings } from "@ironfist/engine/rankings.js";
 import { avgSkill, tierOf } from "@ironfist/engine/fighter.js";
 import { T, Panel, Eyebrow, Tag, Btn, Ovr, heat, ARCH_COLOR, Mono } from "./theme.jsx";
 
@@ -32,51 +33,14 @@ export default function Rankings({ g, t }) {
 
   // ── build combined ranking list ──
   const champ = div.champ;
-  const playerNames = new Set(
-    g.roster.filter((f) => f.weightClass === selDiv).map((f) => f.name)
-  );
-
-  // AI fighters (exclude champion and player fighters)
-  const aiFighters = div.list
-    .filter((c) => !playerNames.has(c.name) && c.name !== champ?.name)
-    .map((c) => ({
-      name: c.name,
-      archetype: c.archetype,
-      points: c.points,
-      record: c.record,
-      player: false,
-      ovr: Math.round(c.level * 60),
-      streak: null,
-      change: null,
-      campId: c.campId,
-      campName: c.campName,
-    }));
-
-  // Player fighters with rank points (not the champion)
-  const playerFighters = g.roster
-    .filter(
-      (f) =>
-        f.weightClass === selDiv &&
-        (f.rankPoints || 0) > 0 &&
-        !(champ?.player && champ?.fighterId === f.id)
-    )
-    .map((f) => ({
-      name: f.name,
-      archetype: f.archetype,
-      points: f.rankPoints,
-      record: f.record,
-      player: true,
-      ovr: Math.round(avgSkill(f)),
-      streak: f.streakL || 0,
-      change: f.lastRankChange || 0,
-      fighterId: f.id,
-      titles: f.titles || [],
-    }));
-
-  // Combine & sort by points descending
-  const combined = [...aiFighters, ...playerFighters].sort(
-    (a, b) => b.points - a.points
-  );
+  const combined = divisionRankings(g, selDiv).map(({ fighter: f, player, points }) => ({
+    name: f.name, archetype: f.archetype, points, record: f.record, player,
+    ovr: Math.round(player ? avgSkill(f) : f.level * 60),
+    streak: player ? f.streakL || 0 : null,
+    change: player ? f.lastRankChange || 0 : null,
+    fighterId: player ? f.id : undefined,
+    titles: f.titles || [], campId: f.campId, campName: f.campName,
+  }));
   const top15 = combined.slice(0, 15);
   const outsideTop15 = combined.slice(15).filter((x) => x.player);
 

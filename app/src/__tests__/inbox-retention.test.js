@@ -59,14 +59,35 @@ describe("inbox retention", () => {
     expect(g.inbox.length).toBeLessThan(atY3 * 2);
   });
 
-  it("drops injury notices once the fighter has healed", () => {
-    const g = simulate(240);
+  it("drops injury notices for healed fighters at monthly settlement", () => {
+    // newGame starts at week 1; 239 ticks end at the week-240 cleanup.
+    // At week 241 another injury can heal before the next monthly cleanup.
+    const g = simulate(239);
     const orphaned = g.inbox.filter((m) => {
       if (m.type !== "injury") return false;
       const f = g.roster.find((x) => x.id === m.fighterId);
       return !f || !f.injury;
     });
     expect(orphaned).toEqual([]);
+  });
+
+  it("removes healed and missing-fighter notices while retaining an active injury", () => {
+    setRNG(mulberry32(42));
+    const g = newGame();
+    const fighter = g.roster[0];
+    g.week = 4;
+    g.inbox = [
+      { id: 'healed', type: 'injury', fighterId: fighter.id, createdWeek: 1 },
+      { id: 'missing', type: 'injury', fighterId: 'missing-fighter', createdWeek: 1 },
+    ];
+    fighter.injury = null;
+    tickSettlement(g);
+    expect(g.inbox.some(m => m.id === 'healed' || m.id === 'missing')).toBe(false);
+    fighter.injury = { weeks: 4, label: 'Active injury' };
+    g.inbox.push({ id: 'active', type: 'injury', fighterId: fighter.id, createdWeek: 4 });
+    g.week = 8;
+    tickSettlement(g);
+    expect(g.inbox.some(m => m.id === 'active')).toBe(true);
   });
 
   it("exposes sane retention thresholds", () => {

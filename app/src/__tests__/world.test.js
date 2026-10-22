@@ -499,8 +499,8 @@ describe("maintainDivisions", () => {
       divisions: {
         LW: makeDivision({
           list: [
-            makeFighter({ name: "New Champ", age: 28, level: 0.9 }),
-            makeFighter({ name: "Other Guy", age: 25, level: 0.7 }),
+            makeFighter({ name: "New Champ", age: 28, level: 0.9, points: 95 }),
+            makeFighter({ name: "Other Guy", age: 25, level: 0.7, points: 50 }),
           ],
           champ: { name: "Old Champ", player: false, age: 35 }, // not in list
         }),
