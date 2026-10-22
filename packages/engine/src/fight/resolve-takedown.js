@@ -2,19 +2,32 @@
 import { R, clamp, random } from "../rng.js";
 import * as CFG from "./config.js";
 import { effAttr } from "../fight.js";
-import { canGuillotine, cautiousMult } from "./trait-effects.js";
+import { canGuillotine } from "./trait-effects.js";
 
-export function resolveTakedown(exType, A, B, stA, stB, planA, cornerA, matchup, comm, exMin, exSec) {
+// side: { planA, planB, cornerA, cornerB } — each fighter's game plan and
+// corner instruction. The shooter's plan and the defender's corner both count.
+export function resolveTakedown(exType, A, B, stA, stB, side, matchup, comm, exMin, exSec) {
   if (exType === "td") {
-    return resolveTakedownByA(A, B, stA, stB, planA, cornerA, matchup, comm, exMin, exSec);
+    return resolveTakedownByA(A, B, stA, stB, side, matchup, comm, exMin, exSec);
   } else {
-    return resolveTakedownByB(A, B, stA, stB, cornerA, matchup, comm, exMin, exSec);
+    return resolveTakedownByB(A, B, stA, stB, side, matchup, comm, exMin, exSec);
   }
 }
 
-function resolveTakedownByA(A, B, stA, stB, planA, cornerA, matchup, comm, exMin, exSec) {
-  const tdBonus = (matchup.aTD || 0) + (planA === "Take It Down" ? 0.18 : 0) + (cornerA === "tdd" ? -0.10 : 0);
-  const tdDefBonus = -(matchup.bTDDef || 0);
+// Shooter bonus: the "Take It Down" plan helps; a "tdd" corner (defend
+// takedowns) makes the fighter less committed to shooting.
+function shotBonus(plan, corner) {
+  return (plan === "Take It Down" ? 0.18 : 0) + (corner === "tdd" ? -0.10 : 0);
+}
+
+// Defender bonus from a "tdd" corner.
+function sprawlBonus(corner) {
+  return corner === "tdd" ? 0.10 : 0;
+}
+
+function resolveTakedownByA(A, B, stA, stB, side, matchup, comm, exMin, exSec) {
+  const tdBonus = (matchup.aTD || 0) + shotBonus(side.planA, side.cornerA);
+  const tdDefBonus = -((matchup.bTDDef || 0) + sprawlBonus(side.cornerB));
   const p = clamp(CFG.TD_BASE_CHANCE + (effAttr(A, "wrestling", stA, {}) - effAttr(B, "wrestling", stB, {})) / CFG.TD_SKILL_DIVISOR + tdBonus + tdDefBonus, CFG.TD_MIN_CHANCE, CFG.TD_MAX_CHANCE);
 
   if (random() < p) {
@@ -47,9 +60,9 @@ function resolveTakedownByA(A, B, stA, stB, planA, cornerA, matchup, comm, exMin
   }
 }
 
-function resolveTakedownByB(A, B, stA, stB, cornerA, matchup, comm, exMin, exSec) {
-  const bTDBonus = (matchup.bTD || 0);
-  const aTDDefBonus = (matchup.aTDDef || 0) + (cornerA === "tdd" ? 0.10 : 0);
+function resolveTakedownByB(A, B, stA, stB, side, matchup, comm, exMin, exSec) {
+  const bTDBonus = (matchup.bTD || 0) + shotBonus(side.planB, side.cornerB);
+  const aTDDefBonus = (matchup.aTDDef || 0) + sprawlBonus(side.cornerA);
   const pB = clamp(CFG.TD_BASE_CHANCE + (effAttr(B, "wrestling", stB, {}) - effAttr(A, "wrestling", stA, {})) / CFG.TD_SKILL_DIVISOR + bTDBonus - aTDDefBonus, CFG.TD_MIN_CHANCE, CFG.TD_MAX_CHANCE);
 
   if (random() < pB) {

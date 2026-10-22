@@ -7,6 +7,7 @@ export * from "./dynasty.js";
 export * from "./prestige.js";
 export { genFighter, assignAgent, agentFor, avgSkill, tierOf, weeklyFee, scoutGrade, makeReport, genCoach, genBio, gradeOf, defaultContract } from "./fighter.js";
 export { simRound, prepFighter, effAttr, autoGamePlan } from "./fight.js";
+export { scoreRound, scoreDecision } from "./fight/scoring.js";
 export { newGame, tick } from "./state.js";
 export { reducer } from "./reducer.js";
 export { genDivisions, rankOf, vacateTitle, stripTitle, initPromoterRel } from "./rankings.js";

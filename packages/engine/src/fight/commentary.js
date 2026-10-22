@@ -66,11 +66,13 @@ export const SCRAMBLE_STALL_TEMPLATES = [
 export function traitCommentary(fight, A, B, rnd, dmgA, dmgB, landA) {
   const msgs = [];
   if (A.traits?.includes("Explosive") && rnd === 1) msgs.push(`${A.name}'s explosive style on display early.`);
+  if (B.traits?.includes("Explosive") && rnd === 1) msgs.push(`${B.name}'s explosive style on display early.`);
   if (A.traits?.includes("Iron Chin") && dmgA > 20) msgs.push(`${A.name}'s iron chin holding up.`);
   if (B.traits?.includes("Glass Jaw") && dmgB > 25) msgs.push(`${B.name} wobbles — that glass jaw!`);
   if (A.traits?.includes("Grinder") && rnd >= 3) msgs.push(`${A.name}'s grinding pressure wearing ${B.name} down.`);
   if (A.traits?.includes("Showboat") && landA > 20) msgs.push(`${A.name} showboating — crowd loves it!`);
   if (A.traits?.includes("Warrior") && dmgA > 40) msgs.push(`${A.name} keeps firing despite taking damage — true warrior spirit!`);
+  if (B.traits?.includes("Warrior") && dmgB > 40) msgs.push(`${B.name} keeps firing despite taking damage — true warrior spirit!`);
   return msgs;
 }
 

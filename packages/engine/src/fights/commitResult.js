@@ -6,6 +6,7 @@ import { TITLE_CELEBRATION_DELAY_WEEKS, TITLE_SPONSOR_DELAY_WEEKS } from "../eve
 import { recordEra } from "../world/history.js";
 import { avgSkill } from "../fighter.js";
 import { FIGHT_INJURY_CHANCE, FIGHT_INJURY_TIERS, FIGHT_INJURY_LABELS } from "../data.js";
+import { fightPurse } from "../fight/purse.js";
 
 /** Commit fight result to game state. Called from FightNight done() callback. */
 export function commitFightResult(g, fighter, result) {
@@ -13,9 +14,10 @@ export function commitFightResult(g, fighter, result) {
   if (!f) return;
 
   // ── Purse payout (show money always, win bonus only on win) ──
-  const purse = (fighter.booked?.show || 0) + (result.won ? (fighter.booked?.winBonus || 0) : 0);
+  const { purse, forfeit } = fightPurse(fighter.booked, result);
   const campCut = Math.round((f.contract?.managerCut || 0.18) * purse);
   g.cash = (g.cash || 0) + campCut;
+  if (forfeit > 0) g.log.unshift(`⚖️ Catchweight: purse ${f.name} dipotong 30% (${fmt$(forfeit)}).`);
 
   // ── PPV revenue (title fights only) ──
   if (fighter.booked?.titleTier === "Major" || fighter.booked?.titleTier === "Premier") {

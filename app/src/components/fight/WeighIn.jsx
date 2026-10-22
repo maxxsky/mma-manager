@@ -1,28 +1,35 @@
 // WeighIn — weigh-in, tale of the tape, game plan selection
 import { Panel, Eyebrow, Tag, Btn } from "../../ui/theme.jsx";
-import { T, ARCH_COLOR } from "../../ui/theme.jsx";
+import { T } from "../../ui/theme.jsx";
 import { t } from "../../i18n/index.js";
 import { GAME_PLANS } from "@ironfist/engine/data.js";
 
-export default function WeighIn({ fighter, opp, cutInfo, cutPct, missedWeight, weighinIssue, setWeighinIssue, plan, setPlan, viewMode, setViewMode, onStart, ca, cb }) {
-  const limit = fighter.natWeight || 155; // fallback
+export default function WeighIn({ fighter, opp, limit, cutInfo, oppCutInfo, cutPct, missedWeight, weighinIssue, setWeighinIssue, plan, setPlan, oppPlan, viewMode, setViewMode, onStart, ca, cb }) {
+  const cancelled = weighinIssue === "cancelled";
+  const canStart = cancelled || (plan && (!missedWeight || weighinIssue === "catchweight"));
   return (
     <>
       <Panel>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Eyebrow>{t("WEIGH.header")}</Eyebrow>
-          {missedWeight && !weighinIssue ? <Tag color={T.neg}>{t("WEIGH.missed")}</Tag> : <Tag color={T.pos}>{t("WEIGH.made")}</Tag>}
+          <Tag color={missedWeight ? T.neg : T.pos}>{cancelled ? t("WEIGH.cancel") : missedWeight ? t("WEIGH.missed") : t("WEIGH.made")}</Tag>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <span style={{ fontFamily: T.mono, fontSize: 24, fontWeight: 700, color: T.txt }}>
-            {fighter.natWeight || limit} <span style={{ fontSize: 13, color: T.txt3 }}>→ {limit} lbs</span></span>
+            {fighter.natWeight ?? limit} <span style={{ fontSize: 13, color: T.txt3 }}>→ {limit} lbs</span></span>
           <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt2 }}>
             {cutInfo.label} ({Math.round(cutPct * 100)}%) — <span style={{ color: cutInfo.pen > 0 ? T.warn : T.pos }}>−{cutInfo.pen}% stamina cap</span>.
           </div>
         </div>
+        <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt2, marginTop: 8 }}>
+          {opp.name}: {oppCutInfo.label} ({Math.round(oppCutInfo.cutPct * 100)}%) — −{oppCutInfo.pen}% stamina cap.
+        </div>
+        {weighinIssue === "catchweight" && (
+          <div style={{ fontFamily: T.body, fontSize: 12, color: T.warn, marginTop: 10 }}>{t("WEIGH.catchweightAccepted")}</div>
+        )}
         {missedWeight && !weighinIssue && (
           <div style={{ marginTop: 10, padding: 10, background: `${T.neg}15`, border: `1px solid ${T.neg}44`, borderRadius: T.r }}>
-            <div style={{ color: T.neg, fontSize: 13, fontFamily: T.disp, letterSpacing: 1 }}>{t("WEIGH.missMessage").replace("{0}", fighter.natWeight)}</div>
+            <div style={{ color: T.neg, fontSize: 13, fontFamily: T.disp, letterSpacing: 1 }}>{t("WEIGH.missMessage")}</div>
             <div style={{ display: "flex", gap: 6, marginTop: 8, justifyContent: "center" }}>
               <Btn sm color={T.neg} onClick={() => setWeighinIssue("catchweight")}>{t("WEIGH.catchweight")}</Btn>
               <Btn sm color={T.txt3} ghost onClick={() => setWeighinIssue("cancelled")}>{t("WEIGH.cancel")}</Btn>
@@ -34,6 +41,11 @@ export default function WeighIn({ fighter, opp, cutInfo, cutPct, missedWeight, w
       {/* Game Plan */}
       <Panel>
         <Eyebrow color={T.ember}>{t("WEIGH.gamePlan")}</Eyebrow>
+        {oppPlan && (
+          <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt2, marginBottom: 10 }}>
+            {t("WEIGH.oppPlan").replace("{0}", opp.name)} <b style={{ color: cb || T.txt }}>{oppPlan}</b>
+          </div>
+        )}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
           {Object.entries(GAME_PLANS).map(([k, d]) => (
             <button key={k} className="chip" onClick={() => setPlan(k)} style={{
@@ -53,7 +65,7 @@ export default function WeighIn({ fighter, opp, cutInfo, cutPct, missedWeight, w
           ))}
         </div>
         <div style={{ marginTop: 14 }}>
-          <Btn color={T.ember} onClick={onStart} style={{ opacity: plan ? 1 : .4, pointerEvents: plan ? "auto" : "none" }}>{t("WEIGH.ringBell")}</Btn>
+          <Btn color={T.ember} onClick={onStart} disabled={!canStart}>{cancelled ? t("WEIGH.confirmCancel") : t("WEIGH.ringBell")}</Btn>
         </div>
       </Panel>
     </>

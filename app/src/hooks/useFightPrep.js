@@ -1,8 +1,8 @@
 // Fight prep hook — fighter preparation, weight cut, attitude modifiers, staff bonuses
 import { useMemo } from "react";
-import { clamp, random } from "@ironfist/engine/rng.js";
-import { WEIGHTS } from "@ironfist/engine/data.js";
+import { clamp, random, mulberry32 } from "@ironfist/engine/rng.js";
 import { prepFighter } from "@ironfist/engine/fight.js";
+import { weightCutInfo } from "@ironfist/engine/fight/weight-cut.js";
 
 export function useFightPrep(fighter, opp, attitude, staff) {
   const cutmanSkill = staff?.cutman?.skill || 0;
@@ -20,18 +20,15 @@ export function useFightPrep(fighter, opp, attitude, staff) {
     return { A: fa, B: fo, attMod: mod };
   }, [fighter, opp, attitude, cutmanSkill]);
 
-  const wc = WEIGHTS.find((w) => w.name === fighter.weightClass);
-  const limit = wc ? wc.limit : 155;
-  const hasWeight = fighter.natWeight != null && !isNaN(fighter.natWeight);
-  const cutPct = hasWeight ? (fighter.natWeight - limit) / fighter.natWeight : 0;
-  const penRaw = cutPct > 0.07 ? 10 : cutPct > 0.03 ? 5 : 0;
-  const cutInfo = {
-    label: cutPct > 0.07 ? "Big cut" : cutPct > 0.03 ? "Moderate cut" : "On weight",
-    pen: nutriSkill ? Math.max(0, penRaw - nutriSkill * 0.4) : penRaw,
-  };
-  const missWeightBase = cutPct > 0.08 ? 0.20 : cutPct > 0.05 ? 0.08 : 0.02;
-  const missWeightChance = nutriSkill ? missWeightBase * (1 - Math.min(nutriSkill * 0.05, 0.45)) : missWeightBase;
-  const missedWeight = useMemo(() => random() < missWeightChance, [fighter.id]);
+  const cutInfo = weightCutInfo(fighter, nutriSkill);
+  const oppCutInfo = weightCutInfo(opp);
+  const { cutPct, limit, missWeightChance } = cutInfo;
+  const seed = fighter.booked?.seed;
+  // A separate seeded roll survives remounts without consuming fight RNG.
+  const missedWeight = useMemo(() => {
+    const roll = Number.isFinite(seed) ? mulberry32(seed ^ 0x57454947)() : random();
+    return roll < missWeightChance;
+  }, [fighter.id, seed, missWeightChance]);
 
-  return { A, B, attMod, cutInfo, cutPct, missedWeight, limit };
+  return { A, B, attMod, cutInfo, oppCutInfo, cutPct, missedWeight, limit };
 }
