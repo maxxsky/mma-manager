@@ -7,10 +7,10 @@ export default function WeeklySummary({ summary, onClose, t }) {
   if (!summary) return null;
   return (
     localizeTree(<div style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(6,9,14,.88)", display: "flex", alignItems: "center", justifyContent: "center", padding: 14 }} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440, width: "100%", background: `linear-gradient(160deg, ${T.raised}, ${T.surface})`, border: `1px solid ${T.gold}`, padding: 18, ...cut(14), animation: "rise .35s ease both" }}>
+      <div data-weekly-summary role="dialog" aria-modal="true" aria-label="Ringkasan minggu" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440, width: "100%", background: `linear-gradient(160deg, ${T.raised}, ${T.surface})`, border: `1px solid ${T.gold}`, padding: 18, ...cut(14), animation: "rise .35s ease both" }}>
         <div style={{ fontFamily: T.disp, fontSize: 20, letterSpacing: 3, color: T.gold, textTransform: "uppercase", marginBottom: 4 }}>{t("UI.week")} {summary.week}</div>
         <div style={{ display: "flex", gap: 12, marginBottom: 10, fontSize: 10, color: T.txt3 }}>
-          <span>{fmt$(summary.cash)} · Rep {Math.round(summary.rep)} · {summary.rosterCount} fighters · {summary.inboxCount} inbox</span>
+          <span>{fmt$(summary.cash)} · Rep {Math.round(summary.rep)} · {summary.rosterCount} petarung · {summary.inboxCount} pesan</span>
         </div>
         {summary.achievements && summary.achievements.length > 0 && (
           <div style={{ marginBottom: 10, padding: "8px 12px", background: `${T.gold}15`, border: `1px solid ${T.gold}44`, borderRadius: 8 }}>

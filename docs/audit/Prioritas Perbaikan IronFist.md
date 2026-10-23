@@ -577,3 +577,5 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 - **23 Oktober 2026: review #51 — jalur pensiun menjadi coach diperbaiki.** Nama turunan nama keluarga kini juga mengecualikan nama coach/staf aktif dan pasar, dengan suffix deterministik tanpa RNG tambahan. Regresi dua nama bertabrakan dan tiga tes nama lulus; build lulus.
 
 - **23 Oktober 2026: review #46 — nama tampilan dilindungi.** Field nama langsung diberi translate=no dan dilewatkan oleh lapisan terjemahan. Nama seperti Five Wins tetap nama, walaupun sama dengan judul pencapaian. Regresi render Roster, lima tes bahasa, dan build lulus.
+
+- **23 Oktober 2026: review #50/#59 — ringkasan mingguan di HP diperbaiki.** Overlay dipindahkan keluar ancestor beranimasi/transform ke tingkat App agar fixed mengacu viewport. Dialog diberi role/label; browser membuktikan posisi y=305,9 dan tinggi=232,2 di viewport 390×844. CTA 320/390/767px, advance, kunci modal dan desktop-hidden lulus. Smoke CI sekarang juga memeriksa geometri dialog dan tombol HP dalam browser context baru; smoke 11 tab+fight+mobile lulus.

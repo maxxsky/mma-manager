@@ -177,13 +177,12 @@ export default function App() {
           {tab === "world" && <WorldNews g={g} />}
           {tab === "dynasty" && <Dynasty g={g} dispatch={dispatch} />}
 
-          {/* Weekly summary overlay */}
-          <WeeklySummary summary={weeklySummary} onClose={() => setWeeklySummary(null)} t={t} />
           </div> {/* end tab transition wrapper */}
         </div>
       </div>
 
       {/* Modals */}
+      <WeeklySummary summary={weeklySummary} onClose={() => setWeeklySummary(null)} t={t} />
       {nego && (
         <NegotiateModal
           fighter={nego.fighter} mode={nego.mode} cash={g.cash}

@@ -304,6 +304,27 @@ try {
     await new Promise((r) => setTimeout(r, 400));
   }
   console.log("  tabs re-checked after simulation");
+
+  // A fresh context also checks the mobile weekly action and the actual modal
+  // position. A transformed ancestor used to centre the fixed summary below
+  // the viewport on a long dashboard, leaving only its backdrop on screen.
+  const mobileContext = await browser.createBrowserContext();
+  const mobile = await mobileContext.newPage();
+  mobile.on("pageerror", (error) => note("uncaught", "mobile", error.message));
+  await mobile.setViewport({ width: 390, height: 844 });
+  await mobile.goto(APP_URL, { waitUntil: "networkidle2" });
+  const advanceMobile = '[data-action="advance-week-mobile"]';
+  await mobile.waitForSelector(advanceMobile, { visible: true });
+  await mobile.click(advanceMobile);
+  await mobile.waitForSelector('[data-weekly-summary]', { visible: true });
+  const summaryInside = await mobile.$eval('[data-weekly-summary]', el => {
+    const rect = el.getBoundingClientRect();
+    return rect.top >= 0 && rect.bottom <= innerHeight && rect.left >= 0 && rect.right <= innerWidth;
+  });
+  if (!summaryInside) note("layout", "mobile", "weekly summary is outside the viewport");
+  if (!(await mobile.$eval(advanceMobile, el => el.disabled))) note("action", "mobile", "advance remains enabled behind summary");
+  await mobileContext.close();
+  console.log("  mobile advance and summary checked");
 } catch (err) {
   problems.push({ kind: "harness", where: "runner", text: err.message });
 } finally {
