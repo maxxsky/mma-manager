@@ -123,6 +123,8 @@ const L = {
   decision:  ["go to decision", "ke keputusan"],
   backToCamp:["back to camp", "kembali ke camp"],
   enterCage: ["enter the cage", "masuk arena"],
+  catchweight: ["catchweight (purse -30%)"],
+  doctorContinue: ["continue fight", "lanjut tarung"],
   cornerAny: ["push the pace", "work the body", "conserve", "dorong", "serang badan", "hemat"],
 };
 
@@ -149,6 +151,10 @@ async function playFight(page, setPhase) {
     if (chips.length) chips[0].click();
   });
   await new Promise((r) => setTimeout(r, 250));
+  // A missed weigh-in requires an explicit choice before the bell enables.
+  if (await clickByText(page, L.catchweight)) {
+    await new Promise((r) => setTimeout(r, 250));
+  }
   await clickByText(page, L.ringBell);
   await new Promise((r) => setTimeout(r, 900));
 
@@ -164,6 +170,7 @@ async function playFight(page, setPhase) {
       (await clickByText(page, L.seeFinish)) ||
       (await clickByText(page, L.endRound)) ||
       (await clickByText(page, L.decision)) ||
+      (await clickByText(page, L.doctorContinue)) ||
       (await clickByText(page, L.cornerAny));
 
     await new Promise((r) => setTimeout(r, moved ? 500 : 900));
@@ -283,7 +290,10 @@ try {
       continue;
     }
     if (outcome === "stalled") {
-      note("stalled", phase, "FightNight did not reach a result within 60 steps");
+      const buttons = await page.evaluate(() => [...document.querySelectorAll("button")]
+        .filter(button => !button.disabled && button.getClientRects().length)
+        .map(button => button.textContent.trim()).join(" | "));
+      note("stalled", phase, `FightNight did not reach a result within 60 steps. Enabled buttons: ${buttons}`);
       break;
     }
 

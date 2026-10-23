@@ -89,7 +89,13 @@ Commit `534cdae` memperbaiki tes agar secara eksplisit memeriksa kedua bahasa;
 tidak mengubah perilaku game. Pengujian app setelah koreksi: **78 file, 863 tes
 lulus** dengan `npm test -w app -- --maxWorkers=2`. Batas worker dipakai untuk
 menghindari timeout dua tes statistik ketika seluruh worker lokal berebut CPU.
-CI ulang memverifikasi perubahan pada runner GitHub dengan PostgreSQL.
+CI ulang di `5e9413a` [lulus seluruh tahap](https://github.com/maxxsky/mma-manager/actions/runs/39886812636),
+termasuk tes app/API server dengan PostgreSQL, harness fight/dunia, build dan
+smoke browser. Keterbatasan PostgreSQL di atas hanya berlaku pada pengujian lokal.
+Skrip smoke juga menampilkan anotasi error CI serta menangani pilihan catchweight
+dan lanjut tarung setelah pemeriksaan dokter. Smoke lokal setelah penambahan alur
+tersebut lulus; kegagalan smoke sebelumnya tidak berhasil direproduksi secara
+konsisten sehingga bukti yang ada tidak menetapkan satu penyebab pasti.
 
 Simulasi dan smoke tidak menggantikan playtest manusia untuk kenyamanan antarmuka
 atau balance di semua gaya bermain. Backend #55–#58 tetap ditunda.
