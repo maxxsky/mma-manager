@@ -7,12 +7,12 @@
 
 const OBJECTIVES = [
   { id: "assign_training", label: "Assign training to a fighter", hint: "Click a fighter in Roster, then pick a training program.", check: (g) => g.roster?.some(f => f.training?.type && f.training.type !== "conditioning") },
-  { id: "advance_week", label: "Advance the first week", hint: "Click 'Advance Week' in the sidebar.", check: (g) => g.week > 1 },
+  { id: "advance_week", label: "Advance the first week", hint: "Use the Advance Week / Maju Minggu button.", check: (g) => g.week > 1 },
   { id: "accept_fight", label: "Accept your first fight", hint: "Check your Inbox for fight offers.", check: (g) => g.roster?.some(f => f.booked) },
   { id: "complete_fight", label: "Complete your first fight", hint: "Click the fight card in Dashboard to start FightNight.", check: (g) => g.roster?.some(f => (f.record?.w || 0) + (f.record?.l || 0) > 0) },
   { id: "scout_prospect", label: "Scout your first prospect", hint: "Go to the Scout tab and send a scout.", check: (g) => g.prospects?.length > 0 },
   { id: "sign_prospect", label: "Sign your first prospect", hint: "Click Negotiate on a prospect in the Scout tab.", check: (g) => g.roster?.length >= 3 },
-  { id: "upgrade_facility", label: "Upgrade a facility", hint: "Go to the Facility tab and upgrade any facility.", check: (g) => Object.values(g.facilities || {}).some(l => l >= 2) },
+  { id: "upgrade_facility", label: "Upgrade a facility", hint: "Open the camp dashboard and upgrade a facility in Quick Actions.", check: (g) => Object.values(g.facilities || {}).some(l => l >= 2) },
 ];
 
 export function getObjectives(g) {
@@ -41,7 +41,7 @@ export function checkObjectives(g) {
 const TIPS = [
   { id: "first_chemistry", trigger: (g) => g.chemistry < 50 && g.week > 4, title: "💡 Chemistry", body: "Low chemistry reduces training efficiency. Mediate conflicts and build team bonding to raise it." },
   { id: "first_rep_gate", trigger: (g) => g.rep >= 12 && g.rep < 15 && g.campTier === 0, title: "💡 Reputation", body: "Reach 15 reputation to upgrade your camp to Regional tier. Win more fights to raise it." },
-  { id: "first_injury", trigger: (g) => g.roster?.some(f => f.injury), title: "💡 Injuries", body: "Fighters heal automatically. Upgrade Medical Room to speed recovery and reduce future injury risk." },
+  { id: "first_injury", trigger: (g) => g.roster?.some(f => f.injury), title: "💡 Injuries", body: "Fighters heal as weeks pass. The Medical Room reduces injury risk and physio costs; it does not shorten recovery. Choose Recovery training to rest." },
   { id: "first_sponsor", trigger: (g) => g.sponsors?.length > 0 && g.sponsors.length === 1, title: "💡 Sponsors", body: "Sponsors provide monthly income. You can have up to 3 active sponsors. Accept offers in your Inbox." },
   { id: "first_overtraining", trigger: (g) => g.roster?.some(f => f.overtraining > 60), title: "💡 Overtraining", body: "A fighter is overtraining. Switch them to Recovery to prevent injuries and burnout." },
   { id: "first_low_morale", trigger: (g) => g.roster?.some(f => f.morale < 30), title: "💡 Low Morale", body: "A fighter has very low morale. This reduces training gains. Winning fights and giving attention raises morale." },
