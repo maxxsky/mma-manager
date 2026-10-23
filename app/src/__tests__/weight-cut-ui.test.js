@@ -1,6 +1,6 @@
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import WeighIn from '../components/fight/WeighIn.jsx'
 import ResultScreen from '../components/fight/ResultScreen.jsx'
 import { useFightPrep } from '../hooks/useFightPrep.js'
@@ -29,17 +29,22 @@ function buttons(node) {
   return React.Children.toArray(node.props?.children).flatMap(buttons)
 }
 const startButton = (p) => buttons(WeighIn(p)).find((b) => b.props.onClick === p.onStart)
+afterEach(() => vi.unstubAllGlobals())
 
 describe('weigh-in integration', () => {
-  it('shows the correct division limit and both penalties from fight prep', () => {
+  it.each([
+    { lang: 'id', staminaLabel: 'batas stamina' },
+    { lang: 'en', staminaLabel: 'stamina cap' },
+  ])('shows the correct division limit and both penalties from fight prep ($lang)', ({ lang, staminaLabel }) => {
+    vi.stubGlobal('localStorage', { getItem: () => lang })
     const p = props()
     expect(p.cutInfo.staminaCap).toBe(90)
     expect(p.oppCutInfo.staminaCap).toBe(95)
     expect(prep({ nutritionist: { skill: 10 } }).cutInfo.staminaCap).toBe(94)
     const html = renderToStaticMarkup(React.createElement(WeighIn, p))
     expect(html).toContain('→ 155 lbs')
-    expect(html).toContain('−10% stamina cap')
-    expect(html).toContain('−5% stamina cap')
+    expect(html).toContain(`−10% ${staminaLabel}`)
+    expect(html).toContain(`−5% ${staminaLabel}`)
   })
 
   it('reuses a booked weigh-in roll across remounts without consuming fight RNG', () => {
