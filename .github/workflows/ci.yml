@@ -48,3 +48,14 @@ jobs:
       # Ten simulated years: inbox, save size, log, world roster.
       - name: World balance harness
         run: npm run balance
+
+      - name: Build app
+        run: npm run build -w app
+
+      - uses: browser-actions/setup-chrome@v1
+        id: chrome
+
+      - name: Browser smoke test
+        run: npm run smoke -- 4
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}

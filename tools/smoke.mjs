@@ -11,6 +11,7 @@
 
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import puppeteer from "puppeteer-core";
 
 const WEEKS = Number(process.argv[2] || 30);
@@ -19,6 +20,8 @@ const APP_URL = `http://localhost:${PORT}`;
 
 const CHROME_CANDIDATES = [
   process.env.CHROME_PATH,
+  "C:/Program Files/Google/Chrome/Application/chrome.exe",
+  "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
   "/opt/google/chrome/chrome",
   "/usr/bin/chromium",
   "/usr/bin/chromium-browser",
@@ -176,10 +179,12 @@ try {
   console.log(`Chrome:  ${chromePath}`);
   console.log(`Weeks:   ${WEEKS}`);
 
-  server = spawn("npx", ["vite", "preview", "--port", String(PORT), "--strictPort"], {
-    cwd: new URL("../app/", import.meta.url).pathname,
+  server = spawn(process.execPath, [fileURLToPath(new URL("../node_modules/vite/bin/vite.js", import.meta.url)), "preview", "--port", String(PORT), "--strictPort"], {
+    cwd: fileURLToPath(new URL("../app/", import.meta.url)),
     stdio: "ignore",
+    windowsHide: true,
   });
+  server.on("error", (error) => note("server", "startup", error.message));
   await waitForServer(APP_URL);
   console.log(`Server:  ${APP_URL}\n`);
 

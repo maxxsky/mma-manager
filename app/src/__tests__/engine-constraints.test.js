@@ -1,8 +1,7 @@
 // Engine constraints & invariants — enforcement tests
 // These run as part of CI to catch regressions against rules in CONSTRAINTS.md
 import { describe, it, expect } from "vitest";
-import { readFileSync, existsSync } from "fs";
-import { execSync } from "child_process";
+import { readFileSync, readdirSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -10,12 +9,12 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ENGINE_SRC = join(__dirname, "..", "..", "..", "packages", "engine", "src");
 
 // Collect all .js files recursively from engine/src, excluding node_modules
-function getEngineFiles() {
-  const result = execSync(
-    `find "${ENGINE_SRC}" -name '*.js' -not -path '*/node_modules/*' -not -path '*/dist/*'`,
-    { encoding: "utf-8" }
-  );
-  return result.trim().split("\n").filter(Boolean);
+function getEngineFiles(dir = ENGINE_SRC) {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    if (["node_modules", "dist"].includes(entry.name)) return [];
+    const path = join(dir, entry.name);
+    return entry.isDirectory() ? getEngineFiles(path) : entry.name.endsWith(".js") ? [path] : [];
+  });
 }
 
 describe("Engine Constraints (CONSTRAINTS.md)", () => {
