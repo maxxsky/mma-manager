@@ -29,6 +29,7 @@ it('also prevents a retired fighter coach from colliding with a hired or listed 
   const g = newGame();g.rep=50;
   const f=g.roster[0];f.name='Raka Surya';
   g.coachMarket=[{name:'Coach Surya'}];
+  g.staffMarket={nutritionist:null}; // legacy markets may leave a role empty
   g.coaches.push({id:'other',name:'Coach Surya 2',skill:4,salary:5000});
   setRNG(()=>{throw Error('Naming retirement must not consume RNG')});
   dispatchEvent(g,{}, {toCoach:f.id});

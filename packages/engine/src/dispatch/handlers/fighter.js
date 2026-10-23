@@ -56,7 +56,7 @@ export function registerFighterHandlers(register) {
     if (g.coaches.length < cap2) {
       const specMap = { Boxer: "Striking", "Muay Thai": "Striking", Wrestler: "Wrestling", "BJJ Specialist": "BJJ", "All-Rounder": "Head" };
       const sk = clamp(Math.round(avgSkill(f) / 12), 2, 8);
-      const occupied = [...g.coaches, ...(g.coachMarket || []), ...Object.values(g.staff || {}).filter(Boolean), ...Object.values(g.staffMarket || {}).flat()].map(person => person.name);
+      const occupied = [...g.coaches, ...(g.coachMarket || []), ...Object.values(g.staff || {}), ...Object.values(g.staffMarket || {}).flat()].filter(Boolean).map(person => person.name);
       const name = uniqueName("Coach " + f.name.split(" ").pop(), occupied);
       g.coaches.push({ id: uid(), name, spec: specMap[f.archetype] || "Head", skill: sk, salary: sk * 1800 });
       g.chemistry = clamp(g.chemistry + 5, 0, 100);

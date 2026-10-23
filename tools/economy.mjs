@@ -437,4 +437,3 @@ if (process.argv.includes("--check")) {
   console.log("Economy bands:", checks);
   if (Object.values(checks).some(ok => !ok)) process.exitCode = 1;
 }
-
