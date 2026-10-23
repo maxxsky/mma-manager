@@ -2,6 +2,7 @@
 // Returns array of newly unlocked achievements
 
 import { ACHIEVEMENTS } from "./data.js";
+import { getPrestige } from "./prestige.js";
 
 export const isKnockout = how => how === "KO/TKO" || how === "Doctor Stoppage";
 
@@ -38,8 +39,9 @@ export function checkAchievements(g, context = {}) {
   if (won && context.fightResult.titleWon) add("first_title");
   if (totalWins >= 5) add("five_wins");
   if (totalWins >= 10) add("ten_wins");
-  if (g.legacy >= 1000) add("legacy_1k");
-  if (g.legacy >= 5000) add("legacy_5k");
+  // Keep the saved IDs so earned badges survive the consolidation.
+  if (getPrestige(g) >= 12) add("legacy_1k");
+  if (getPrestige(g) >= 55) add("legacy_5k");
   if (g.cash >= 100000) add("cash_100k");
   if (g.cash >= 1000000) add("cash_1m");
   if (g.campTier >= 3) add("tier_3");

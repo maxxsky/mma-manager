@@ -41,6 +41,7 @@ import Dynasty from "./ui/Dynasty.jsx";
 import { rememberTab, getLastTab } from "./ui/ui-utils.js";
 import { saveGame } from "./services/saveService.js";
 import { applyFightCompletion } from "./services/fightCompletion.js";
+import { getPrestige } from "@ironfist/engine/prestige.js";
 
 // ── MAIN APP ──
 
@@ -143,7 +144,7 @@ export default function App() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, minHeight: "100vh" }}>
         <TopBar
           title={tabLabel}
-          cash={g.cash} rep={g.rep} chem={g.chemistry} legacy={g.legacy || 0}
+          cash={g.cash} rep={g.rep} chem={g.chemistry} prestige={getPrestige(g)}
           week={g.week}
           saveSlot={saveSlot}
           onSaveSlotChange={setSaveSlot}
@@ -160,7 +161,7 @@ export default function App() {
           <style>{`@keyframes tabIn{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}`}</style>
           <div key={tab} style={{ animation: "tabIn .18s ease both" }}>
           {/* Win condition */}
-          <WinConditionBanner legacy={g.legacy} />
+          <WinConditionBanner prestige={getPrestige(g)} />
           {g.over && <GameOverBanner message={g.over} onRestart={() => startNew(newGame())} />}
 
           {/* Tab content */}

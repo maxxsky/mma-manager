@@ -23,7 +23,9 @@ export default function Dynasty({ g, dispatch }) {
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      {/* Camp Identity */}
+      <details>
+        <summary style={{ cursor: "pointer", color: T.txt2, marginBottom: 10 }}>{t("DYN.identity")} · {t("DYN.stat.peakLegacy")}</summary>
+      {/* Historical flavor, not a separate camp progression track. */}
       <Panel>
         <Eyebrow color={T.gold}>{t("DYN.identity")}</Eyebrow>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
@@ -41,6 +43,9 @@ export default function Dynasty({ g, dispatch }) {
           </div>
         )}
       </Panel>
+
+      <div style={{ color: T.txt3, fontSize: 12 }}>{Math.round(dyn.peakLegacy || 0).toLocaleString()} pts · {t("PRES.src.legacy")}</div>
+      </details>
 
       {/* Camp Prestige — the long arc. Everything the camp has ever done feeds
           the calibre of talent that walks through the door. Shown with its
@@ -125,7 +130,6 @@ export default function Dynasty({ g, dispatch }) {
             [t("DYN.stat.totalKOs"), dyn.totalKOs],
             [t("DYN.stat.totalSubs"), dyn.totalSubs],
             [t("DYN.stat.peakRep"), dyn.peakRep],
-            [t("DYN.stat.peakLegacy"), `${Math.round(dyn.peakLegacy || 0).toLocaleString()} pts`],
             [t("DYN.stat.hallOfFamers"), dyn.hallOfFamers?.length || 0],
           ].map(([label, value]) => (
             <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.line}33` }}>

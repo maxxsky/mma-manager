@@ -45,13 +45,12 @@ const Chip = ({ label, val, color, flashOnChange, rawValue }) => {
   );
 };
 
-export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
+export default function TopBar({ title, crumb, cash, rep, chem, prestige, week,
   saveSlot, onSaveSlotChange, slotInfo, lang, onLangChange, onNewGame, version, extraRight, dispatch, onToggleMenu }) {
   const year = Math.floor((week || 1) / 48) + 1;
   const month = Math.floor(((week || 1) % 48) / 4) + 1;
   const wk = ((week || 1) % 4) + 1;
   const cashVal = cash != null && !isNaN(cash) ? `$${(cash / 1000).toFixed(1)}K` : "—";
-  const legacyVal = legacy != null ? `★${(legacy / 1000).toFixed(1)}K` : "—";
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -93,7 +92,7 @@ export default function TopBar({ title, crumb, cash, rep, chem, legacy, week,
         <Chip label="Bank" val={cashVal} color={T.txt} flashOnChange={true} rawValue={cash} />
         {!isMobile && <Chip label="Rep" val={rep != null ? rep : "—"} color={T.gold} />}
         {!isMobile && <Chip label="Chem" val={chem != null ? chem : "—"} color={chem >= 60 ? T.pos : T.warn} />}
-        {!isMobile && <Chip label="Legacy" val={legacyVal} color={T.steel} />}
+        {!isMobile && <Chip label={t("PRES.title")} val={prestige != null ? `${prestige}/100` : "—"} color={T.steel} />}
         {/* Utility row — save slot, lang, extras (kept compact) */}
         {(onSaveSlotChange || onLangChange || extraRight) && (
           <>
