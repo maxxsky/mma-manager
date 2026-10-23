@@ -39,9 +39,11 @@ export function createCoaches() {
   const freeCoach = genCoach(8); // rep awal = 8 (dari createCamp)
   freeCoach.salary = Math.max(500, freeCoach.salary);
   freeCoach.freeUntil = 4;
+  const coachMarket = [];
+  for (let i = 0; i < 3; i++) coachMarket.push(genCoach(8, ["Coach Basic", ...coachMarket.map(c => c.name)]));
   return {
     coaches: [{ ...freeCoach, name: "Coach Basic", skill: 3, spec: "Head" }],
-    coachMarket: [genCoach(8), genCoach(8), genCoach(8)],
+    coachMarket,
   };
 }
 

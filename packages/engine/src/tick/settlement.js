@@ -223,14 +223,22 @@ export function tickSettlement(g) {
   const marketSize = clamp(2 + Math.floor(g.rep / 15), 2, 7);
   const market = [];
   const alumniBonus = g.investments?.alumniNetwork ? 15 : 0;
-  for (let i = 0; i < marketSize; i++) market.push(genCoach((g.rep || 0) + alumniBonus));
+  const occupiedNames = [...g.coaches, ...Object.values(g.staff || {}).filter(Boolean)].map(c => c.name);
+  for (let i = 0; i < marketSize; i++) {
+    const coach = genCoach((g.rep || 0) + alumniBonus, occupiedNames);
+    market.push(coach); occupiedNames.push(coach.name);
+  }
   g.coachMarket = market;
 
   // ── Staff market — refresh tiap settlement, mirror coachMarket ──
   if (!g.staffMarket) g.staffMarket = { cutman: [], nutritionist: [], sportsPsych: [] };
   ["cutman", "nutritionist", "sportsPsych"].forEach((role) => {
     const size = clamp(1 + Math.floor((g.rep || 0) / 20), 1, 3);
-    g.staffMarket[role] = Array.from({ length: size }, () => genStaffCandidate(role, g.rep));
+    g.staffMarket[role] = Array.from({ length: size }, () => {
+      const candidate = genStaffCandidate(role, g.rep, occupiedNames);
+      occupiedNames.push(candidate.name);
+      return candidate;
+    });
   });
 
   // Coach skill growth: +0.5/year for coaches with active fighters

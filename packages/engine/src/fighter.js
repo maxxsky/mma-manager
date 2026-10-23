@@ -5,6 +5,7 @@ import {
   POTENTIAL_TIERS,
 } from "./data.js";
 import { getRegionFlavor, weightedPick, pickRegion, pickArchetypeForRegion } from "./identity.js";
+import { pickUniqueName } from "./names.js";
 
 // ---------- generators ----------
 export function genAttrs(level) {
@@ -140,13 +141,13 @@ export function defaultContract() {
   };
 }
 
-export function genCoach(rep) {
+export function genCoach(rep, occupied = []) {
   // Gate skill market sesuai rep camp — camp baru (rep rendah) gak bakal ketemu
   // coach mahal yang gak sanggup dia bayar. rep=null/undefined = skill penuh (dipakai rival camp & shadow AI).
   const maxSkill = rep != null ? clamp(3 + Math.floor(rep / 10), 3, 9) : 9;
   const skill = RI(2, maxSkill);
   return {
-    id: uid(), name: "Coach " + pick(COACH_NAMES),
+    id: uid(), name: pickUniqueName(COACH_NAMES.map(name => "Coach " + name), occupied),
     spec: pick(COACH_SPECS), skill, salary: skill * RI(1600, 2400),
     personality: pick(Object.keys(COACH_PERSONALITIES)),
   };
