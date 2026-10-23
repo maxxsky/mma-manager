@@ -3,7 +3,7 @@
 - Dibuat: 22 Oktober 2026, dari [Review IronFist - 2026-10-21.md](Review%20IronFist%20-%202026-10-21.md).
 - Kode dalam kurung (misalnya `FT1`) merujuk ke temuan di file review.
 - Ukuran adalah perkiraan kasar dari membaca kode: **K** = kecil (jam), **S** = sedang (1–2 hari), **B** = besar (butuh keputusan desain atau beberapa hari).
-- **Status terbaru 22 Oktober 2026:** P0 #1–#7, seluruh P1 #8–#25, seluruh P2 #26–#37, P3 #40–#45 (kecuali #39), P4 #47, dan P5 #53–#54 selesai (45 dari 63 item; #33 sebagian: pinjaman ditunda ke P3 sesuai saran). #19–#37, #40–#45, #47, dan #53–#54 dikerjakan di branch `claude/quirky-mccarthy-7jogso`. Sebelas commit P1 telah digabung ke `master` lewat merge `f672cbc`; source terbaru ada di worktree `mma-manager-fight-night`. Validasi lokal hasil merge lulus; status GitHub CI dilihat pada commit terbaru setelah push. Rincian ada di log progres.
+- **Status terbaru 23 Oktober 2026:** seluruh item single-player #1–#54 dan #59–#63 sudah ditangani: **59 dari 63 item** melalui perbaikan, implementasi atau keputusan pemangkasan. #33 diputuskan tanpa pinjaman; penjualan aset nyata tetap ada. **Hanya backend #55–#58 ditunda atas instruksi user.** Basis GitHub adalah master 1ed3f70; perubahan sesi ini sudah di-commit lokal dan belum di-push. Validasi: 862 tes app, build, 137.000 fight, harness dunia, band ekonomi 3×20 tahun dan smoke browser+HP lulus. Tes server: 3 config lulus; 25 API tidak berjalan karena PostgreSQL lokal ECONNREFUSED. Detail keputusan dan batas ada di README/GDD serta log di bawah.
 
 ## Prinsip urutan
 
@@ -63,7 +63,7 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 | 30 | Staf Cutman dan Nutritionist | CA2 | Cutman mengurangi cut; Nutritionist digabung ke weight cut (setelah #6). **Selesai** |
 | 31 | Janji ke fighter | FI5 | Catat janji dan beri akibat kalau diingkari. **Selesai** |
 | 32 | Event chemistry | FI8 | Opsi gratis diberi kelemahan, atau opsi berbiaya diberi hasil lebih besar. **Selesai** |
-| 33 | Pinjaman dan penjualan darurat | EK4 | Pinjaman baru perlu kalau ekonomi sudah ketat (setelah P3). Penjualan darurat jual aset nyata. **Penjualan darurat selesai; pinjaman masih ditunda** |
+| 33 | Pinjaman dan penjualan darurat | EK4 | **Selesai secara lingkup:** penjualan aset nyata; pinjaman diputuskan tidak ditambahkan (#39). |
 | 34 | Mentor | FI6 | Perbesar dan tampilkan, atau buang. **Selesai: dibuang** |
 | 35 | Kepribadian promotor | DU8 | Beri efek nyata (purse, tipe lawan) atau buang. **Selesai: diberi efek purse** |
 | 36 | Trait Injury Prone | FI4 | Bisa didapat, atau hapus pengecekannya. **Selesai: bisa didapat dari cedera mana pun** |
@@ -73,8 +73,8 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 
 | # | Perbaikan | Temuan |
 |---|---|---|
-| 38 | Gabungkan angka status camp (Reputasi, Prestise, Legacy, Tier, Identitas Dinasti) jadi 1–2 | EK1 |
-| 39 | Ekonomi late game: kurangi banjir uang dan reputasi; prestise sekitar 50 di tahun ke-10. Ukur ulang setelah bug sabuk (#8) dan sponsor (#12) diperbaiki. **Dianalisis, ditahan — butuh target dan keputusan (lihat log)** | EK1 |
+| 38 | Gabungkan angka status camp (Reputasi, Prestise, Legacy, Tier, Identitas Dinasti) jadi 1–2 **Selesai.** | EK1 |
+| 39 | Ekonomi late game: purse mengikuti ranking, reputasi mengikuti tier, pendapatan popularitas melambat dan bot mengatur biaya. **Selesai**; target/bukti di docs/balance/P3_39_ECONOMY.md. | EK1 |
 | 40 | Grade scout tidak otomatis S hanya karena reputasi tinggi. **Selesai** | CA1 |
 | 41 | Intensitas Hard: gain lebih tinggi atau risiko lebih rendah sampai layak dipilih. **Selesai** | FI1 |
 | 42 | Kurangi atau tampilkan pengali training yang tidak terlihat. **Selesai: dikurangi (#28, #34) dan ditampilkan** | FI1 |
@@ -86,13 +86,13 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 
 | # | Perbaikan | Temuan | Ukuran |
 |---|---|---|---|
-| 46 | Putuskan bahasa game dulu (GDD "Hal yang belum diputuskan" poin 1), lalu terjemahkan sekitar 400 teks pesan engine, komentar fight, Dunia, Pencapaian, onboarding | UI1, FN4, PR3 | B |
+| 46 | Putuskan bahasa game dulu (GDD "Hal yang belum diputuskan" poin 1), lalu terjemahkan sekitar 400 teks pesan engine, komentar fight, Dunia, Pencapaian, onboarding **Selesai.** | UI1, FN4, PR3 | B |
 | 47 | Label bocor dan aksesibilitas: "UI.DIVISION", filter "Kelas Berat", 12 aria-label, `lang` di `app/index.html`. **Selesai** | UI2 | K |
-| 48 | Label salah: judul Fasilitas, "Biaya Penempatan", Hot Streak, "Warisan Tertinggi $0", "Coach Basic ()", teks layar Promotor | UI3, DU8 | K |
-| 49 | Tips onboarding: Medical Room, sponsor, nama tombol "Maju Minggu" | UI4 | K |
-| 50 | Tombol Maju Minggu terlihat langsung di HP | UI5 | K |
-| 51 | Daftar nama staf/coach lebih banyak, cegah nama kembar | UI6 | K |
-| 52 | Kontras warna merah di panel terang | UI7 | K |
+| 48 | Label salah: judul Fasilitas, "Biaya Penempatan", Hot Streak, "Warisan Tertinggi $0", "Coach Basic ()", teks layar Promotor **Selesai.** | UI3, DU8 | K |
+| 49 | Tips onboarding: Medical Room, sponsor, nama tombol "Maju Minggu" **Selesai.** | UI4 | K |
+| 50 | Tombol Maju Minggu terlihat langsung di HP **Selesai.** | UI5 | K |
+| 51 | Daftar nama staf/coach lebih banyak, cegah nama kembar **Selesai.** | UI6 | K |
+| 52 | Kontras warna merah di panel terang **Selesai.** | UI7 | K |
 
 ## P5 — Backend (ditahan, kecuali keamanan)
 
@@ -100,20 +100,20 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 |---|---|---|---|
 | 53 | Hapus secret JWT cadangan; server menolak start tanpa `JWT_SECRET` | BE4 | Sekarang (kecil, keamanan) |
 | 54 | Batasi pembuatan fighter; validasi password dan email | BE5 | Sekarang (kecil) |
-| 55 | `resolveFight.js` memakai plan/corner sisi B | BE1 | Setelah P0 #2 |
-| 56 | Cek status "pending" di dalam transaksi, cegah resolve dobel | BE2 | Saat backend dilanjutkan |
-| 57 | Booking PvP butuh persetujuan lawan | BE3 | Saat backend dilanjutkan |
-| 58 | Skema DB: kolom yang hilang, key `record`, index, `camps.user_id` unik, tabel versi migrasi | BE6, SV3 | Saat backend dilanjutkan |
+| 55 | `resolveFight.js` memakai plan/corner sisi B **Ditunda sesuai user.** | BE1 | Setelah P0 #2 |
+| 56 | Cek status "pending" di dalam transaksi, cegah resolve dobel **Ditunda sesuai user.** | BE2 | Saat backend dilanjutkan |
+| 57 | Booking PvP butuh persetujuan lawan **Ditunda sesuai user.** | BE3 | Saat backend dilanjutkan |
+| 58 | Skema DB: kolom yang hilang, key `record`, index, `camps.user_id` unik, tabel versi migrasi **Ditunda sesuai user.** | BE6, SV3 | Saat backend dilanjutkan |
 
 ## P6 — Kebersihan proyek
 
 | # | Perbaikan | Temuan |
 |---|---|---|
-| 59 | Test untuk FightNight, useGameState, NegotiateModal; smoke test di CI | PR1 |
-| 60 | Perbarui README | PR2 |
-| 61 | Perbarui tabel status GDD: ✅ hanya untuk yang berfungsi | PR3 |
-| 62 | Arsipkan dokumen lama; pertahankan `CONSTRAINTS.md`, riwayat simulasi balance, spesifikasi championship | PR4 |
-| 63 | Pangkas fitur sesuai tabel "Fitur yang sebaiknya dipangkas" di review, setelah dimainkan beberapa jam | — |
+| 59 | Test untuk FightNight, useGameState, NegotiateModal; smoke test di CI **Selesai.** | PR1 |
+| 60 | Perbarui README **Selesai.** | PR2 |
+| 61 | Perbarui tabel status GDD: ✅ hanya untuk yang berfungsi **Selesai.** | PR3 |
+| 62 | Arsipkan dokumen lama; pertahankan `CONSTRAINTS.md`, riwayat simulasi balance, spesifikasi championship **Selesai.** | PR4 |
+| 63 | Pangkas fitur sesuai tabel "Fitur yang sebaiknya dipangkas" di review, setelah dimainkan beberapa jam **Selesai.** | — |
 
 ## Log progres
 
@@ -539,14 +539,14 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
   - `app/index.html` memakai `lang="id"` (bahasa bawaan game). `lang` di elemen `<html>` ikut berubah saat bahasa diganti.
   - Validasi: test baru `ui-labels.test.js` (3 test). `npm test` root: **846 test app + 28 test server lulus**. Build dan smoke test (11 tab) lulus.
 
-## Urutan kerja yang disarankan
+## Status kerja saat ini
 
-1. P0 #1–#7 dan P1 #8–#18 selesai; seluruh commit sudah digabung ke master melalui `f672cbc`. P1 #19–#25 selesai di branch `claude/quirky-mccarthy-7jogso` (#21: rival camp dibuang). Seluruh P1 selesai.
-2. P1 #19–#25 sudah di `master` (`927e0da`). P5 #53–#54 juga sudah di `master`. Atas instruksi user, P2 dikerjakan tanpa menunggu playtest, mengikuti kolom saran; tiap item langsung di-merge ke `master`.
-3. Mainkan beberapa jam setelah bug state utama selesai; tandai temuan yang sudah terbantu dan yang masih bisa direproduksi.
-4. Putuskan P2 dan daftar pangkas.
-5. P3, lalu P4, lalu P6.
-6. Backend (#55–#58) setelah Fase 1 terasa proper dan ada playtester.
+1. Seluruh item single-player #1–#54 dan #59–#63 ditangani. Keputusan yang memang memangkas fitur dijelaskan di docs/SINGLE_PLAYER_SCOPE.md.
+2. Backend #55–#58 tetap ditunda; tidak mulai tanpa instruksi baru.
+3. Lakukan playtest manusia untuk pacing dan kebosanan. Itu tidak digantikan oleh lulus tes/simulasi.
+4. Seluruh perubahan sesi ini masih lokal; belum push, belum ada CI GitHub untuk commit lokal atau deploy VPS.
+
+## Log progres lanjutan — 23 Oktober 2026
 
 - **23 Oktober 2026: P6 #59 selesai** di branch test/browser-smoke-ci. FightNight, useGameState, dan NegotiateModal sudah punya tes regresi yang menjalankan jalur nyata. CI kini build dan menjalankan Chrome smoke (11 tab, advance minggu, minimal satu fight sampai hasil). Peluncur Vite dan pemeriksaan constraint memakai Node agar lintas platform. Validasi: 846 tes app lulus, build lulus, smoke Windows lulus tanpa error console/uncaught exception. Backend tidak diubah.
 
@@ -581,3 +581,5 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 - **23 Oktober 2026: review #50/#59 — ringkasan mingguan di HP diperbaiki.** Overlay dipindahkan keluar ancestor beranimasi/transform ke tingkat App agar fixed mengacu viewport. Dialog diberi role/label; browser membuktikan posisi y=305,9 dan tinggi=232,2 di viewport 390×844. CTA 320/390/767px, advance, kunci modal dan desktop-hidden lulus. Smoke CI sekarang juga memeriksa geometri dialog dan tombol HP dalam browser context baru; smoke 11 tab+fight+mobile lulus.
 
 - **23 Oktober 2026: review #46 — copy hasil pemeriksaan visual dilengkapi.** Langkah Awal/Selesai/Aksi Cepat, label ringkasan, bank/staf/biaya dan log perkembangan delapan atribut ditambahkan ke katalog. Angka dan nama tetap disisipkan apa adanya. Build dan browser smoke akhir lulus.
+
+- **23 Oktober 2026: validasi penutup.** Pemeriksaan arsip membuktikan 48 blob Git sama dengan versi GitHub asal, selain verifikasi SHA-256 saat pemindahan. 862 tes app lulus (78 file); regresi akhir pasar staf kosong dan bahasa 8 tes lulus. Build terakhir sekitar 598 KB (186 KB gzip; warning >500 KB tetap). Harness fight 137.000 laga dan dunia lulus; ekonomi --check seluruh enam band lulus, 0/3 bangkrut. Smoke menyelesaikan fight dan memeriksa dialog HP. Backend source tidak berubah; PostgreSQL lokal tidak tersedia sehingga integrasi server belum dapat diklaim lulus.

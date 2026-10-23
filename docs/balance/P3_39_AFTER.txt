@@ -1,5 +1,5 @@
 Economy harness — 960 weeks (20y) x 3 seeds
-Scripted player: accepts every fight, trains weakest attribute, upgrades, hires.
+Scripted player: AI corner, contract renewals, budgeted payroll/intake/upgrades, normal injury rest.
 
 seed 500
   year        cash  rep  roster  avgSkill  identity  tier  wins  champs  prestige
@@ -68,3 +68,11 @@ Cash    year 3 avg 275.495  ->  final avg 6.458.419
 Identity  year 3 avg 26.6  ->  final avg 29.4   (best-minus-worst attribute within a fighter; falling = archetypes flattening)
 Ended early: 0/3 seeds
 ========================================================================
+Economy bands: {
+  survival: true,
+  medianCash: true,
+  peakCash: true,
+  earlyReputation: true,
+  longProgress: true,
+  finiteData: true
+}
