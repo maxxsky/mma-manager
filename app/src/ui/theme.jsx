@@ -15,7 +15,7 @@ export const T = {
   line: "#2a323f", line2: "#384556",
   txt: "#eef2f7", txt2: "#9aa7b8", txt3: "#8996a5",
   ember: "#f5623c", steel: "#3ea6ff", gold: "#ffd15c",
-  pos: "#35c98a", warn: "#f5b942", neg: "#ef4d5a",
+  pos: "#35c98a", warn: "#f5b942", neg: "#ff7480",
   disp: "'Barlow Condensed','Arial Narrow',sans-serif",
   body: "'Barlow','Segoe UI',system-ui,sans-serif",
   mono: "'JetBrains Mono',ui-monospace,'SF Mono',monospace",

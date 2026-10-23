@@ -557,3 +557,5 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 - **23 Oktober 2026: P4 #50 selesai** di branch fix/mobile-week-action. CTA Maju Minggu tetap terlihat di bawah viewport HP, dengan safe-area dan ruang bawah konten. Dinonaktifkan saat modal/ringkasan/menu terbuka atau game over. Build dan Chrome 320/390/767px lulus; klik memajukan minggu, ringkasan mencegah klik ulang, desktop menyembunyikan CTA duplikat.
 
 - **23 Oktober 2026: P4 #51 selesai** di branch fix/unique-staff-names. Pool coach/staf masing-masing 30 nama; generator mengambil satu roll seeded lalu mencari nama kosong, fallback suffix bila pool habis. Pasar awal/bulanan mengecualikan coach/staf aktif dan kandidat lain. Nama save lama dipertahankan. Regresi 50 seed × 3 bulan serta RNG konstan/pool habis lulus; build dan harness dunia lulus.
+
+- **23 Oktober 2026: P4 #52 selesai** di branch fix/negative-text-contrast. Token negatif menjadi #ff7480 agar teks kecil lolos rasio 4,5:1 di bg, surface, raised, dan raisedHi; teks gelap pada tombol merah juga lolos. Tes kontras matematis dan build lulus.
