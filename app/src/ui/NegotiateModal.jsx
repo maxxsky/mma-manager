@@ -99,7 +99,7 @@ export default function NegotiateModal({ fighter, mode, cash, rosterCap, rosterS
     localizeTree(<div style={wrap} onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460, width: "100%", background: `linear-gradient(160deg, ${T.raised}, ${T.surface})`, border: `1px solid ${T.gold}`, padding: 16, maxHeight: "90vh", overflowY: "auto", ...{ borderRadius: T.r } }}>
         <H>{mode === "extend" ? t("NEGO.form.headerExtend") : t("NEGO.form.headerSign")}</H>
-        <div style={{ fontFamily: T.disp, color: T.txt, fontSize: 18, letterSpacing: 1, textTransform: "uppercase" }}>{fighter?.name}</div>
+        <div style={{ fontFamily: T.disp, color: T.txt, fontSize: 18, letterSpacing: 1, textTransform: "uppercase" }}><span translate="no">{fighter?.name}</span></div>
         <div style={{ color: T.txt3, fontSize: 11, marginBottom: 12 }}>
           {ag.label}{fighter?.agent !== "none" && t("NEGO.form.agentInfoCut").replace("{0}", Math.round(ag.cutFloor * 100))}
           {fighter?.agent === "Power" && t("NEGO.form.agentInfoAgg")}

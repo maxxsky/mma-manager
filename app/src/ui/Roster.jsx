@@ -137,7 +137,7 @@ export default function Roster({ g, setTab, dispatch }) {
               <Mono name={f.name} color={ac} size={34} region={f.region} titleTier={isChamp || f.titles?.length > 0 ? (f.titles?.includes("Major World Champion") ? "Major" : "National") : null} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
-                  <span style={{ fontFamily: T.body, fontSize: 14, fontWeight: 600, color: T.txt }}>{f.name}</span>
+                  <span style={{ fontFamily: T.body, fontSize: 14, fontWeight: 600, color: T.txt }}><span translate="no">{f.name}</span></span>
                   {isChamp ? <Tag color={T.gold} solid>{t("UI.champion")}</Tag>
                     : f.titles?.length > 0 ? <Tag color={T.gold}>🏆</Tag>
                     : r ? <Tag color={T.gold}>#{r}</Tag> : null}
@@ -220,7 +220,7 @@ export default function Roster({ g, setTab, dispatch }) {
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontFamily: T.body, fontSize: 14, fontWeight: 600, color: T.txt,
                   display: "flex", alignItems: "center", gap: 6 }}>
-                  {f.name}
+                  <span translate="no">{f.name}</span>
                   {isChamp ? <Tag color={T.gold} solid>{t("UI.champion")}</Tag>
                     : f.titles?.length > 0 ? <Tag color={T.gold}>🏆</Tag>
                     : r ? <Tag color={T.gold}>#{r}</Tag> : null}

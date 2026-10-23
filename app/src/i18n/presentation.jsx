@@ -7,6 +7,7 @@ export function localizeTree(node) {
   if (typeof node === "string") return localizeText(node);
   if (Array.isArray(node)) return node.map(localizeTree);
   if (!React.isValidElement(node)) return node;
+  if (node.props.translate === "no") return node;
   const props = {};
   for (const key of ["label", "title", "detail", "hint", "placeholder", "aria-label"]) {
     if (typeof node.props[key] === "string") props[key] = localizeText(node.props[key]);

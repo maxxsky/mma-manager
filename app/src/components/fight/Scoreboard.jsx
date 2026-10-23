@@ -13,7 +13,7 @@ export default function Scoreboard({ fighter, opp, state, rnd, totalRounds, tota
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "baseline", gap: 8, marginBottom: 5 }}>
-            <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 16, textTransform: "uppercase", color: T.txt }}>{fighter.name}</span>
+            <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 16, textTransform: "uppercase", color: T.txt }}><span translate="no">{fighter.name}</span></span>
             <span style={{ fontFamily: T.mono, fontSize: 11, color: CORNER_RED }}>{t("SCORE.hp")} {Math.round(state.hpA ?? 100)}</span>
           </div>
           <div style={{ height: 8, background: T.bg, borderRadius: 4, overflow: "hidden", transform: "scaleX(-1)" }}>
@@ -30,7 +30,7 @@ export default function Scoreboard({ fighter, opp, state, rnd, totalRounds, tota
         <div style={{ flex: 1 }}>
           <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline", gap: 8, marginBottom: 5 }}>
             <span style={{ fontFamily: T.mono, fontSize: 11, color: CORNER_BLUE }}>{t("SCORE.hp")} {Math.round(state.hpB ?? 100)}</span>
-            <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 16, textTransform: "uppercase", color: T.txt }}>{opp.name}</span>
+            <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 16, textTransform: "uppercase", color: T.txt }}><span translate="no">{opp.name}</span></span>
           </div>
           <div style={{ height: 8, background: T.bg, borderRadius: 4, overflow: "hidden" }}>
             <div style={{ height: "100%", width: `${state.hpB ?? 100}%`, background: CORNER_BLUE, borderRadius: 4 }} />

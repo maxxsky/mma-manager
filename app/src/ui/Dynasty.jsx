@@ -177,7 +177,7 @@ export default function Dynasty({ g, dispatch }) {
                   background: T.bg, borderRadius: T.r,
                   border: `1px solid ${(a.titles?.length || 0) > 0 ? `${T.gold}33` : T.line}` }}>
                   <div>
-                    <div style={{ fontFamily: T.disp, fontSize: 13, fontWeight: 700, color: T.txt }}>{a.name}</div>
+                    <div style={{ fontFamily: T.disp, fontSize: 13, fontWeight: 700, color: T.txt }}><span translate="no">{a.name}</span></div>
                     <div style={{ fontFamily: T.body, fontSize: 10.5, color: T.txt3 }}>
                       {a.archetype} · {a.weightClass}
                     </div>
@@ -220,7 +220,7 @@ export default function Dynasty({ g, dispatch }) {
               localizeTree(<div key={h.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: `${T.gold}08`, borderRadius: T.r, border: `1px solid ${T.gold}33` }}>
                 <span style={{ fontSize: 24 }}>🏆</span>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: T.disp, fontSize: 16, fontWeight: 700, color: T.gold, textTransform: "uppercase", letterSpacing: 1 }}>{h.name}</div>
+                  <div style={{ fontFamily: T.disp, fontSize: 16, fontWeight: 700, color: T.gold, textTransform: "uppercase", letterSpacing: 1 }}><span translate="no">{h.name}</span></div>
                   <div style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>{h.record} · {t("DYN.titleDefenses").replace("{0}", h.defenses)}</div>
                   {h.highlights.length > 0 && (
                     <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
@@ -292,7 +292,7 @@ export default function Dynasty({ g, dispatch }) {
             return (
               localizeTree(<div key={inv.id} style={{ padding: "10px 12px", background: T.bg, borderRadius: T.r, border: `1px solid ${owned ? T.pos : T.line}`, opacity: locked ? 0.5 : 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                  <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 13, color: T.txt }}>{inv.name}</span>
+                  <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 13, color: T.txt }}><span translate="no">{inv.name}</span></span>
                   <span style={{ fontFamily: T.mono, fontSize: 12, color: owned ? T.pos : T.gold }}>{owned ? "OWNED" : fmt$(inv.cost)}</span>
                 </div>
                 <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3, marginBottom: 6 }}>{inv.desc}</div>

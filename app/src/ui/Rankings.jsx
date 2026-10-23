@@ -167,7 +167,7 @@ export default function Rankings({ g, t }) {
                 color: active ? T.ember : has ? T.txt : T.txt3,
               }}
             >
-              {w.name}
+              <span translate="no">{w.name}</span>
               {has && <span style={{ color: active ? T.ember : T.steel, marginLeft: 5 }}>●</span>}
             </button>)
           );
@@ -208,7 +208,7 @@ export default function Rankings({ g, t }) {
                   textTransform: "uppercase",
                 }}
               >
-                👑 {champ.name}
+                👑 <span translate="no">{champ.name}</span>
               </div>
               <div style={{ fontSize: 10, color: T.txt3, marginTop: 1 }}>
                 {selDiv} Champion
@@ -226,7 +226,7 @@ export default function Rankings({ g, t }) {
                 return prom ? (
                   <div style={{ fontSize: 10, color: T.gold, marginTop: 1, display: "flex", alignItems: "center", gap: 4 }}>
                     {prom.color && <span style={{ width: 6, height: 6, borderRadius: "50%", background: prom.color, display: "inline-block" }} />}
-                    {prom.name}
+                    <span translate="no">{prom.name}</span>
                   </div>
                 ) : null;
               })()}
@@ -284,7 +284,7 @@ export default function Rankings({ g, t }) {
               localizeTree(<div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: i < divRetired.length - 1 ? `1px solid ${T.line}22` : "none" }}>
                 <span style={{ fontFamily: T.mono, fontSize: 10, color: T.txt3, minWidth: 32 }}>W{r.week}</span>
                 <span style={{ fontSize: 13 }}>🎗️</span>
-                <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt2 }}>{r.name}</span>
+                <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt2 }}><span translate="no">{r.name}</span></span>
               </div>)
             ))}
           </Panel>)
@@ -317,7 +317,7 @@ export default function Rankings({ g, t }) {
                   letterSpacing: .6, textTransform: "uppercase", color: f.player ? T.gold : T.txt,
                   flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 }}>
-                  {f.name}{f.player ? " ★" : ""}
+                  <span translate="no">{f.name}</span>{f.player ? " ★" : ""}
                 </span>
                 {f.titles?.length > 0 && <span style={{ fontSize: 13 }}>👑</span>}
                 <span style={{ fontFamily: T.mono, fontSize: 16, fontWeight: 700, color: heat(f.ovr), flexShrink: 0 }}>
@@ -531,7 +531,7 @@ export default function Rankings({ g, t }) {
                     textOverflow: "ellipsis",
                   }}
                 >
-                  {f.name}
+                  <span translate="no">{f.name}</span>
                   {f.player ? " ★" : ""}
                 </span>
                 {f.titles?.length > 0 && (
@@ -645,7 +645,7 @@ export default function Rankings({ g, t }) {
               }}
             >
               <span>
-                <b style={{ color: T.txt }}>{f.name}</b>
+                <b style={{ color: T.txt }}><span translate="no">{f.name}</span></b>
                 <span style={{ marginLeft: 6, fontSize: 10 }}>
                   {f.archetype}
                 </span>
@@ -676,7 +676,7 @@ export default function Rankings({ g, t }) {
               }}
             >
               <span>
-                <b style={{ color: T.txt }}>{f.name}</b>
+                <b style={{ color: T.txt }}><span translate="no">{f.name}</span></b>
                 <span style={{ marginLeft: 6, fontSize: 10 }}>
                   {f.archetype} · {tierOf(f)}
                 </span>
@@ -733,7 +733,7 @@ export default function Rankings({ g, t }) {
                   color: f.player ? T.gold : T.txt,
                 }}
               >
-                {f.name}
+                <span translate="no">{f.name}</span>
                 {f.wc ? ` (${f.wc})` : ""}
                 {f.player ? " ★" : ""}
               </span>

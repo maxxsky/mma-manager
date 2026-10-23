@@ -33,7 +33,7 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: T.body, fontSize: 13.5, fontWeight: 600, color: T.txt,
                 display: "flex", alignItems: "center", gap: 7 }}>
-                {c.name} <Tag color={T.steel}>{coachSpecLabel(c.spec)}</Tag>
+                <span translate="no">{c.name}</span> <Tag color={T.steel}>{coachSpecLabel(c.spec)}</Tag>
               </div>
               <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>{c.personality}</div>
             </div>
@@ -75,7 +75,7 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
                   <Mono name={c.name} color={COACH_PERSONALITIES[c.personality]?.color || T.steel} size={28} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: T.body, fontSize: 12, fontWeight: 600, color: T.txt }}>
-                      {c.name} <Tag color={T.steel} style={{ fontSize: 9 }}>{coachSpecLabel(c.spec)}</Tag>
+                      <span translate="no">{c.name}</span> <Tag color={T.steel} style={{ fontSize: 9 }}>{coachSpecLabel(c.spec)}</Tag>
                     </div>
                     <div style={{ fontFamily: T.body, fontSize: 10, color: T.txt3 }}>
                       {c.personality} · Skill {c.skill}
@@ -110,7 +110,7 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
           {nextTier ? (
             <div style={{ display: "grid", gap: 6, marginBottom: 4 }}>
               <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>
-                {t("UI.nextTier")}: {nextTier.name}
+                {t("UI.nextTier")}: <span translate="no">{nextTier.name}</span>
               </div>
               <Meter
                 label={`Rep ${Math.round(g.rep)} / ${nextTier.rep}`}
@@ -206,13 +206,13 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
                 <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3, marginBottom: 6 }}>{role.desc}</div>
                 {hired ? (
                   <div style={{ fontFamily: T.mono, fontSize: 12, color: T.pos }}>
-                    {hired.name} — Skill {hired.skill} — ${hired.salary}/bln
+                    <span translate="no">{hired.name}</span> — Skill {hired.skill} — ${hired.salary}/bln
                   </div>
                 ) : market.length > 0 ? (
                   <div style={{ display: "grid", gap: 4 }}>
                     {market.map((cand) => (
                       localizeTree(<div key={cand.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>{cand.name} — Skill {cand.skill} — ${cand.salary}/bln</span>
+                        <span style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2 }}><span translate="no">{cand.name}</span> — Skill {cand.skill} — ${cand.salary}/bln</span>
                         <Btn color={T.gold} small onClick={() => dispatch({ type: "HIRE_STAFF", role: role.id, staffId: cand.id })}>
                           Hire
                         </Btn>

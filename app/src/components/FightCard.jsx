@@ -38,7 +38,7 @@ export default function FightCard({ fighter, g, onProceed }) {
                   {m.titleText ? m.titleText.replace(/^[🏆🌟🥇🌍⚡👑\s]+/, "") : `${m.tier} Fight Night`}
                 </div>
                 <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>
-                  {m.opponent?.name} · {m.opponent?.archetype} · {m.weeks ? `T-${m.weeks}w` : ""}
+                  <span translate="no">{m.opponent?.name}</span> · {m.opponent?.archetype} · {m.weeks ? `T-${m.weeks}w` : ""}
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
@@ -51,14 +51,14 @@ export default function FightCard({ fighter, g, onProceed }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", padding: "20px 20px 8px", gap: 16 }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
                 <Mono name={f.name} color={ca} size={58} region={f.region} titleTier={f.titles?.length > 0 ? (f.titles?.includes("Major World Champion") ? "Major" : "National") : null} />
-                <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 19, textTransform: "uppercase", color: T.txt, marginTop: 8 }}>{f.name}</div>
+                <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 19, textTransform: "uppercase", color: T.txt, marginTop: 8 }}><span translate="no">{f.name}</span></div>
                 <div style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>{f.record?.w ?? 0}-{f.record?.l ?? 0}</div>
                 <Tag color={ca}>{f.archetype}</Tag>
               </div>
               <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 30, color: T.ember, textShadow: `0 0 20px ${T.ember}44` }}>VS</div>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
                 <Mono name={m.opponent?.name} color={cb} size={58} />
-                <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 19, textTransform: "uppercase", color: T.txt, marginTop: 8 }}>{m.opponent?.name}</div>
+                <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 19, textTransform: "uppercase", color: T.txt, marginTop: 8 }}><span translate="no">{m.opponent?.name}</span></div>
                 <div style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>
                   {m.opponent?.record?.w ?? "?"}-{m.opponent?.record?.l ?? "?"}
                   {m.oppRank != null && <span style={{ color: T.gold }}> · #{m.oppRank}</span>}

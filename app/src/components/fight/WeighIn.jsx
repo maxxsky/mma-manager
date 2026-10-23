@@ -23,7 +23,7 @@ export default function WeighIn({ fighter, opp, limit, cutInfo, oppCutInfo, cutP
           </div>
         </div>
         <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt2, marginTop: 8 }}>
-          {opp.name}: {oppCutInfo.label} ({Math.round(oppCutInfo.cutPct * 100)}%) — −{oppCutInfo.pen}% stamina cap.
+          <span translate="no">{opp.name}</span>: {oppCutInfo.label} ({Math.round(oppCutInfo.cutPct * 100)}%) — −{oppCutInfo.pen}% stamina cap.
         </div>
         {weighinIssue === "catchweight" && (
           <div style={{ fontFamily: T.body, fontSize: 12, color: T.warn, marginTop: 10 }}>{t("WEIGH.catchweightAccepted")}</div>

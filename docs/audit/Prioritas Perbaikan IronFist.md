@@ -575,3 +575,5 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 - **23 Oktober 2026: P6 #62 selesai** di branch docs/archive-historical-audits. 48 dokumen historis (16 audit kepatuhan, audit pengalaman lama, knowledge Juli, overview/arsitektur/baseline/discovery) dipindahkan ke docs/archive/2026-07. Seluruh isi diverifikasi SHA-256 sama; lokasi lama menjadi penunjuk agar tautan tidak putus. Indeks dan manifest dibuat. Constitution, CONSTRAINTS, standar engineering/prosedur kerja, seluruh riwayat balance dan spesifikasi championship/promotion tetap aktif. README/GDD/log Oktober menjadi sumber status.
 
 - **23 Oktober 2026: review #51 — jalur pensiun menjadi coach diperbaiki.** Nama turunan nama keluarga kini juga mengecualikan nama coach/staf aktif dan pasar, dengan suffix deterministik tanpa RNG tambahan. Regresi dua nama bertabrakan dan tiga tes nama lulus; build lulus.
+
+- **23 Oktober 2026: review #46 — nama tampilan dilindungi.** Field nama langsung diberi translate=no dan dilewatkan oleh lapisan terjemahan. Nama seperti Five Wins tetap nama, walaupun sama dengan judul pencapaian. Regresi render Roster, lima tes bahasa, dan build lulus.

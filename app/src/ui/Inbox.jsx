@@ -108,11 +108,11 @@ export default function Inbox({ g, dispatch, setTab }) {
                 borderTop: `1px solid ${T.line}44`, borderBottom: `1px solid ${T.line}44`,
               }}>
                 <span style={{ fontFamily: T.disp, color: T.ember, fontSize: 16, textTransform: "uppercase", flex: 1, textAlign: "right" }}>
-                  {f.name}
+                  <span translate="no">{f.name}</span>
                 </span>
                 <span style={{ fontFamily: T.disp, color: T.gold, fontSize: 15 }}>VS</span>
                 <span style={{ fontFamily: T.disp, color: T.steel, fontSize: 16, textTransform: "uppercase", flex: 1 }}>
-                  {m.opponent.name}
+                  <span translate="no">{m.opponent.name}</span>
                 </span>
               </div>
 

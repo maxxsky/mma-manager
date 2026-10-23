@@ -200,7 +200,7 @@ export default function Scout({
                   fontWeight: 600,
                 }}
               >
-                {w.name}
+                <span translate="no">{w.name}</span>
                 {active ? " ✓" : ""}
               </button>)
             );
@@ -447,7 +447,7 @@ export default function Scout({
                         color: T.txt,
                       }}
                     >
-                      {p.fighter.name}
+                      <span translate="no">{p.fighter.name}</span>
                     </div>
                     <div
                       style={{

@@ -39,7 +39,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
             <Mono name={f.name} color={ac} size={64} region={f.region} titleTier={f.titles?.length > 0 ? (f.titles?.includes("Major World Champion") ? "Major" : "National") : null} />
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 34, letterSpacing: .5,
-                textTransform: "uppercase", color: T.txt, lineHeight: 1 }}>{f.name}</div>
+                textTransform: "uppercase", color: T.txt, lineHeight: 1 }}><span translate="no">{f.name}</span></div>
                 {(() => { const nick = generateFighterNickname(f); return nick ? <div style={{ fontFamily: T.body, fontSize: 12, color: T.gold, fontStyle: "italic", letterSpacing: .5 }}>"{nick}"</div> : null; })()}
               <div style={{ marginTop: 6 }}>
                 <Tag color={ac} solid>{f.archetype}</Tag><Tag color={T.txt2}>{f.weightClass}</Tag>
@@ -227,7 +227,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
                 return (
                   localizeTree(<div style={{ marginTop: 8, padding: "8px 10px", background: T.bg, borderRadius: T.r, border: `1px solid ${T.steel}44` }}>
                     <div style={{ fontFamily: T.body, fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: T.steel }}>{t("FIGHTER.exclusiveTo")}</div>
-                    <div style={{ fontFamily: T.body, fontSize: 13, fontWeight: 600, color: T.txt }}>{prom.name}</div>
+                    <div style={{ fontFamily: T.body, fontSize: 13, fontWeight: 600, color: T.txt }}><span translate="no">{prom.name}</span></div>
                     <div style={{ fontFamily: T.mono, fontSize: 11, color: T.txt3 }}>{t("FIGHTER.fightsRemaining").replace("{0}", f.promotionContract.fightsLeft).replace("{1}", f.promotionContract.fightsTotal)}</div>
                   </div>)
                 );
@@ -246,7 +246,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
                     const intensity = r.count >= 5 ? 3 : r.count >= 3 ? 2 : r.count >= 1 ? 1 : 0;
                     return (
                       localizeTree(<div key={name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", background: T.bg, borderRadius: T.r }}>
-                        <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt, flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
+                        <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt, flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}><span translate="no">{name}</span></span>
                         <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: r.wins > r.losses ? T.pos : r.losses > r.wins ? T.neg : T.txt2 }}>{r.wins}-{r.losses}</span>
                         <span style={{ fontFamily: T.mono, fontSize: 11, color: T.txt3 }}>{"🔥".repeat(intensity)}{"💧".repeat(3 - intensity)}</span>
                         {isCareerRival && <span style={{ fontFamily: T.mono, fontSize: 8, fontWeight: 700, letterSpacing: 0.5, color: T.ember, padding: "1px 5px", borderRadius: T.r, border: `1px solid ${T.ember}44`, background: `${T.ember}10` }}>{t("FIGHTER.careerRival")}</span>}
@@ -344,7 +344,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
                 if (synergy) {
                   return (
                     localizeTree(<div style={{ padding: '6px 10px', background: T.bg, borderRadius: T.r, marginBottom: 8, fontFamily: T.body, fontSize: 11, color: T.txt3, fontStyle: 'italic', borderLeft: '2px solid ' + T.steel }}>
-                      {coach.name} ({coachView.specialty}) · {synergy.label}: {synergy.rating === 'perfect' ? '⭐ Ideal synergy with ' + f.archetype : synergy.rating === 'good' ? 'Good fit' : 'Adequate'}
+                      <span translate="no">{coach.name}</span> ({coachView.specialty}) · {synergy.label}: {synergy.rating === 'perfect' ? '⭐ Ideal synergy with ' + f.archetype : synergy.rating === 'good' ? 'Good fit' : 'Adequate'}
                     </div>)
                   );
                 }

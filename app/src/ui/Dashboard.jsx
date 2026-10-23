@@ -207,7 +207,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
                 <div style={{ fontFamily: T.body, fontSize: 13, fontWeight: 600, color: T.txt2, lineHeight: 1.5, marginTop: 12 }}>
                   <span style={{ color: T.txt }}>{fighterName}</span>
                   <span style={{ display: "block", color: T.txt3, fontSize: 11, fontWeight: 500, margin: "2px 0" }}>vs</span>
-                  <span style={{ color: T.txt }}>{oppName}</span>
+                  <span style={{ color: T.txt }}><span translate="no">{oppName}</span></span>
                 </div>
               ) : (
               <div style={{ fontFamily: T.body, fontSize: 11, lineHeight: 1.4, opacity: 0.8, color: T.txt3, marginTop: 8 }}>{d}</div>
@@ -329,11 +329,11 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <Mono name={f.name} color={ac} size={32} region={f.region} titleTier={isChamp(f) ? (f.titles?.includes("Major World Champion") ? "Major" : "National") : null} />
                     <div>
-                      <div style={{ fontFamily: T.body, fontSize: 15, fontWeight: 700, color: T.txt }}>{f.name}</div>
+                      <div style={{ fontFamily: T.body, fontSize: 15, fontWeight: 700, color: T.txt }}><span translate="no">{f.name}</span></div>
                       <div style={{ fontFamily: T.body, fontSize: 11.5, color: T.txt3 }}>{f.weightClass}</div>
                     </div>
                   </div>
-                  <span style={{ fontFamily: T.body, fontSize: 13, color: T.txt2 }}>{oppName}{oppRank ? " " : ""}<span style={{ fontFamily: T.mono, fontSize: 11, color: T.gold }}>{oppRank}</span></span>
+                  <span style={{ fontFamily: T.body, fontSize: 13, color: T.txt2 }}><span translate="no">{oppName}</span>{oppRank ? " " : ""}<span style={{ fontFamily: T.mono, fontSize: 11, color: T.gold }}>{oppRank}</span></span>
                   <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt3 }}>{event}</span>
                   <span>{bk.title ? <Tag color={T.gold} solid>{t("UI.title")}</Tag> : <Tag color={T.steel}>{bk.tier}</Tag>}</span>
                   <span style={{ fontFamily: T.mono, fontSize: 12.5, color: T.txt2, textAlign: "right" }}>{purseStr}</span>

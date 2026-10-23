@@ -96,7 +96,7 @@ export default function Promoters({ g }) {
                         <span style={{ width: 10, height: 10, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 13, letterSpacing: .4, color: T.txt }}>
-                            {p.name}
+                            <span translate="no">{p.name}</span>
                           </div>
                           <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 2, flexWrap: "wrap" }}>
                             <Tag color={T.steel} title={p.personality.desc}>{p.personality.label}</Tag>

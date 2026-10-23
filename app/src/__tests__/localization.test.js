@@ -1,15 +1,17 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { it, expect, afterEach } from 'vitest';
+import { it, expect, afterEach, vi } from 'vitest';
 import { localizeText } from '../i18n/text.js';
 import { localizeTree } from '../i18n/presentation.jsx';
 import { MESSAGE_PAIRS } from '../i18n/messages-id.js';
 import WorldNews from '../ui/WorldNews.jsx';
 import Achievements from '../ui/Achievements.jsx';
+import Roster from '../ui/Roster.jsx';
+import { createTestGame } from './helpers.js';
 import { genFighter } from '@ironfist/engine/fighter.js';
 import { runFight, prepFighter, autoGamePlan } from '@ironfist/engine/fight.js';
 import { mulberry32, setRNG, resetRNG } from '@ironfist/engine/rng.js';
-afterEach(resetRNG);
+afterEach(() => { resetRNG(); vi.unstubAllGlobals(); });
 
 it('localizes existing save messages and achievement descriptions without mutating state', () => {
   const g = {inbox:[{id:1,type:'world',title:'👑 New Lightweight Champion!',body:'José defeats A. Santoso to become the new Lightweight champion!'}],_unlocked:['five_wins']};
@@ -32,6 +34,13 @@ it('preserves interpolated names, timestamps, scores, IDs and event handlers', (
   expect(result.props['data-id']).toBe('champion');
   expect(result.props.onClick).toBe(onClick);
   expect(original.props.children).toBe('Five Wins');
+});
+it('preserves a displayed fighter name even when it equals a translated achievement', () => {
+  vi.stubGlobal('window',{innerWidth:1280});
+  const g=createTestGame();g.roster[0].name='Five Wins';
+  const html=renderToStaticMarkup(React.createElement(Roster,{g,dispatch:()=>{},setTab:()=>{}}));
+  expect(html).toContain('translate="no">Five Wins');
+  expect(html).not.toContain('Lima Kemenangan');
 });
 it('keeps every template well-formed with all values used by the translation present in the source', () => {
   expect(MESSAGE_PAIRS.length).toBeGreaterThan(400);

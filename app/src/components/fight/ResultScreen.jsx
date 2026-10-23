@@ -22,7 +22,7 @@ export default function ResultScreen({ fighter, opp, roundLog, roundLogs, result
     localizeTree(<Panel style={{ textAlign: "center", padding: "36px 24px", border: `1px solid ${result.won ? T.gold : T.neg}55` }}>
       <div style={{ display: "inline-block", fontFamily: T.disp, fontWeight: 700, fontSize: 48, letterSpacing: 3, textTransform: "uppercase", color: result.won ? T.gold : T.neg, lineHeight: 1, padding: "6px 26px", border: `3px solid ${result.won ? T.gold : T.neg}`, borderRadius: T.r }}>{result.won ? t("RESULT.victory") : t("RESULT.defeat")}</div>
       <div style={{ fontFamily: T.body, fontSize: 15, color: T.txt, marginTop: 16 }}>
-        <b>{fighter.name}</b> {result.won ? t("RESULT.wins") : t("RESULT.loses")} via <b>{t("RESULT.how." + result.how.replace(/[/ ]/g, ''))}</b> · Round {result.r}
+        <b><span translate="no">{fighter.name}</span></b> {result.won ? t("RESULT.wins") : t("RESULT.loses")} via <b>{t("RESULT.how." + result.how.replace(/[/ ]/g, ''))}</b> · Round {result.r}
       </div>
       {sc && (
         <div style={{ fontFamily: T.mono, fontSize: 12.5, color: T.txt2, marginTop: 8 }}>
@@ -35,8 +35,8 @@ export default function ResultScreen({ fighter, opp, roundLog, roundLogs, result
       )}
 
       <div style={{ marginTop: 12, fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>
-        <div>{fighter.name}: {t("SCORE.str")} {totals.landA} · {t("SCORE.td")} {totals.tdA}</div>
-        <div>{opp.name}: {t("SCORE.str")} {totals.landB} · {t("SCORE.td")} {totals.tdB}</div>
+        <div><span translate="no">{fighter.name}</span>: {t("SCORE.str")} {totals.landA} · {t("SCORE.td")} {totals.tdA}</div>
+        <div><span translate="no">{opp.name}</span>: {t("SCORE.str")} {totals.landB} · {t("SCORE.td")} {totals.tdB}</div>
       </div>
 
       {/* Fight Narrative */}

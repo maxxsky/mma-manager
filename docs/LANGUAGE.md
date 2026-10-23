@@ -13,6 +13,9 @@ menulis ulang histori. ID aksi, nilai option, handler, skor, timestamp, dan
 state RNG tidak diterjemahkan. Argumen template disisipkan apa adanya agar
 nama dan nilai hasil simulasi tidak berubah.
 
+Nama yang ditampilkan langsung diberi `translate="no"`; jangan terjemahkan nama
+petarung hanya karena kebetulan sama dengan judul pencapaian atau label UI.
+
 Untuk teks baru, utamakan key `t()` yang sudah ada. Untuk narasi engine baru,
 tambahkan pasangan template lengkap dengan placeholder `{0}`, `{1}`, dst. ke
 katalog, lalu tambahkan contoh nyata di tes lokal. Hindari substitusi kata bebas:
