@@ -33,7 +33,6 @@
  * @property {Object[]} inbox
  * @property {string[]} log
  * @property {Object<string,Object>} divisions
- * @property {?{amount:number, weeklyPayment:number, remaining:number}} loan
  * @property {Object[]} sponsors
  * @property {number} legacy
  */

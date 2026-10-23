@@ -1,6 +1,7 @@
 import { clamp } from "./rng.js";
 import { CAMP_TIERS, MEMBER_FEE, SPONSOR_BRANDS, TRAINING } from "./data.js";
 import { getPublicOpinion } from "./publicOpinion.js";
+import { SUPPORT_PER_TIER, popularityIncome } from "./economy-progression.js";
 
 export function coachBonus(g, gains) {
   let b = 1;
@@ -61,12 +62,12 @@ export function computeMonthlyIncome(g) {
       sponsorAmt += rate;
     });
   }
-  const fSponsor = g.roster.reduce((s, f) => s + f.popularity * 150, 0);
+  const fSponsor = g.roster.reduce((s, f) => s + popularityIncome(f.popularity, 150, 35), 0);
   const championBonus = g.roster.reduce((s, f) => s + (f.titles?.includes("Major World Champion") ? 5000 : 0), 0);
   const merchRevenue = Math.round(g.roster.reduce((s, f) => {
     const opinion = getPublicOpinion(f);
     const merchMult = opinion.sentiment === "positive" ? 1.2 : opinion.sentiment === "negative" ? 0.8 : 1.0;
-    return s + f.popularity * 80 * merchMult;
+    return s + popularityIncome(f.popularity, 80, 20) * merchMult;
   }, 0));
   const { revenue: membershipRevenue } = computeMembership(g);
   return { sponsorAmt, fSponsor, championBonus, merchRevenue, membershipRevenue,
@@ -127,7 +128,7 @@ export function computeMonthlyExpense(g) {
   // staff around each of them, and runs full fight camps. Leaving it flat meant
   // a larger roster generated more purses with almost no matching cost, which
   // is how raising the intake rate quietly undid the late-game cash sink.
-  const supportPerFighter = 600 + (g.campTier || 0) * 2200;
+  const supportPerFighter = 600 + (g.campTier || 0) * SUPPORT_PER_TIER;
   const fighterSupport = (g.roster?.length || 0) * supportPerFighter;
   // Tier upkeep. Only the two prestige-gated late tiers carry one, so existing
   // balance is untouched; running a multi-continent academy should not cost the

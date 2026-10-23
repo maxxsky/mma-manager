@@ -12,6 +12,7 @@ import { fightTotals } from "../fight/report.js";
 import { fightPurse } from "../fight/purse.js";
 import { aiChampion } from "../world/fighter-profile.js";
 import { isKnockout, koWinStreak } from "../achievements.js";
+import { reputationAfterWin } from "../economy-progression.js";
 
 /** Commit fight result to game state. Called from FightNight done() callback. */
 export function commitFightResult(g, fighter, result) {
@@ -92,7 +93,7 @@ export function commitFightResult(g, fighter, result) {
     const crowdMult = f.traits?.includes("Crowd Favorite") ? 2 : 1;
     const showboatBonus = f.traits?.includes("Showboat") && result.how !== "Decision" ? 5 : 0;
     f.popularity = clamp(f.popularity + popBase * crowdMult + showboatBonus, 0, 100);
-    g.rep = clamp(g.rep + 7, 0, 100);
+    g.rep = reputationAfterWin(g.rep, booking?.tier, result.attitude === "Professional");
 
     if (contestedTier && div) {
       if (defending) {
@@ -241,8 +242,6 @@ export function commitFightResult(g, fighter, result) {
   // ── Staredown attitude effects ──
   if (result.attitude === "Respectful") {
     f.popularity = clamp((f.popularity || 0) + 2, 0, 100);
-  } else if (result.attitude === "Professional" && result.won) {
-    g.rep = clamp((g.rep || 0) + 2, 2, 100);
   } else if (result.attitude === "Trash talk") {
     f.popularity = clamp((f.popularity || 0) + 5, 0, 100);
     if (!result.won) {

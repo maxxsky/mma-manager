@@ -214,8 +214,8 @@ describe('F8.3 — public opinion merchandise modifier', () => {
       coaches: [], sponsors: [], facilities: { mats: 1, ring: 0, weights: 0, medical: 0 },
     }
     const { merchRevenue } = computeMonthlyIncome(g)
-    // 60 * 80 * 1.2 = 5760
-    expect(merchRevenue).toBe(5760)
+    // First 30 fame at $80, remaining 30 at $20, positive sentiment ×1.2.
+    expect(merchRevenue).toBe(3600)
   })
 
   it('negative sentiment = ×0.8 merchandise contribution', () => {
@@ -224,8 +224,7 @@ describe('F8.3 — public opinion merchandise modifier', () => {
       coaches: [], sponsors: [], facilities: { mats: 1, ring: 0, weights: 0, medical: 0 },
     }
     const { merchRevenue } = computeMonthlyIncome(g)
-    // 70 * 80 * 0.8 = 4480
-    expect(merchRevenue).toBe(4480)
+    expect(merchRevenue).toBe(2560)
   })
 
   it('neutral sentiment = ×1.0 merchandise contribution (baseline)', () => {
@@ -234,7 +233,6 @@ describe('F8.3 — public opinion merchandise modifier', () => {
       coaches: [], sponsors: [], facilities: { mats: 1, ring: 0, weights: 0, medical: 0 },
     }
     const { merchRevenue } = computeMonthlyIncome(g)
-    // 50 * 80 * 1.0 = 4000
-    expect(merchRevenue).toBe(4000)
+    expect(merchRevenue).toBe(2800)
   })
 })

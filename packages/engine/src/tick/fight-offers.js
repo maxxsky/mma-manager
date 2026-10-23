@@ -6,6 +6,7 @@ import { worldOpponent, championFighter } from "../world/fighter-profile.js";
 import { championAt } from "../championships.js";
 import { rankOf, stripTitle, divisionRankings, rankedAIContenders } from "../rankings.js";
 import { pickPromotion, promotionOfferTerms } from "../data/promotions.js";
+import { regularOfferTier, PURSE_RANGES } from "../economy-progression.js";
 
 // Skill thresholds for each rung of the title ladder.
 //
@@ -215,12 +216,9 @@ export function tickFightOffers(g) {
         titleReason = `${f.record.w} menang + rep ${Math.round(rep)} + skill ${Math.round(sk)}`;
       }
 
-      let tier, show;
-      if (rep >= 80 && f.record.w >= 8) { tier = "Premier"; show = RI(150, 350) * 1000; }
-      else if (rep >= 60 && f.record.w >= 6) { tier = "Major"; show = RI(40, 140) * 1000; }
-      else if (rep >= 40 && f.record.w >= 4) { tier = "National"; show = RI(12, 60) * 1000; }
-      else if (rep >= 20 && f.record.w >= 2) { tier = "Regional"; show = RI(3, 12) * 1000; }
-      else { tier = "Local"; show = RI(8, 30) * 100; }
+      const tier = regularOfferTier(rep, f, r);
+      const [lowPurse, highPurse] = PURSE_RANGES[tier];
+      let show = RI(lowPurse / 100, highPurse / 100) * 100;
       if (titleTier) show = Math.round(show * 1.5);
 
       // Streak-based purse adjustment

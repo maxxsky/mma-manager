@@ -14,13 +14,12 @@ import { computeMonthlyIncome, computeMonthlyExpense } from "@ironfist/engine/ec
 export default function Finance({ g }) {
   // ── Income breakdown (shared functions = settlement reality) ──
   const { sponsorAmt: sponsorIncome, fSponsor: popTotal, membershipRevenue,
-    merchRevenue: merchTotal, championBonus } = computeMonthlyIncome(g);
+    merchRevenue: merchTotal, championBonus, total: totalIncome } = computeMonthlyIncome(g);
   const { coachSal, staffSal, maint, training, opCost, fighterSupport, tierUpkeep,
     total: totalExpense } = computeMonthlyExpense(g);
   // NOTE: weeklyFee()/feeTotal sengaja gak dipake di totalIncome — belum di-wire
   // ke tickSettlement, jadi kalau ditampilin bikin Net/Month overstate.
   // Lihat commit e1b6569 (debug panel) buat bukti gap-nya di save nyata.
-  const totalIncome = sponsorIncome + popTotal + merchTotal + membershipRevenue;
 
   // ── Expense breakdown ─────────────────────────────────────────
   // Take the total straight from computeMonthlyExpense rather than re-adding
@@ -88,6 +87,7 @@ export default function Finance({ g }) {
           color={T.pos}
           detail={`${g.roster.length} fighter${g.roster.length !== 1 ? "s" : ""}`}
         />
+        {championBonus > 0 && <Row label={t("FIN.championBonus")} value={championBonus} color={T.pos} />}
         <TotalRow label={t("UI.income") + " Total"} value={totalIncome} color={T.pos} />
 
         <div style={{ marginTop: 4 }} />

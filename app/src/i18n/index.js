@@ -15,6 +15,7 @@ export function setLang(l) {
 
 const EN = {
   "FIN.sponsorIncome": "Reputation & sponsor income",
+  "FIN.championBonus": "Champion bonus",
   // ---- ATTRS ----
   "ATTR.striking": "Striking", "ATTR.wrestling": "Wrestling", "ATTR.bjj": "BJJ",
   "ATTR.footwork": "Footwork", "ATTR.strength": "Strength", "ATTR.cardio": "Cardio",
@@ -433,6 +434,7 @@ const EN = {
 
 const ID = {
   "FIN.sponsorIncome": "Pendapatan reputasi & sponsor",
+  "FIN.championBonus": "Bonus juara",
   "ATTR.striking": "Pukulan", "ATTR.wrestling": "Gulat", "ATTR.bjj": "BJJ",
   "ATTR.footwork": "Footwork", "ATTR.strength": "Kekuatan", "ATTR.cardio": "Cardio",
   "ATTR.chin": "Dagu", "ATTR.fightIQ": "IQ Tarung",

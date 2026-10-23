@@ -19,8 +19,9 @@ export function reduceCoach(g, action) {
       break;
     }
     case "FIRE_COACH": {
-      if (g.coaches.length > 1) {
-        g.cash -= action.severance || 0;
+      const coach = g.coaches.find(x => x.id === action.coachId);
+      if (coach && g.cash >= coach.salary) {
+        g.cash -= coach.salary;
         g.coaches = g.coaches.filter((x) => x.id !== action.coachId);
         g.chemistry = clamp(g.chemistry - CHEM_PENALTY_FIRE_COACH, 0, 100);
         g.log.unshift("👋 " + (action.coachName || "Coach") + " dipecat — severance 1 bulan gaji. Chemistry -" + CHEM_PENALTY_FIRE_COACH + ".");

@@ -24,11 +24,13 @@ import {
   ATTRS, TRAINING, getPrestige, getPrestigeTier,
 } from "../packages/engine/src/index.js";
 // Not re-exported by the barrel; imported directly.
-import { runFight } from "../packages/engine/src/fight.js";
+import { runFight, aiCorner } from "../packages/engine/src/fight.js";
 import { CAMP_TIERS } from "../packages/engine/src/data/camp.js";
 
 const ROSTER_CAP_BY_TIER = CAMP_TIERS.map((t) => t.rosterCap);
 import { commitFightResult } from "../packages/engine/src/fights/commitResult.js";
+import { planSpending, canRecruit, affordableOperation } from "./economy-policy.mjs";
+import { defaultOffer } from "../packages/engine/src/contracts/negotiation.js";
 
 const WEEKS = Number(process.argv[2] || 960);
 const SEED_COUNT = Number(process.argv[3] || 3);
@@ -43,7 +45,7 @@ function isBad(n) {
 
 // --- scripted player -------------------------------------------------------
 
-function resolveDueFights(g, seed, week) {
+function resolveDueFights(g, seed, week, receipts) {
   for (const f of [...g.roster]) {
     if (!f.booked || f.booked.weeksLeft > 0 || f.injury) continue;
 
@@ -62,7 +64,9 @@ function resolveDueFights(g, seed, week) {
 
     const rounds = f.booked.title ? 5 : 3;
     const plan = autoGamePlan(A, B);
-    const res = runFight(A, B, plan, () => "go", f.booked.seed ?? seed + week, rounds);
+    const corner = (_res, rnd, st) => aiCorner({ rnd, totalRounds: rounds, plan,
+      staOwn: st.staA, staOpp: st.staB, cutOwn: st.cutA, cutOpp: st.cutB, momOwn: st.momentum });
+    const res = runFight(A, B, plan, corner, f.booked.seed ?? seed + week, rounds);
 
     if (isBad(res.totalDmgA) || isBad(res.totalDmgB)) {
       nanHits.push({ week, kind: "NaN-damage", name: opp.name || "?" });
@@ -74,14 +78,17 @@ function resolveDueFights(g, seed, week) {
     // sees null and no belt is ever awarded. The UI passes a fighter from the
     // pre-clone state, so it never hit this; the harness did, and it reported
     // zero championships across ten years while titles were being won.
+    const cashBefore = g.cash;
     commitFightResult(g, { ...f, booked: { ...f.booked } }, {
       won: res.winner === "A",
       how: res.how,
-      r: res.finalRound,
+      r: res.round,
       totalDmgA: res.totalDmgA,
       totalDmgB: res.totalDmgB,
       attitude: "Professional",
+      roundLogs: res.roundLogs,
     });
+    receipts.push({week: g.week, cash: Math.max(0, g.cash - cashBefore)});
   }
 }
 
@@ -96,10 +103,21 @@ function acceptOffers(g) {
 
 // Clears prompts by taking the cheapest choice, so the inbox does not silently
 // become the reason nothing else happens.
-function clearPrompts(g) {
+function clearPrompts(g, receipts) {
   for (const m of [...g.inbox]) {
     if (m.type === "offer" || m.type === "press") continue;
     if (!m.choices || m.choices.length === 0) continue;
+    const rest = m.choices.find(c => c.choice === "rest");
+    if (rest) {
+      reducer(g, { type: "INBOX_EVENT", messageId: m.id, choice: rest });
+      continue;
+    }
+    const talent = m.choices.find(c => c.talentAccept);
+    if (talent && !canRecruit(g, talent.talentFighter, receipts)) {
+      const decline = m.choices.find(c => c.talentReject);
+      if (decline) reducer(g, { type: "INBOX_EVENT", messageId: m.id, choice: decline });
+      continue;
+    }
     // Prompts that can remove a fighter are decided explicitly, by intent
     // rather than by price.
     //
@@ -120,11 +138,21 @@ function clearPrompts(g) {
       m.choices.find((c) => c.openExtend) || m.choices.find((c) => c.release);
     if (exitChoice) {
       reducer(g, { type: "INBOX_EVENT", messageId: m.id, choice: exitChoice, gambleRoll: 0.5 });
+      if (exitChoice.openExtend) {
+        const fighter = g.roster.find(f => f.id === exitChoice.openExtend);
+        if (fighter) {
+          reducer(g, { type: "NEGOTIATE_CONTRACT", mode: "extend", fighterId: fighter.id, offer: defaultOffer(fighter, "extend") });
+          if (g.negotiation?.status === "counter" && g.cash >= g.negotiation.counter.signBonus) reducer(g, { type: "ACCEPT_COUNTER_OFFER" });
+          reducer(g, { type: "CLEAR_NEGOTIATION" });
+        }
+      }
       continue;
     }
 
-    const choice =
-      [...m.choices].sort((a, b) => (a.cash ? -a.cash : 0) - (b.cash ? -b.cash : 0))[0];
+    const budgeted = m.choices.filter(c => !c.coachSalary || affordableOperation({ ...g,
+      coaches: g.coaches.map(coach => coach.id === c.coachSalary.id ? { ...coach, salary: c.coachSalary.amt } : coach),
+    }, receipts));
+    const choice = [...(budgeted.length ? budgeted : m.choices)].sort((a,b) => (a.cash ? -a.cash : 0) - (b.cash ? -b.cash : 0))[0];
     reducer(g, { type: "INBOX_EVENT", messageId: m.id, choice, gambleRoll: 0.5 });
   }
 }
@@ -174,24 +202,6 @@ function cutDeadWeight(g) {
 
   if (!candidates.length) return;
   reducer(g, { type: "RELEASE_FIGHTER", fighterId: candidates[0].f.id });
-}
-
-function spend(g) {
-  // Facilities first, then coaches. Keep a buffer so the camp is not one bad
-  // month from insolvency.
-  const BUFFER = 60000;
-  for (const fac of Object.keys(g.facilities || {})) {
-    if (g.cash < BUFFER) break;
-    reducer(g, { type: "UPGRADE_FACILITY", facility: fac });
-  }
-  if (g.cash > BUFFER * 3 && g.coachMarket?.length) {
-    reducer(g, { type: "HIRE_COACH", coachId: g.coachMarket[0].id });
-  }
-  // Same buffer for the camp tier: buying it with the last dollar used to sink
-  // early camps, which only survived because the bankruptcy prompt handed out
-  // free cash (removed in P2 #33).
-  const next = CAMP_TIERS[(g.campTier || 0) + 1];
-  if (next && g.cash - next.cost >= BUFFER) reducer(g, { type: "UPGRADE_TIER" });
 }
 
 // Prospect intake, bucketed by era. This is the only direct read on whether
@@ -258,13 +268,17 @@ function runSeed(seed) {
   const snaps = [];
   const seenIds = new Set();
   const intake = [];
+  const receipts = [];
 
   for (let w = 1; w <= WEEKS; w++) {
-    resolveDueFights(g, seed, w);
+    resolveDueFights(g, seed, w, receipts);
     acceptOffers(g);
-    clearPrompts(g);
+    clearPrompts(g, receipts);
     manageTraining(g);
-    if (w % 4 === 0) { spend(g); cutDeadWeight(g); }
+    if (w % 4 === 0) {
+      planSpending(g, receipts, action => reducer(g, action)); cutDeadWeight(g);
+      while (receipts.length && g.week - receipts[0].week > 48) receipts.shift();
+    }
 
     // Drop the undo history before ticking. Every reducer dispatch deep-clones
     // the whole game state into it, and a scripted player issues one dispatch
@@ -300,7 +314,7 @@ function runSeed(seed) {
 }
 
 console.log(`Economy harness — ${WEEKS} weeks (${(WEEKS / YEAR).toFixed(0)}y) x ${SEEDS.length} seeds`);
-console.log("Scripted player: accepts every fight, trains weakest attribute, upgrades, hires.\n");
+console.log("Scripted player: AI corner, contract renewals, budgeted payroll/intake/upgrades, normal injury rest.\n");
 
 const all = [];
 for (const seed of SEEDS) {
@@ -333,7 +347,6 @@ for (const seed of SEEDS) {
 
 // --- read the result -------------------------------------------------------
 console.log("=".repeat(72));
-
 // Cross-run comparison warning.
 //
 // Any engine change shifts the order in which the seeded RNG is consumed, so
@@ -408,3 +421,20 @@ if (nanHits.length) {
   console.log(`\nData issues seen while simulating fights: ${JSON.stringify(byKind)}`);
 }
 console.log("=".repeat(72));
+
+if (process.argv.includes("--check")) {
+  if (WEEKS < 960 || SEED_COUNT < 3) throw new Error("Economy bands need at least 960 weeks and 3 seeds");
+  const finalCash = finals.map(s => s.cash);
+  const yearTwo = all.map(r => r.snaps.find(s => s.year === 2)?.rep ?? 100);
+  const checks = {
+    survival: all.every(r => !r.over && r.snaps.length >= 20),
+    medianCash: median(finalCash) >= 100000 && median(finalCash) <= 8000000,
+    peakCash: Math.max(...finalCash) <= 15000000,
+    earlyReputation: median(yearTwo) <= 80,
+    longProgress: median(finals.map(s => s.prestige)) >= 40 && median(finals.map(s => s.prestige)) <= 90,
+    finiteData: nanHits.length === 0,
+  };
+  console.log("Economy bands:", checks);
+  if (Object.values(checks).some(ok => !ok)) process.exitCode = 1;
+}
+

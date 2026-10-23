@@ -43,6 +43,10 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
             </div>
             <span style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2, width: 70, textAlign: "right" }}>
               {fmt$(c.salary)}/mo</span>
+            <Btn sm ghost color={T.neg} disabled={g.cash < c.salary}
+              onClick={() => dispatch({ type: "FIRE_COACH", coachId: c.id, coachName: c.name })}>
+              {t("UI.fire")} · {fmt$(c.salary)}
+            </Btn>
           </div>
         ))}
         {g.coaches.length < coachCap && (
