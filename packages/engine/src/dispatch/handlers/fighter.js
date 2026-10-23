@@ -6,6 +6,7 @@ import { avgSkill } from "../../fighter.js";
 import { checkHallOfFame } from "../../dynasty.js";
 import { pushInboxEvent, onFightComplaintIgnored } from "../../events.js";
 import { makePromise } from "../../promises.js";
+import { uniqueName } from "../../names.js";
 
 export function registerFighterHandlers(register) {
   register("release", ({ g, c }) => {
@@ -55,7 +56,9 @@ export function registerFighterHandlers(register) {
     if (g.coaches.length < cap2) {
       const specMap = { Boxer: "Striking", "Muay Thai": "Striking", Wrestler: "Wrestling", "BJJ Specialist": "BJJ", "All-Rounder": "Head" };
       const sk = clamp(Math.round(avgSkill(f) / 12), 2, 8);
-      g.coaches.push({ id: uid(), name: "Coach " + f.name.split(" ").pop(), spec: specMap[f.archetype] || "Head", skill: sk, salary: sk * 1800 });
+      const occupied = [...g.coaches, ...(g.coachMarket || []), ...Object.values(g.staff || {}).filter(Boolean), ...Object.values(g.staffMarket || {}).flat()].map(person => person.name);
+      const name = uniqueName("Coach " + f.name.split(" ").pop(), occupied);
+      g.coaches.push({ id: uid(), name, spec: specMap[f.archetype] || "Head", skill: sk, salary: sk * 1800 });
       g.chemistry = clamp(g.chemistry + 5, 0, 100);
       g.log.unshift(`👨‍🏫 ${f.name} pensiun dan jadi coach.`);
     }

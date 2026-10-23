@@ -3,6 +3,7 @@ import { newGame } from '@ironfist/engine/state.js';
 import { setRNG, mulberry32, resetRNG } from '@ironfist/engine/rng.js';
 import { tickSettlement } from '@ironfist/engine/tick/settlement.js';
 import { pickUniqueName } from '@ironfist/engine/names.js';
+import { dispatchEvent } from '@ironfist/engine/dispatch.js';
 afterEach(resetRNG);
 
 it('keeps hired staff and the entire monthly market distinct across seeds', () => {
@@ -23,4 +24,14 @@ it('terminates even with a constant RNG and exhausted name pool', () => {
   setRNG(() => 0);
   expect(pickUniqueName(['A', 'B'], ['A'])).toBe('B');
   expect(pickUniqueName(['A', 'B'], ['A', 'B', 'A 2'])).toBe('A 3');
+});
+it('also prevents a retired fighter coach from colliding with a hired or listed coach', () => {
+  const g = newGame();g.rep=50;
+  const f=g.roster[0];f.name='Raka Surya';
+  g.coachMarket=[{name:'Coach Surya'}];
+  g.coaches.push({id:'other',name:'Coach Surya 2',skill:4,salary:5000});
+  setRNG(()=>{throw Error('Naming retirement must not consume RNG')});
+  dispatchEvent(g,{}, {toCoach:f.id});
+  expect(g.coaches.at(-1).name).toBe('Coach Surya 3');
+  expect(g.roster.some(x=>x.id===f.id)).toBe(false);
 });

@@ -9,7 +9,13 @@ export function pickUniqueName(pool, occupied = []) {
     const name = pool[(start + offset) % pool.length];
     if (!used.has(name)) return name;
   }
+  return uniqueName(chosen, used);
+}
+
+export function uniqueName(name, occupied = []) {
+  const used = new Set(occupied);
+  if (!used.has(name)) return name;
   let suffix = 2;
-  while (used.has(`${chosen} ${suffix}`)) suffix++;
-  return `${chosen} ${suffix}`;
+  while (used.has(`${name} ${suffix}`)) suffix++;
+  return `${name} ${suffix}`;
 }
