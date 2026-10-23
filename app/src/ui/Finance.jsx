@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 import { fmt$ } from "@ironfist/engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
@@ -30,20 +31,20 @@ export default function Finance({ g }) {
 
   // ── Mini components (inline — not exported) ──
   const Row = ({ label, value, color, detail }) => (
-    <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0",
+    localizeTree(<div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0",
       borderBottom: `1px solid ${T.line}33` }}>
       <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt2 }}>{label}</span>
       <span style={{ textAlign: "right" }}>
         <span style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 700, color: color || T.txt }}>{fmt$(value)}</span>
         {detail && <div style={{ fontFamily: T.body, fontSize: 9, color: T.txt3 }}>{detail}</div>}
       </span>
-    </div>
+    </div>)
   );
   const TotalRow = ({ label, value, color }) => (
-    <div style={{ padding: "4px 0", textAlign: "right" }}>
+    localizeTree(<div style={{ padding: "4px 0", textAlign: "right" }}>
       <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>{label} </span>
       <span style={{ fontFamily: T.mono, fontSize: 16, fontWeight: 700, color }}>{fmt$(value)}</span>
-    </div>
+    </div>)
   );
 
   // ── Runway calculation ────────────────────────────────────────
@@ -52,7 +53,7 @@ export default function Finance({ g }) {
   const bankruptcyThreshold = -50000;
 
   return (
-    <div>
+    localizeTree(<div>
       {/* ── P&L SUMMARY CARD ─────────────────────────────────── */}
       <Panel style={{ marginBottom: 14 }}>
         <Eyebrow color={T.gold}>{t("UI.monthlyCashFlow")}</Eyebrow>
@@ -286,7 +287,7 @@ export default function Finance({ g }) {
           <div style={{ color: T.txt3, fontSize: 12 }}>{t("UI.noEventsHint")}</div>
         )}
       </Panel>
-    </div>
+    </div>)
   );
 }
 
@@ -294,7 +295,7 @@ export default function Finance({ g }) {
 
 function SectionHeader({ label, color }) {
   return (
-    <div
+    localizeTree(<div
       style={{
         fontSize: 11,
         fontWeight: 600,
@@ -306,13 +307,13 @@ function SectionHeader({ label, color }) {
       }}
     >
       {label}
-    </div>
+    </div>)
   );
 }
 
 function Row({ label, value, color = T.txt, detail }) {
   return (
-    <div
+    localizeTree(<div
       style={{
         display: "flex",
         justifyContent: "space-between",
@@ -329,33 +330,33 @@ function Row({ label, value, color = T.txt, detail }) {
       <span style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 700, color }}>
         {fmt$(value)}
       </span>
-    </div>
+    </div>)
   );
 }
 
 function TotalRow({ label, value, color }) {
   return (
-    <div style={{ padding: "4px 0", display: "flex", justifyContent: "flex-end" }}>
+    localizeTree(<div style={{ padding: "4px 0", display: "flex", justifyContent: "flex-end" }}>
       <span style={{ fontFamily: T.mono, fontSize: 15, fontWeight: 700, color }}>
         {fmt$(value)}
       </span>
-    </div>
+    </div>)
   );
 }
 
 function Detail({ label, value, color = T.txt2 }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+    localizeTree(<div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
       <span style={{ color: T.txt3 }}>{label}</span>
       <span style={{ color, fontWeight: 600 }}>{value}</span>
-    </div>
+    </div>)
   );
 }
 
 function SplitBar({ label, value, total, color }) {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   return (
-    <div style={{ marginBottom: 10 }}>
+    localizeTree(<div style={{ marginBottom: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
         <span style={{ fontSize: 11, color: T.txt2 }}>{label}</span>
         <span style={{ fontFamily: T.mono, fontSize: 11, fontWeight: 700, color }}>
@@ -373,7 +374,7 @@ function SplitBar({ label, value, total, color }) {
           }}
         />
       </div>
-    </div>
+    </div>)
   );
 }
 
@@ -393,7 +394,7 @@ function EconomyDebugPanel({ g }) {
   const sponsorDelta = incReal.sponsorAmt - incNoSponsor.sponsorAmt;
 
   return (
-    <Panel style={{ marginBottom: 14, border: `1px dashed ${T.warn}` }}>
+    localizeTree(<Panel style={{ marginBottom: 14, border: `1px dashed ${T.warn}` }}>
       <Eyebrow color={T.warn}>⚠️ DEBUG — Economy Ground Truth (hapus setelah verifikasi)</Eyebrow>
 
       <div style={{ fontSize: 11, color: T.txt3, marginBottom: 8 }}>
@@ -429,6 +430,6 @@ function EconomyDebugPanel({ g }) {
         color={sponsorDelta < 0 ? T.neg : T.pos}
         detail={sponsorDelta < 0 ? "⚠️ SPONSOR CLIFF TERKONFIRMASI — nerima sponsor bikin rugi" : (g.sponsors?.length ? "aman" : "belum ada sponsor aktif, gak bisa dicek")}
       />
-    </Panel>
+    </Panel>)
   );
 }

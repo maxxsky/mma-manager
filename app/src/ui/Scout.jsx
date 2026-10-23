@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 import { fmt$ } from "@ironfist/engine/rng.js";
 import React from "react";
 import {
@@ -57,7 +58,7 @@ export default function Scout({
   const diamondMethod = { ...dm, cost: dm.cost(g), grade: scoutGradeFor(g, dm) };
 
   return (
-    <>
+    localizeTree(<>
       {/* ── Scouting Network Panel ── */}
       <Panel>
         <Eyebrow>{t("UI.scoutNetwork")} · {t("UI.grade")} {grade}</Eyebrow>
@@ -115,7 +116,7 @@ export default function Scout({
           {Object.keys(AC).map((arch) => {
             const active = scoutFilterArch === arch;
             return (
-              <button
+              localizeTree(<button
                 key={arch}
                 onClick={() =>
                   setScoutFilterArch(active ? null : arch)
@@ -135,7 +136,7 @@ export default function Scout({
               >
                 {arch}
                 {active ? " ✓" : ""}
-              </button>
+              </button>)
             );
           })}
         </div>
@@ -181,7 +182,7 @@ export default function Scout({
           {WEIGHTS.map((w) => {
             const active = scoutFilterWC === w.name;
             return (
-              <button
+              localizeTree(<button
                 key={w.name}
                 onClick={() =>
                   setScoutFilterWC(active ? null : w.name)
@@ -201,7 +202,7 @@ export default function Scout({
               >
                 {w.name}
                 {active ? " ✓" : ""}
-              </button>
+              </button>)
             );
           })}
         </div>
@@ -218,7 +219,7 @@ export default function Scout({
             const canAfford = g.cash >= m.cost;
             const canScout = canAfford && !isRosterFull;
             return (
-              <div
+              localizeTree(<div
                 key={m.label}
                 style={{
                   background: T.raised,
@@ -298,7 +299,7 @@ export default function Scout({
                     ? t("UI.rosterFull")
                     : t("UI.sendScout")}
                 </Btn>
-              </div>
+              </div>)
             );
           })}
         </div>
@@ -413,7 +414,7 @@ export default function Scout({
           {g.prospects.map((p) => {
             const archColor = AC[p.fighter.archetype] || T.txt3;
             return (
-              <Panel
+              localizeTree(<Panel
                 key={p.id}
                 pad={14}
                 style={{
@@ -544,7 +545,7 @@ export default function Scout({
                     const val = p.report.est[k];
                     const scouted = reportAttrValue(p.report, k);
                     return (
-                      <div
+                      localizeTree(<div
                         key={k}
                         style={{
                           background: T.bg,
@@ -576,7 +577,7 @@ export default function Scout({
                         >
                           {val}
                         </div>
-                      </div>
+                      </div>)
                     );
                   })}
                 </div>
@@ -600,9 +601,9 @@ export default function Scout({
                     <div style={{ marginTop: 3 }}>
                       {t("TRAIT.sparring")}:{" "}
                       {p.report.traits.map((tr, i) => (
-                        <Tag key={i} color={T.neg}>
+                        localizeTree(<Tag key={i} color={T.neg}>
                           {tr}
-                        </Tag>
+                        </Tag>)
                       ))}
                     </div>
                   )}
@@ -666,7 +667,7 @@ export default function Scout({
                     {t("UI.pass")}
                   </Btn>
                 </div>
-              </Panel>
+              </Panel>)
             );
           })}
         </>
@@ -704,6 +705,6 @@ export default function Scout({
           </div>
         </Panel>
       )}
-    </>
+    </>)
   );
 }

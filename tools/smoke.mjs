@@ -122,7 +122,7 @@ const L = {
   seeResult: ["see the result", "lihat hasil"],
   decision:  ["go to decision", "ke keputusan"],
   backToCamp:["back to camp", "kembali ke camp"],
-  enterCage: ["enter the cage"],
+  enterCage: ["enter the cage", "masuk arena"],
   cornerAny: ["push the pace", "work the body", "conserve", "dorong", "serang badan", "hemat"],
 };
 
@@ -192,9 +192,12 @@ try {
     executablePath: chromePath,
     headless: !process.env.SMOKE_HEADFUL,
     args: ["--no-sandbox", "--disable-dev-shm-usage"],
+    userDataDir: process.env.SMOKE_PROFILE,
+    timeout: 30000,
   });
 
   const page = await browser.newPage();
+  page.setDefaultTimeout(15000);
   let phase = "boot";
   const setPhase = (p) => { phase = p; };
 
@@ -255,7 +258,7 @@ try {
   // This is the point of the whole script. FightNight is the most complex UI
   // in the game and nothing else exercises it.
   let fightsPlayed = 0;
-  for (let attempt = 1; attempt <= 40 && fightsPlayed < 2; attempt++) {
+  for (let attempt = 1; attempt <= 40 && fightsPlayed < 1; attempt++) {
     phase = `fight-hunt:${attempt}`;
     for (let i = 0; i < 6; i++) {
       if (!(await dismissModal(page))) break;

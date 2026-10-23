@@ -1,3 +1,4 @@
+import { localizeTree } from "./i18n/presentation.jsx";
 // ============================================================
 //   MMA MANAGER — Application Shell
 //   Composition only — state in hooks, UI in components,
@@ -46,7 +47,7 @@ import { getPrestige } from "@ironfist/engine/prestige.js";
 // ── MAIN APP ──
 
 export default function App() {
-  const { t, lang, setLang } = useLang();
+  const { t, lang } = useLang();
 
   // Tab state
   const [tab, setTabRaw] = useState(getLastTab());
@@ -94,16 +95,16 @@ export default function App() {
   // ── LOADING ──
   if (!loaded) {
     return (
-      <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      localizeTree(<div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <GlobalStyle />
         <div style={{ fontFamily: T.disp, color: T.gold, letterSpacing: 4, fontSize: 18, animation: "goldglow 1.5s infinite" }}>LOADING CAMP…</div>
-      </div>
+      </div>)
     );
   }
 
   // ── MAIN RENDER ──
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#0a0e14", color: "#c8ccd4", fontFamily: "Inter, sans-serif" }}>
+    localizeTree(<div style={{ display: "flex", minHeight: "100vh", background: "#0a0e14", color: "#c8ccd4", fontFamily: "Inter, sans-serif" }}>
       <GlobalStyle />
 
       {/* Week flash */}
@@ -150,7 +151,6 @@ export default function App() {
           onSaveSlotChange={setSaveSlot}
           slotInfo={slotInfo}
           lang={lang}
-          onLangChange={() => setLang(lang === "id" ? "en" : "id")}
           onNewGame={() => startNew(newGame())}
           dispatch={dispatch}
           version="v1.0.0-ea"
@@ -218,6 +218,6 @@ export default function App() {
           setShowFightCard(false);
         }} />
       )}
-    </div>
+    </div>)
   );
 }

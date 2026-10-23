@@ -1,3 +1,4 @@
+import { localizeTree } from "../../i18n/presentation.jsx";
 // Scoreboard — HP/STA bars shared between fight stages
 import { Panel } from "../../ui/theme.jsx";
 import { T } from "../../ui/theme.jsx";
@@ -8,7 +9,7 @@ const CORNER_BLUE = "#3ea6ff";
 
 export default function Scoreboard({ fighter, opp, state, rnd, totalRounds, totalLandA, totalLandB, totalTdA, totalTdB }) {
   return (
-    <Panel pad={14} style={{ marginBottom: 14 }}>
+    localizeTree(<Panel pad={14} style={{ marginBottom: 14 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "baseline", gap: 8, marginBottom: 5 }}>
@@ -43,6 +44,6 @@ export default function Scoreboard({ fighter, opp, state, rnd, totalRounds, tota
         <span>{t("SCORE.str")} <b style={{ color: CORNER_RED }}>{totalLandA}</b> · {t("SCORE.td")} <b style={{ color: CORNER_RED }}>{totalTdA}</b></span>
         <span>{t("SCORE.td")} <b style={{ color: CORNER_BLUE }}>{totalTdB}</b> · {t("SCORE.str")} <b style={{ color: CORNER_BLUE }}>{totalLandB}</b></span>
       </div>
-    </Panel>
+    </Panel>)
   );
 }

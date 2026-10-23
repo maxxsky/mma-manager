@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 import React, { useState, useEffect } from "react";
 import { fmt$ } from "@ironfist/engine/rng.js";
 import { ARCH_COLOR, TRAINING, INTENSITY, TRAITS, ACQUIRED_TRAITS, GAME_PLANS } from "@ironfist/engine/data.js";
@@ -29,7 +30,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
   ];
 
   return (
-    <div>
+    localizeTree(<div>
       {onBack && <Btn sm ghost onClick={onBack} style={{ marginBottom: 14 }}>{t("FIGHTER.backRoster")}</Btn>}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 16 }}>
         {/* identity header spans full width */}
@@ -65,12 +66,12 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
               <Eyebrow>{t("FIGHTER.attrsHeader")}</Eyebrow>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 22px" }}>
                 {groups.map(([gn, rows]) => (
-                  <div key={gn} style={{ marginBottom: 10 }}>
+                  localizeTree(<div key={gn} style={{ marginBottom: 10 }}>
                     <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1.2,
                       textTransform: "uppercase", color: ac, marginBottom: 6,
                       paddingBottom: 4, borderBottom: `1px solid ${T.line}` }}>{t(gn)}</div>
-                    {rows.map(([k, lb]) => <AttrTele key={k} label={t(lb)} v={Math.round(f.attrs[k])} ceil={f.ceilings[k]} />)}
-                  </div>
+                    {rows.map(([k, lb]) => localizeTree(<AttrTele key={k} label={t(lb)} v={Math.round(f.attrs[k])} ceil={f.ceilings[k]} />))}
+                  </div>)
                 ))}
               </div>
             </div>
@@ -87,7 +88,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
           <Eyebrow>{t("FIGHTER.profile")}</Eyebrow>
           <div style={{ marginBottom: 14 }}>
             {f.traits?.map((t) => (
-              <Tag key={t} color={t.includes("Glass") || t.includes("Chinny") ? T.neg : T.ember} title={TRAITS[t] || ACQUIRED_TRAITS[t] || ""}>{t}</Tag>
+              localizeTree(<Tag key={t} color={t.includes("Glass") || t.includes("Chinny") ? T.neg : T.ember} title={TRAITS[t] || ACQUIRED_TRAITS[t] || ""}>{t}</Tag>)
             ))}
           </div>
           {f.ambition && (
@@ -102,9 +103,9 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
           {(() => {
             const lc = getLifecyclePhase(f);
             return (
-              <div style={{ marginBottom: 8 }}>
+              localizeTree(<div style={{ marginBottom: 8 }}>
                 <Tag color={T.steel} title={lc.desc}>{lc.label}</Tag>
-              </div>
+              </div>)
             );
           })()}
           {/* Reign history */}
@@ -112,9 +113,9 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
             <div style={{ marginBottom: 12 }}>
               <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: T.gold, marginBottom: 4 }}>{t("FIGHTER.titleReigns")}</div>
               {f.reignHistory.map((r, i) => (
-                <div key={i} style={{ fontFamily: T.body, fontSize: 11, color: T.txt2, marginBottom: 2 }}>
+                localizeTree(<div key={i} style={{ fontFamily: T.body, fontSize: 11, color: T.txt2, marginBottom: 2 }}>
                   {t("FIGHTER.reignLine").replace("{0}", r.weightClass).replace("{1}", r.wonWeek)}
-                </div>
+                </div>)
               ))}
             </div>
           )}
@@ -123,11 +124,11 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
             const tags = getStoryTags(f);
             if (tags.length === 0) return null;
             return (
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+              localizeTree(<div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
                 {tags.map((t) => (
-                  <Tag key={t.tag} color={t.color} title={t.desc}>{t.tag}</Tag>
+                  localizeTree(<Tag key={t.tag} color={t.color} title={t.desc}>{t.tag}</Tag>)
                 ))}
-              </div>
+              </div>)
             );
           })()}
           {/* Training identity badges */}
@@ -135,11 +136,11 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
             const identity = getTrainingIdentity(f);
             if (!identity || identity.length === 0) return null;
             return (
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+              localizeTree(<div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
                 {identity.map((id) => (
-                  <Tag key={id.id} color={T.steel}>{id.icon} {id.label}</Tag>
+                  localizeTree(<Tag key={id.id} color={T.steel}>{id.icon} {id.label}</Tag>)
                 ))}
-              </div>
+              </div>)
             );
           })()}
           <div style={{ display: "grid", gap: 10, marginBottom: 16 }}>
@@ -150,10 +151,10 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
               const po = getPublicOpinion(f);
               const opinionColor = po.sentiment === "positive" ? T.pos : po.sentiment === "negative" ? T.neg : T.txt2;
               return (
-                <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "2px 8px", background: `${opinionColor}10`, borderRadius: T.r, border: `1px solid ${opinionColor}33` }}>
+                localizeTree(<div style={{ display: "flex", alignItems: "center", gap: 6, padding: "2px 8px", background: `${opinionColor}10`, borderRadius: T.r, border: `1px solid ${opinionColor}33` }}>
                   <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: opinionColor }}>{po.label}</span>
                   <span style={{ fontFamily: T.body, fontSize: 9, color: T.txt3 }}>{po.description}</span>
-                </div>
+                </div>)
               );
             })()}
             <Meter label="Loyalty" v={f.loyalty ?? 50} color={f.loyalty >= 60 ? T.pos : T.warn} />
@@ -166,12 +167,12 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
                   [t("FIGHTER.fightsLeft"), `${f.contract.fightsLeft}/${f.contract.fightsTotal}`],
                   [t("FIGHTER.duration"), f.contract.durationMo + " mo"],
                   [t("FIGHTER.agent"), f.agent || t("FIGHTER.agentNone")]].map(([l, v], i) => (
-                  <div key={l} style={{ background: T.bg, borderRadius: T.r, padding: "8px 10px" }}>
+                  localizeTree(<div key={l} style={{ background: T.bg, borderRadius: T.r, padding: "8px 10px" }}>
                     <div style={{ fontFamily: T.body, fontSize: 9, letterSpacing: 1, textTransform: "uppercase",
                       color: T.txt3 }}>{l}</div>
                     <div style={{ fontFamily: T.mono, fontSize: 14, fontWeight: 700,
                       color: i === 1 && f.contract.fightsLeft <= 1 ? T.neg : T.txt }}>{v}</div>
-                  </div>
+                  </div>)
                 ))}
               </div>
               {dispatch && (
@@ -204,7 +205,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
                 const severance = Math.max(2000, Math.round(fee * 4 * monthsLeft * 0.5));
                 const affordable = g.cash >= severance;
                 return (
-                  <Btn sm ghost color={T.neg} disabled={!affordable}
+                  localizeTree(<Btn sm ghost color={T.neg} disabled={!affordable}
                     style={{ marginTop: 8, width: "100%" }}
                     onClick={() => {
                       if (window.confirm(
@@ -216,7 +217,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
                       }
                     }}>
                     {t("FIGHTER.release").replace("{0}", fmt$(severance))}
-                  </Btn>
+                  </Btn>)
                 );
               })()}
 
@@ -224,11 +225,11 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
                 const prom = g.promotions?.find((p) => p.id === f.promotionContract.promotionId);
                 if (!prom) return null;
                 return (
-                  <div style={{ marginTop: 8, padding: "8px 10px", background: T.bg, borderRadius: T.r, border: `1px solid ${T.steel}44` }}>
+                  localizeTree(<div style={{ marginTop: 8, padding: "8px 10px", background: T.bg, borderRadius: T.r, border: `1px solid ${T.steel}44` }}>
                     <div style={{ fontFamily: T.body, fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: T.steel }}>{t("FIGHTER.exclusiveTo")}</div>
                     <div style={{ fontFamily: T.body, fontSize: 13, fontWeight: 600, color: T.txt }}>{prom.name}</div>
                     <div style={{ fontFamily: T.mono, fontSize: 11, color: T.txt3 }}>{t("FIGHTER.fightsRemaining").replace("{0}", f.promotionContract.fightsLeft).replace("{1}", f.promotionContract.fightsTotal)}</div>
-                  </div>
+                  </div>)
                 );
               })()}
             </>          )}
@@ -237,23 +238,23 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
             const sorted = Object.entries(f.rivalries).sort((a, b) => b[1].count - a[1].count || (b[1].wins + b[1].losses) - (a[1].wins + a[1].losses));
             const top = sorted[0];
             return (
-              <div style={{ marginTop: 12 }}>
+              localizeTree(<div style={{ marginTop: 12 }}>
                 <Eyebrow>{t("FIGHTER.rivalries")}</Eyebrow>
                 <div style={{ display: "grid", gap: 6 }}>
                   {sorted.slice(0, 5).map(([name, r]) => {
                     const isCareerRival = top && name === top[0] && sorted.length > 1 && r.count >= 2;
                     const intensity = r.count >= 5 ? 3 : r.count >= 3 ? 2 : r.count >= 1 ? 1 : 0;
                     return (
-                      <div key={name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", background: T.bg, borderRadius: T.r }}>
+                      localizeTree(<div key={name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", background: T.bg, borderRadius: T.r }}>
                         <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt, flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
                         <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: r.wins > r.losses ? T.pos : r.losses > r.wins ? T.neg : T.txt2 }}>{r.wins}-{r.losses}</span>
                         <span style={{ fontFamily: T.mono, fontSize: 11, color: T.txt3 }}>{"🔥".repeat(intensity)}{"💧".repeat(3 - intensity)}</span>
                         {isCareerRival && <span style={{ fontFamily: T.mono, fontSize: 8, fontWeight: 700, letterSpacing: 0.5, color: T.ember, padding: "1px 5px", borderRadius: T.r, border: `1px solid ${T.ember}44`, background: `${T.ember}10` }}>{t("FIGHTER.careerRival")}</span>}
-                      </div>
+                      </div>)
                     );
                   })}
                 </div>
-              </div>
+              </div>)
             );
           })()}
         </Panel>
@@ -274,7 +275,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
               {Object.entries(GAME_PLANS).map(([k, d]) => {
                 const on = f.booked.gamePlan === k;
                 return (
-                  <button
+                  localizeTree(<button
                     key={k}
                     className="chip"
                     onClick={() => dispatch({ type: "SET_GAME_PLAN", fighterId: f.id, plan: k })}
@@ -287,7 +288,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
                   >
                     <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 14, letterSpacing: .4, textTransform: "uppercase", color: on ? T.ember : T.txt }}>{k}</div>
                     <div style={{ fontFamily: T.body, fontSize: 10.5, color: T.txt2, marginTop: 3 }}>{d}</div>
-                  </button>
+                  </button>)
                 );
               })}
             </div>
@@ -301,11 +302,11 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
             {(() => {
               const cycle = getTrainingCycle(f);
               return (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                localizeTree(<div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                   <span style={{ fontSize: 16 }}>{cycle.icon}</span>
                   <span style={{ fontFamily: T.disp, fontSize: 14, fontWeight: 700, color: cycle.phase === 'recovery' || cycle.phase === 'warning' ? T.warn : T.steel, textTransform: 'uppercase', letterSpacing: 1 }}>{cycle.label}</span>
                   <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>{cycle.desc}</span>
-                </div>
+                </div>)
               );
             })()}
             {/* Development Philosophy */}
@@ -313,11 +314,11 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
               const philosophies = getDevelopmentPhilosophy(f);
               if (!philosophies || philosophies.length === 0) return null;
               return (
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                localizeTree(<div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
                   {philosophies.slice(0, 2).map(p => (
-                    <Tag key={p.id} color={T.steel}>{p.label}</Tag>
+                    localizeTree(<Tag key={p.id} color={T.steel}>{p.label}</Tag>)
                   ))}
-                </div>
+                </div>)
               );
             })()}
             {/* Fighting Style */}
@@ -325,11 +326,11 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
               const style = getFightStyleSummary(f);
               if (!style) return null;
               return (
-                <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+                localizeTree(<div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
                   <Tag color={ac} solid>{style.style}</Tag>
                   {style.isFinisher && <Tag color={T.ember}>{t("FIGHTER.finisher")}</Tag>}
                   {style.isGrinder && <Tag color={T.steel}>{t("FIGHTER.decisionMachine")}</Tag>}
-                </div>
+                </div>)
               );
             })()}
             {/* Coach Recommendation */}
@@ -342,18 +343,18 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
               if (!recs || recs.length === 0) {
                 if (synergy) {
                   return (
-                    <div style={{ padding: '6px 10px', background: T.bg, borderRadius: T.r, marginBottom: 8, fontFamily: T.body, fontSize: 11, color: T.txt3, fontStyle: 'italic', borderLeft: '2px solid ' + T.steel }}>
+                    localizeTree(<div style={{ padding: '6px 10px', background: T.bg, borderRadius: T.r, marginBottom: 8, fontFamily: T.body, fontSize: 11, color: T.txt3, fontStyle: 'italic', borderLeft: '2px solid ' + T.steel }}>
                       {coach.name} ({coachView.specialty}) · {synergy.label}: {synergy.rating === 'perfect' ? '⭐ Ideal synergy with ' + f.archetype : synergy.rating === 'good' ? 'Good fit' : 'Adequate'}
-                    </div>
+                    </div>)
                   );
                 }
                 return null;
               }
               return (
-                <div style={{ padding: '6px 10px', background: T.bg, borderRadius: T.r, marginBottom: 8, fontFamily: T.body, fontSize: 11, color: T.txt3, fontStyle: 'italic', borderLeft: '2px solid ' + T.steel }}>
+                localizeTree(<div style={{ padding: '6px 10px', background: T.bg, borderRadius: T.r, marginBottom: 8, fontFamily: T.body, fontSize: 11, color: T.txt3, fontStyle: 'italic', borderLeft: '2px solid ' + T.steel }}>
                   {recs[0].reason}
                   {synergy && <span style={{ display: 'block', marginTop: 2, color: synergy.rating === 'perfect' ? T.pos : T.txt3, fontSize: 10 }}>Synergy: {synergy.label}</span>}
-                </div>
+                </div>)
               );
             })()}
           <div style={{ display: "flex", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
@@ -364,7 +365,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
                 {Object.entries(TRAINING).map(([k, v]) => {
                   const active = f.booked ? k === "fightcamp" : f.training?.type === k;
                   return (
-                    <button key={k} className="chip" disabled={!!f.booked}
+                    localizeTree(<button key={k} className="chip" disabled={!!f.booked}
                             onClick={() => { saveLastTraining(f, k, f.training?.intensity || "Medium"); dispatch({ type: "SET_TRAINING", fighterId: f.id, program: k, intensity: f.training?.intensity || "Medium" }); }}
                       aria-label={`Select training program: ${v.label}`}
                       style={{ fontFamily: T.body, fontSize: 11, fontWeight: 600, padding: "6px 12px",
@@ -372,7 +373,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
                         background: active ? `${T.ember}22` : "transparent", color: active ? T.ember : T.txt3,
                         opacity: f.booked && k !== "fightcamp" ? 0.4 : 1 }}>
                       {v.label} {k === "fightcamp" ? "🔒" : `$${v.cost}/wk`}
-                    </button>
+                    </button>)
                   );
                 })}
               </div>
@@ -384,14 +385,14 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
                 {Object.entries(INTENSITY).map(([k, v]) => {
                   const active = f.training?.intensity === k;
                   return (
-                    <button key={k} className="chip" disabled={!!f.booked}
+                    localizeTree(<button key={k} className="chip" disabled={!!f.booked}
                       onClick={() => { const type = f.booked ? "fightcamp" : f.training?.type || "striking"; dispatch({ type: "SET_TRAINING", fighterId: f.id, program: type, intensity: k }); }}
                       aria-label={`Select intensity: ${k}`}
                       style={{ fontFamily: T.body, fontSize: 11, fontWeight: 600, padding: "5px 10px",
                         borderRadius: 6, cursor: f.booked ? "default" : "pointer", border: `1px solid ${active ? T.gold : T.line}`,
                         background: active ? `${T.gold}22` : "transparent", color: active ? T.gold : T.txt3 }}>
                       {k} <span style={{ fontSize: 9, color: T.txt3 }}>{Math.round(v.mult * 100)}%</span>
-                    </button>
+                    </button>)
                   );
                 })}
               </div>
@@ -407,7 +408,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
             {isMobile ? (
               <div style={{ display: "grid", gap: 2 }}>
                 {[...f.fightHistory].reverse().slice(0, 10).map((h, i) => (
-                  <div key={i} style={{
+                  localizeTree(<div key={i} style={{
                     display: "flex", alignItems: "center", gap: 8,
                     padding: "6px 4px", borderBottom: `1px solid ${T.line}22`,
                   }}>
@@ -425,7 +426,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
                         {h.tier} · {t("UI.week")} {h.week}
                       </div>
                     </div>
-                  </div>
+                  </div>)
                 ))}
               </div>
             ) : (
@@ -433,12 +434,12 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
             <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 90px 70px 90px 60px",
               padding: "0 4px 6px", borderBottom: `1px solid ${T.line}` }}>
               {["", t("UI.opponent"), t("FIGHTER.method"), t("SCORE.round"), t("UI.tier"), t("UI.week")].map((c, i) => (
-                <span key={i} style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1,
-                  textTransform: "uppercase", color: T.txt3 }}>{c}</span>
+                localizeTree(<span key={i} style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1,
+                  textTransform: "uppercase", color: T.txt3 }}>{c}</span>)
               ))}
             </div>
             {[...f.fightHistory].reverse().slice(0, 10).map((h, i) => (
-              <div key={i} className="row" style={{ display: "grid",
+              localizeTree(<div key={i} className="row" style={{ display: "grid",
                 gridTemplateColumns: "40px 1fr 90px 70px 90px 60px", alignItems: "center",
                 padding: "8px 4px", borderBottom: `1px solid ${T.line}`, borderRadius: 4 }}>
                 <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 15,
@@ -448,7 +449,7 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
                 <span style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>R{h.round}</span>
                 <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt3 }}>{h.tier}</span>
                 <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: T.pos }}>{h.week}</span>
-              </div>
+              </div>)
             ))}
             </>
             )}
@@ -468,14 +469,14 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
           if (deltas.length === 0) return null;
           const labels = { striking: t("ATTR.striking"), wrestling: t("ATTR.wrestling"), bjj: t("ATTR.bjj"), footwork: t("ATTR.footwork"), strength: t("ATTR.strength"), cardio: t("ATTR.cardio"), chin: t("ATTR.chin"), fightIQ: t("ATTR.fightIQ") };
           return (
-            <Panel style={{ gridColumn: "span 2" }}>
+            localizeTree(<Panel style={{ gridColumn: "span 2" }}>
               <Eyebrow color={T.pos}>{t("FIGHTER.progress").replace("{0}", weeks)}</Eyebrow>
               <div style={{ display: "grid", gap: 6 }}>
                 {deltas.map(({ key, delta, now, ceil }) => {
                   const pct = Math.round((now / ceil) * 100);
                   const plateau = pct >= 90;
                   return (
-                    <div key={key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    localizeTree(<div key={key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt3, width: 72, textAlign: "right" }}>{labels[key]}</span>
                       <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: delta > 0 ? T.pos : T.neg, minWidth: 50 }}>
                         {delta > 0 ? "+" : ""}{delta.toFixed(1)}
@@ -485,15 +486,15 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
                       </div>
                       <span style={{ fontFamily: T.mono, fontSize: 11, color: T.txt2, minWidth: 44 }}>{now}/{ceil}</span>
                       {plateau && <Tag color={T.warn}>{t("FIGHTER.plateau")}</Tag>}
-                    </div>
+                    </div>)
                   );
                 })}
               </div>
-            </Panel>
+            </Panel>)
           );
         })()}
       </div>
-    </div>
+    </div>)
   );
 }
 
@@ -506,19 +507,19 @@ export function TrainingFactors({ g, f }) {
   const total = FX_KEYS.reduce((p, k) => p * fx[k], 1);
   const color = (v) => (v > 1.001 ? T.pos : v < 0.999 ? T.neg : T.txt3);
   return (
-    <div style={{ marginTop: 14, borderTop: `1px solid ${T.line}44`, paddingTop: 10 }}>
+    localizeTree(<div style={{ marginTop: 14, borderTop: `1px solid ${T.line}44`, paddingTop: 10 }}>
       <div style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: T.txt3, marginBottom: 8 }}>
         {t("TRAINFX.header")} · {t("TRAINFX.total")} <span style={{ color: color(total), fontFamily: T.mono }}>×{total.toFixed(2)}</span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "4px 12px", fontSize: 11 }}>
         {FX_KEYS.map((k) => (
-          <div key={k} style={{ display: "flex", justifyContent: "space-between", color: T.txt2 }}>
+          localizeTree(<div key={k} style={{ display: "flex", justifyContent: "space-between", color: T.txt2 }}>
             <span>{t(`TRAINFX.${k}`)}</span>
             <span style={{ fontFamily: T.mono, color: color(fx[k]) }}>×{fx[k].toFixed(2)}</span>
-          </div>
+          </div>)
         ))}
       </div>
       <div style={{ fontSize: 10, color: T.txt3, marginTop: 6 }}>{t("TRAINFX.note")}</div>
-    </div>
+    </div>)
   );
 }

@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 import { fmt$ } from "@ironfist/engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
@@ -13,13 +14,13 @@ export default function Inbox({ g, dispatch, setTab }) {
   const displayInbox = (g.inbox || []).filter((m) => m.type !== "world");
   if (displayInbox.length === 0) {
     return (
-      <Panel style={{ textAlign: "center", padding: "40px 20px" }}>
+      localizeTree(<Panel style={{ textAlign: "center", padding: "40px 20px" }}>
         <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.6 }}>✉</div>
         <Eyebrow>{t("UI.inboxClear")}</Eyebrow>
         <div style={{ fontSize: 13, color: T.txt3 }}>
           {t("UI.noEventsHint")}
         </div>
-      </Panel>
+      </Panel>)
     );
   }
 
@@ -42,7 +43,7 @@ export default function Inbox({ g, dispatch, setTab }) {
   };
 
   return (
-    <div>
+    localizeTree(<div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <Eyebrow color={T.gold}>
           {t("UI.inbox")} · {g.inbox.length} message{g.inbox.length !== 1 ? "s" : ""}
@@ -63,7 +64,7 @@ export default function Inbox({ g, dispatch, setTab }) {
           const accent = isTitle ? T.gold : isUrgent ? T.neg : T.steel;
 
           return (
-            <Panel key={m.id} style={{ marginBottom: 12, borderColor: accent }}>
+            localizeTree(<Panel key={m.id} style={{ marginBottom: 12, borderColor: accent }}>
               {/* Header row */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -75,7 +76,7 @@ export default function Inbox({ g, dispatch, setTab }) {
                   {m.isTitleEliminator && <Tag color={T.warn}>{t("UI.rankings") + " Eliminator"}</Tag>}
                   {m.shortNotice && <Tag color={T.neg}>{t("UI.expiresWeek")}</Tag>}
                   <Tag color={accent}>{m.tier}</Tag>
-                  {m.promotionName && (() => { const prom = g.promotions?.find(p => p.name === m.promotionName); return <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: T.body, fontSize: 10, color: T.txt3, marginLeft: 4 }}>{prom?.color && <span style={{ width: 6, height: 6, borderRadius: "50%", background: prom.color, display: "inline-block" }} />}{m.promotionName}{m.promotionNote && <span style={{ color: T.gold }}> · {m.promotionNote}</span>}</span>; })()}
+                  {m.promotionName && (() => { const prom = g.promotions?.find(p => p.name === m.promotionName); return localizeTree(<span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: T.body, fontSize: 10, color: T.txt3, marginLeft: 4 }}>{prom?.color && <span style={{ width: 6, height: 6, borderRadius: "50%", background: prom.color, display: "inline-block" }} />}{m.promotionName}{m.promotionNote && <span style={{ color: T.gold }}> · {m.promotionNote}</span>}</span>); })()}
                 </div>
                 {m.expires != null && (
                   <span style={{
@@ -194,14 +195,14 @@ export default function Inbox({ g, dispatch, setTab }) {
                   {t("UI.reject")}
                 </Btn>
               </div>
-            </Panel>
+            </Panel>)
           );
         }
 
         // ── SPONSOR OFFER ────────────────────────────────────────
         if (m.type === "sponsor") {
           return (
-            <Panel key={m.id} style={{ marginBottom: 12, borderColor: T.gold }}>
+            localizeTree(<Panel key={m.id} style={{ marginBottom: 12, borderColor: T.gold }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <Tag color={T.gold} solid>Sponsor</Tag>
                 <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 15, textTransform: "uppercase",
@@ -218,25 +219,25 @@ export default function Inbox({ g, dispatch, setTab }) {
               {m.choices && m.choices.length > 0 && (
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {m.choices.map((c, i) => (
-                    <Btn key={i} sm color={c.sponsorReject ? T.txt3 : T.pos}
+                    localizeTree(<Btn key={i} sm color={c.sponsorReject ? T.txt3 : T.pos}
                       ghost={!!c.sponsorReject}
                       onClick={() => dispatch({
                         type: "INBOX_EVENT", choiceIndex: i, messageId: m.id,
                         choice: c, gambleRoll: null,
                       })}>
                       {c.label}
-                    </Btn>
+                    </Btn>)
                   ))}
                 </div>
               )}
-            </Panel>
+            </Panel>)
           );
         }
 
         // ── PRESS CONFERENCE ─────────────────────────────────────
         if (m.type === "press") {
           return (
-            <Panel key={m.id} style={{ marginBottom: 12, borderColor: T.ember }}>
+            localizeTree(<Panel key={m.id} style={{ marginBottom: 12, borderColor: T.ember }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <Tag color={T.ember} solid>Press</Tag>
                 <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 15, textTransform: "uppercase", letterSpacing: .5, color: T.txt }}>{m.title}</span>
@@ -247,7 +248,7 @@ export default function Inbox({ g, dispatch, setTab }) {
               {m.choices && m.choices.length > 0 && (
                 <div style={{ display: "flex", gap: 6, flexDirection: "column" }}>
                   {m.choices.map((c, i) => (
-                    <Btn key={i} sm
+                    localizeTree(<Btn key={i} sm
                       color={c.choice === "trashTalk" ? T.neg : c.choice === "confident" ? T.pos : T.txt2}
                       ghost={c.choice !== "trashTalk"}
                       onClick={() => dispatch({
@@ -257,18 +258,18 @@ export default function Inbox({ g, dispatch, setTab }) {
                       style={{ justifyContent: "flex-start", textAlign: "left" }}
                     >
                       {c.label}
-                    </Btn>
+                    </Btn>)
                   ))}
                 </div>
               )}
-            </Panel>
+            </Panel>)
           );
         }
 
         // ── INJURY ────────────────────────────────────────
         if (m.type === "injury") {
           return (
-            <Panel key={m.id} style={{ marginBottom: 12, borderColor: T.neg }}>
+            localizeTree(<Panel key={m.id} style={{ marginBottom: 12, borderColor: T.neg }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <Tag color={T.neg} solid>Injury</Tag>
                 <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 15, textTransform: "uppercase", letterSpacing: .5, color: T.txt }}>{m.title}</span>
@@ -279,7 +280,7 @@ export default function Inbox({ g, dispatch, setTab }) {
               {m.choices && m.choices.length > 0 && (
                 <div style={{ display: "flex", gap: 6, flexDirection: "column" }}>
                   {m.choices.map((c, i) => (
-                    <Btn key={i} sm
+                    localizeTree(<Btn key={i} sm
                       color={c.choice === "physio" ? T.pos : c.choice === "push" ? T.warn : T.txt2}
                       ghost={c.choice === "rest" || c.choice === "ok"}
                       onClick={() => dispatch({
@@ -290,18 +291,18 @@ export default function Inbox({ g, dispatch, setTab }) {
                       style={{ justifyContent: "flex-start", textAlign: "left" }}
                     >
                       {c.label}
-                    </Btn>
+                    </Btn>)
                   ))}
                 </div>
               )}
-            </Panel>
+            </Panel>)
           );
         }
 
         // ── EVENT / OTHER ────────────────────────────────────────
         const eventColor = m.type === "event" ? T.warn : T.steel;
         return (
-          <Panel key={m.id} style={{ marginBottom: 12, borderColor: eventColor }}>
+          localizeTree(<Panel key={m.id} style={{ marginBottom: 12, borderColor: eventColor }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Tag color={eventColor}>{(TYPE_META[m.type] || TYPE_META.event).label}</Tag>
@@ -330,7 +331,7 @@ export default function Inbox({ g, dispatch, setTab }) {
             {m.choices && m.choices.length > 0 && (
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {m.choices.map((c, i) => (
-                  <Btn
+                  localizeTree(<Btn
                     key={i}
                     sm
                     onClick={() => {
@@ -347,23 +348,23 @@ export default function Inbox({ g, dispatch, setTab }) {
                     }}
                   >
                     {c.label}
-                  </Btn>
+                  </Btn>)
                 ))}
               </div>
             )}
-          </Panel>
+          </Panel>)
         );
       })}
-    </div>
+    </div>)
   );
 }
 
 /* ---- Helper: single detail row ---- */
 function Detail({ label, value, color = T.txt2 }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
+    localizeTree(<div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
       <span style={{ color: T.txt3 }}>{label}</span>
       <span style={{ color, fontWeight: 600 }}>{value}</span>
-    </div>
+    </div>)
   );
 }

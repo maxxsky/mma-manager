@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 import React, { useState, useEffect } from "react";
 import { ARCH_COLOR, TRAINING, INTENSITY, ATTRS } from "@ironfist/engine/data.js";
 import { avgSkill } from "@ironfist/engine/fighter.js";
@@ -47,7 +48,7 @@ function BulkTraining({ g, dispatch }) {
   const programOptions = ["auto", ...Object.keys(TRAINING)];
 
   return (
-    <Panel style={{ marginBottom: 14 }}>
+    localizeTree(<Panel style={{ marginBottom: 14 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <span style={{ fontFamily: T.disp, fontSize: 12, fontWeight: 700, letterSpacing: 1,
           textTransform: "uppercase", color: T.txt3, marginRight: 2 }}>
@@ -62,9 +63,9 @@ function BulkTraining({ g, dispatch }) {
             borderRadius: T.r, padding: "6px 8px", fontFamily: T.body, fontSize: 12 }}
         >
           {programOptions.map((k) => (
-            <option key={k} value={k}>
+            localizeTree(<option key={k} value={k}>
               {k === "auto" ? t("ROSTER.bulkAuto") : (TRAINING[k].label || k)}
-            </option>
+            </option>)
           ))}
         </select>
 
@@ -75,7 +76,7 @@ function BulkTraining({ g, dispatch }) {
           style={{ background: T.bg, color: T.txt, border: `1px solid ${T.line}`,
             borderRadius: T.r, padding: "6px 8px", fontFamily: T.body, fontSize: 12 }}
         >
-          {Object.keys(INTENSITY).map((k) => <option key={k} value={k}>{k}</option>)}
+          {Object.keys(INTENSITY).map((k) => localizeTree(<option key={k} value={k}>{k}</option>))}
         </select>
 
         <Btn sm onClick={apply} disabled={eligible.length === 0}>
@@ -86,7 +87,7 @@ function BulkTraining({ g, dispatch }) {
           {t("ROSTER.bulkSkips")}
         </span>
       </div>
-    </Panel>
+    </Panel>)
   );
 }
 
@@ -128,7 +129,7 @@ export default function Roster({ g, setTab, dispatch }) {
           .sort((a, b) => b.v - a.v)
           .slice(0, 3);
         return (
-          <div key={f.id} onClick={() => { setDetailFighter(f); }}
+          localizeTree(<div key={f.id} onClick={() => { setDetailFighter(f); }}
             style={{ background: T.raised, borderRadius: T.r, padding: 12, cursor: "pointer",
               border: `1px solid ${T.line}`, borderLeft: isChamp ? `3px solid ${T.gold}` : `1px solid ${T.line}` }}>
             {/* Top row: mono + name/tags + OVR */}
@@ -154,14 +155,14 @@ export default function Roster({ g, setTab, dispatch }) {
             {/* Top 3 attrs chips */}
             <div style={{ display: "flex", gap: 5, marginBottom: 8, flexWrap: "wrap" }}>
               {top3.map(({ k, v }) => (
-                <span key={k} style={{
+                localizeTree(<span key={k} style={{
                   fontFamily: T.mono, fontSize: 10, fontWeight: 700, padding: "2px 7px",
                   borderRadius: 4, background: `${heat(v)}22`, color: heat(v),
                 }}>
                   {k === "striking" ? "STR" : k === "wrestling" ? "WRE" : k === "bjj" ? "BJJ"
                     : k === "footwork" ? "FTW" : k === "strength" ? "PWR" : k === "cardio" ? "CAR"
                     : k === "chin" ? "CHN" : "IQ"} {Math.round(v)}
-                </span>
+                </span>)
               ))}
             </div>
             {/* Bottom row: status tag + mini bars */}
@@ -184,7 +185,7 @@ export default function Roster({ g, setTab, dispatch }) {
                 </div>
               </div>
             </div>
-          </div>
+          </div>)
         );
       })}
     </div>
@@ -198,8 +199,8 @@ export default function Roster({ g, setTab, dispatch }) {
         alignItems: "center", padding: "0 16px", height: 40, background: T.raised,
         borderBottom: `1px solid ${T.line}` }}>
         {[t("UI.fighter"), t("UI.overall"), ...cols, t("UI.status"), t("UI.condition")].map((c, i) => (
-          <span key={i} role="columnheader" style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1,
-            textTransform: "uppercase", color: T.txt3, textAlign: i === 0 ? "left" : "center" }}>{c}</span>
+          localizeTree(<span key={i} role="columnheader" style={{ fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1,
+            textTransform: "uppercase", color: T.txt3, textAlign: i === 0 ? "left" : "center" }}>{c}</span>)
         ))}
       </div>
       {g.roster.map((f) => {
@@ -208,7 +209,7 @@ export default function Roster({ g, setTab, dispatch }) {
         const div = g.divisions && g.divisions[f.weightClass];
         const isChamp = div && div.champ && div.champ.player && div.champ.fighterId === f.id;
         return (
-          <div key={f.id} className="row" onClick={() => { setDetailFighter(f); }}
+          localizeTree(<div key={f.id} className="row" onClick={() => { setDetailFighter(f); }}
             role="row" aria-label={`${f.name} - ${f.weightClass}`}
             style={{ display: "grid",
               gridTemplateColumns: "minmax(200px,1.4fr) 46px repeat(8, 40px) 90px 70px",
@@ -235,8 +236,8 @@ export default function Roster({ g, setTab, dispatch }) {
                 {Math.round(avgSkill(f))}</span>
             </div>
             {keys.map((k) => (
-              <span key={k} role="cell" style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 600,
-                textAlign: "center", color: heat(f.attrs[k]) }}>{Math.round(f.attrs[k])}</span>
+              localizeTree(<span key={k} role="cell" style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 600,
+                textAlign: "center", color: heat(f.attrs[k]) }}>{Math.round(f.attrs[k])}</span>)
             ))}
             <div role="cell" style={{ textAlign: "center" }}>
               {isChamp ? <Tag color={T.gold}>{t("UI.champion")}</Tag>
@@ -253,7 +254,7 @@ export default function Roster({ g, setTab, dispatch }) {
                 <div style={{ height: "100%", width: `${f.overtraining}%`,
                   background: f.overtraining > 50 ? T.neg : T.txt3, borderRadius: 2 }} /></div>
             </div>
-          </div>
+          </div>)
         );
       })}
       </div>

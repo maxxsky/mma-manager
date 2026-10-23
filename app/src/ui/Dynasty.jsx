@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
 import { t } from "../i18n/index.js";
@@ -22,7 +23,7 @@ export default function Dynasty({ g, dispatch }) {
   });
 
   return (
-    <div style={{ display: "grid", gap: 16 }}>
+    localizeTree(<div style={{ display: "grid", gap: 16 }}>
       <details>
         <summary style={{ cursor: "pointer", color: T.txt2, marginBottom: 10 }}>{t("DYN.identity")} · {t("DYN.stat.peakLegacy")}</summary>
       {/* Historical flavor, not a separate camp progression track. */}
@@ -30,7 +31,7 @@ export default function Dynasty({ g, dispatch }) {
         <Eyebrow color={T.gold}>{t("DYN.identity")}</Eyebrow>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
           {identity.length > 0 ? identity.map(id => (
-            <Tag key={id.id} color={T.gold} solid>{id.label}</Tag>
+            localizeTree(<Tag key={id.id} color={T.gold} solid>{id.label}</Tag>)
           )) : (
             <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt3 }}>{t("DYN.identityPlaceholder")}</span>
           )}
@@ -38,7 +39,7 @@ export default function Dynasty({ g, dispatch }) {
         {identity.length > 0 && (
           <div style={{ display: "grid", gap: 6 }}>
             {identity.map(id => (
-              <div key={id.id} style={{ fontFamily: T.body, fontSize: 12, color: T.txt2, fontStyle: "italic" }}>{id.desc}</div>
+              localizeTree(<div key={id.id} style={{ fontFamily: T.body, fontSize: 12, color: T.txt2, fontStyle: "italic" }}>{id.desc}</div>)
             ))}
           </div>
         )}
@@ -99,14 +100,14 @@ export default function Dynasty({ g, dispatch }) {
         {prestige.sources.length > 0 ? (
           <div style={{ display: "grid", gap: 4 }}>
             {prestige.sources.map((src) => (
-              <div key={src.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "4px 0" }}>
+              localizeTree(<div key={src.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "4px 0" }}>
                 <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt2 }}>
                   {t("PRES.src." + src.id).replace("{0}", src.count)}
                 </span>
                 <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: T.gold }}>
                   +{src.points}
                 </span>
-              </div>
+              </div>)
             ))}
           </div>
         ) : (
@@ -132,10 +133,10 @@ export default function Dynasty({ g, dispatch }) {
             [t("DYN.stat.peakRep"), dyn.peakRep],
             [t("DYN.stat.hallOfFamers"), dyn.hallOfFamers?.length || 0],
           ].map(([label, value]) => (
-            <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.line}33` }}>
+            localizeTree(<div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.line}33` }}>
               <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt3 }}>{label}</span>
               <span style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 700, color: T.txt }}>{value}</span>
-            </div>
+            </div>)
           ))}
         </div>
       </Panel>
@@ -145,13 +146,13 @@ export default function Dynasty({ g, dispatch }) {
         <Eyebrow color={T.ember}>{t("DYN.worldRecords")}</Eyebrow>
         <div style={{ display: "grid", gap: 8 }}>
           {records.map(r => (
-            <div key={r.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "8px 10px", background: T.bg, borderRadius: T.r }}>
+            localizeTree(<div key={r.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "8px 10px", background: T.bg, borderRadius: T.r }}>
               <div>
                 <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3 }}>{r.label}</div>
                 <div style={{ fontFamily: T.disp, fontSize: 18, fontWeight: 700, color: T.gold, textTransform: "uppercase", letterSpacing: 1 }}>{r.value}</div>
               </div>
               <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt2 }}>{r.holder}</span>
-            </div>
+            </div>)
           ))}
         </div>
       </Panel>
@@ -170,7 +171,7 @@ export default function Dynasty({ g, dispatch }) {
               const years = Math.max(0, Math.round((a.leftWeek - a.joinedWeek) / 48 * 10) / 10);
               const rec = a.record || {};
               return (
-                <div key={a.id} style={{ display: "grid",
+                localizeTree(<div key={a.id} style={{ display: "grid",
                   gridTemplateColumns: "minmax(140px,1.4fr) 1fr 90px 70px 110px",
                   alignItems: "center", gap: 8, padding: "8px 10px",
                   background: T.bg, borderRadius: T.r,
@@ -183,7 +184,7 @@ export default function Dynasty({ g, dispatch }) {
                   </div>
                   <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
                     {(a.titles || []).map((ti) => (
-                      <Tag key={ti} color={T.gold}>{ti}</Tag>
+                      localizeTree(<Tag key={ti} color={T.gold}>{ti}</Tag>)
                     ))}
                   </div>
                   <span style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2, textAlign: "center" }}>
@@ -195,7 +196,7 @@ export default function Dynasty({ g, dispatch }) {
                   <span style={{ fontFamily: T.body, fontSize: 10.5, color: T.txt3, textAlign: "right" }}>
                     {t("DYN.alumniLeft").replace("{0}", a.ageAtExit ?? "?")}
                   </span>
-                </div>
+                </div>)
               );
             })}
             {alumni.length > 15 && (
@@ -216,19 +217,19 @@ export default function Dynasty({ g, dispatch }) {
         ) : (
           <div style={{ display: "grid", gap: 8 }}>
             {[...hof].reverse().map(h => (
-              <div key={h.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: `${T.gold}08`, borderRadius: T.r, border: `1px solid ${T.gold}33` }}>
+              localizeTree(<div key={h.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: `${T.gold}08`, borderRadius: T.r, border: `1px solid ${T.gold}33` }}>
                 <span style={{ fontSize: 24 }}>🏆</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontFamily: T.disp, fontSize: 16, fontWeight: 700, color: T.gold, textTransform: "uppercase", letterSpacing: 1 }}>{h.name}</div>
                   <div style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>{h.record} · {t("DYN.titleDefenses").replace("{0}", h.defenses)}</div>
                   {h.highlights.length > 0 && (
                     <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
-                      {h.highlights.map(hl => <Tag key={hl} color={T.ember}>{hl}</Tag>)}
+                      {h.highlights.map(hl => localizeTree(<Tag key={hl} color={T.ember}>{hl}</Tag>))}
                     </div>
                   )}
                 </div>
                 <span style={{ fontFamily: T.mono, fontSize: 10, color: T.txt3 }}>W{h.week}</span>
-              </div>
+              </div>)
             ))}
           </div>
         )}
@@ -239,9 +240,9 @@ export default function Dynasty({ g, dispatch }) {
         <Panel>
           <Eyebrow color={T.steel}>{t("DYN.generationalLegacy")}</Eyebrow>
           {links.map((l, i) => (
-            <div key={i} style={{ fontFamily: T.body, fontSize: 13, color: T.txt2, padding: "6px 0", fontStyle: "italic", borderBottom: i < links.length - 1 ? `1px solid ${T.line}33` : "none" }}>
+            localizeTree(<div key={i} style={{ fontFamily: T.body, fontSize: 13, color: T.txt2, padding: "6px 0", fontStyle: "italic", borderBottom: i < links.length - 1 ? `1px solid ${T.line}33` : "none" }}>
               {l.text}
-            </div>
+            </div>)
           ))}
         </Panel>
       )}
@@ -255,11 +256,11 @@ export default function Dynasty({ g, dispatch }) {
           .sort((a, b) => b[1].championsProduced - a[1].championsProduced || b[1].totalFighters - a[1].totalFighters);
         if (ranked.length === 0) return null;
         return (
-          <Panel>
+          localizeTree(<Panel>
             <Eyebrow color={T.ember}>{t("DYN.regionalPower")}</Eyebrow>
             <div style={{ display: "grid", gap: 6 }}>
               {ranked.map(([region, stats], i) => (
-                <div key={region} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", background: T.bg, borderRadius: T.r }}>
+                localizeTree(<div key={region} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", background: T.bg, borderRadius: T.r }}>
                   <span style={{ fontFamily: T.disp, fontSize: 14, fontWeight: 700, color: T.txt3, minWidth: 24 }}>#{i + 1}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontFamily: T.disp, fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, color: T.txt }}>{region}</div>
@@ -268,10 +269,10 @@ export default function Dynasty({ g, dispatch }) {
                     <div style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 700, color: T.gold }}>{stats.championsProduced} 👑</div>
                     <div style={{ fontFamily: T.mono, fontSize: 10, color: T.txt3 }}>{t("DYN.fighters").replace("{0}", stats.totalFighters)}</div>
                   </div>
-                </div>
+                </div>)
               ))}
             </div>
-          </Panel>
+          </Panel>)
         );
       })()}
 
@@ -289,7 +290,7 @@ export default function Dynasty({ g, dispatch }) {
             const affordable = g.cash >= inv.cost;
             const locked = !tierOk || !legacyOk;
             return (
-              <div key={inv.id} style={{ padding: "10px 12px", background: T.bg, borderRadius: T.r, border: `1px solid ${owned ? T.pos : T.line}`, opacity: locked ? 0.5 : 1 }}>
+              localizeTree(<div key={inv.id} style={{ padding: "10px 12px", background: T.bg, borderRadius: T.r, border: `1px solid ${owned ? T.pos : T.line}`, opacity: locked ? 0.5 : 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                   <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 13, color: T.txt }}>{inv.name}</span>
                   <span style={{ fontFamily: T.mono, fontSize: 12, color: owned ? T.pos : T.gold }}>{owned ? "OWNED" : fmt$(inv.cost)}</span>
@@ -304,11 +305,11 @@ export default function Dynasty({ g, dispatch }) {
                     {locked ? (inv.tierReq ? `Butuh Tier ${inv.tierReq}` : `Butuh Legacy ${inv.legacyReq}`) : !affordable ? "Cash Kurang" : "Beli"}
                   </Btn>
                 )}
-              </div>
+              </div>)
             );
           })}
         </div>
       </Panel>
-    </div>
+    </div>)
   );
 }

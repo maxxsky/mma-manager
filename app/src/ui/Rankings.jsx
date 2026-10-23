@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 import { fmt$ } from "@ironfist/engine/rng.js";
 import React, { useState, useEffect } from "react";
 import { WEIGHTS, ARCH_COLOR as DATA_ARCH_COLOR } from "@ironfist/engine/data.js";
@@ -24,10 +25,10 @@ export default function Rankings({ g, t }) {
   const div = g.divisions?.[selDiv];
   if (!div) {
     return (
-      <Panel>
+      localizeTree(<Panel>
         <Eyebrow>{t("UI.divRankings")}</Eyebrow>
         <div style={{ color: T.txt3, fontSize: 13 }}>No ranking data available.</div>
-      </Panel>
+      </Panel>)
     );
   }
 
@@ -87,7 +88,7 @@ export default function Rankings({ g, t }) {
     if (f.streak == null) return null;
     if (f.streak >= 3)
       return (
-        <span
+        localizeTree(<span
           style={{
             color: T.pos,
             fontFamily: T.mono,
@@ -96,11 +97,11 @@ export default function Rankings({ g, t }) {
           }}
         >
           W{f.streak}
-        </span>
+        </span>)
       );
     if (f.streak > 0)
       return (
-        <span
+        localizeTree(<span
           style={{
             color: "#8fd06a",
             fontFamily: T.mono,
@@ -109,13 +110,13 @@ export default function Rankings({ g, t }) {
           }}
         >
           W{f.streak}
-        </span>
+        </span>)
       );
     if (f.streak === 0) return null;
     // negative streak = lose streak
     const ls = Math.abs(f.streak);
     return (
-      <span
+      localizeTree(<span
         style={{
           color: T.neg,
           fontFamily: T.mono,
@@ -124,7 +125,7 @@ export default function Rankings({ g, t }) {
         }}
       >
         L{ls}
-      </span>
+      </span>)
     );
   };
 
@@ -133,26 +134,26 @@ export default function Rankings({ g, t }) {
     if (!c || c === 0) return null;
     if (c > 0)
       return (
-        <span style={{ color: T.pos, fontSize: 12, fontWeight: 700 }}>
+        localizeTree(<span style={{ color: T.pos, fontSize: 12, fontWeight: 700 }}>
           ▲{c}
-        </span>
+        </span>)
       );
     return (
-      <span style={{ color: T.neg, fontSize: 12, fontWeight: 700 }}>
+      localizeTree(<span style={{ color: T.neg, fontSize: 12, fontWeight: 700 }}>
         ▼{Math.abs(c)}
-      </span>
+      </span>)
     );
   };
 
   return (
-    <>
+    localizeTree(<>
       {/* ── Division Chip Selector ── */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
         {WEIGHTS.map((w) => {
           const has = g.roster.some((f) => f.weightClass === w.name);
           const active = selDiv === w.name;
           return (
-            <button
+            localizeTree(<button
               key={w.name}
               onClick={() => setSelDiv(w.name)}
               className="chip"
@@ -168,7 +169,7 @@ export default function Rankings({ g, t }) {
             >
               {w.name}
               {has && <span style={{ color: active ? T.ember : T.steel, marginLeft: 5 }}>●</span>}
-            </button>
+            </button>)
           );
         })}
       </div>
@@ -257,18 +258,18 @@ export default function Rankings({ g, t }) {
         const divHistory = g._worldHistory.titleChanges.filter(tc => tc.division === selDiv).slice(-5).reverse();
         if (divHistory.length === 0) return null;
         return (
-          <Panel style={{ marginTop: 12 }}>
+          localizeTree(<Panel style={{ marginTop: 12 }}>
             <Eyebrow>Title History — {selDiv}</Eyebrow>
             {divHistory.map((tc, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: i < divHistory.length - 1 ? `1px solid ${T.line}22` : "none" }}>
+              localizeTree(<div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: i < divHistory.length - 1 ? `1px solid ${T.line}22` : "none" }}>
                 <span style={{ fontFamily: T.mono, fontSize: 10, color: T.txt3, minWidth: 32 }}>W{tc.week}</span>
                 <span style={{ color: T.gold, fontSize: 13 }}>👑</span>
                 <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt2 }}>
                   <b style={{ color: T.txt }}>{tc.newChamp}</b> def. {tc.oldChamp}
                 </span>
-              </div>
+              </div>)
             ))}
-          </Panel>
+          </Panel>)
         );
       })()}
 
@@ -277,16 +278,16 @@ export default function Rankings({ g, t }) {
         const divRetired = g._worldHistory.retiredChamps.filter((r) => r.division === selDiv).slice(-5).reverse();
         if (divRetired.length === 0) return null;
         return (
-          <Panel style={{ marginTop: 12 }}>
+          localizeTree(<Panel style={{ marginTop: 12 }}>
             <Eyebrow>{t("UI.retiredLegends")} — {selDiv}</Eyebrow>
             {divRetired.map((r, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: i < divRetired.length - 1 ? `1px solid ${T.line}22` : "none" }}>
+              localizeTree(<div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: i < divRetired.length - 1 ? `1px solid ${T.line}22` : "none" }}>
                 <span style={{ fontFamily: T.mono, fontSize: 10, color: T.txt3, minWidth: 32 }}>W{r.week}</span>
                 <span style={{ fontSize: 13 }}>🎗️</span>
                 <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt2 }}>{r.name}</span>
-              </div>
+              </div>)
             ))}
-          </Panel>
+          </Panel>)
         );
       })()}
 
@@ -299,7 +300,7 @@ export default function Rankings({ g, t }) {
             </div>
           )}
           {top15.map((f, i) => (
-            <div key={f.player ? `p-${f.fighterId || i}` : `ai-${i}`}
+            localizeTree(<div key={f.player ? `p-${f.fighterId || i}` : `ai-${i}`}
               style={{
                 background: f.player ? `${T.gold}0d` : T.raised,
                 borderRadius: T.r, padding: "10px 12px",
@@ -346,7 +347,7 @@ export default function Rankings({ g, t }) {
                   PTS {f.points}
                 </span>
               </div>
-            </div>
+            </div>)
           ))}
         </div>
       ) : (
@@ -482,7 +483,7 @@ export default function Rankings({ g, t }) {
           </div>
         )}
         {top15.map((f, i) => (
-          <div
+          localizeTree(<div
             key={f.player ? `p-${f.fighterId || i}` : `ai-${i}`}
             className="row"
             role="row"
@@ -622,7 +623,7 @@ export default function Rankings({ g, t }) {
             >
               {f.points}
             </div>
-          </div>
+          </div>)
         ))}
       </div>
       </Panel>
@@ -633,7 +634,7 @@ export default function Rankings({ g, t }) {
         <Panel pad={12} style={{ marginTop: 12, borderColor: T.warn }}>
           <Eyebrow color={T.warn}>{t("UI.outsideTop15")}</Eyebrow>
           {outsideTop15.map((f, i) => (
-            <div
+            localizeTree(<div
               key={`out-${i}`}
               style={{
                 display: "flex",
@@ -654,7 +655,7 @@ export default function Rankings({ g, t }) {
               >
                 {f.points} pts
               </span>
-            </div>
+            </div>)
           ))}
         </Panel>
       )}
@@ -664,7 +665,7 @@ export default function Rankings({ g, t }) {
         <Panel pad={12} style={{ marginTop: 12, borderColor: T.txt3 }}>
           <Eyebrow>{t("UI.unranked")}</Eyebrow>
           {unranked.map((f) => (
-            <div
+            localizeTree(<div
               key={f.id}
               style={{
                 display: "flex",
@@ -683,7 +684,7 @@ export default function Rankings({ g, t }) {
               <span style={{ fontFamily: T.mono, fontSize: 11, color: T.txt2 }}>
                 {f.record?.w ?? 0}-{f.record?.l ?? 0}
               </span>
-            </div>
+            </div>)
           ))}
         </Panel>
       )}
@@ -699,7 +700,7 @@ export default function Rankings({ g, t }) {
       >
         <Eyebrow color={T.gold}>🌍 P4P — Pound-for-Pound Top 10</Eyebrow>
         {p4p.map((f, i) => (
-          <div
+          localizeTree(<div
             key={i}
             style={{
               display: "flex",
@@ -761,9 +762,9 @@ export default function Rankings({ g, t }) {
                 {f.record}W
               </span>
             </div>
-          </div>
+          </div>)
         ))}
       </Panel>
-    </>
+    </>)
   );
 }

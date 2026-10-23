@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 import { useState } from "react";
 import { fmt$ } from "@ironfist/engine/rng.js";
 import React from "react";
@@ -19,14 +20,14 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
   const coachSpecLabel = (spec) => ({ Striking: "Striking", Wrestling: "Wrestling", BJJ: "BJJ", "S&C": "S&C", Head: "Head" }[spec] || spec);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
+    localizeTree(<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
       {/* LEFT — Coaching staff */}
       <Panel pad={0} style={{ overflow: "hidden" }}>
         <div style={{ padding: "14px 18px 10px" }}>
           <Eyebrow>{t("UI.coachingStaff")} · {g.coaches.length} / {coachCap} slots</Eyebrow>
         </div>
         {g.coaches.map((c, i, arr) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 18px",
+          localizeTree(<div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 18px",
             borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none" }}>
             <Mono name={c.name} color={COACH_PERSONALITIES[c.personality]?.color || T.steel} size={32} />
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -47,7 +48,7 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
               onClick={() => dispatch({ type: "FIRE_COACH", coachId: c.id, coachName: c.name })}>
               {t("UI.fire")} · {fmt$(c.salary)}
             </Btn>
-          </div>
+          </div>)
         ))}
         {g.coaches.length < coachCap && (
           <div style={{ padding: 14, textAlign: "center" }}>
@@ -69,7 +70,7 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
               </div>
             ) : (
               g.coachMarket.map((c, i) => (
-                <div key={c.id || i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0",
+                localizeTree(<div key={c.id || i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0",
                   borderBottom: i < g.coachMarket.length - 1 ? `1px solid ${T.line}33` : "none" }}>
                   <Mono name={c.name} color={COACH_PERSONALITIES[c.personality]?.color || T.steel} size={28} />
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -87,7 +88,7 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
                     dispatch({ type: "HIRE_COACH", coachId: c.id, coachName: c.name, coachSpec: c.spec, coachSalary: c.salary });
                     setShowingMarket(false);
                   }}>Hire</Btn>
-                </div>
+                </div>)
               ))
             )}
           </div>
@@ -139,10 +140,10 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
               [t("UI.coachingStaff"), `${g.coaches.length}/${coachCap}`],
               ["Train bonus", `+${Math.round((tier.trainBonus || 0) * 100)}%`],
             ].map(([l, v]) => (
-              <div key={l} style={{ background: T.bg, borderRadius: T.r, padding: "8px 10px", textAlign: "center" }}>
+              localizeTree(<div key={l} style={{ background: T.bg, borderRadius: T.r, padding: "8px 10px", textAlign: "center" }}>
                 <div style={{ fontFamily: T.mono, fontSize: 15, fontWeight: 700, color: T.txt }}>{v}</div>
                 <div style={{ fontFamily: T.body, fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: T.txt3 }}>{l}</div>
-              </div>
+              </div>)
             ))}
           </div>
         </Panel>
@@ -160,26 +161,26 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
             );
             const capHere = CAMP_TIERS[g.campTier || 0].facMax[i] ?? 0;
             return (
-            <div key={k} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0",
+            localizeTree(<div key={k} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0",
               borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none" }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: T.body, fontSize: 13, fontWeight: 600, color: T.txt, marginBottom: 5 }}>
                   {facLabels[k]}</div>
                 <div style={{ display: "flex", gap: 4 }}>
                   {Array.from({ length: segments }).map((_, j) => (
-                    <div key={j} style={{ width: 18, height: 5, borderRadius: 2,
+                    localizeTree(<div key={j} style={{ width: 18, height: 5, borderRadius: 2,
                       background: j < lvl ? T.steel : T.bg,
                       // Levels this camp tier cannot yet reach are dimmed, so
                       // the bar shows both current progress and remaining room.
                       opacity: j < capHere ? 1 : 0.35,
-                      border: `1px solid ${j < lvl ? T.steel : T.line}` }} />
+                      border: `1px solid ${j < lvl ? T.steel : T.line}` }} />)
                   ))}
                 </div>
               </div>
               <span style={{ fontFamily: T.mono, fontSize: 11, color: T.txt3 }}>L{lvl}/{capHere}</span>
               <span style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 700, color: T.txt2 }}>
                 {fmt$(facCost(lvl))}/mo</span>
-            </div>
+            </div>)
           );})}
         </Panel>
       </div>
@@ -193,7 +194,7 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
             const hired = g.staff?.[role.id];
             const market = g.staffMarket?.[role.id] || [];
             return (
-              <div key={role.id} style={{ padding: "10px 12px", background: T.bg, borderRadius: T.r, border: `1px solid ${hired ? T.pos : T.line}` }}>
+              localizeTree(<div key={role.id} style={{ padding: "10px 12px", background: T.bg, borderRadius: T.r, border: `1px solid ${hired ? T.pos : T.line}` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                   <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 13 }}>{role.icon} {role.label}</span>
                   {hired && (
@@ -210,23 +211,23 @@ export default function Facility({ g, dispatch, coachCap, rosterCap }) {
                 ) : market.length > 0 ? (
                   <div style={{ display: "grid", gap: 4 }}>
                     {market.map((cand) => (
-                      <div key={cand.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      localizeTree(<div key={cand.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <span style={{ fontFamily: T.mono, fontSize: 12, color: T.txt2 }}>{cand.name} — Skill {cand.skill} — ${cand.salary}/bln</span>
                         <Btn color={T.gold} small onClick={() => dispatch({ type: "HIRE_STAFF", role: role.id, staffId: cand.id })}>
                           Hire
                         </Btn>
-                      </div>
+                      </div>)
                     ))}
                   </div>
                 ) : (
                   <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>Gak ada kandidat bulan ini.</div>
                 )}
-              </div>
+              </div>)
             );
           })}
         </div>
       </Panel>
       </div>
-    </div>
+    </div>)
   );
 }

@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 // World News — tab dedicated to simulation world events (title changes, streaks, retirements)
 import React from "react";
 import { T, Panel, Eyebrow } from "./theme.jsx";
@@ -7,13 +8,13 @@ export default function WorldNews({ g }) {
   const worldEvents = g.inbox?.filter((m) => m.type === "world") || [];
   if (worldEvents.length === 0) {
     return (
-      <Panel style={{ textAlign: "center", padding: "40px 20px" }}>
+      localizeTree(<Panel style={{ textAlign: "center", padding: "40px 20px" }}>
         <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.6 }}>🌍</div>
         <Eyebrow>{t("WN.header")}</Eyebrow>
         <div style={{ fontSize: 13, color: T.txt3 }}>
           {t("WN.empty")}
         </div>
-      </Panel>
+      </Panel>)
     );
   }
 
@@ -21,7 +22,7 @@ export default function WorldNews({ g }) {
   const firstMajor = sorted.findIndex((m) => m.severity === "major");
 
   return (
-    <div>
+    localizeTree(<div>
       <Eyebrow color={T.gold}>🌍 {t("WN.header")}</Eyebrow>
       <div style={{ display: "grid", gap: 8 }}>
         {sorted.map((m, i) => {
@@ -29,7 +30,7 @@ export default function WorldNews({ g }) {
           // Check if this is the first major — highlight its position
           const isHighlighted = isMajor && sorted.slice(0, i).every((x) => x.severity !== "major");
           return (
-            <Panel
+            localizeTree(<Panel
               key={m.id || i}
               style={{
                 borderColor: isMajor ? T.gold : T.line,
@@ -57,10 +58,10 @@ export default function WorldNews({ g }) {
                   </div>
                 </div>
               </div>
-            </Panel>
+            </Panel>)
           );
         })}
       </div>
-    </div>
+    </div>)
   );
 }

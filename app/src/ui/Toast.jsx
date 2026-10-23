@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 // Toast — broadcast notification system
 // Stack auto-dismiss toasts (gold border = achievement)
 import React, { useEffect } from "react";
@@ -25,7 +26,7 @@ export default function ToastContainer({ toasts, onDismiss }) {
   if (!toasts || toasts.length === 0) return null;
 
   return (
-    <div style={{
+    localizeTree(<div style={{
       position: "fixed",
       top: 70,
       right: 16,
@@ -36,9 +37,9 @@ export default function ToastContainer({ toasts, onDismiss }) {
       pointerEvents: "none",
     }}>
       {toasts.map((t) => (
-        <ToastItem key={t.id} toast={t} onDismiss={onDismiss} />
+        localizeTree(<ToastItem key={t.id} toast={t} onDismiss={onDismiss} />)
       ))}
-    </div>
+    </div>)
   );
 }
 
@@ -49,7 +50,7 @@ function ToastItem({ toast, onDismiss }) {
   }, [toast.id, onDismiss]);
 
   return (
-    <div style={{
+    localizeTree(<div style={{
       background: `linear-gradient(135deg, ${T.raised}, ${T.surface})`,
       border: `1px solid ${T.gold}66`,
       borderRadius: T.r,
@@ -78,6 +79,6 @@ function ToastItem({ toast, onDismiss }) {
           </div>
         )}
       </div>
-    </div>
+    </div>)
   );
 }

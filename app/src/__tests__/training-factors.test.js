@@ -30,7 +30,7 @@ describe('TrainingFactors panel (FighterDetail)', () => {
     f.training = { type: 'sparring', intensity: 'Medium' }
     const html = renderToStaticMarkup(React.createElement(TrainingFactors, { f, g }))
     expect(html).toMatch(/Faktor training minggu ini|This week&#x27;s training factors|This week's training factors/)
-    expect(html).toMatch(/Overtraining/)
+    expect(html).toMatch(/Latihan Berlebih/)
     expect(html).toMatch(/×\d\.\d\d/)
   })
 })

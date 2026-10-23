@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { t as rawT, getLang, setLang } from "../i18n/index.js";
+import { t as rawT, setLang } from "../i18n/index.js";
 
 const LangContext = createContext();
 
 export function LangProvider({ children }) {
-  const [lang, setLangState] = useState(getLang());
+  const [lang, setLangState] = useState(() => { setLang("id"); return "id"; });
   // Keep <html lang> in step with the UI language (screen readers, hyphenation).
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
 

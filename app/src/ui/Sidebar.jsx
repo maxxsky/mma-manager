@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 import React, { useState, useEffect } from "react";
 import { T, Icon, ICONS, Btn } from "./theme.jsx";
 import { t } from "../i18n/index.js";
@@ -21,7 +22,7 @@ function SidebarContent({ view, setView, onAdvance, inboxCount }) {
   const map = { fighter: "roster", card: "inbox", fightnight: "roster" };
   const active = map[view] || view;
   return (
-    <>
+    localizeTree(<>
       {/* Brand */}
       <div style={{ padding: "20px 18px 16px", borderBottom: `1px solid ${T.line}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -44,7 +45,7 @@ function SidebarContent({ view, setView, onAdvance, inboxCount }) {
         {NAV.map(([k, label, icon]) => {
           const on = active === k;
           return (
-            <button key={k} className="nav-item" onClick={() => setView(k === "roster" ? "roster" : k)}
+            localizeTree(<button key={k} className="nav-item" onClick={() => setView(k === "roster" ? "roster" : k)}
               aria-label={t(label)} data-tab={k} aria-current={on ? "page" : undefined}
               style={{ display: "flex", alignItems: "center", gap: 11, width: "100%",
                 textAlign: "left", padding: "9px 12px", marginBottom: 2, borderRadius: T.r,
@@ -62,7 +63,7 @@ function SidebarContent({ view, setView, onAdvance, inboxCount }) {
                   fontWeight: 700, color: T.bg, background: T.ember, borderRadius: 10,
                   padding: "1px 7px" }}>{inboxCount}</span>
               )}
-            </button>
+            </button>)
           );
         })}
       </nav>
@@ -74,7 +75,7 @@ function SidebarContent({ view, setView, onAdvance, inboxCount }) {
           <Icon d={ICONS.chevR} size={16} /> {t("UI.advanceWeek")}
         </Btn>
       </div>
-    </>
+    </>)
   );
 }
 
@@ -91,17 +92,17 @@ export default function Sidebar({ view, setView, onAdvance, inboxCount, mobileMe
   // Desktop: normal sidebar
   if (!isMobile) {
     return (
-      <aside style={{ width: 220, flexShrink: 0, background: T.surface,
+      localizeTree(<aside style={{ width: 220, flexShrink: 0, background: T.surface,
         borderRight: `1px solid ${T.line}`, display: "flex", flexDirection: "column",
         height: "100vh", position: "sticky", top: 0, overflowY: "auto" }}>
         <SidebarContent view={view} setView={setView} onAdvance={onAdvance} inboxCount={inboxCount} />
-      </aside>
+      </aside>)
     );
   }
 
   // Mobile: overlay drawer
   return (
-    <>
+    localizeTree(<>
       {/* Backdrop */}
       {mobileMenuOpen && (
         <div onClick={() => setMobileMenuOpen(false)}
@@ -116,6 +117,6 @@ export default function Sidebar({ view, setView, onAdvance, inboxCount, mobileMe
       </aside>
       {/* Show hamburger on mobile via CSS class (toggle button in TopBar) */}
       <style>{`@media(max-width:767px){.mobile-hamburger{display:inline-flex!important}}`}</style>
-    </>
+    </>)
   );
 }

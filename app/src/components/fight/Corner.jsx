@@ -1,3 +1,4 @@
+import { localizeTree } from "../../i18n/presentation.jsx";
 // Corner — between rounds strategy with contextual options
 import { Panel, Eyebrow, Btn } from "../../ui/theme.jsx";
 import { T } from "../../ui/theme.jsx";
@@ -51,20 +52,20 @@ export function buildOptions(state, rnd, totalRounds) {
 export default function Corner({ rnd, totalRounds, timer, state, runRound, processResult }) {
   if (rnd >= totalRounds) {
     return (
-      <Panel style={{ border: `1px solid ${T.gold}44` }}>
+      localizeTree(<Panel style={{ border: `1px solid ${T.gold}44` }}>
         <Eyebrow color={T.gold}>{t("CORNER.headerFinal")}</Eyebrow>
         <div style={{ textAlign: "center", padding: 20 }}>
           <div style={{ fontFamily: T.body, fontSize: 13, color: T.txt2, marginBottom: 12 }}>{t("CORNER.waitingDecision")}</div>
           <Btn color={T.gold} onClick={processResult}>{t("CORNER.goDecision")}</Btn>
         </div>
-      </Panel>
+      </Panel>)
     );
   }
 
   const options = buildOptions(state, rnd, totalRounds);
 
   return (
-    <Panel style={{ border: `1px solid ${T.gold}44` }}>
+    localizeTree(<Panel style={{ border: `1px solid ${T.gold}44` }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Eyebrow color={T.gold}>{t("CORNER.headerBetween")}</Eyebrow>
         <span style={{ fontFamily: T.mono, fontSize: 20, fontWeight: 700, color: T.warn, marginBottom: 12 }}>0:{String(timer).padStart(2, "0")}</span>
@@ -74,12 +75,12 @@ export default function Corner({ rnd, totalRounds, timer, state, runRound, proce
           {(state?.hpB < 50 ? t("CORNER.coachHurting") : t("CORNER.coachDangerous")).replace("{0}", rnd + 1)}</span>
       </div>
       {options.map(({ k, title, sub, trade }) => (
-        <button key={k} className="chip" onClick={() => runRound(rnd + 1, state, k)} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", padding: "10px 14px", borderRadius: T.r, cursor: "pointer", marginBottom: 6, border: `1px solid ${T.line}`, background: "transparent" }}>
+        localizeTree(<button key={k} className="chip" onClick={() => runRound(rnd + 1, state, k)} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", padding: "10px 14px", borderRadius: T.r, cursor: "pointer", marginBottom: 6, border: `1px solid ${T.line}`, background: "transparent" }}>
           <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 14.5, letterSpacing: .4, textTransform: "uppercase", color: T.txt, width: 180 }}>{t(title)}</span>
           <span style={{ fontFamily: T.body, fontSize: 11.5, color: T.txt2, flex: 1 }}>{t(sub)}</span>
           <span style={{ fontFamily: T.body, fontSize: 10.5, color: T.txt3 }}>{t(trade)}</span>
-        </button>
+        </button>)
       ))}
-    </Panel>
+    </Panel>)
   );
 }

@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 // ============================================================
 //   FIGHT NIGHT — Orchestrator
 //   Stage-based fight experience. Delegates to components/fight/.
@@ -179,7 +180,7 @@ export default function FightNight({ fighter, done, staff }) {
   const displayLog = (viewMode === "tick" ? roundLog?.tickLog : roundLog?.log) || roundLog?.log || [];
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 60, overflowY: "auto",
+    localizeTree(<div style={{ position: "fixed", inset: 0, zIndex: 60, overflowY: "auto",
       background: `radial-gradient(ellipse 90% 55% at 50% -5%, ${T.raised} 0%, ${T.bg} 60%)` }}>
       <GlobalStyle />
       <div style={{ maxWidth: 860, margin: "0 auto", padding: 14, position: "relative" }}>
@@ -187,13 +188,13 @@ export default function FightNight({ fighter, done, staff }) {
         {/* Stage progress */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
           {STAGES.map((st, i) => (
-            <React.Fragment key={st}>
+            localizeTree(<React.Fragment key={st}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ width: 20, height: 20, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.mono, fontSize: 10, fontWeight: 700, background: i <= stepIdx ? T.ember : T.raised, color: i <= stepIdx ? T.bg : T.txt3 }}>{i + 1}</span>
                 <span style={{ fontFamily: T.body, fontSize: 11.5, fontWeight: i === stepIdx ? 700 : 500, color: i === stepIdx ? T.txt : T.txt3 }}>{t(STAGE_KEYS[st])}</span>
               </div>
               {i < 3 && <div style={{ flex: 1, height: 1, background: i < stepIdx ? T.ember : T.line }} />}
-            </React.Fragment>
+            </React.Fragment>)
           ))}
         </div>
 
@@ -213,6 +214,6 @@ export default function FightNight({ fighter, done, staff }) {
         {stage === "knockdown" && <Knockdown roundLog={roundLog} rnd={rnd} onSeeResult={() => { if (roundLog.finish) processResult(); else { setStage("corner"); setTimer(60); } }} />}
         {stage === "result" && result && <ResultScreen fighter={fighter} opp={opp} roundLog={roundLog} roundLogs={roundLogs} result={{ ...result, weighinIssue, roundLogs }} totalRounds={totalRounds} onCommit={commitResult} />}
       </div>
-    </div>
+    </div>)
   );
 }

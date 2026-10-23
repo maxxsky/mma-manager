@@ -1,3 +1,4 @@
+import { localizeTree } from "../../i18n/presentation.jsx";
 // WeighIn — weigh-in, tale of the tape, game plan selection
 import { Panel, Eyebrow, Tag, Btn } from "../../ui/theme.jsx";
 import { T } from "../../ui/theme.jsx";
@@ -8,7 +9,7 @@ export default function WeighIn({ fighter, opp, limit, cutInfo, oppCutInfo, cutP
   const cancelled = weighinIssue === "cancelled";
   const canStart = cancelled || (plan && (!missedWeight || weighinIssue === "catchweight"));
   return (
-    <>
+    localizeTree(<>
       <Panel>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Eyebrow>{t("WEIGH.header")}</Eyebrow>
@@ -48,26 +49,26 @@ export default function WeighIn({ fighter, opp, limit, cutInfo, oppCutInfo, cutP
         )}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
           {Object.entries(GAME_PLANS).map(([k, d]) => (
-            <button key={k} className="chip" onClick={() => setPlan(k)} style={{
+            localizeTree(<button key={k} className="chip" onClick={() => setPlan(k)} style={{
               textAlign: "left", padding: "11px 13px", borderRadius: T.r, cursor: "pointer",
               border: `1px solid ${plan === k ? T.ember : T.line}`,
               background: plan === k ? `${T.ember}12` : T.bg }}>
               <div style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 14.5, letterSpacing: .4, textTransform: "uppercase", color: plan === k ? T.ember : T.txt }}>{k}</div>
               <div style={{ fontFamily: T.body, fontSize: 10.5, color: T.txt2, marginTop: 4 }}>{d}</div>
-            </button>
+            </button>)
           ))}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16 }}>
           <span style={{ fontFamily: T.body, fontSize: 11, color: T.txt3, flex: 1 }}>
             {t("WEIGH.viewing")} <b style={{ color: T.txt2 }}>{viewMode === "tick" ? t("WEIGH.viewStatusTick") : t("WEIGH.viewStatusSummary")}</b></span>
           {[{ k: "tick", label: "WEIGH.viewBtnTick" }, { k: "summary", label: "WEIGH.viewBtnSummary" }].map((m) => (
-            <button key={m.k} onClick={() => setViewMode(m.k)} style={{ fontFamily: T.body, fontSize: 10, background: viewMode === m.k ? T.ember : T.raised, color: viewMode === m.k ? T.bg : T.txt3, border: `1px solid ${T.line}`, padding: "4px 10px", borderRadius: T.r, cursor: "pointer" }}>{t(m.label)}</button>
+            localizeTree(<button key={m.k} onClick={() => setViewMode(m.k)} style={{ fontFamily: T.body, fontSize: 10, background: viewMode === m.k ? T.ember : T.raised, color: viewMode === m.k ? T.bg : T.txt3, border: `1px solid ${T.line}`, padding: "4px 10px", borderRadius: T.r, cursor: "pointer" }}>{t(m.label)}</button>)
           ))}
         </div>
         <div style={{ marginTop: 14 }}>
           <Btn color={T.ember} onClick={onStart} disabled={!canStart}>{cancelled ? t("WEIGH.confirmCancel") : t("WEIGH.ringBell")}</Btn>
         </div>
       </Panel>
-    </>
+    </>)
   );
 }

@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 import React, { useRef, useEffect, useState } from "react";
 import { T, Icon, ICONS } from "./theme.jsx";
 import { t } from "../i18n/index.js";
@@ -27,7 +28,7 @@ const Chip = ({ label, val, color, flashOnChange, rawValue }) => {
   const flashColor = flash === "up" ? "#2ecc71" : flash === "down" ? "#e74c3c" : null;
 
   return (
-    <div style={{ textAlign: "right" }}>
+    localizeTree(<div style={{ textAlign: "right" }}>
       <div style={{ fontFamily: T.body, fontSize: 9, fontWeight: 600, letterSpacing: 1.2,
         textTransform: "uppercase", color: T.txt3 }}>{label}</div>
       <div key={flash ? `${rawValue}-${flash}` : rawValue}
@@ -41,7 +42,7 @@ const Chip = ({ label, val, color, flashOnChange, rawValue }) => {
         ? `@keyframes cashFlash{0%{background:rgba(46,204,113,.15)}100%{background:transparent}}`
         : `@keyframes cashFlash{0%{background:rgba(231,76,60,.15)}100%{background:transparent}}`
       }</style>}
-    </div>
+    </div>)
   );
 };
 
@@ -60,7 +61,7 @@ export default function TopBar({ title, crumb, cash, rep, chem, prestige, week,
   }, []);
 
   return (
-    <header aria-label="Main header" style={{ height: 60, display: "flex", alignItems: "center",
+    localizeTree(<header aria-label="Main header" style={{ height: 60, display: "flex", alignItems: "center",
       justifyContent: "space-between", padding: isMobile ? "0 12px" : "0 24px",
       borderBottom: `1px solid ${T.line}`, background: `${T.bg}cc`,
       backdropFilter: "blur(6px)", position: "sticky", top: 0, zIndex: 5,
@@ -104,9 +105,9 @@ export default function TopBar({ title, crumb, cash, rep, chem, prestige, week,
                   style={{ fontFamily: T.mono, fontSize: 10, background: T.raised, color: T.txt3,
                     border: `1px solid ${T.line}`, borderRadius: T.r, padding: "3px 6px", cursor: "pointer" }}>
                   {[1, 2, 3].map((s) => (
-                    <option key={s} value={s}>
+                    localizeTree(<option key={s} value={s}>
                       S{s}{slotInfo && slotInfo[s - 1]?.week != null ? ` W${slotInfo[s - 1].week}` : ""}
-                    </option>
+                    </option>)
                   ))}
                 </select>
               )}
@@ -193,6 +194,6 @@ export default function TopBar({ title, crumb, cash, rep, chem, prestige, week,
           </>
         )}
       </div>
-    </header>
+    </header>)
   );
 }

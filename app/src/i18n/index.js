@@ -841,3 +841,8 @@ export function t(key, lang) {
   if (EN[key] !== undefined) return EN[key];
   return key;
 }
+
+// Reuse existing UI translations for literal labels emitted by older components.
+export const INTERFACE_TEXT_ID = new Map(Object.entries(EN)
+  .filter(([key, value]) => ID[key] !== undefined && ID[key] !== value)
+  .map(([key, value]) => [value, ID[key]]));

@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 // Promoters — tier relations + promoter directory
 import React from "react";
 import { T, Panel, Eyebrow, Tag } from "./theme.jsx";
@@ -26,7 +27,7 @@ export default function Promoters({ g }) {
   const relColor = (v) => (v < 30 ? T.neg : v < 70 ? T.txt3 : T.pos);
 
   return (
-    <div>
+    localizeTree(<div>
       <Eyebrow color={T.gold}>{t("PROMO.header")}</Eyebrow>
       <div style={{ color: T.txt3, fontSize: 12, marginBottom: 16, lineHeight: 1.5 }}>
         {t("PROMO.intro")}
@@ -40,7 +41,7 @@ export default function Promoters({ g }) {
             const v = rel[tier] ?? 30;
             const declining = !hasRecentActivity(tier);
             return (
-              <div key={tier}>
+              localizeTree(<div key={tier}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                   <span style={{ fontFamily: T.disp, fontWeight: 700, fontSize: 14, letterSpacing: .5, textTransform: "uppercase", color: T.txt }}>{tier}</span>
                   <span style={{ fontFamily: T.mono, fontSize: 14, fontWeight: 700, color: relColor(v) }}>{v}</span>
@@ -57,7 +58,7 @@ export default function Promoters({ g }) {
                 {v >= 70 && v < 85 && (
                   <div style={{ fontSize: 10.5, color: T.pos, marginTop: 2 }}>{t("PROMO.effect.t70")}</div>
                 )}
-              </div>
+              </div>)
             );
           })}
         </div>
@@ -76,7 +77,7 @@ export default function Promoters({ g }) {
               const tierPromos = byTier[tier];
               if (!tierPromos || tierPromos.length === 0) return null;
               return (
-                <div key={tier}>
+                localizeTree(<div key={tier}>
                   <div style={{
                     fontFamily: T.body, fontSize: 10, fontWeight: 700, letterSpacing: 1,
                     textTransform: "uppercase", color: T.txt3, marginBottom: 6,
@@ -88,7 +89,7 @@ export default function Promoters({ g }) {
                   {tierPromos.map((p) => {
                     const excl = exclusiveTo(p.id);
                     return (
-                      <div key={p.id} style={{
+                      localizeTree(<div key={p.id} style={{
                         display: "flex", alignItems: "center", gap: 10,
                         padding: "8px 10px", background: T.bg, borderRadius: T.r, marginBottom: 4,
                       }}>
@@ -107,15 +108,15 @@ export default function Promoters({ g }) {
                             )}
                           </div>
                         </div>
-                      </div>
+                      </div>)
                     );
                   })}
-                </div>
+                </div>)
               );
             })}
           </div>
         )}
       </Panel>
-    </div>
+    </div>)
   );
 }

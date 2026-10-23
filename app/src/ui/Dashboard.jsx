@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 import { fmt$ } from "@ironfist/engine/rng.js";
 import React from "react";
 import { T, Panel, Eyebrow, Tag, Btn, Icon, ICONS, Mono, ARCH_COLOR } from "./theme.jsx";
@@ -188,7 +189,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
 
   // ---- RENDER -------------------------------------------------------------------
   return (
-    <div style={{ display: "grid", gap: 16 }}>
+    localizeTree(<div style={{ display: "grid", gap: 16 }}>
       {/* KPI STRIP — 4 cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
         {kpis.map(([l, v, c, d, to], idx) => {
@@ -198,7 +199,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
           const oppName = nextFight?.booked?.opponent?.name;
           const showMatchup = isHero && nextFight && fighterName && oppName;
           return (
-          <Panel key={l} pad={0} style={isHero ? { borderColor: c, boxShadow: `0 0 0 1px ${c}22, 0 4px 20px rgba(0,0,0,.3)`, background: `linear-gradient(160deg, ${T.surface} 0%, ${T.raised} 100%)` } : {}}>
+          localizeTree(<Panel key={l} pad={0} style={isHero ? { borderColor: c, boxShadow: `0 0 0 1px ${c}22, 0 4px 20px rgba(0,0,0,.3)`, background: `linear-gradient(160deg, ${T.surface} 0%, ${T.raised} 100%)` } : {}}>
             <button className="row" onClick={() => setTab(to)} aria-label={`${l} - ${v}`} style={{ display: "block", width: "100%", textAlign: "left", padding: isHero ? 24 : 18, border: "none", background: "transparent", cursor: "pointer", borderRadius: T.r2 }}>
               <div style={{ fontFamily: T.body, fontSize: 11, fontWeight: 700, letterSpacing: isHero ? 2 : 1.5, textTransform: "uppercase", color: T.txt3, opacity: isHero ? 0.6 : 1, marginBottom: isHero ? 12 : 8 }}>{l}</div>
               <div style={{ fontFamily: T.mono, fontSize: isHero ? 40 : 30, fontWeight: 800, color: c, lineHeight: 1 }}>{v}</div>
@@ -221,7 +222,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
                 </div>
               )}
             </button>
-          </Panel>
+          </Panel>)
           );
         })}
       </div>
@@ -233,7 +234,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
         const completedCount = allObjectives - objectives.length;
         if (objectives.length === 0) return null;
         return (
-          <Panel pad={0} style={{ borderColor: T.gold, border: `1px solid ${T.gold}44`, background: `${T.gold}08` }}>
+          localizeTree(<Panel pad={0} style={{ borderColor: T.gold, border: `1px solid ${T.gold}44`, background: `${T.gold}08` }}>
             <div style={{ padding: "14px 20px 4px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                 <Eyebrow color={T.gold}>📋 Getting Started</Eyebrow>
@@ -244,14 +245,14 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
               {objectives.slice(0, 4).map((o, i) => {
                 const isFirst = i === 0;
                 return (
-                <div key={o.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", fontFamily: T.body, fontSize: 13, color: T.txt2, lineHeight: 1.3 }}>
+                localizeTree(<div key={o.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", fontFamily: T.body, fontSize: 13, color: T.txt2, lineHeight: 1.3 }}>
                   <span style={{ width: 18, height: 18, borderRadius: 9, background: isFirst ? `${T.gold}33` : `${T.gold}18`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.mono, fontSize: 10, color: isFirst ? T.gold : `${T.gold}aa`, flexShrink: 0 }}>{i + 1}</span>
                   <span style={{ color: isFirst ? T.txt : T.txt2, fontWeight: isFirst ? 600 : 400 }}>{o.label}</span>
                   <span style={{ marginLeft: "auto", fontSize: 9, color: T.txt3, opacity: 0.5, whiteSpace: "nowrap" }}>{o.hint}</span>
-                </div>
+                </div>)
               )})}
             </div>
-           </Panel>
+           </Panel>)
         );
       })()}
       {/* PRIORITIES THIS WEEK */}
@@ -287,7 +288,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
             fighterName = '';
           }
           return (
-          <button key={i} className="row" onClick={() => setTab(to)} aria-label={`Priority ${i+1}: ${txt}`} style={{ display: "flex", alignItems: "center", gap: 16, width: "100%", textAlign: "left", padding: "14px 20px", border: "none", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}44` : "none", background: "transparent", cursor: "pointer", minHeight: 68 }}>
+          localizeTree(<button key={i} className="row" onClick={() => setTab(to)} aria-label={`Priority ${i+1}: ${txt}`} style={{ display: "flex", alignItems: "center", gap: 16, width: "100%", textAlign: "left", padding: "14px 20px", border: "none", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}44` : "none", background: "transparent", cursor: "pointer", minHeight: 68 }}>
             <span style={{ fontFamily: T.mono, fontSize: 15, fontWeight: 700, color: c, width: 22, flexShrink: 0, lineHeight: 1 }}>{i + 1}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: T.body, fontSize: 14, fontWeight: 700, color: c, marginBottom: 2 }}>{action}</div>
@@ -295,7 +296,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
               <div style={{ fontFamily: T.body, fontSize: 11, fontWeight: 400, color: T.txt3, opacity: 0.75, lineHeight: 1.3 }}>{status}</div>
             </div>
             <span style={{ color: `${c}99`, flexShrink: 0 }}><Icon d={ICONS.chevR} size={16} /></span>
-          </button>
+          </button>)
           );
         })}
       </Panel>
@@ -312,7 +313,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
           <>
             <div style={{ display: "grid", gridTemplateColumns: "minmax(180px,1.2fr) minmax(160px,1fr) 1fr 90px 130px 60px 30px", alignItems: "center", padding: "0 18px", height: 32, background: T.raised, borderTop: `1px solid ${T.line}`, borderBottom: `1px solid ${T.line}` }}>
               {[t("UI.fighter"), t("UI.opponent"), t("UI.event"), t("UI.tier"), t("UI.purse"), t("UI.weeksIn"), ""].map((col, i) => (
-                <span key={i} style={{ fontFamily: T.body, fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: T.txt3, textAlign: i === 4 || i === 5 ? "right" : "left" }}>{col}</span>
+                localizeTree(<span key={i} style={{ fontFamily: T.body, fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: T.txt3, textAlign: i === 4 || i === 5 ? "right" : "left" }}>{col}</span>)
               ))}
             </div>
             {fights.map((f, i, arr) => {
@@ -324,7 +325,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
               const weeks = bk.weeksLeft;
               const ac = ARCH_COLOR[f.archetype] || T.steel;
               return (
-                <div key={f.id} className="row" onClick={() => setActiveFight(f.id)} style={{ display: "grid", gridTemplateColumns: "minmax(180px,1.2fr) minmax(160px,1fr) 1fr 90px 130px 60px 30px", alignItems: "center", padding: "0 18px", height: 52, cursor: "pointer", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none" }}>
+                localizeTree(<div key={f.id} className="row" onClick={() => setActiveFight(f.id)} style={{ display: "grid", gridTemplateColumns: "minmax(180px,1.2fr) minmax(160px,1fr) 1fr 90px 130px 60px 30px", alignItems: "center", padding: "0 18px", height: 52, cursor: "pointer", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <Mono name={f.name} color={ac} size={32} region={f.region} titleTier={isChamp(f) ? (f.titles?.includes("Major World Champion") ? "Major" : "National") : null} />
                     <div>
@@ -338,7 +339,7 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
                   <span style={{ fontFamily: T.mono, fontSize: 12.5, color: T.txt2, textAlign: "right" }}>{purseStr}</span>
                   <span style={{ fontFamily: T.mono, fontSize: 17, fontWeight: 800, color: T.ember, textAlign: "right" }}>{weeks}w</span>
                   <span style={{ color: T.txt3, display: "flex", justifyContent: "flex-end" }}><Icon d={ICONS.chevR} size={14} /></span>
-                </div>
+                </div>)
               );
             })}
           </>
@@ -352,11 +353,11 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
           <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, padding: "18px 20px" }}>{t("UI.noEventsHint")}</div>
         )}
         {dedupedFeed.map(([wk, who, txt, c], i, arr) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 20px", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none" }}>
+          localizeTree(<div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 20px", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : "none" }}>
             <span style={{ fontFamily: T.mono, fontSize: 10.5, color: T.txt3, width: 32, flexShrink: 0 }}>W{String(wk).padStart(2, "0")}</span>
             <span style={{ width: 6, height: 6, borderRadius: 3, background: c, flexShrink: 0 }} />
             <span style={{ fontFamily: T.body, fontSize: 13, color: T.txt2 }}><b style={{ color: T.txt }}>{who}</b> — {txt}</span>
-          </div>
+          </div>)
         ))}
       </Panel>
       {dispatch && (
@@ -372,6 +373,6 @@ export default function Dashboard({ g, setTab, setActiveFight, dispatch }) {
           </div>
         </Panel>
       )}
-    </div>
+    </div>)
   );
 }

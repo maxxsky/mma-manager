@@ -1,3 +1,4 @@
+import { localizeTree } from "../../i18n/presentation.jsx";
 // Entrance — fighter walkout (fade-in, auto-transition)
 import { Panel, Eyebrow, Mono } from "../../ui/theme.jsx";
 import { T } from "../../ui/theme.jsx";
@@ -13,7 +14,7 @@ if (!document.getElementById(styleId)) {
 
 export default function Entrance({ fighter, opp, ca, cb }) {
   return (
-    <Panel style={{ textAlign: "center", padding: 30, animation: "entranceFade .4s ease-out" }}>
+    localizeTree(<Panel style={{ textAlign: "center", padding: 30, animation: "entranceFade .4s ease-out" }}>
       <div style={{ fontSize: 48, marginBottom: 4 }}>🚶</div>
       <Eyebrow color={T.gold}>{t("ENTR.header")}</Eyebrow>
       <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 14 }}>
@@ -29,6 +30,6 @@ export default function Entrance({ fighter, opp, ca, cb }) {
           <div style={{ color: T.txt3, fontSize: 10, marginTop: 1 }}>{opp.weightClass || fighter.weightClass}</div>
         </div>
       </div>
-    </Panel>
+    </Panel>)
   );
 }

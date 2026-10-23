@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 import React from "react";
 import { T, Panel, Eyebrow, Tag } from "./theme.jsx";
 import { t } from "../i18n/index.js";
@@ -7,7 +8,7 @@ export default function Achievements({ g }) {
   const unlocked = g._unlocked || [];
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
+    localizeTree(<div style={{ display: "grid", gap: 12 }}>
       <Panel>
         <Eyebrow color={T.gold}>{t("ACHV.header")}</Eyebrow>
         <div style={{ fontFamily: T.body, fontSize: 12, color: T.txt3, marginBottom: 14 }}>
@@ -17,7 +18,7 @@ export default function Achievements({ g }) {
           {ACHIEVEMENTS.map((a) => {
             const done = unlocked.includes(a.id);
             return (
-              <div key={a.id} style={{
+              localizeTree(<div key={a.id} style={{
                 display: "flex", alignItems: "center", gap: 12, padding: "10px 14px",
                 background: done ? `${T.gold}0e` : T.bg, borderRadius: T.r,
                 border: `1px solid ${done ? T.gold : T.line}44`,
@@ -29,11 +30,11 @@ export default function Achievements({ g }) {
                   <div style={{ fontFamily: T.body, fontSize: 11, color: T.txt3 }}>{a.desc}</div>
                 </div>
                 {done && <Tag color={T.pos}>✓</Tag>}
-              </div>
+              </div>)
             );
           })}
         </div>
       </Panel>
-    </div>
+    </div>)
   );
 }

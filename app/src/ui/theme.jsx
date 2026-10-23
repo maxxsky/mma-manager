@@ -2,6 +2,8 @@ import React from "react";
 import { clamp } from "@ironfist/engine/rng.js";
 import { REGION_COLOR } from "@ironfist/engine/data/archetypes.js";
 import { avgSkill } from "@ironfist/engine/fighter.js";
+import { localizeTree } from "../i18n/presentation.jsx";
+import { localizeText } from "../i18n/text.js";
 
 /* =============================================================================
    IRONFIST DESIGN SYSTEM — theme.jsx
@@ -89,19 +91,19 @@ const ICONS = {
 /* ---- PRIMITIVES ------------------------------------------------------------ */
 export const Panel = ({ children, style, pad = 16 }) => (
   <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: T.r2,
-    boxShadow: "0 1px 0 rgba(255,255,255,.02) inset", padding: pad, ...style }}>{children}</div>
+    boxShadow: "0 1px 0 rgba(255,255,255,.02) inset", padding: pad, ...style }}>{localizeTree(children)}</div>
 );
 
 export const Eyebrow = ({ children, color = T.txt3 }) => (
   <div style={{ fontFamily: T.body, fontSize: 11, fontWeight: 600, letterSpacing: 1.4,
-    textTransform: "uppercase", color, marginBottom: 12 }}>{children}</div>
+    textTransform: "uppercase", color, marginBottom: 12 }}>{localizeTree(children)}</div>
 );
 
 export const Tag = ({ children, color = T.txt2, solid, title, style }) => (
-  <span title={title} style={{ display: "inline-flex", alignItems: "center", fontFamily: T.body, fontSize: 11,
+  <span title={localizeText(title)} style={{ display: "inline-flex", alignItems: "center", fontFamily: T.body, fontSize: 11,
     fontWeight: 600, letterSpacing: .5, padding: "2px 8px", borderRadius: 4, marginRight: 6,
     color: solid ? T.bg : color, background: solid ? color : `${color}1f`,
-    border: `1px solid ${color}${solid ? "" : "44"}`, ...style }}>{children}</span>
+    border: `1px solid ${color}${solid ? "" : "44"}`, ...style }}>{localizeTree(children)}</span>
 );
 
 export const Btn = ({ children, color = T.ember, onClick, ghost, sm, style, disabled, wide }) => (
@@ -111,7 +113,7 @@ export const Btn = ({ children, color = T.ember, onClick, ghost, sm, style, disa
     border: `1px solid ${color}${ghost ? "66" : ""}`, color: ghost ? color : T.bg,
     background: disabled ? T.raised : ghost ? "transparent" : color,
     cursor: disabled ? "default" : "pointer", width: wide ? "100%" : undefined,
-    opacity: disabled ? 0.5 : 1, ...style }}>{children}</button>
+    opacity: disabled ? 0.5 : 1, ...style }}>{localizeTree(children)}</button>
 );
 
 // initials monogram — per-fighter identity, archetype-colored, no image asset

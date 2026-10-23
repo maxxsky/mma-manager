@@ -1,3 +1,4 @@
+import { localizeTree } from "../i18n/presentation.jsx";
 // FightCard — pre-fight Tale of the Tape
 // Visual layout from FightCardFull, simplified API for current flow.
 import { fmt$ } from "@ironfist/engine/rng.js";
@@ -20,7 +21,7 @@ export default function FightCard({ fighter, g, onProceed }) {
 
   /* cache-bust */
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 55, background: "rgba(6,9,14,.92)", display: "flex", alignItems: "center", justifyContent: "center", padding: 14, overflowY: "auto" }}>
+    localizeTree(<div style={{ position: "fixed", inset: 0, zIndex: 55, background: "rgba(6,9,14,.92)", display: "flex", alignItems: "center", justifyContent: "center", padding: 14, overflowY: "auto" }}>
       <div style={{ maxWidth: 860, width: "100%", maxHeight: "95vh", overflowY: "auto" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16, alignItems: "start" }}>
           {/* LEFT — Event banner + Fighters + Tale of the Tape */}
@@ -77,7 +78,7 @@ export default function FightCard({ fighter, g, onProceed }) {
               <CompareBar label="Age" a={f.age ?? 0} b={m.opponent?.age || 28} ca={ca} cb={cb} />
               <div style={{ height: 1, background: T.line, margin: "8px 0" }} />
               {rows.map(([lb, k]) => (
-                <CompareBar key={k} label={lb} a={Math.round(f.attrs[k])} b={Math.round(m.opponent?.attrs?.[k] || 50)} ca={ca} cb={cb} />
+                localizeTree(<CompareBar key={k} label={lb} a={Math.round(f.attrs[k])} b={Math.round(m.opponent?.attrs?.[k] || 50)} ca={ca} cb={cb} />)
               ))}
             </div>
           </Panel>
@@ -90,10 +91,10 @@ export default function FightCard({ fighter, g, onProceed }) {
                 ["Win bonus", fmt$(m.winBonus || 0), T.pos],
                 ["Your cut", Math.round(((f.contract?.managerCut) || 0.18) * 100) + "%", T.txt2],
               ].map(([l, v, c]) => (
-                <div key={l} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", background: T.bg, borderRadius: T.r }}>
+                localizeTree(<div key={l} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", background: T.bg, borderRadius: T.r }}>
                   <span style={{ fontFamily: T.body, fontSize: 12, color: T.txt2 }}>{l}</span>
                   <span style={{ fontFamily: T.mono, fontSize: 15, fontWeight: 700, color: c }}>{v}</span>
-                </div>
+                </div>)
               ))}
             </div>
             {m.defense && (
@@ -107,6 +108,6 @@ export default function FightCard({ fighter, g, onProceed }) {
           </Panel>
         </div>
       </div>
-    </div>
+    </div>)
   );
 }
