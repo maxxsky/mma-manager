@@ -345,6 +345,10 @@ if (problems.length === 0) {
     seen.add(key);
     console.log(`  [${p.kind}] at ${p.where}`);
     console.log(`    ${p.text.split("\n")[0].slice(0, 300)}\n`);
+    if (process.env.GITHUB_ACTIONS) {
+      const escape = value => value.replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A");
+      console.log(`::error title=Browser smoke::${escape(`[${p.kind}] at ${p.where}: ${p.text}`)}`);
+    }
   }
   if (seen.size < problems.length) {
     console.log(`  (${problems.length - seen.size} duplicate occurrence(s) collapsed)`);
