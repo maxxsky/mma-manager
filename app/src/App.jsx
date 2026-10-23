@@ -122,6 +122,23 @@ export default function App() {
       <Sidebar view={tab} setView={(t) => { setTab(t); setMobileMenuOpen(false); }} onAdvance={advance} inboxCount={g.inbox?.length || 0}
         mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
+      <style>{`
+        .mobile-week-action { display: none; }
+        @media (max-width: 767px) {
+          .mobile-week-action { display: block; position: fixed; bottom: 0; left: 0; right: 0;
+            z-index: 30; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: ${T.surface}; border-top: 1px solid ${T.line}; }
+          .app-content { padding: 14px 12px 100px !important; }
+        }
+      `}</style>
+      <div className="mobile-week-action">
+        <button type="button" data-action="advance-week-mobile" onClick={advance}
+          disabled={g.over || !!activeFight || !!nego || !!weeklySummary || mobileMenuOpen}
+          style={{ width: "100%", minHeight: 44, border: 0, borderRadius: T.r, background: T.ember,
+            color: T.bg, fontFamily: T.body, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+          {t("UI.advanceWeek")}
+        </button>
+      </div>
+
       {/* Main area */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, minHeight: "100vh" }}>
         <TopBar
@@ -139,7 +156,7 @@ export default function App() {
           onToggleMenu={() => setMobileMenuOpen(p => !p)}
         />
 
-        <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
+        <div className="app-content" style={{ flex: 1, overflowY: "auto", padding: 24 }}>
           <style>{`@keyframes tabIn{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}`}</style>
           <div key={tab} style={{ animation: "tabIn .18s ease both" }}>
           {/* Win condition */}
