@@ -1,226 +1,113 @@
-# 🥊 MMA Manager — Ironfist Edition
+# IronFist — MMA Manager
 
 [![CI](https://github.com/maxxsky/mma-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/maxxsky/mma-manager/actions/workflows/ci.yml)
-[![Constraints](https://img.shields.io/badge/engine-constraints-blue)](CONSTRAINTS.md)
 
-**A single-player MMA camp management simulation game.** Build your gym, recruit fighters, train champions, negotiate contracts, and compete through the ranks — from local shows to world title fights.
+Game manajemen camp MMA single-player berbasis React dan engine JavaScript murni.
+Rekrut dan latih petarung, kelola biaya, terima tawaran, dan bangun prestise lintas generasi.
+Status dokumentasi: 23 Oktober 2026. Backend tersedia sebagai eksperimen terpisah dan
+**tetap ditunda**; browser belum memakai akun/server untuk permainan single-player.
 
-Built with a **pure JavaScript engine** (zero UI dependencies) layered under a **React + Vite** frontend — architecturally ready for multiplayer backend migration.
+## Menjalankan lokal
 
----
+Gunakan Node.js 20+ dan npm dari root repository:
 
-## ✨ Features
-
-### 🏕️ Camp Management
-- **Camp tiers** — Upgrade from Local Gym → Regional Camp → National Center → Elite Factory → World-Class Institute
-- **Facilities** — Manage training mats, boxing ring, weight room, and medical room
-- **Coaching staff** — Hire/fire coaches with specialties (Striking, Wrestling, BJJ, S&C, Head) and personalities (Motivator, Technician, Disciplinarian, Player's Coach)
-- **Sponsors** — Accept royalty or placement deals from brands based on camp reputation
-- **Chemistry & reputation** — Camp morale affects training efficiency; reputation unlocks tiers and opportunities
-
-### 🧑‍🤝‍🧑 Fighter Management
-- **Roster** — Full attribute grid (Striking, Wrestling, BJJ, Footwork, Strength, Cardio, Chin, Fight IQ) with heat-mapped OVR
-- **Training** — 6 programs (Striking, Grappling, S&C, Sparring, Recovery, Fight Camp) × 3 intensities
-- **Traits & ambitions** — Iron Chin, Glass Jaw, Crowd Favorite, Belt Chaser, Legacy, etc.
-- **Contracts** — Manager cut, fight commitment, duration, agent tiers (Budget/Standard/Power)
-- **Weight cutting** — Miss weight, catchweight, or cancel fights
-- **Injuries** — 4-tier injury system with attribute decay during long recoveries
-- **Aging & retirement** — Attribute ceilings, chin decay, retire-to-coach conversion
-
-### 🔍 Scouting
-- **4 scout tiers** — Local Amateur Circuit → Regional Tryouts → National Trip → Diamond in the Rough
-- **Grade-based reports** — C/B/A/S grade accuracy based on camp reputation
-- **Prospect management** — Track up to 5 prospects, negotiate contracts, filter by archetype & weight class
-
-### 🥊 Fight System
-- **Tick-based MMA engine** — Round-by-round simulation with position hierarchy (standing → clinch → ground positions)
-- **Archetype matchups** — Boxer, Muay Thai, Wrestler, BJJ Specialist, All-Rounder with rock-paper-scissors dynamics
-- **Game plans** — Take It Down, Keep It Standing, Finish It, Survive & Outpoint
-- **Corner decisions** — Between-round strategy with countdown timer (Finish him / Work the body / Save your gas)
-- **Fight Night experience** — Staredown attitude (Respectful/Professional/Trash Talk), weigh-in with Tale of the Tape, entrance, round-by-round commentary, knockdown, doctor stoppage, result with purse breakdown
-- **Title fights** — Major, Premier, Minor, National, Regional title tiers with mandatory defenses
-- **Double Champion** — Cross-division super fights
-
-### 📊 Rankings
-- **Division rankings** — Top 15 per weight class with point decay and AI fighter rotation
-- **P4P Top 10** — Cross-division pound-for-pound rankings
-- **Outside offers** — other camps approach unhappy fighters (low morale and loyalty)
-
-### 💰 Finance
-- **Monthly P&L** — Income (sponsors, training fees, popularity) vs expenses (coach salaries, maintenance, training costs)
-- **Cash reserve** — Runway projection and bankruptcy threshold gauge
-- **Split visualizations** — Income and expense breakdown bars
-
-### 🌐 Internationalization
-- **Full EN ↔ ID** — 200+ translation keys covering attributes, UI labels, traits, game terms
-- **Language toggle** — Switch between English and Bahasa Indonesia in real-time
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| **Runtime** | Browser (Vite dev server / static build) |
-| **UI Framework** | React 18 |
-| **Build Tool** | Vite 6 |
-| **Game Engine** | Pure JavaScript (zero framework dependencies) |
-| **State** | React `useState` + in-place mutation engine |
-| **Styling** | Inline styles with design token system (Ironfist theme) |
-| **Fonts** | Barlow + Barlow Condensed + JetBrains Mono (Google Fonts) |
-| **Icons** | Custom SVG icon set |
-| **Persistence** | `localStorage` (3 save slots) |
-| **Deploy** | Static HTML/JS served via Python `http.server` on PM2 |
-
----
-
-## 📦 Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/maxxsky/mma-manager.git
-cd mma-manager/app
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Production build
-npm run build
-# Output: app/dist/ (static HTML + single JS bundle, ~350KB)
+```sh
+npm ci
+npm run dev -w app
+npm run build -w app
+npm run preview -w app
 ```
 
----
+Build statis ada di `app/dist/`. Tidak perlu PostgreSQL untuk bermain di browser.
 
-## 📁 Project Structure
+## Fitur dan lingkup
 
-```
-mma-manager/
-├── app/                          # React + Vite frontend
-│   ├── index.html                # HTML entry point
-│   ├── package.json
-│   ├── vite.config.js
-│   ├── dist/                     # Production build output
-│   └── src/
-│       ├── main.jsx              # React root + ErrorBoundary
-│       ├── App.jsx               # App shell: routing, state, save/load, dispatch
-│       ├── engine/               # Pure JS game engine (13 files, ~2,800 LOC)
-│       │   ├── state.js          # Game loop (tick) + newGame initialization
-│       │   ├── fight.js          # Round-by-round fight simulation
-│       │   ├── fighter.js        # Fighter generation, scouting, contracts
-│       │   ├── reducer.js        # Action-based state mutation (19 actions)
-│       │   ├── data.js           # Game constants (traits, training, tiers, etc.)
-│       │   ├── rng.js            # Seeded PRNG + utilities (fmt$, clamp, pick)
-│       │   ├── i18n.js           # EN/ID translation tables
-│       │   ├── economy.js        # Training bonus calculations
-│       │   ├── rankings.js       # Division generation, ranking, titles
-│       │   ├── relationships.js  # Fighter-to-fighter relationship tracking
-│       │   ├── achievements.js   # Achievement unlock checks
-│       │   └── finance.js        # Shared monthly financial calculations
-│       └── ui/                   # React components (16 files, ~4,500 LOC)
-│           ├── theme.jsx         # Design tokens, primitives, SVG icons
-│           ├── Dashboard.jsx     # KPI strip, priorities, upcoming fights, feed
-│           ├── Roster.jsx        # Fighter table with attribute grid
-│           ├── FighterDetail.jsx # Full profile: AttrTele, OctaRadar, training
-│           ├── FightNight.jsx    # Fullscreen staged fight experience
-│           ├── FightCardFull.jsx # Tale of the Tape standalone view
-│           ├── Rankings.jsx      # Division rankings + P4P
-│           ├── Scout.jsx         # Scouting hub: filters, methods, prospects
-│           ├── Finance.jsx       # Monthly P&L, cash reserve, split bars
-│           ├── Facility.jsx      # Camp tier, coaches, facility upgrades
-│           ├── Inbox.jsx         # Fight offers, sponsor offers, events
-│           ├── NegotiateModal.jsx# Contract negotiation dialog
-│           ├── Sidebar.jsx       # Navigation sidebar
-│           ├── TopBar.jsx        # Header: date, KPI chips, save/language
-│           └── LangContext.jsx   # i18n React context provider
-├── tools/                        # Balance simulation scripts
-├── docs/balance/                 # 23 balance simulation result files
-├── GDD_v4.md                     # Game Design Document
-├── GDD-fight-engine-reference.md
-├── gdd-gap-list.md
-└── backend-blueprint-v1.md       # Multiplayer backend architecture plan
+- Tujuh tier camp, dari Local Gym hingga Dynasty Institution; kapasitas roster,
+  coach, dan fasilitas mengikuti tier. Tier akhir juga memerlukan Prestise dan cadangan biaya.
+- Dua sumbu progres: Reputasi untuk akses/bisnis, Prestise untuk pencapaian lintas
+  generasi. Legacy dan identitas tetap tersimpan sebagai arsip sejarah.
+- Latihan dengan program, intensitas, batas potensi, faktor yang terlihat, cedera,
+  penuaan, ambisi, janji, coach dan staf pendukung yang memiliki efek nyata.
+- Negosiasi kontrak melalui engine: bonus, bagian camp, jumlah laga dan durasi.
+  Equity baru, mentor pasif dan relasi antar-fighter sudah dipangkas.
+- Scouting memakai laporan scout, bukan membocorkan atribut asli; grade dibatasi
+  metode dan reputasi. Prospek berperingkat dunia mempunyai profil combat persisten.
+- Fight Night dengan penimbangan, penalti cut/catchweight, game plan dan corner dua
+  sisi, penilaian per ronde, statistik nyata, narasi berbasis hasil, serta bonus yang dibayar.
+- Peringkat divisi dan P4P; sabuk per tier terpisah. Mandatory defense dan simulasi
+  juara AI saat ini khusus Major. Rival camp dihapus; outside offers untuk fighter
+  tidak puas tetap berjalan.
+- Keuangan memakai rumus bersama untuk preview dan settlement. Purse reguler
+  Major/Premier mengikuti ranking; kontrak equity lama tetap dihormati dan terlihat sebagai biaya.
+- Bahasa utama Indonesia. Katalog UI/narasi juga menangani pesan Inggris yang
+  dikenali dari save lama; teks custom yang tidak dikenal tetap tampil asli.
+- Tiga slot localStorage, autosave, backup/impor, undo/redo dan checkpoint RNG dunia.
+  Simpan backup sebelum membersihkan data browser. Tombol Maju Minggu selalu terlihat di HP.
+
+Keputusan lengkap: [lingkup single-player](docs/SINGLE_PLAYER_SCOPE.md),
+[bahasa](docs/LANGUAGE.md), [aturan ekonomi dan hasil ukur](docs/balance/P3_39_ECONOMY.md).
+
+## Verifikasi
+
+```sh
+npm test -w app
+npm run build -w app
+npm run fight-balance
+npm run balance
+npm run economy -- 960 3 --check
+npm run smoke -- 4
 ```
 
----
+Smoke menjalankan Chrome headless, membuka semua tab, memajukan minggu dan
+menyelesaikan minimal satu FightNight. Set `CHROME_PATH` jika Chrome/Chromium/Edge
+belum terdeteksi; `SMOKE_HEADFUL=1` untuk melihat browser. `SMOKE_PROFILE` bisa menunjuk
+profil khusus pengujian. Jangan gunakan profil browser pribadi. CI menjalankan tes app
+**dan server**, kedua harness, build, lalu smoke browser.
 
-## 🏗️ Architecture Overview
+Tes server memerlukan PostgreSQL dengan database pengujian yang boleh dikosongkan:
 
-### Engine/UI Separation
-
-The game engine (`app/src/engine/`) is **pure JavaScript** with zero React or UI imports. This architectural choice makes it:
-
-- **Multiplayer-ready** — The same engine can run server-side on Node.js
-- **Testable** — Fight simulation and game logic can be tested independently
-- **Portable** — No framework lock-in
-
-### State Management
-
-The engine uses **in-place mutation** — all game state changes modify the state object directly. A `reducer` function (named for familiarity, not Redux-style purity) applies actions in-place. Undo/redo uses deep snapshots (capped at 20 entries).
-
-The React layer (`App.jsx`) wraps this with `structuredClone` for state immutability, throttled `localStorage` persistence, and a `dispatch` bridge that intercepts UI-specific actions.
-
-### Data Flow
-
-```
-User Click → UI Component → dispatch(action) → reducer(state, action) → mutated state
-                                                                              ↓
-User sees updated UI ← React re-render ← setG(structuredClone(state)) ←──────┘
+```sh
+# Set TEST_DATABASE_URL ke database pengujian, lalu:
+npm test -w packages/server
+# Atau kedua workspace:
+npm test
 ```
 
-### Save System
+Jangan gunakan database produksi untuk tes. PostgreSQL 16 disediakan oleh service CI.
+Harness dunia menjaga kas agar dunia tetap bergerak; ia menguji koherensi dunia,
+**bukan** balance ekonomi. Harness ekonomi memakai bot anggaran tanpa injeksi kas.
+Tiga seed acuan bukan jaminan semua strategi bermain selalu berhasil.
 
-- 3 save slots stored in `localStorage`
-- Auto-save on every state change (throttled)
-- Migration layer handles old save formats (adds missing fields: `training`, `ceilings`, `sponsors`, etc.)
-- Corrupted save detection with fallback reset
+## Struktur
 
----
+```text
+app/src/                 React UI, hooks, layanan save dan terjemahan presentasi
+packages/engine/src/     Engine murni: tick, reducer domain, fight, ranking, ekonomi
+packages/server/         Backend eksperimen; pengembangan ditunda
+app/src/__tests__/       Tes engine, integrasi UI/hook, regresi save
+packages/server/src/tests/  Tes auth/API/config server
+.github/workflows/ci.yml Tes dan pemeriksaan browser di GitHub Actions
+tools/                   Harness fight, dunia, ekonomi dan smoke
+docs/audit/              Review Oktober dan log perbaikan aktif
+docs/balance/            Riwayat pengukuran, termasuk hasil sebelum/sesudah
+design/                  Spesifikasi championship/promotion
+```
 
-## 🚧 Development Status
+## Sumber acuan
 
-**Phase:** Single-Player Complete — Polish & Bug Fix
+- [GDD dan status terverifikasi](GDD_v4.md)
+- [Prioritas dan log progres](docs/audit/Prioritas%20Perbaikan%20IronFist.md)
+- [Constraints engine](CONSTRAINTS.md) dan [konstitusi proyek](PROJECT_CONSTITUTION.md)
+- [Spesifikasi championship](design/CHAMPIONSHIP_SYSTEM_SPEC.md)
 
-| Area | Status |
-|------|--------|
-| Core game loop (tick) | ✅ Fully implemented |
-| Fight engine | ✅ Tick-based MMA simulation |
-| Camp management | ✅ Tiers, facilities, coaches |
-| Fighter system | ✅ Training, traits, contracts, aging |
-| Scouting | ✅ 4 tiers with grade-based reports |
-| Rankings | ✅ Division top 15 + P4P |
-| Outside offers | ✅ Other camps approach unhappy fighters |
-| Finance | ✅ Monthly P&L + runway |
-| Sponsors | ✅ Placement & royalty deals |
-| i18n | ✅ 200+ keys EN/ID |
-| UI redesign (Ironfist) | ✅ All screens migrated |
-| Achievements display | ⬜ Tracked but not displayed |
-| Coach market UI | ⬜ Coach hiring modal needed |
-| Backend / Multiplayer | ⬜ Blueprint exists, not started |
-| Tests | ⬜ No test suite yet |
-| CI/CD | ⬜ Not configured |
+Engine tidak mengimpor React/DOM dan semua RNG engine lewat `rng.js`. UI mengirim aksi
+ke reducer; hook mengambil snapshot sebelum mutasi dan menyimpan checkpoint RNG.
+Terjemahan hanya mengubah tampilan, bukan isi state atau keputusan simulasi.
 
----
+Implementasi dan simulasi sudah diperiksa; pacing serta kebosanan tetap memerlukan
+playtest manusia jangka panjang. Bundle produksi masih melewati ambang peringatan
+Vite 500 KB. Backend belum siap dilanjutkan: lihat #55–#58 di log prioritas.
 
-## 🤝 Contributing
+## Lisensi
 
-This is a solo project. Bug reports and feature suggestions are welcome via GitHub Issues.
-
-Areas that would benefit from contributions:
-- **Test suite** — The pure JS engine is highly testable (`simRound`, `tick`, `reducer`)
-- **Coach market UI** — Modal for browsing and hiring coaches
-- **Achievements panel** — Display unlocked achievements to the player
-- **TypeScript migration** — Would catch shape mismatches (e.g., `coachResignChance` number vs object)
-
----
-
-## ⚠️ Shared Engine Warning
-
-`packages/engine` (`@ironfist/engine`) is a **shared dependency** between `app/` (solo play, client-side) and `packages/server/` (multiplayer backend). Any change to `packages/engine/` **must** be tested in both workspaces before merging. Run `npm test` from the repo root to execute both test suites at once — this is the minimum gate before considering engine work done.
-
----
-
-## 📄 License
-
-This project is currently unlicensed. All rights reserved by the author.
+Proyek belum memiliki lisensi publik. Hak cipta tetap pada penulis.
