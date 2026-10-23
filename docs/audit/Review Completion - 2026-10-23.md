@@ -4,7 +4,10 @@ Basis pemeriksaan GitHub: `origin/master` di `1ed3f70`. Seluruh item single-play
 #1–#54 dan #59–#63 telah ditangani melalui perbaikan, implementasi atau keputusan
 lingkup: **59 dari 63 item**. Backend #55–#58 tetap ditunda atas instruksi user.
 Status terperinci ada di [daftar prioritas](Prioritas%20Perbaikan%20IronFist.md).
-Perubahan sesi ini disimpan dalam commit lokal; belum di-push atau dideploy.
+Perubahan telah di-push ke branch `work/single-player-complete`. User kemudian
+meminta integrasi ke `master`; hasil integrasi dapat diperiksa pada riwayat Git
+dan [GitHub Actions](https://github.com/maxxsky/mma-manager/actions).
+Tidak ada deployment yang dilakukan sebagai bagian dari pekerjaan ini.
 
 ## Keputusan dan hasil
 
@@ -54,7 +57,7 @@ Tidak ada perubahan sumber backend terhadap basis GitHub tersebut.
 
 ## Bukti validasi
 
-- Suite app: **78 file, 862 tes lulus**. Pemeriksaan terarah terakhir untuk nama
+- Suite app awal: **78 file, 862 tes lulus**. Pemeriksaan terarah terakhir untuk nama
   staf dan lokalisasi: 8 tes lulus setelah perbaikan salinan dan data market lama.
 - Build produksi berhasil: JavaScript 597,62 kB / 186,34 kB gzip. Peringatan chunk
   di atas 500 kB masih ada.
@@ -79,7 +82,14 @@ Tes server: tiga tes konfigurasi lulus, sedangkan 25 tes API tidak dapat berjala
 karena koneksi PostgreSQL lokal ditolak (`ECONNREFUSED`, port 5432). Ini bukan
 kelulusan suite server. PostgreSQL tidak tersedia di lingkungan lokal sesi ini.
 
-CI GitHub yang berhasil di basis `1ed3f70` tidak memvalidasi commit lokal baru ini.
-CI baru akan berjalan setelah push. Tidak ada push, merge ke master remote atau
-deployment pada sesi ini. Simulasi dan smoke tidak menggantikan playtest manusia
-untuk kenyamanan antarmuka atau balance di semua gaya bermain.
+CI GitHub di basis `1ed3f70` tidak memvalidasi perubahan sesi ini. Setelah push,
+[CI pertama](https://github.com/maxxsky/mma-manager/actions/runs/39885750454)
+menemukan ekspektasi Inggris pada tes UI penimbangan yang kini diterjemahkan.
+Commit `534cdae` memperbaiki tes agar secara eksplisit memeriksa kedua bahasa;
+tidak mengubah perilaku game. Pengujian app setelah koreksi: **78 file, 863 tes
+lulus** dengan `npm test -w app -- --maxWorkers=2`. Batas worker dipakai untuk
+menghindari timeout dua tes statistik ketika seluruh worker lokal berebut CPU.
+CI ulang memverifikasi perubahan pada runner GitHub dengan PostgreSQL.
+
+Simulasi dan smoke tidak menggantikan playtest manusia untuk kenyamanan antarmuka
+atau balance di semua gaya bermain. Backend #55–#58 tetap ditunda.
