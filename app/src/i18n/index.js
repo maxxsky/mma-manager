@@ -14,6 +14,7 @@ export function setLang(l) {
 }
 
 const EN = {
+  "FIN.sponsorIncome": "Reputation & sponsor income",
   // ---- ATTRS ----
   "ATTR.striking": "Striking", "ATTR.wrestling": "Wrestling", "ATTR.bjj": "BJJ",
   "ATTR.footwork": "Footwork", "ATTR.strength": "Strength", "ATTR.cardio": "Cardio",
@@ -418,7 +419,7 @@ const EN = {
   "UI.retiredLegends": "🎗️ Retired Legends",
   // ---- PROMOTERS ----
   "PROMO.header": "Promoter Relations",
-  "PROMO.intro": "Your relationship with each tier determines fight opportunities and purse multipliers.",
+  "PROMO.intro": "Relations increase purses and unlock main-event or eliminator opportunities. They do not increase how often offers arrive.",
   "PROMO.tierRel": "Tier Relations",
   "PROMO.promoters": "Promoters",
   "PROMO.effect.t85": "1.4× purse · Title eliminator chance",
@@ -431,6 +432,7 @@ const EN = {
 };
 
 const ID = {
+  "FIN.sponsorIncome": "Pendapatan reputasi & sponsor",
   "ATTR.striking": "Pukulan", "ATTR.wrestling": "Gulat", "ATTR.bjj": "BJJ",
   "ATTR.footwork": "Footwork", "ATTR.strength": "Kekuatan", "ATTR.cardio": "Cardio",
   "ATTR.chin": "Dagu", "ATTR.fightIQ": "IQ Tarung",
@@ -817,7 +819,7 @@ const ID = {
   "UI.retiredLegends": "🎗️ Legenda Pensiun",
   // ---- PROMOTERS ----
   "PROMO.header": "Relasi Promotor",
-  "PROMO.intro": "Hubungan dengan setiap tier menentukan peluang bertarung dan pengali purse.",
+  "PROMO.intro": "Relasi menaikkan purse dan membuka peluang main event atau eliminator. Relasi tidak menambah frekuensi tawaran.",
   "PROMO.tierRel": "Relasi Tier",
   "PROMO.promoters": "Promotor",
   "PROMO.effect.t85": "1.4× purse · Peluang title eliminator",

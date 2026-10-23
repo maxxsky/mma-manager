@@ -549,3 +549,5 @@ Setiap baris butuh keputusan: **implementasikan** atau **buang**. Saran ada di k
 6. Backend (#55–#58) setelah Fase 1 terasa proper dan ada playtester.
 
 - **23 Oktober 2026: P6 #59 selesai** di branch test/browser-smoke-ci. FightNight, useGameState, dan NegotiateModal sudah punya tes regresi yang menjalankan jalur nyata. CI kini build dan menjalankan Chrome smoke (11 tab, advance minggu, minimal satu fight sampai hasil). Peluncur Vite dan pemeriksaan constraint memakai Node agar lintas platform. Validasi: 846 tes app lulus, build lulus, smoke Windows lulus tanpa error console/uncaught exception. Backend tidak diubah.
+
+- **23 Oktober 2026: P4 #48 selesai** di branch fix/ui-label-accuracy. Judul Fasilitas sesuai navigasi; pemasukan reputasi+sponsor tidak lagi disebut biaya penempatan; Five Wins dan Champion sesuai syarat pencapaian; legacy memakai poin; rekomendasi coach memakai spec yang tersimpan tanpa kurung kosong; teks promotor menjelaskan efek purse/main event/eliminator, bukan frekuensi offer. Build lulus, 11 tab lolos render Chrome.

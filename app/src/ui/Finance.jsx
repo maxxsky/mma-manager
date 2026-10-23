@@ -61,7 +61,7 @@ export default function Finance({ g }) {
         {/* Income section */}
         <SectionHeader label={t("UI.income")} color={T.pos} />
         <Row
-          label={t("SPONSOR.placement")}
+          label={t("FIN.sponsorIncome")}
           value={sponsorIncome}
           color={T.pos}
           detail={
@@ -238,7 +238,7 @@ export default function Finance({ g }) {
         {totalIncome > 0 ? (
           <div>
             <SplitBar
-              label={t("SPONSOR.placement")}
+              label={t("FIN.sponsorIncome")}
               value={sponsorIncome}
               total={totalIncome}
               color={T.steel}

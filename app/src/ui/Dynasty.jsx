@@ -125,7 +125,7 @@ export default function Dynasty({ g, dispatch }) {
             [t("DYN.stat.totalKOs"), dyn.totalKOs],
             [t("DYN.stat.totalSubs"), dyn.totalSubs],
             [t("DYN.stat.peakRep"), dyn.peakRep],
-            [t("DYN.stat.peakLegacy"), fmt$(dyn.peakLegacy)],
+            [t("DYN.stat.peakLegacy"), `${Math.round(dyn.peakLegacy || 0).toLocaleString()} pts`],
             [t("DYN.stat.hallOfFamers"), dyn.hallOfFamers?.length || 0],
           ].map(([label, value]) => (
             <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.line}33` }}>

@@ -336,13 +336,14 @@ export default function FighterDetail({ f, g, onBack, dispatch }) {
             {(() => {
               const coach = g.coaches?.[0];
               if (!coach) return null;
-              const recs = getCoachRecommendation(coach, f);
-              const synergy = coach ? getCoachArchetypeSynergy(coach, f) : null;
+              const coachView = { ...coach, specialty: coach.spec || coach.specialty || "Head" };
+              const recs = getCoachRecommendation(coachView, f);
+              const synergy = getCoachArchetypeSynergy(coachView, f);
               if (!recs || recs.length === 0) {
                 if (synergy) {
                   return (
                     <div style={{ padding: '6px 10px', background: T.bg, borderRadius: T.r, marginBottom: 8, fontFamily: T.body, fontSize: 11, color: T.txt3, fontStyle: 'italic', borderLeft: '2px solid ' + T.steel }}>
-                      {coach.name} ({coach.specialty}) · {synergy.label}: {synergy.rating === 'perfect' ? '⭐ Ideal synergy with ' + f.archetype : synergy.rating === 'good' ? 'Good fit' : 'Adequate'}
+                      {coach.name} ({coachView.specialty}) · {synergy.label}: {synergy.rating === 'perfect' ? '⭐ Ideal synergy with ' + f.archetype : synergy.rating === 'good' ? 'Good fit' : 'Adequate'}
                     </div>
                   );
                 }
