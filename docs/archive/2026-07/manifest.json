@@ -1,0 +1,242 @@
+[
+  {
+    "original": "audits/01_COMBAT_AUDIT_v2.md",
+    "archive": "docs/archive/2026-07/audits/01_COMBAT_AUDIT_v2.md",
+    "sha256": "2134FC392FFC0657751250541BB2926E6C429A97B6D80323B3713020C2F8DA29"
+  },
+  {
+    "original": "audits/01_COMBAT_AUDIT.md",
+    "archive": "docs/archive/2026-07/audits/01_COMBAT_AUDIT.md",
+    "sha256": "F7795D7317155B308824E94D46BE4364E61677EF5CA6C3E48F49CA7CA7F64966"
+  },
+  {
+    "original": "audits/02_TRAINING_AUDIT_v2.md",
+    "archive": "docs/archive/2026-07/audits/02_TRAINING_AUDIT_v2.md",
+    "sha256": "58798D3F9C111539983F1036E6A492B875C5A95F69F446E994951FC753BEEA1C"
+  },
+  {
+    "original": "audits/02_TRAINING_AUDIT.md",
+    "archive": "docs/archive/2026-07/audits/02_TRAINING_AUDIT.md",
+    "sha256": "5A50F2B677417F0CD3F1BF3AE7C99197AEE6BDF3692107E8CAE937541B9919EB"
+  },
+  {
+    "original": "audits/03_FIGHTER_AUDIT_v2.md",
+    "archive": "docs/archive/2026-07/audits/03_FIGHTER_AUDIT_v2.md",
+    "sha256": "3BCCDEC5ABA5BC8F8114E12FAFB93F9EBF6DFBFD888E934F25DF4CB6CCE6D13C"
+  },
+  {
+    "original": "audits/03_FIGHTER_AUDIT.md",
+    "archive": "docs/archive/2026-07/audits/03_FIGHTER_AUDIT.md",
+    "sha256": "96D6B175BE1132C654E083B4A80552264FAA5949B7DF080C25C7F7165A43BA73"
+  },
+  {
+    "original": "audits/04_WORLD_AUDIT_v2.md",
+    "archive": "docs/archive/2026-07/audits/04_WORLD_AUDIT_v2.md",
+    "sha256": "27A4069649EA74BA286C207C59FE10FCD87B1550027752C844E0D38C358FFC6E"
+  },
+  {
+    "original": "audits/04_WORLD_AUDIT.md",
+    "archive": "docs/archive/2026-07/audits/04_WORLD_AUDIT.md",
+    "sha256": "16090D0ED1423D8BA3B995E68868150DD304BF1BCD18DA9F14A877F6CD9777A6"
+  },
+  {
+    "original": "audits/05_ECONOMY_AUDIT_v2.md",
+    "archive": "docs/archive/2026-07/audits/05_ECONOMY_AUDIT_v2.md",
+    "sha256": "A723E904EBB0BB71B0005E0136A1B135A3D8F76C1587298528DDE1E022C53505"
+  },
+  {
+    "original": "audits/05_ECONOMY_AUDIT.md",
+    "archive": "docs/archive/2026-07/audits/05_ECONOMY_AUDIT.md",
+    "sha256": "A4E6B324DC8713E14E5C86BFD529FC9E01556165C67DB2DD0ACAA41AF65DA72C"
+  },
+  {
+    "original": "audits/06_EVENTS_AUDIT_v2.md",
+    "archive": "docs/archive/2026-07/audits/06_EVENTS_AUDIT_v2.md",
+    "sha256": "E1750143DD3902AAE91609C1766F04EED18AB0F3FD029EC300ADE38E2B400913"
+  },
+  {
+    "original": "audits/06_EVENTS_AUDIT.md",
+    "archive": "docs/archive/2026-07/audits/06_EVENTS_AUDIT.md",
+    "sha256": "6AB97998123784CAD5BFB59DC86219F0458256E89FFE0FA14FBBC4DADF921727"
+  },
+  {
+    "original": "audits/07_SAVE_AUDIT_v2.md",
+    "archive": "docs/archive/2026-07/audits/07_SAVE_AUDIT_v2.md",
+    "sha256": "7DF16B613E549A5734F82E6295B05CCA96C0B906433F1DE1BE20EB1396CA8F60"
+  },
+  {
+    "original": "audits/07_SAVE_AUDIT.md",
+    "archive": "docs/archive/2026-07/audits/07_SAVE_AUDIT.md",
+    "sha256": "4322CEBB9920260C341DC0B5627018077086EFAE9C8CD663FD22D83DA18B20D6"
+  },
+  {
+    "original": "audits/08_UI_AUDIT_v2.md",
+    "archive": "docs/archive/2026-07/audits/08_UI_AUDIT_v2.md",
+    "sha256": "634D0828A099E639B26EDA0FF7ED3350EF8396C449DF966729A88F410FACE1D5"
+  },
+  {
+    "original": "audits/08_UI_AUDIT.md",
+    "archive": "docs/archive/2026-07/audits/08_UI_AUDIT.md",
+    "sha256": "D8F0CB71B728465604EEB53CAE6EE7B90E18C28BA356CD668E6227CE8478E9E6"
+  },
+  {
+    "original": "knowledge/01_combat.md",
+    "archive": "docs/archive/2026-07/knowledge/01_combat.md",
+    "sha256": "B661BE34D4997C7D1BCEA7648213C5B1C171AA39E5DBF88F9B55E70EE3C14D48"
+  },
+  {
+    "original": "knowledge/02_TRAINING.md",
+    "archive": "docs/archive/2026-07/knowledge/02_TRAINING.md",
+    "sha256": "F7F828BA22D3EF532D53DDA2C6E880FC9B51EF33C36360435E0F831338F08BDF"
+  },
+  {
+    "original": "knowledge/03_FIGHTER.md",
+    "archive": "docs/archive/2026-07/knowledge/03_FIGHTER.md",
+    "sha256": "54CB5535A1205CD19E196A06859F4A6749FC001AC401EF104A47B8B109236F89"
+  },
+  {
+    "original": "knowledge/04_WORLD.md",
+    "archive": "docs/archive/2026-07/knowledge/04_WORLD.md",
+    "sha256": "88AD5A0C95D8EECD84067F8F76916F41817EA257DD8EBA0D3245B382CAE5A01B"
+  },
+  {
+    "original": "knowledge/05_ECONOMY.md",
+    "archive": "docs/archive/2026-07/knowledge/05_ECONOMY.md",
+    "sha256": "FC1A4DE32F87CCC25A8F00795E8856BCE754E6506E33E12A3DC9BDD52DF68C4B"
+  },
+  {
+    "original": "knowledge/06_EVENTS.md",
+    "archive": "docs/archive/2026-07/knowledge/06_EVENTS.md",
+    "sha256": "A7EFA19F7A97DEC147B232476342F3560213C073B488EBA45ACD5728D50F9F27"
+  },
+  {
+    "original": "knowledge/07_SAVE_SYSTEM.md",
+    "archive": "docs/archive/2026-07/knowledge/07_SAVE_SYSTEM.md",
+    "sha256": "64C322E9C9AD351EC9E1D4280042ABE4A626159BFA2058D5D4B1931A39A604A3"
+  },
+  {
+    "original": "knowledge/08_UI.md",
+    "archive": "docs/archive/2026-07/knowledge/08_UI.md",
+    "sha256": "8D789871D4F4F2E37D66C7AD1378C603695477E1802A92143C64070D2AA5947B"
+  },
+  {
+    "original": "docs/audit/ai-camp-management.md",
+    "archive": "docs/archive/2026-07/docs/audit/ai-camp-management.md",
+    "sha256": "5AA81249194B33D3893BC9E1491DBBF7C7C5D734E002B0041F8BA75DEE983A02"
+  },
+  {
+    "original": "docs/audit/archetype-balance.md",
+    "archive": "docs/archive/2026-07/docs/audit/archetype-balance.md",
+    "sha256": "1BF350C28B61F546BFB394607DA2E26A81578CD9F691510D8892BF3F0FACEDC3"
+  },
+  {
+    "original": "docs/audit/career-simulation.md",
+    "archive": "docs/archive/2026-07/docs/audit/career-simulation.md",
+    "sha256": "E335CFC18BAF8CBD099897B7C5ED38494E991831460627F84509CED0474D2208"
+  },
+  {
+    "original": "docs/audit/code-quality.md",
+    "archive": "docs/archive/2026-07/docs/audit/code-quality.md",
+    "sha256": "F87F6D15A9730E47F18DA6B3F3DCD75B6A730189BE7248B3B98B09075EC089F6"
+  },
+  {
+    "original": "docs/audit/content-depth.md",
+    "archive": "docs/archive/2026-07/docs/audit/content-depth.md",
+    "sha256": "9CFEBFE7338064D11E7D699466D2CEBD18E6E472B139C77F24C08B646FFD7F19"
+  },
+  {
+    "original": "docs/audit/emergent-storytelling.md",
+    "archive": "docs/archive/2026-07/docs/audit/emergent-storytelling.md",
+    "sha256": "33C844D5AB2038748166B3B9970E720981728CE5AB5FB4C83FF554959642B91E"
+  },
+  {
+    "original": "docs/audit/event-system.md",
+    "archive": "docs/archive/2026-07/docs/audit/event-system.md",
+    "sha256": "5AD1E991DA4DD0B132BAD6CF45A2820C5D9553EB6FA1C960C946F485B84ABCA2"
+  },
+  {
+    "original": "docs/audit/fight-night-experience.md",
+    "archive": "docs/archive/2026-07/docs/audit/fight-night-experience.md",
+    "sha256": "5DBEFB28C6646C148DBBF26A31C9A64E86033E79EB43983D8305007945B37CC7"
+  },
+  {
+    "original": "docs/audit/game-balance.md",
+    "archive": "docs/archive/2026-07/docs/audit/game-balance.md",
+    "sha256": "ED4D622D8816DE9A755BECC79E0C82BD0782E61CFD71603B71D64EC37D5786D9"
+  },
+  {
+    "original": "docs/audit/long-term-motivation.md",
+    "archive": "docs/archive/2026-07/docs/audit/long-term-motivation.md",
+    "sha256": "0A96B2976DDDAA359B98C7285D064DB96D07456BCA23AD13089481171453F821"
+  },
+  {
+    "original": "docs/audit/player-decisions.md",
+    "archive": "docs/archive/2026-07/docs/audit/player-decisions.md",
+    "sha256": "CBBC77B6F506E54D647A33A06F310A44BDE8164CACE4B76CDCD6CEA6371668F7"
+  },
+  {
+    "original": "docs/audit/player-experience.md",
+    "archive": "docs/archive/2026-07/docs/audit/player-experience.md",
+    "sha256": "0B04682043CF35625A101B9BDE957DA65AC7560052BF3CFE592CFCA48677E329"
+  },
+  {
+    "original": "docs/audit/pre-release.md",
+    "archive": "docs/archive/2026-07/docs/audit/pre-release.md",
+    "sha256": "6B359C7C754981328F22B97871C2B1C909C2957CC304A096E9268BDEAA5DAD3E"
+  },
+  {
+    "original": "docs/audit/state-management.md",
+    "archive": "docs/archive/2026-07/docs/audit/state-management.md",
+    "sha256": "58CE0B816982DA56134C7EB87069E69FCCF251F731B1206D10B3EAA95E0068B5"
+  },
+  {
+    "original": "docs/audit/training-system.md",
+    "archive": "docs/archive/2026-07/docs/audit/training-system.md",
+    "sha256": "25AA2898210108A29A045F5B6D9778475C3CB8E457E28CA302F41AA75F82A108"
+  },
+  {
+    "original": "docs/audit/trait-relevance.md",
+    "archive": "docs/archive/2026-07/docs/audit/trait-relevance.md",
+    "sha256": "93EC129484ADC6D90DC412821FB87CF687A54980DEF844F7FEF6F5F5725BA301"
+  },
+  {
+    "original": "docs/audit/trait-system.md",
+    "archive": "docs/archive/2026-07/docs/audit/trait-system.md",
+    "sha256": "24B9AF87C9D4AD6B07835557BC7AF677B4CBFCB5E976E4437EC274E9E71C7134"
+  },
+  {
+    "original": "docs/audit/ui-ux.md",
+    "archive": "docs/archive/2026-07/docs/audit/ui-ux.md",
+    "sha256": "D39CE5C29FE35E8B21CC64E7588ED62780B64DE4E034409B1FBC62E6EC3E389A"
+  },
+  {
+    "original": "docs/audit/world-simulation.md",
+    "archive": "docs/archive/2026-07/docs/audit/world-simulation.md",
+    "sha256": "F2D51693870A82D94D3E691316538A094AF2E28837677AEF9064D3E334FDA98C"
+  },
+  {
+    "original": "01_PROJECT_OVERVIEW.md",
+    "archive": "docs/archive/2026-07/01_PROJECT_OVERVIEW.md",
+    "sha256": "2701E226759A91252634090F6DFC04F29B3DC713C9C48108F9352609597F29CA"
+  },
+  {
+    "original": "ARCHITECTURE.md",
+    "archive": "docs/archive/2026-07/ARCHITECTURE.md",
+    "sha256": "BA96369937D12F8C84B6CDD575C2981C7D7BE7D9A2E9288E2FDA207146E42152"
+  },
+  {
+    "original": "BASELINE_VALIDATION.md",
+    "archive": "docs/archive/2026-07/BASELINE_VALIDATION.md",
+    "sha256": "54AC9845D0A7E26ED74026882AD5A5502EB63BB020945CCC24F3BDD698985192"
+  },
+  {
+    "original": "patterns/01_COMPONENT_PATTERN.md",
+    "archive": "docs/archive/2026-07/patterns/01_COMPONENT_PATTERN.md",
+    "sha256": "08323F358D59AE1482AF01DDFE6B7ED1F6110BFC17FE5F19BBC5B51E00FF09F9"
+  },
+  {
+    "original": "design/CHAMPIONSHIP_SPRINT1_DISCOVERY.md",
+    "archive": "docs/archive/2026-07/design/CHAMPIONSHIP_SPRINT1_DISCOVERY.md",
+    "sha256": "A1FA51D87369F3C2940BC6E02FB2B619F80E35F413610FBCD23E2A89B5EF1531"
+  }
+]

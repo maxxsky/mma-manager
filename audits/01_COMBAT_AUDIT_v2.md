@@ -1,78 +1,8 @@
-## Design Compliance Audit (Re-audit)
+# Dokumen historis — 01_COMBAT_AUDIT_v2
 
-### Scope
+Diarsipkan 23 Oktober 2026. Klaim audit/struktur di dokumen lama bukan status proyek saat ini.
 
-Domain: Combat
-Knowledge: knowledge/01_combat.md
-Codebase: /root/mma-manager/app/src/engine/fight.js (HEAD 2bbbe07)
-Date: July 2026
+- [Baca dokumen asli](../docs/archive/2026-07/audits/01_COMBAT_AUDIT_v2.md)
+- [Status dan desain aktif](../GDD_v4.md)
 
----
-
-### Summary
-
-Overall Compliance: 95%
-
-🟢 Fully Implemented: 19
-🟡 Partially Implemented: 1
-🟠 Implemented Differently: 0
-🔴 Missing: 0
-⚫ Unknown: 0
-
-**Resolved from previous audit:**
-- Damage clamp added (clampDamage wrapping all 4 resolvers) ✅
-- Upset rate calibration test added (300 fights, [1%, 15%]) ✅
-
-**New findings:** None.
-
----
-
-### Key Changes Since Previous Audit
-
-| Previous Finding | Status | Evidence |
-|-----------------|--------|----------|
-| Damage never negative (🟡 → 🟢) | Resolved | clampDamage() in fight.js wraps all resolvers |
-| Upset rate calibration (🟡 → 🟢) | Resolved | regression.test.js — Calibration — Upset Rate |
-
-### Compliance Matrix
-
-| Design Principle | Status | Impact | Category |
-|-----------------|--------|--------|----------|
-| Unique fights | 🟢 | — | — |
-| Archetypes viable | 🟢 | — | — |
-| Player decisions > RNG | 🟢 | — | — |
-| Comebacks possible | 🟢 | — | — |
-| Better fighter wins | 🟢 | — | — |
-| Responsibilities | 🟢 | — | — |
-| Non-responsibilities | 🟢 | — | — |
-| Effective attribute | 🟢 | — | — |
-| Game plan effects | 🟢 | — | — |
-| Knockdown check | 🟢 | — | — |
-| Submission logic | 🟢 | — | — |
-| Winner invariant | 🟢 | — | — |
-| Stamina clamp | 🟢 | — | — |
-| Damage clamp | 🟢 | — | Resolved |
-| Title rounds | 🟢 | — | — |
-| Champion filter | 🟢 | — | — |
-| Position model | 🟢 | — | — |
-| Upset rate calibration | 🟢 | — | Resolved |
-| Zero React in engine | 🟢 | — | — |
-| Extension points | 🟢 | — | — |
-
----
-
-### Design Coverage
-
-Overall Design Coverage: 95%
-
-### Design Drift
-
-Overall Drift: LOW (5%)
-
-### Generated Backlog
-
-None.
-
-### Overall Recommendation
-
-**Accept** — Combat is the most mature domain.
+Isi asli dipertahankan utuh; jangan gunakan kesimpulan lama sebagai bukti fitur sudah berfungsi.

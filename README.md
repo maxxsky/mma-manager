@@ -99,6 +99,7 @@ design/                  Spesifikasi championship/promotion
 - [Prioritas dan log progres](docs/audit/Prioritas%20Perbaikan%20IronFist.md)
 - [Constraints engine](CONSTRAINTS.md) dan [konstitusi proyek](PROJECT_CONSTITUTION.md)
 - [Spesifikasi championship](design/CHAMPIONSHIP_SYSTEM_SPEC.md)
+- [Indeks arsip dan manifest](docs/archive/README.md)
 
 Engine tidak mengimpor React/DOM dan semua RNG engine lewat `rng.js`. UI mengirim aksi
 ke reducer; hook mengambil snapshot sebelum mutasi dan menyimpan checkpoint RNG.
