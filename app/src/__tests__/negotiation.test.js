@@ -27,13 +27,13 @@ function gameWithProspect(agent = 'Standard') {
 }
 
 describe('acceptChance', () => {
-  it('a higher camp cut lowers the odds; more bonus, fights and equity raise them', () => {
+  it('a higher camp cut lowers the odds; bonus/fights raise them and removed equity cannot change them', () => {
     const f = agentFighter()
     const at = (o) => acceptChance(f, 'sign', offer(o))
     expect(at({ cut: 0.25 })).toBeLessThan(at({ cut: 0.18 }))
     expect(at({ signBonus: 6000 })).toBeGreaterThan(at({}))
     expect(at({ fights: 8 })).toBeGreaterThan(at({ fights: 2 }))
-    expect(at({ equity: 20 })).toBeGreaterThan(at({}))
+    expect(at({ equity: 20 })).toBe(at({}))
   })
 
   it('ignores the removed exclusivity, rematch and medical clauses', () => {
@@ -126,7 +126,7 @@ describe('NEGOTIATE_CONTRACT reducer', () => {
 
   it('sanitizeOffer snaps arbitrary numbers to the screen options', () => {
     const s = sanitizeOffer(agentFighter(), 'sign', { signBonus: 1e9, cut: 0.01, fights: 99, duration: -5, equity: 50 })
-    expect(s).toEqual({ signBonus: 6000, cut: 0.15, fights: 8, duration: 12, equity: 20 })
+    expect(s).toEqual({ signBonus: 6000, cut: 0.15, fights: 8, duration: 12, equity: 0 })
   })
 })
 

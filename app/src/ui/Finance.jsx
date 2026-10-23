@@ -1,10 +1,10 @@
 import { localizeTree } from "../i18n/presentation.jsx";
 import { fmt$ } from "@ironfist/engine/rng.js";
 import React from "react";
-import { T, Panel, Eyebrow, Tag, Btn } from "./theme.jsx";
+import { T, Panel, Eyebrow } from "./theme.jsx";
 import { t } from "../i18n/index.js";
-import { weeklyFee } from "@ironfist/engine/fighter.js";
-import { TRAINING, CAMP_TIERS } from "@ironfist/engine/data.js";
+
+import { CAMP_TIERS } from "@ironfist/engine/data.js";
 import { computeMonthlyIncome, computeMonthlyExpense } from "@ironfist/engine/economy.js";
 
 /* =============================================================================
@@ -16,11 +16,8 @@ export default function Finance({ g }) {
   // ── Income breakdown (shared functions = settlement reality) ──
   const { sponsorAmt: sponsorIncome, fSponsor: popTotal, membershipRevenue,
     merchRevenue: merchTotal, championBonus, total: totalIncome } = computeMonthlyIncome(g);
-  const { coachSal, staffSal, maint, training, opCost, fighterSupport, tierUpkeep,
+  const { coachSal, staffSal, maint, training, opCost, fighterSupport, tierUpkeep, revenueShares,
     total: totalExpense } = computeMonthlyExpense(g);
-  // NOTE: weeklyFee()/feeTotal sengaja gak dipake di totalIncome — belum di-wire
-  // ke tickSettlement, jadi kalau ditampilin bikin Net/Month overstate.
-  // Lihat commit e1b6569 (debug panel) buat bukti gap-nya di save nyata.
 
   // ── Expense breakdown ─────────────────────────────────────────
   // Take the total straight from computeMonthlyExpense rather than re-adding
@@ -128,6 +125,7 @@ export default function Finance({ g }) {
         {staffSal > 0 && (
           <Row label="Gaji Staf" value={staffSal} color={T.neg} />
         )}
+        {revenueShares > 0 && <Row label="Bagi hasil kontrak lama" value={revenueShares} color={T.neg} />}
         {tierUpkeep > 0 && (
           <Row
             label="Biaya Operasional Tier"
@@ -256,8 +254,8 @@ export default function Finance({ g }) {
         )}
       </Panel>
 
-      {/* ── DEBUG — Economy Ground Truth ── */}
-      <EconomyDebugPanel g={g} />
+
+
 
       {/* ── EXPENSE SPLIT VISUAL ──────────────────────────────── */}
       <Panel>
@@ -311,48 +309,6 @@ function SectionHeader({ label, color }) {
   );
 }
 
-function Row({ label, value, color = T.txt, detail }) {
-  return (
-    localizeTree(<div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        padding: "6px 0",
-        borderBottom: `1px solid ${T.line}33`,
-      }}
-    >
-      <span style={{ fontSize: 12, color: T.txt }}>
-        {label}
-        {detail && (
-          <span style={{ fontSize: 10, color: T.txt3, marginLeft: 6 }}>{detail}</span>
-        )}
-      </span>
-      <span style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 700, color }}>
-        {fmt$(value)}
-      </span>
-    </div>)
-  );
-}
-
-function TotalRow({ label, value, color }) {
-  return (
-    localizeTree(<div style={{ padding: "4px 0", display: "flex", justifyContent: "flex-end" }}>
-      <span style={{ fontFamily: T.mono, fontSize: 15, fontWeight: 700, color }}>
-        {fmt$(value)}
-      </span>
-    </div>)
-  );
-}
-
-function Detail({ label, value, color = T.txt2 }) {
-  return (
-    localizeTree(<div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-      <span style={{ color: T.txt3 }}>{label}</span>
-      <span style={{ color, fontWeight: 600 }}>{value}</span>
-    </div>)
-  );
-}
-
 function SplitBar({ label, value, total, color }) {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   return (
@@ -375,61 +331,5 @@ function SplitBar({ label, value, total, color }) {
         />
       </div>
     </div>)
-  );
-}
-
-function EconomyDebugPanel({ g }) {
-  // Ground truth — persis yang dipakai tickSettlement buat motong g.cash
-  const incReal = computeMonthlyIncome(g);
-  const expReal = computeMonthlyExpense(g);
-  const netReal = incReal.total - expReal.total;
-
-  // Bandingin ke totalIncome versi lama (dulu termasuk feeTotal — sekarang fix)
-  const feeTotal = g.roster.reduce((s, f) => s + weeklyFee(f) * 4, 0);
-  const displayedTotalIncome = incReal.sponsorAmt + incReal.fSponsor + incReal.merchRevenue + incReal.membershipRevenue;
-  const phantomGap = displayedTotalIncome - incReal.total;
-
-  // Sponsor cliff check — hitung ulang tanpa sponsor, bandingin
-  const incNoSponsor = computeMonthlyIncome({ ...g, sponsors: [] });
-  const sponsorDelta = incReal.sponsorAmt - incNoSponsor.sponsorAmt;
-
-  return (
-    localizeTree(<Panel style={{ marginBottom: 14, border: `1px dashed ${T.warn}` }}>
-      <Eyebrow color={T.warn}>⚠️ DEBUG — Economy Ground Truth (hapus setelah verifikasi)</Eyebrow>
-
-      <div style={{ fontSize: 11, color: T.txt3, marginBottom: 8 }}>
-        Angka di bawah dihitung langsung dari computeMonthlyIncome/computeMonthlyExpense —
-        ini yang BENERAN dipakai tickSettlement buat motong cash.
-      </div>
-
-      <Row label="REAL total income" value={incReal.total} color={T.pos} />
-      <Row label="REAL total expense" value={expReal.total} color={T.neg} />
-      <Row label="REAL net/month" value={netReal} color={netReal >= 0 ? T.pos : T.neg} />
-
-      <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${T.line}` }} />
-
-      <Row
-        label="Displayed totalIncome (Finance tab lama)"
-        value={displayedTotalIncome}
-        color={T.txt2}
-      />
-      <Row
-        label="Phantom gap (feeTotal yang gak pernah masuk cash)"
-        value={phantomGap}
-        color={phantomGap > 0 ? T.neg : T.txt2}
-        detail={phantomGap > 0 ? "⚠️ Finance tab OVERSTATE income sebesar ini" : "aman"}
-      />
-
-      <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${T.line}` }} />
-
-      <Row label="sponsorAmt SEKARANG (dengan sponsor aktif)" value={incReal.sponsorAmt} color={T.txt} />
-      <Row label="sponsorAmt KALAU sponsor dilepas semua" value={incNoSponsor.sponsorAmt} color={T.txt2} />
-      <Row
-        label="Delta sponsor"
-        value={sponsorDelta}
-        color={sponsorDelta < 0 ? T.neg : T.pos}
-        detail={sponsorDelta < 0 ? "⚠️ SPONSOR CLIFF TERKONFIRMASI — nerima sponsor bikin rugi" : (g.sponsors?.length ? "aman" : "belum ada sponsor aktif, gak bisa dicek")}
-      />
-    </Panel>)
   );
 }

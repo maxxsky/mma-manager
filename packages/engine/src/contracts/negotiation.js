@@ -7,17 +7,16 @@
 // a penalty; asking for more lowers the odds, and a counter pushes the cut
 // down toward the floor. The old counter raised the cut, against the client.
 //
-// Levers kept: sign bonus, cut, fights, duration, equity — each changes
-// something in the game (cash, purse share, contract length/expiry, sponsor
-// share). Exclusivity, rematch and medical-cost clauses were removed: nothing
-// in the game read them, so they only lowered the odds.
+// New deals keep sign bonus, cut, fights and duration. Equity is retired;
+// existing signed shares are honoured by monthly settlement. Exclusivity,
+// rematch and medical-cost clauses were removed because they had no effect.
 import { RI, clamp, random } from "../rng.js";
 import { AGENT_TYPES } from "../data.js";
 
 export const NEGO_CUT_OPTIONS = [15, 16, 18, 20, 22, 25];   // percent
 export const NEGO_FIGHT_OPTIONS = [2, 4, 6, 8];
 export const NEGO_DURATION_OPTIONS = [12, 18, 24, 36];      // months
-export const NEGO_EQUITY_OPTIONS = [0, 5, 10, 15, 20];      // percent
+export const NEGO_EQUITY_OPTIONS = [0]; // no new equity; existing signed shares remain payable
 export const NEGO_EXTEND_BONUS_OPTIONS = [0, 2000, 5000, 10000, 20000];
 
 export const agentOf = (f) => AGENT_TYPES[f?.agent || "none"] || AGENT_TYPES.none;
@@ -59,8 +58,7 @@ export function acceptChance(f, mode, offer) {
   const bonusBoost = mode === "sign" ? (offer.signBonus / base - 1) * 22 : offer.signBonus / 1000 * 1.2;
   const fightsBoost = (offer.fights >= 6 ? 6 : offer.fights >= 4 ? 2 : -4) * (1 - ag.hardness * 0.3);
   const hardnessDrag = ag.hardness * 10;
-  const equityMod = (offer.equity || 0) * 1.5;
-  return clamp(Math.round(70 + bonusBoost + fightsBoost - cutPenalty - hardnessDrag + equityMod), 3, 97);
+  return clamp(Math.round(70 + bonusBoost + fightsBoost - cutPenalty - hardnessDrag), 3, 97);
 }
 
 /** An offer the agent sees as short: camp cut above their floor, or (new signings) a bonus under 85% of asking. */

@@ -8,7 +8,7 @@ export function generateProsperityEvents(ctx) {
 
   events.push({
     title: "💰 Camp Sedang Berjaya",
-    body: "Keuangan camp sehat dan reputasi tinggi — investor lokal mulai melirik untuk kerja sama jangka panjang.",
+    body: "Keuangan camp sehat. Pertahankan cadangan atau rencanakan upgrade fasilitas yang bisa dibiayai operasional camp.",
     choices: [
       { label: "Investasi ulang ke fasilitas (chemistry +3)", chem: 3 },
       { label: "Simpan sebagai cadangan", chem: 0 },

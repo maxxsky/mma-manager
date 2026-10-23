@@ -136,8 +136,18 @@ export function computeMonthlyExpense(g) {
   // one-off purchases do not, so a recurring cost is the only thing that can
   // actually meet it.
   const tierUpkeep = CAMP_TIERS[g.campTier || 0]?.upkeep || 0;
-  return { coachSal, staffSal, maint, training, opCost, fighterSupport, tierUpkeep, members,
-    total: coachSal + staffSal + maint + training + opCost + fighterSupport + tierUpkeep };
+  const { fighterShares, investorShares, total: revenueShares } = computeRevenueShares(g);
+  return { coachSal, staffSal, maint, training, opCost, fighterSupport, tierUpkeep, members, fighterShares, investorShares, revenueShares,
+    total: coachSal + staffSal + maint + training + opCost + fighterSupport + tierUpkeep + revenueShares };
+}
+
+// Compatibility for contracts signed before equity was removed from new deals.
+export function computeRevenueShares(g) {
+  const income = computeMonthlyIncome(g);
+  const base = income.sponsorAmt + income.fSponsor;
+  const fighterShares = g.roster.reduce((sum, f) => sum + Math.round(base * Math.max(0, f.contract?.equity || 0) / 100), 0);
+  const investorShares = Math.round(base * (g.investors || []).reduce((sum, investor) => sum + Math.max(0, investor.equity || 0), 0) / 100);
+  return { fighterShares, investorShares, total: fighterShares + investorShares };
 }
 
 // Shared facility upgrade cost — used by both UI and reducer

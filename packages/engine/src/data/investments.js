@@ -25,12 +25,4 @@ export const INVESTMENTS = [
     desc: "Jaringan alumni fighter jadi rujukan coach berkualitas. Coach market seolah reputasi +15.",
     effect: "Coach market rep+15",
   },
-  {
-    id: "legacyMuseum",
-    name: "Fight Legacy Museum",
-    cost: 300000,
-    legacyReq: 5000,
-    desc: "Museum yang merayakan sejarah camp. Murni kosmetik — tidak menambah legacy score.",
-    effect: "Kosmetik — banner Dynasty tab",
-  },
 ];

@@ -25,7 +25,7 @@ export function tickSettlement(g) {
 
   // ---------- monthly settlement ----------
   const { sponsorAmt, fSponsor, championBonus, merchRevenue, membershipRevenue } = computeMonthlyIncome(g);
-  const { coachSal, maint, training, opCost, fighterSupport, total: monthlyExpense } = computeMonthlyExpense(g);
+  const { coachSal, maint, training, opCost, fighterSupport, investorShares, total: monthlyExpense } = computeMonthlyExpense(g);
   g.cash += sponsorAmt + fSponsor + championBonus + merchRevenue + membershipRevenue - monthlyExpense;
 
   // Sponsor lifecycle: weeksLeft countdown, renewal window, expiry cleanup
@@ -69,7 +69,6 @@ export function tickSettlement(g) {
     if (f.contract?.equity && f.contract.equity > 0) {
       const fighterCut = Math.round((sponsorAmt + fSponsor) * (f.contract.equity / 100));
       if (fighterCut > 0) {
-        g.cash -= fighterCut;
         f.morale = clamp(f.morale + 2, 0, 100); // equity partner = happier
       }
     }
@@ -106,9 +105,8 @@ export function tickSettlement(g) {
 
   if (g.investors && g.investors.length > 0) {
     const totalEquity = g.investors.reduce((s, inv) => s + inv.equity, 0);
-    const equityCut = Math.round((sponsorAmt + fSponsor) * (totalEquity / 100));
+    const equityCut = investorShares;
     if (equityCut > 0) {
-      g.cash -= equityCut;
       g.log.unshift(`💰 ${totalEquity}% equity — investor potong ${fmt$(equityCut)} dari income.`);
     }
   }

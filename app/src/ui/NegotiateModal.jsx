@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { fmt$ } from "@ironfist/engine/rng.js";
 import {
   agentOf, baseAskingOf, defaultOffer, bonusOptions, acceptChance,
-  NEGO_CUT_OPTIONS, NEGO_FIGHT_OPTIONS, NEGO_DURATION_OPTIONS, NEGO_EQUITY_OPTIONS,
+  NEGO_CUT_OPTIONS, NEGO_FIGHT_OPTIONS, NEGO_DURATION_OPTIONS,
 } from "@ironfist/engine/contracts/negotiation.js";
 import { T, Panel, Eyebrow as H, Btn, Tag, Bar } from "./theme.jsx";
 import { t } from "../i18n/index.js";
@@ -31,11 +31,10 @@ export default function NegotiateModal({ fighter, mode, cash, rosterCap, rosterS
   const [cutPct, setCutPct] = useState(Math.round(start.cut * 100));
   const [fights, setFights] = useState(start.fights);
   const [duration, setDuration] = useState(start.duration);
-  const [equity, setEquity] = useState(start.equity);
   // Only show engine results produced by this modal session, never a stale one from a save.
   const [submitted, setSubmitted] = useState(false);
 
-  const offer = { signBonus, cut: cutPct / 100, fights, duration, equity };
+  const offer = { signBonus, cut: cutPct / 100, fights, duration, equity: 0 };
   const accept = acceptChance(fighter, mode, offer);
   const tooPoor = signBonus > cash;
   const rosterFull = mode === "sign" && rosterSize >= rosterCap;
@@ -123,19 +122,6 @@ export default function NegotiateModal({ fighter, mode, cash, rosterCap, rosterS
         <NegoRow label={t("NEGO.form.duration")}>
           <div style={{ display: "flex", gap: 6 }}>{NEGO_DURATION_OPTIONS.map((v) => localizeTree(<NegoOpt key={v} v={duration} set={setDuration} val={v}>{t("NEGO.form.durationVal").replace("{0}", v)}</NegoOpt>))}</div>
         </NegoRow>
-        <div style={{ borderTop: `1px solid ${T.line}44`, paddingTop: 10, marginTop: 10 }}>
-          <div style={{ fontSize: 10, color: T.txt3, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{t("NEGO.form.clauses")}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 6 }}>
-            <div style={{ background: T.surface, padding: "6px 8px", ...{ borderRadius: T.r } }}>
-              <div style={{ fontSize: 9, color: T.txt3 }}>{t("NEGO.form.campEquity")}</div>
-              <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
-                {NEGO_EQUITY_OPTIONS.map((v) => (
-                  localizeTree(<button key={v} onClick={() => setEquity(v)} style={{ flex: 1, background: equity === v ? T.gold : T.raised, color: equity === v ? "#0a0d14" : T.txt, border: "none", padding: "3px 4px", fontSize: 9, cursor: "pointer", ...{ borderRadius: T.r } }}>{v}%</button>)
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
         <div style={{ background: "#0a0e17", padding: 10, margin: "6px 0 12px", ...{ borderRadius: T.r } }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: 11, color: T.txt3 }}>{t("NEGO.form.estAccept")}</span>
