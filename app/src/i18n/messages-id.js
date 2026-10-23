@@ -493,4 +493,30 @@ Fight Offer — {0}|Tawaran Laga — {0}
 ⭐ Ideal synergy with|⭐ Kecocokan ideal dengan
 Defense|Pertahanan
 - has fighters|- memiliki petarung
+📋 Getting Started|📋 Langkah Awal
+Completed|Selesai
+Quick Actions|Aksi Cepat
+Bank|Kas
+Bankrupt|Bangkrut
+Game Over|Game Berakhir
+Main Event|Laga Utama
+Notice|Pemberitahuan
+Purse & terms|Purse & ketentuan
+Legacy Investments|Investasi Camp
+Press|Pers
+Injury|Cedera
+skill|keahlian
+message|pesan
+messages|pesan
+{0} fighter{1}|{0} petarung
+% stamina cap|% batas stamina
+% stamina cap.|% batas stamina.
+🥊 {0} +{1} attr (best: strength +{2}) — {3}|🥊 {0} +{1} atribut (terbaik: kekuatan +{2}) — {3}
+🥊 {0} +{1} attr (best: cardio +{2}) — {3}|🥊 {0} +{1} atribut (terbaik: kardio +{2}) — {3}
+🥊 {0} +{1} attr (best: chin +{2}) — {3}|🥊 {0} +{1} atribut (terbaik: dagu +{2}) — {3}
+🥊 {0} +{1} attr (best: striking +{2}) — {3}|🥊 {0} +{1} atribut (terbaik: striking +{2}) — {3}
+🥊 {0} +{1} attr (best: wrestling +{2}) — {3}|🥊 {0} +{1} atribut (terbaik: gulat +{2}) — {3}
+🥊 {0} +{1} attr (best: bjj +{2}) — {3}|🥊 {0} +{1} atribut (terbaik: BJJ +{2}) — {3}
+🥊 {0} +{1} attr (best: footwork +{2}) — {3}|🥊 {0} +{1} atribut (terbaik: gerak kaki +{2}) — {3}
+🥊 {0} +{1} attr (best: fightIQ +{2}) — {3}|🥊 {0} +{1} atribut (terbaik: IQ tarung +{2}) — {3}
 `.trim().split('\n').map(line => line.split('|'));
